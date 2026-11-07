@@ -2854,4 +2854,3009 @@
                                 <button onclick="applyTexture2StaggerPreset()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 px-4 rounded-2xl shadow-md transition flex items-center gap-2 text-sm flex-shrink-0">
                                     <i class="fa-solid fa-stairs"></i> <span>Stagger Every Bar</span>
                                 </button>
-                                <button id="texture2-master-btn" onclick="
+                                <button id="texture2-master-btn" onclick="toggleTexture2MasterPlay()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold py-3 px-6 rounded-2xl shadow-md transition flex items-center gap-2 flex-shrink-0 text-sm">
+                                    <i class="fa-solid fa-play"></i> <span>Start Studio</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Live Visual Sequencer & Playhead Canvas -->
+                        <div class="bg-slate-950 rounded-2xl p-6 border border-slate-800 shadow-xl mb-6 relative overflow-hidden">
+                            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-3 h-3 rounded-full bg-indigo-500 animate-pulse"></span>
+                                    <span class="text-xs uppercase font-extrabold tracking-wider text-slate-400">Current Measure:</span>
+                                    <span id="texture2-bar-display" class="text-xs font-bold px-3 py-0.5 rounded-full bg-slate-800 text-amber-300 font-mono border border-slate-700">Bar 1 (Beat 1)</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span id="texture2-density-label" class="text-xs font-bold px-3 py-0.5 rounded-full bg-indigo-900/60 text-indigo-300 border border-indigo-700">Thin: Lurking</span>
+                                    <span class="text-xs text-slate-400 font-mono">Key: A Minor</span>
+                                </div>
+                            </div>
+
+                            <!-- SVG Timeline Ruler & Staggered Soundwave Canvas -->
+                            <div class="bg-slate-900/90 rounded-xl p-3 border border-slate-800 overflow-x-auto">
+                                <svg width="560" height="150" viewBox="0 0 560 150" id="texture2-layers-svg" class="w-full min-w-[500px] select-none">
+                                    <!-- Dynamic Timeline & Playhead rendered by updateTextureLab2UI() -->
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Arrangement Grid / Stagger Controller -->
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Arrange Entry Bars (Drag or Select Bar)</h4>
+                                <p class="text-[11px] text-slate-500">Each bar contains 4 beats. Set each sound to enter 1 bar after the previous sound for maximum build!</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="resetTexture2Timeline()" class="text-xs font-bold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">Clear All</button>
+                                <button onclick="applyAllSameBarPreset()" class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-200/80 hover:bg-slate-300 px-3 py-1.5 rounded-lg transition">All at Bar 1 (Instant Thick)</button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2.5 mb-6" id="texture2-timeline-tracks">
+                            <!-- Stagger track rows injected dynamically by initTextureLab2() -->
+                        </div>
+
+                        <!-- Guided Observation Note -->
+                        <div class="bg-indigo-50/60 border border-indigo-200 rounded-2xl p-5 text-xs text-slate-700 space-y-2">
+                            <span class="font-bold text-indigo-950 text-sm block mb-1">
+                                <i class="fa-solid fa-ear-listen text-indigo-600 mr-1.5"></i> Notice How Staggering Builds Tension:
+                            </span>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-600">
+                                <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-xs">
+                                    <strong class="text-indigo-700 block mb-0.5">Bar 1: Solo Sub Pulse</strong>
+                                    Only the low sub-bass plays. The ear perceives suspense, mystery, and space.
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-xs">
+                                    <strong class="text-purple-700 block mb-0.5">Bars 2 & 3: Harmonic Entry</strong>
+                                    The Cello Drone and Ostinato join one after the other. Heart-rate and urgency rise.
+                                </div>
+                                <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-xs">
+                                    <strong class="text-rose-700 block mb-0.5">Bars 4 & 5: Peak Climax</strong>
+                                    The Haunting Lead enters, followed by High Chimes. The texture reaches full dense thickness!
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                return this.renderLessonWrapper('texture', 1, 'textureLesson2', tabs, tab, content);
+            },
+
+            testModule(data) {
+                if (data) {
+                    const areaQuizzes = quizData[data.area];
+                    const quizKey = `level${data.level}${data.type === 'test' ? 'Test' : 'Practice'}`;
+                    const quiz = areaQuizzes ? (areaQuizzes[quizKey] || areaQuizzes[`level${data.level}`]) : null;
+                    
+                    if (!quiz) {
+                        return `
+                        <div class="p-8 max-w-3xl mx-auto fade-in text-center mt-20">
+                            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-3xl">
+                                <i class="fa-solid fa-file-circle-question"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-slate-800 mb-2">No Quiz Data Found</h2>
+                            <p class="text-slate-500 mb-6">We haven't added the quiz questions for this specific level yet.</p>
+                            <button onclick="app.navigate('levelHub', {area: '${data.area}', level: ${data.level}})" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">Go Back</button>
+                        </div>`;
+                    }
+                    
+                    window.quizState = {
+                        area: data.area,
+                        level: data.level,
+                        type: data.type || 'practice',
+                        questions: quiz,
+                        currentIndex: 0,
+                        score: 0,
+                        selectedOption: null,
+                        userAnswers: [],
+                        finished: false
+                    };
+                }
+
+                const state = window.quizState;
+                if (!state) return '';
+
+                if (state.finished) {
+                    const pct = Math.round((state.score / state.questions.length) * 100);
+                    const studentName = app.currentUser ? app.currentUser.name : "Student";
+                    const areaTitle = appData.areas.find(a => a.id === state.area)?.title || state.area.toUpperCase();
+                    const currentDate = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
+                    if (state.type === 'test') {
+                        const isPass = pct >= 50;
+
+                        if (!isPass) {
+                            return `
+                            <div class="p-4 sm:p-8 max-w-2xl mx-auto fade-in pb-20 text-center mt-6">
+                                <div class="bg-white rounded-3xl shadow-xl p-8 sm:p-12 border-4 border-amber-300 relative overflow-hidden">
+                                    <div class="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl shadow-sm">
+                                        <i class="fa-solid fa-rotate-right"></i>
+                                    </div>
+
+                                    <h3 class="text-3xl font-extrabold text-slate-900 mb-2">Keep Practicing, ${studentName}!</h3>
+                                    <p class="text-slate-600 text-base sm:text-lg mb-6 leading-relaxed">
+                                        You scored <strong class="text-slate-800">${state.score} / ${state.questions.length}</strong> (<span class="text-amber-600 font-bold">${pct}%</span>) on the <strong>${areaTitle} — Level ${state.level}</strong> assessment.
+                                    </p>
+
+                                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 text-sm text-amber-900 text-left leading-relaxed">
+                                        <div class="flex items-center gap-2 font-bold mb-1 text-amber-800">
+                                            <i class="fa-solid fa-circle-info"></i> Passing Score: 50% Required
+                                        </div>
+                                        You need a score of <strong>50% or higher</strong> to receive your Certificate of Completion. Review the lesson material and try the test again—you can do it!
+                                    </div>
+
+                                    <div class="flex flex-wrap items-center justify-center gap-4">
+                                        <button onclick="app.navigate('testModule', { area: '${state.area}', level: ${state.level}, type: 'test' })" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 px-8 rounded-xl shadow-md transition inline-flex items-center gap-2">
+                                            <i class="fa-solid fa-arrow-rotate-left"></i> Try Test Again
+                                        </button>
+                                        <button onclick="app.navigate('levelHub', { area: '${state.area}', level: ${state.level} })" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-sm transition">
+                                            Review Lessons
+                                        </button>
+                                        <button onclick="app.navigate('studentDash')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl transition">
+                                            Dashboard
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                        }
+
+                        return `
+                        <div class="p-4 sm:p-8 max-w-4xl mx-auto fade-in pb-20">
+                            <!-- Certificate Container -->
+                            <div id="cert-container" class="bg-white rounded-3xl shadow-xl p-8 sm:p-12 border-8 border-double border-slate-700 text-center relative overflow-hidden bg-gradient-to-b from-white via-slate-50/40 to-white">
+                                <!-- Watermark Icon -->
+                                <i class="fa-solid fa-award absolute -right-10 -bottom-10 text-9xl text-slate-100 pointer-events-none opacity-60"></i>
+
+                                <div class="flex items-center justify-center gap-3 mb-2">
+                                    <i class="fa-solid fa-music text-blue-600 text-3xl"></i>
+                                    <span class="text-2xl font-extrabold text-slate-800 tracking-tight">BonTheory</span>
+                                </div>
+                                <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Certificate of Music Theory Achievement</p>
+
+                                <p class="text-slate-500 text-sm italic mb-2">This is to certify that</p>
+                                <h3 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight border-b-2 border-slate-200 pb-2 inline-block px-8">
+                                    ${studentName}
+                                </h3>
+
+                                <p class="text-slate-600 text-base sm:text-lg mb-6 max-w-xl mx-auto leading-relaxed mt-4">
+                                    has successfully completed the <strong>Final Assessment</strong> for<br>
+                                    <span class="text-blue-600 font-bold text-xl">${areaTitle} — Level ${state.level}</span>
+                                </p>
+
+                                <!-- Score Ribbon Badge -->
+                                <div class="inline-flex items-center gap-6 bg-slate-900 text-white py-3.5 px-8 rounded-2xl shadow-md mb-8">
+                                    <div>
+                                        <div class="text-xs uppercase tracking-wider text-slate-400">Score</div>
+                                        <div class="text-2xl font-extrabold text-amber-400">${state.score} / ${state.questions.length}</div>
+                                    </div>
+                                    <div class="w-px h-10 bg-slate-700"></div>
+                                    <div>
+                                        <div class="text-xs uppercase tracking-wider text-slate-400">Grade</div>
+                                        <div class="text-2xl font-extrabold text-emerald-400">${pct}%</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 border-t border-slate-200 pt-6 mt-4 gap-4 px-4">
+                                    <div class="text-left">
+                                        <span class="font-bold text-slate-600 block">Date Issued:</span>
+                                        ${currentDate}
+                                    </div>
+                                    <div class="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full font-bold">
+                                        <i class="fa-solid fa-circle-check"></i> Recorded in Markbook
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="font-bold text-slate-600 block">Verification Code:</span>
+                                        BT-${state.area.substring(0,3).toUpperCase()}${state.level}-${Math.random().toString(36).substring(2, 7).toUpperCase()}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions Row (Hidden on print) -->
+                            <div id="cert-actions" class="mt-8 flex flex-wrap items-center justify-center gap-4">
+                                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition inline-flex items-center gap-2">
+                                    <i class="fa-solid fa-file-pdf"></i> Print / Save as PDF
+                                </button>
+                                <button onclick="copyResultsForClassroom('${studentName}', '${areaTitle}', ${state.level}, ${state.score}, ${state.questions.length}, '${pct}%')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-xl shadow-md transition inline-flex items-center gap-2">
+                                    <i class="fa-solid fa-copy"></i> Copy for Google Classroom
+                                </button>
+                                <button onclick="app.navigate('levelHub', {area: '${state.area}', level: ${state.level}})" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold py-3 px-6 rounded-xl shadow-sm transition">
+                                    Level Hub
+                                </button>
+                                <button onclick="app.navigate('studentDash')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-xl transition">
+                                    Dashboard
+                                </button>
+                            </div>
+                            <div id="copy-confirm-msg" class="hidden text-center text-sm font-bold text-emerald-600 mt-3">
+                                <i class="fa-solid fa-check mr-1"></i> Result card copied to clipboard! You can now paste it into Google Classroom or an email.
+                            </div>
+                        </div>
+                        `;
+                    }
+
+                    // Practice Quiz Completion (Standard Modal)
+                    return `
+                    <div class="p-8 max-w-3xl mx-auto fade-in pb-20 text-center mt-10">
+                        <div class="bg-white rounded-2xl shadow-lg p-10 border border-gray-100">
+                            <div class="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Practice Quiz Complete!</h2>
+                            <p class="text-slate-500 mb-6 text-lg">You scored <strong>${state.score}</strong> out of <strong>${state.questions.length}</strong> (${pct}%).</p>
+                            <div class="flex justify-center gap-4">
+                                <button onclick="app.navigate('levelHub', {area: '${state.area}', level: ${state.level}})" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition">Return to Level Hub</button>
+                                <button onclick="app.navigate('studentDash')" class="bg-gray-100 hover:bg-gray-200 text-slate-700 font-bold py-3 px-8 rounded-xl shadow-sm transition">Main Menu</button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }
+
+                const q = state.questions[state.currentIndex];
+                const isLast = state.currentIndex === state.questions.length - 1;
+
+                return `
+                <div class="p-8 max-w-3xl mx-auto fade-in pb-20">
+                    <div class="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+                        <div class="flex justify-between items-center mb-8 border-b pb-4">
+                            <h2 class="text-2xl font-extrabold text-slate-800">${state.type === 'test' ? 'Final Test' : 'Practice Quiz'}: ${state.area.toUpperCase()} Level ${state.level}</h2>
+                            <span class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Question ${state.currentIndex + 1} / ${state.questions.length}</span>
+                        </div>
+                        
+                        <p class="text-xl font-medium text-slate-800 mb-6">${q.q}</p>
+                        
+                        <div class="space-y-3 mb-8">
+                            ${q.options.map((opt, i) => {
+                                const isSelected = state.selectedOption === i;
+                                const baseClass = "w-full text-left px-6 py-4 rounded-xl border-2 transition font-medium flex items-center";
+                                const unselectedClass = "border-gray-100 hover:border-blue-400 hover:bg-blue-50 text-slate-700";
+                                const selectedClass = "border-blue-500 bg-blue-50 text-blue-800 shadow-sm";
+                                
+                                const badgeBase = "inline-block w-8 h-8 text-center leading-8 rounded-full mr-3 text-sm flex-shrink-0 font-bold transition";
+                                const badgeUnselected = "bg-gray-100 text-gray-500";
+                                const badgeSelected = "bg-blue-500 text-white";
+
+                                return `
+                                <button onclick="selectQuizOption(${i})" class="${baseClass} ${isSelected ? selectedClass : unselectedClass}">
+                                    <span class="${badgeBase} ${isSelected ? badgeSelected : badgeUnselected}">${String.fromCharCode(65+i)}</span>
+                                    <span>${opt}</span>
+                                </button>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        <div class="flex justify-end pt-4 border-t">
+                            <button onclick="submitQuizAnswer()" ${state.selectedOption === null ? 'disabled' : ''} class="${state.selectedOption === null ? 'bg-gray-300 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600 shadow-md'} text-white font-bold py-3 px-8 rounded-xl transition">
+                                ${isLast ? 'Finish Quiz' : 'Next Question'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            },
+
+            teacherDash() {
+                const sheetUrl = window.getTeacherSpreadsheetUrl();
+                return `
+                <div class="p-8 max-w-6xl mx-auto fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b pb-4">
+                        <div>
+                            <h2 class="text-3xl font-extrabold text-slate-800 flex items-center gap-3">
+                                <i class="fa-solid fa-graduation-cap text-blue-600"></i>Teacher Markbook & Results
+                            </h2>
+                            <p class="text-slate-500 text-sm mt-1">Directly view and access the live Google Sheet receiving all student test submissions.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <a href="${sheetUrl}" target="_blank" rel="noopener noreferrer" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-md transition inline-flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-table"></i> Open Results Spreadsheet
+                            </a>
+                            <button onclick="setTeacherSpreadsheetUrl()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl transition text-sm" title="Configure Sheet Link">
+                                <i class="fa-solid fa-gear"></i> Configure Link
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Setup & Security Notice -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                            <div class="flex items-center gap-3 mb-2 text-emerald-600 font-bold">
+                                <i class="fa-solid fa-shield-halved text-xl"></i>
+                                <h4 class="text-base text-slate-800">Sandbox-Safe Pipeline</h4>
+                            </div>
+                            <p class="text-slate-600 text-xs leading-relaxed">
+                                Submissions use lightweight background URL-encoded payloads with CORS preflight bypass to ensure school Chromebooks & sandbox filters never block student tests.
+                            </p>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                            <div class="flex items-center gap-3 mb-2 text-blue-600 font-bold">
+                                <i class="fa-solid fa-bolt text-xl"></i>
+                                <h4 class="text-base text-slate-800">Instant Real-Time Recording</h4>
+                            </div>
+                            <p class="text-slate-600 text-xs leading-relaxed">
+                                When a student clicks "Finish Quiz", their Name, Class, Topic, Level, Score, Percentage, and Timestamp write directly into the spreadsheet row in seconds.
+                            </p>
+                        </div>
+
+                        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                            <div class="flex items-center gap-3 mb-2 text-amber-500 font-bold">
+                                <i class="fa-solid fa-lock text-xl"></i>
+                                <h4 class="text-base text-slate-800">Teacher-Only Access</h4>
+                            </div>
+                            <p class="text-slate-600 text-xs leading-relaxed">
+                                Students only see their completion certificate and cannot view or access the master markbook sheet. Only the teacher login has access to this portal.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Spreadsheet Embedded Preview / Launcher Card -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
+                        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-xs">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-2">Live Class Results Spreadsheet</h3>
+                        <p class="text-slate-500 max-w-lg mx-auto text-sm mb-6 leading-relaxed">
+                            Click below to open your master spreadsheet in a new tab. All incoming student submissions from any device in your class are displayed live.
+                        </p>
+                        <div class="flex flex-wrap items-center justify-center gap-3">
+                            <a href="${sheetUrl}" target="_blank" rel="noopener noreferrer" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-8 rounded-xl shadow-md transition inline-flex items-center gap-2 text-base">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Google Sheet Now
+                            </a>
+                        </div>
+                        <div class="mt-5 p-3 bg-slate-50 rounded-xl border border-slate-200 max-w-xl mx-auto">
+                            <span class="text-xs text-slate-500 font-bold block mb-1">Direct Link:</span>
+                            <a href="${sheetUrl}" target="_blank" rel="noopener noreferrer" class="text-xs text-blue-600 hover:underline break-all font-mono">
+                                ${sheetUrl}
+                            </a>
+                        </div>
+
+                        <!-- Diagnostic Test Button for Teacher -->
+                        <div class="mt-8 pt-6 border-t border-slate-200 max-w-xl mx-auto text-left">
+                            <h4 class="text-sm font-bold text-slate-700 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-wrench text-blue-600"></i> Spreadsheet Connection Diagnostic
+                            </h4>
+                            <p class="text-xs text-slate-500 mb-3">
+                                Click the button below to send a sample test row directly to your spreadsheet and confirm the connection is active.
+                            </p>
+                            <div class="flex items-center gap-3">
+                                <button onclick="testSpreadsheetConnection()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition inline-flex items-center gap-1.5">
+                                    <i class="fa-solid fa-paper-plane"></i> Send Test Entry to Sheet
+                                </button>
+                                <button onclick="toggleCustomWebhookBox()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-2.5 px-3 rounded-xl transition" title="Update Apps Script URL">
+                                    Change Script URL
+                                </button>
+                            </div>
+
+                            <!-- Inline Webhook URL Input (No popup prompt) -->
+                            <div id="webhook-editor-box" class="hidden mt-3 p-3 bg-slate-100 rounded-xl border border-slate-300">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Google Apps Script Web App URL (/exec):</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="webhook-url-input" class="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono outline-none focus:border-blue-500" placeholder="https://script.google.com/macros/s/.../exec">
+                                    <button onclick="saveCustomWebhookUrl()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition">Save</button>
+                                </div>
+                            </div>
+
+                            <div id="test-connection-status" class="text-xs font-bold mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }
+        };
+
+        // --- Audio Context & Logic ---
+        let synth = null;
+        function initChordSynth() {
+            if(!synth) {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -5;
+            }
+        }
+
+        window.playNoteAudio = function(note) {
+            if(!synth) initChordSynth();
+            synth.triggerAttackRelease([note], "0.8n");
+        };
+
+        window.playCurrentChord = function() {
+            if(!synth) initChordSynth();
+            Tone.start();
+            const root = document.getElementById('chord-root').value;
+            const type = document.getElementById('chord-cat').value;
+            
+            let notes = [];
+            if(type === 'major') notes = [`${root}4`, Tone.Frequency(`${root}4`).transpose(4).toNote(), Tone.Frequency(`${root}4`).transpose(7).toNote()];
+            else if(type === 'minor') notes = [`${root}4`, Tone.Frequency(`${root}4`).transpose(3).toNote(), Tone.Frequency(`${root}4`).transpose(7).toNote()];
+            else notes = [`${root}4`, Tone.Frequency(`${root}4`).transpose(4).toNote(), Tone.Frequency(`${root}4`).transpose(7).toNote(), Tone.Frequency(`${root}4`).transpose(10).toNote()];
+
+            synth.triggerAttackRelease(notes, "1.5n");
+        };
+
+        window.updateChordDisplay = function() {
+            const rootEl = document.getElementById('chord-root');
+            const catEl = document.getElementById('chord-cat');
+            if (!rootEl || !catEl) return;
+            const root = rootEl.value;
+            const cat = catEl.value;
+            let name = `${root} Major`;
+            let formula = '1 - 3 - 5';
+            
+            if(cat === 'minor') { name = `${root} Minor`; formula = '1 - b3 - 5'; }
+            if(cat === 'dominant') { name = `${root} Dominant 7`; formula = '1 - 3 - 5 - b7'; }
+            
+            document.getElementById('display-chord-name').textContent = name;
+            document.getElementById('display-formula').textContent = formula;
+
+            try {
+                let noteNames = [];
+                if(cat === 'major') noteNames = [root, Tone.Frequency(`${root}4`).transpose(4).toNote().slice(0,-1), Tone.Frequency(`${root}4`).transpose(7).toNote().slice(0,-1)];
+                else if(cat === 'minor') noteNames = [root, Tone.Frequency(`${root}4`).transpose(3).toNote().slice(0,-1), Tone.Frequency(`${root}4`).transpose(7).toNote().slice(0,-1)];
+                else noteNames = [root, Tone.Frequency(`${root}4`).transpose(4).toNote().slice(0,-1), Tone.Frequency(`${root}4`).transpose(7).toNote().slice(0,-1), Tone.Frequency(`${root}4`).transpose(10).toNote().slice(0,-1)];
+                document.getElementById('display-notes').textContent = noteNames.join(' - ');
+            } catch(e) {
+                document.getElementById('display-notes').textContent = root + " - ...";
+            }
+        };
+
+        // --- Global Login Helpers ---
+        window.loginRole = 'student';
+        
+        window.setRole = function(role) {
+            window.loginRole = role;
+            const roleStudent = document.getElementById('roleStudent');
+            const roleTeacher = document.getElementById('roleTeacher');
+            const passContainer = document.getElementById('passwordContainer');
+            const classContainer = document.getElementById('classContainer');
+            const loginError = document.getElementById('login-error');
+            const passcodeField = document.getElementById('login-passcode');
+
+            if (loginError) loginError.classList.add('hidden');
+            if (passcodeField) passcodeField.classList.remove('border-red-500');
+
+            if (roleStudent && roleTeacher) {
+                if (role === 'student') {
+                    roleStudent.className = 'bg-white shadow-sm text-blue-600 rounded-lg py-2 font-bold transition';
+                    roleTeacher.className = 'text-gray-500 hover:text-gray-700 rounded-lg py-2 font-bold transition';
+                    if (classContainer) classContainer.classList.remove('hidden');
+                } else {
+                    roleTeacher.className = 'bg-white shadow-sm text-blue-600 rounded-lg py-2 font-bold transition';
+                    roleStudent.className = 'text-gray-500 hover:text-gray-700 rounded-lg py-2 font-bold transition';
+                    if (classContainer) classContainer.classList.add('hidden');
+                }
+            }
+            
+            if (passContainer) {
+                if (role === 'teacher') {
+                    passContainer.classList.remove('hidden');
+                } else {
+                    passContainer.classList.add('hidden');
+                }
+            }
+        };
+
+        window.handleLogin = function() {
+            const nameInput = document.getElementById('login-name');
+            const name = nameInput ? nameInput.value.trim() : '';
+            if (!name) {
+                if (nameInput) nameInput.classList.add('border-red-500');
+                return;
+            }
+            if (nameInput) nameInput.classList.remove('border-red-500');
+
+            const classInput = document.getElementById('login-class');
+            const studentClass = classInput && classInput.value.trim() ? classInput.value.trim() : '';
+
+            const role = window.loginRole || 'student';
+            if (role === 'teacher') {
+                const pass = document.getElementById('login-passcode').value;
+                if (pass !== 'Rocky') {
+                    document.getElementById('login-error').classList.remove('hidden');
+                    document.getElementById('login-passcode').classList.add('border-red-500');
+                    return;
+                }
+                app.currentUser = { name, role: 'teacher' };
+                app.navigate('teacherDash');
+            } else {
+                app.currentUser = { name, role: 'student', classGroup: studentClass };
+                app.navigate('studentDash');
+            }
+        };
+
+        window.logout = function() {
+            app.currentUser = null;
+            window.loginRole = 'student';
+            app.navigate('login');
+            setTimeout(() => {
+                if (window.setRole) window.setRole('student');
+            }, 10);
+        };
+
+        // --- Result Copy Helper for Google Classroom / Email ---
+        window.copyResultsForClassroom = function(name, area, level, score, total, percentage) {
+            const studentClass = app.currentUser && app.currentUser.classGroup ? `Class: ${app.currentUser.classGroup}\n` : '';
+            const summary = `🎓 BonTheory Test Result\n` +
+                `Student: ${name}\n` +
+                studentClass +
+                `Topic: ${area} (Level ${level})\n` +
+                `Score: ${score} / ${total} (${percentage})\n` +
+                `Date: ${new Date().toLocaleDateString()}\n` +
+                `Status: Verified Assessment`;
+
+            const tempInput = document.createElement("textarea");
+            tempInput.value = summary;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const msg = document.getElementById('copy-confirm-msg');
+            if (msg) {
+                msg.classList.remove('hidden');
+                setTimeout(() => msg.classList.add('hidden'), 4000);
+            }
+        };
+
+        // --- Global Quiz Helpers ---
+        window.quizState = null;
+        const DEFAULT_GOOGLE_SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby9efiWUNywEUBGBUJATEMc5wjs_iN0R0rlcLxmCUpmKfGtSGjpHPLdRGNmfNPk9kTgvA/exec";
+        const TEACHER_SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/140auyVwux2-WUJZ6DybpfWRrnwOG2FTX-1QpMsvfY0c/edit?gid=0#gid=0";
+        
+        window.getGoogleSheetWebappUrl = function() {
+            return localStorage.getItem('bontheory_webhook_url') || DEFAULT_GOOGLE_SHEET_WEBAPP_URL;
+        };
+
+        window.toggleCustomWebhookBox = function() {
+            const box = document.getElementById('webhook-editor-box');
+            if (box) {
+                box.classList.toggle('hidden');
+                const inp = document.getElementById('webhook-url-input');
+                if (inp) inp.value = window.getGoogleSheetWebappUrl();
+            }
+        };
+
+        window.saveCustomWebhookUrl = function() {
+            const inp = document.getElementById('webhook-url-input');
+            const val = inp ? inp.value.trim() : '';
+            const statusEl = document.getElementById('test-connection-status');
+            if (val) {
+                localStorage.setItem('bontheory_webhook_url', val);
+                if (statusEl) {
+                    statusEl.textContent = "New Web App URL saved successfully!";
+                    statusEl.className = "text-xs font-bold mt-2 text-emerald-600";
+                }
+            } else {
+                localStorage.removeItem('bontheory_webhook_url');
+                if (statusEl) {
+                    statusEl.textContent = "Reset to default Web App URL.";
+                    statusEl.className = "text-xs font-bold mt-2 text-slate-600";
+                }
+            }
+            const box = document.getElementById('webhook-editor-box');
+            if (box) box.classList.add('hidden');
+        };
+
+        // Stored link to the Teacher's viewable Google Sheet (locked to your sheet)
+        window.getTeacherSpreadsheetUrl = function() {
+            return TEACHER_SPREADSHEET_URL;
+        };
+
+        window.openTeacherSpreadsheet = function() {
+            window.open(TEACHER_SPREADSHEET_URL, '_blank', 'noopener,noreferrer');
+        };
+
+        // Teacher diagnostic test to verify upload live
+        window.testSpreadsheetConnection = function() {
+            const statusEl = document.getElementById('test-connection-status');
+            if (statusEl) {
+                statusEl.textContent = "Sending sample entry...";
+                statusEl.className = "text-xs font-bold mt-2 text-blue-600";
+            }
+
+            const sample = {
+                studentName: "Teacher Diagnostic Test",
+                classGroup: "Staff",
+                area: "System Verification",
+                level: "1",
+                score: "10",
+                total: "10",
+                scoreDisplay: "10 / 10",
+                percentage: "100%",
+                timestamp: new Date().toISOString()
+            };
+
+            window.sendResultsToGoogleSheet(sample);
+
+            setTimeout(() => {
+                if (statusEl) {
+                    statusEl.innerHTML = `<span class="text-emerald-600"><i class="fa-solid fa-check mr-1"></i> Sample test dispatched! Check row in your Google Sheet.</span>`;
+                }
+            }, 1000);
+        };
+
+        window.selectQuizOption = function(idx) {
+            if (window.quizState) {
+                window.quizState.selectedOption = idx;
+                app.navigate('testModule');
+            }
+        };
+
+        // Reliable single-transmission submission helper
+        window.lastSubmissionKey = null;
+        window.sendResultsToGoogleSheet = function(payload) {
+            const endpoint = window.getGoogleSheetWebappUrl();
+            if (!endpoint) {
+                console.warn("No Google Sheet Web App URL configured.");
+                return;
+            }
+
+            try {
+                // Ensure all fields are safe strings
+                const cleanPayload = {};
+                Object.keys(payload).forEach(key => {
+                    cleanPayload[key] = (payload[key] !== undefined && payload[key] !== null) ? String(payload[key]) : '';
+                });
+
+                // Deduplication key based on student, area, level, score, and minute
+                const submissionKey = `${cleanPayload.studentName}_${cleanPayload.area}_${cleanPayload.level}_${cleanPayload.score}_${cleanPayload.timestamp.substring(0, 16)}`;
+                if (window.lastSubmissionKey === submissionKey) {
+                    console.log("Duplicate submission prevented.");
+                    return;
+                }
+                window.lastSubmissionKey = submissionKey;
+
+                const formData = new URLSearchParams(cleanPayload);
+                const bodyStr = formData.toString();
+
+                // Send exactly ONCE via fetch (no-cors)
+                if (window.fetch) {
+                    fetch(endpoint, {
+                        method: "POST",
+                        mode: "no-cors",
+                        headers: { 
+                            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" 
+                        },
+                        body: bodyStr
+                    }).then(() => {
+                        console.log("Test result successfully dispatched to spreadsheet.");
+                    }).catch(err => {
+                        console.warn("Fetch failed, falling back to beacon/img:", err);
+                        // Fallback only if fetch actively failed
+                        if (navigator.sendBeacon) {
+                            const blob = new Blob([bodyStr], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
+                            navigator.sendBeacon(endpoint, blob);
+                        } else {
+                            const pingImg = new Image();
+                            pingImg.src = endpoint + (endpoint.includes('?') ? '&' : '?') + formData.toString() + '&_t=' + Date.now();
+                        }
+                    });
+                } else if (navigator.sendBeacon) {
+                    const blob = new Blob([bodyStr], { type: 'application/x-www-form-urlencoded;charset=UTF-8' });
+                    navigator.sendBeacon(endpoint, blob);
+                } else {
+                    const pingImg = new Image();
+                    pingImg.src = endpoint + (endpoint.includes('?') ? '&' : '?') + formData.toString() + '&_t=' + Date.now();
+                }
+
+            } catch (err) {
+                console.error("Submission error:", err);
+            }
+        };
+
+        window.submitQuizAnswer = function() {
+            if (!window.quizState || window.quizState.selectedOption === null) return;
+            const state = window.quizState;
+            const q = state.questions[state.currentIndex];
+            
+            state.userAnswers.push(state.selectedOption);
+            if (state.selectedOption === q.a) state.score++;
+            
+            state.currentIndex++;
+            state.selectedOption = null;
+            
+            if (state.currentIndex >= state.questions.length) {
+                state.finished = true;
+                
+                // Submit to Google Sheet for ALL final test completions across every topic & level
+                if (state.type === 'test') {
+                    const studentName = (app.currentUser && app.currentUser.name) ? app.currentUser.name.trim() : "Student";
+                    const studentClass = (app.currentUser && app.currentUser.classGroup) ? app.currentUser.classGroup.trim() : "-";
+                    const areaTitle = appData.areas.find(a => a.id === state.area)?.title || state.area.toUpperCase();
+                    const pct = Math.round((state.score / state.questions.length) * 100) + "%";
+
+                    const payload = {
+                        studentName: studentName,
+                        classGroup: studentClass,
+                        area: areaTitle,
+                        level: String(state.level),
+                        score: String(state.score),
+                        total: String(state.questions.length),
+                        scoreDisplay: `${state.score} / ${state.questions.length}`,
+                        percentage: pct,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    window.sendResultsToGoogleSheet(payload);
+                }
+            }
+            app.navigate('testModule');
+        };
+
+        // --- Structure Lesson 1 Song Arranger Helpers ---
+        window.structureSongGameState = {
+            selectedBlockId: null,
+            blocks: [
+                { id: 'b_v1', correctSlot: 'slot_1', type: 'Verse 1', text: 'Alarm clock buzzing at seven sharp, forgot my homework and lost my harp...' },
+                { id: 'b_c1', correctSlot: 'slot_2', type: 'Chorus', text: 'Oh, it\'s a hard day at school, trying not to break a rule! Books in my bag and my brain feels cool...' },
+                { id: 'b_v2', correctSlot: 'slot_3', type: 'Verse 2', text: 'Pop quiz in science and a maths exam, spilled lunchbox soup on my favourite jam...' },
+                { id: 'b_c2', correctSlot: 'slot_4', type: 'Chorus', text: 'Oh, it\'s a hard day at school, trying not to break a rule! Counting down the hours by the pool...' }
+            ],
+            slots: [
+                { id: 'slot_1', label: '1. Opening Section (Sets the scene)', expectedType: 'Verse 1' },
+                { id: 'slot_2', label: '2. Catchy Main Hook (Repeats title)', expectedType: 'Chorus' },
+                { id: 'slot_3', label: '3. Story Continues (New lyrics/events)', expectedType: 'Verse 2' },
+                { id: 'slot_4', label: '4. Final Climax (Recurring anthem)', expectedType: 'Chorus' }
+            ],
+            assignments: {}
+        };
+
+        window.startStructureLesson1Game = function() {
+            const state = window.structureSongGameState;
+            state.selectedBlockId = null;
+            state.assignments = {};
+
+            const bank = document.getElementById('struct-bank');
+            const slotsContainer = document.getElementById('struct-slots-container');
+            const fb = document.getElementById('struct-game-feedback');
+            if (fb) fb.textContent = '';
+
+            const shuffledBlocks = [...state.blocks].sort(() => Math.random() - 0.5);
+
+            if (bank) {
+                bank.innerHTML = shuffledBlocks.map(b => `
+                    <div id="struct-block-${b.id}" draggable="true" ondragstart="handleStructDragStart(event, '${b.id}')" onclick="handleStructBlockClick('${b.id}')" class="p-3 bg-white border-2 border-slate-300 hover:border-blue-500 rounded-xl cursor-grab select-none shadow-xs transition active:scale-95">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded">${b.type}</span>
+                            <i class="fa-solid fa-grip-lines text-slate-300 text-xs"></i>
+                        </div>
+                        <p class="text-xs text-slate-600 line-clamp-2 italic">"${b.text}"</p>
+                    </div>
+                `).join('');
+            }
+
+            if (slotsContainer) {
+                slotsContainer.innerHTML = state.slots.map(s => `
+                    <div id="${s.id}" ondragover="event.preventDefault()" ondrop="handleStructDrop(event, '${s.id}')" onclick="handleStructSlotClick('${s.id}')" class="p-3 rounded-xl border-2 border-dashed border-slate-300 bg-white/70 min-h-[64px] flex items-center justify-between gap-3 cursor-pointer hover:border-blue-400 transition">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wide slot-label">${s.label}</div>
+                        <div class="text-xs text-slate-400 font-medium slot-content">Drop section here</div>
+                    </div>
+                `).join('');
+            }
+        };
+
+        window.handleStructDragStart = function(e, blockId) {
+            e.dataTransfer.setData('text/plain', blockId);
+        };
+
+        window.handleStructDrop = function(e, slotId) {
+            e.preventDefault();
+            const blockId = e.dataTransfer.getData('text/plain');
+            if (blockId) assignStructBlock(blockId, slotId);
+        };
+
+        window.handleStructBlockClick = function(blockId) {
+            const state = window.structureSongGameState;
+            if (state.selectedBlockId === blockId) {
+                document.getElementById(`struct-block-${blockId}`)?.classList.remove('ring-4', 'ring-blue-400');
+                state.selectedBlockId = null;
+                return;
+            }
+            if (state.selectedBlockId) {
+                document.getElementById(`struct-block-${state.selectedBlockId}`)?.classList.remove('ring-4', 'ring-blue-400');
+            }
+            state.selectedBlockId = blockId;
+            document.getElementById(`struct-block-${blockId}`)?.classList.add('ring-4', 'ring-blue-400');
+        };
+
+        window.handleStructSlotClick = function(slotId) {
+            const state = window.structureSongGameState;
+            if (state.selectedBlockId) {
+                assignStructBlock(state.selectedBlockId, slotId);
+                document.getElementById(`struct-block-${state.selectedBlockId}`)?.classList.remove('ring-4', 'ring-blue-400');
+                state.selectedBlockId = null;
+            } else if (state.assignments[slotId]) {
+                const bId = state.assignments[slotId];
+                delete state.assignments[slotId];
+                document.getElementById(`struct-block-${bId}`)?.classList.remove('hidden');
+                const slotEl = document.getElementById(slotId);
+                const slotDef = state.slots.find(s => s.id === slotId);
+                if (slotEl) {
+                    slotEl.classList.remove('border-solid', 'border-blue-400', 'bg-blue-50/50');
+                    slotEl.classList.add('border-dashed', 'border-slate-300');
+                    slotEl.innerHTML = `
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wide slot-label">${slotDef.label}</div>
+                        <div class="text-xs text-slate-400 font-medium slot-content">Drop section here</div>
+                    `;
+                }
+            }
+        };
+
+        function assignStructBlock(blockId, slotId) {
+            const state = window.structureSongGameState;
+            // Clear prior assignments for this block
+            Object.keys(state.assignments).forEach(s => {
+                if (state.assignments[s] === blockId) {
+                    delete state.assignments[s];
+                    const prevSlot = document.getElementById(s);
+                    const slotDef = state.slots.find(x => x.id === s);
+                    if (prevSlot && slotDef) {
+                        prevSlot.classList.remove('border-solid', 'border-blue-400', 'bg-blue-50/50', 'border-emerald-500', 'border-red-400', 'bg-emerald-50', 'bg-red-50');
+                        prevSlot.classList.add('border-dashed', 'border-slate-300');
+                        prevSlot.innerHTML = `
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wide slot-label">${slotDef.label}</div>
+                            <div class="text-xs text-slate-400 font-medium slot-content">Drop section here</div>
+                        `;
+                    }
+                }
+            });
+
+            // If slot already had a block, unhide it in the bank
+            if (state.assignments[slotId]) {
+                const prevBlock = state.assignments[slotId];
+                document.getElementById(`struct-block-${prevBlock}`)?.classList.remove('hidden');
+            }
+
+            state.assignments[slotId] = blockId;
+            const block = state.blocks.find(b => b.id === blockId);
+            const slotEl = document.getElementById(slotId);
+            const slotDef = state.slots.find(s => s.id === slotId);
+
+            if (slotEl && block && slotDef) {
+                slotEl.classList.remove('border-dashed', 'border-slate-300', 'border-red-400', 'border-emerald-500', 'bg-red-50', 'bg-emerald-50');
+                slotEl.classList.add('border-solid', 'border-blue-400', 'bg-blue-50/50');
+                slotEl.innerHTML = `
+                    <div class="flex items-center gap-3 w-full justify-between">
+                        <div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded mr-2">${block.type}</span>
+                            <span class="text-xs text-slate-700 italic">"${block.text.substring(0, 48)}..."</span>
+                        </div>
+                        <i class="fa-solid fa-xmark text-slate-400 hover:text-red-500 cursor-pointer text-sm" onclick="event.stopPropagation(); unassignStructBlock('${slotId}')"></i>
+                    </div>
+                `;
+            }
+            document.getElementById(`struct-block-${blockId}`)?.classList.add('hidden');
+        }
+
+        window.unassignStructBlock = function(slotId) {
+            const state = window.structureSongGameState;
+            const bId = state.assignments[slotId];
+            if (bId) {
+                delete state.assignments[slotId];
+                document.getElementById(`struct-block-${bId}`)?.classList.remove('hidden');
+                const slotEl = document.getElementById(slotId);
+                const slotDef = state.slots.find(s => s.id === slotId);
+                if (slotEl && slotDef) {
+                    slotEl.classList.remove('border-solid', 'border-blue-400', 'bg-blue-50/50', 'border-emerald-500', 'border-red-400', 'bg-emerald-50', 'bg-red-50');
+                    slotEl.classList.add('border-dashed', 'border-slate-300');
+                    slotEl.innerHTML = `
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wide slot-label">${slotDef.label}</div>
+                        <div class="text-xs text-slate-400 font-medium slot-content">Drop section here</div>
+                    `;
+                }
+            }
+        };
+
+        window.checkStructureLesson1Game = function() {
+            const state = window.structureSongGameState;
+            let correct = 0;
+            const total = state.slots.length;
+
+            state.slots.forEach(slot => {
+                const assignedBlockId = state.assignments[slot.id];
+                const block = state.blocks.find(b => b.id === assignedBlockId);
+                const slotEl = document.getElementById(slot.id);
+
+                if (block && (block.correctSlot === slot.id || (block.type === slot.expectedType))) {
+                    correct++;
+                    if (slotEl) {
+                        slotEl.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50/50');
+                        slotEl.classList.add('border-emerald-500', 'bg-emerald-50');
+                    }
+                } else {
+                    if (slotEl && assignedBlockId) {
+                        slotEl.classList.remove('border-emerald-500', 'bg-emerald-50', 'border-blue-400', 'bg-blue-50/50');
+                        slotEl.classList.add('border-red-400', 'bg-red-50');
+                    }
+                }
+            });
+
+            const fb = document.getElementById('struct-game-feedback');
+            if (fb) {
+                if (correct === total) {
+                    fb.textContent = `Brilliant! You correctly assembled the Verse-Chorus song structure!`;
+                    fb.className = 'font-bold h-6 text-lg mt-4 text-center text-emerald-600';
+                } else {
+                    fb.textContent = `You have ${correct} / ${total} placed correctly. Check the red highlighted slots and try again!`;
+                    fb.className = 'font-bold h-6 text-lg mt-4 text-center text-amber-600';
+                }
+            }
+        };
+
+        // --- Structure Lesson 3 Section Labeller Helpers ---
+        window.structureLesson3GameState = {
+            streak: 0,
+            best: 0,
+            selectedToken: null,
+            currentPiece: null,
+            assignments: {},
+            pool: [
+                {
+                    title: "Twinkle, Twinkle, Little Star",
+                    formType: "Ternary Form",
+                    pattern: ["A", "B", "A"],
+                    sections: [
+                        { label: "Part 1", desc: "Main melody: 'Twinkle, twinkle little star, how I wonder what you are!'" },
+                        { label: "Part 2", desc: "Contrasting middle: 'Up above the world so high, like a diamond in the sky!'" },
+                        { label: "Part 3", desc: "Exact return: 'Twinkle, twinkle little star, how I wonder what you are!'" }
+                    ]
+                },
+                {
+                    title: "Baroque Dance (Bourrée)",
+                    formType: "Binary Form",
+                    pattern: ["A", "B"],
+                    sections: [
+                        { label: "Part 1", desc: "Opening statement in D minor with rising dotted rhythms, ends on dominant A." },
+                        { label: "Part 2", desc: "Contrasting development section leaping into F major, concludes firmly in D minor." }
+                    ]
+                },
+                {
+                    title: "Classical Lullaby (Wiegenlied)",
+                    formType: "Ternary Form",
+                    pattern: ["A", "B", "A"],
+                    sections: [
+                        { label: "Part 1", desc: "Sweet, gentle melody in F major rocking smoothly back and forth." },
+                        { label: "Part 2", desc: "Slightly more intense passage exploring D minor with soft syncopated chords." },
+                        { label: "Part 3", desc: "Peaceful resolution with complete restatement of the original F major melody." }
+                    ]
+                },
+                {
+                    title: "Traditional Sea Shanty",
+                    formType: "Binary Form",
+                    pattern: ["A", "B"],
+                    sections: [
+                        { label: "Part 1", desc: "Leader solo phrase introducing maritime story in a lively walking tempo." },
+                        { label: "Part 2", desc: "Loud crew chorus with distinct stomping rhythm and wide melodic leaps." }
+                    ]
+                },
+                {
+                    title: "March in D Major",
+                    formType: "Ternary Form",
+                    pattern: ["A", "B", "A"],
+                    sections: [
+                        { label: "Part 1", desc: "Crisp brass fanfare and energetic rhythmic motif in D major." },
+                        { label: "Part 2", desc: "Lyrical Trio section in G major played softly by woodwinds." },
+                        { label: "Part 3", desc: "Da Capo return: full orchestra restates the brass fanfare to close." }
+                    ]
+                }
+            ]
+        };
+
+        window.startStructureLesson3Game = function() {
+            const state = window.structureLesson3GameState;
+            state.selectedToken = null;
+            state.assignments = {};
+
+            // Pick a random piece
+            state.currentPiece = state.pool[Math.floor(Math.random() * state.pool.length)];
+
+            const titleEl = document.getElementById('labeller-piece-title');
+            const typeEl = document.getElementById('labeller-piece-formtype');
+            const sectionsEl = document.getElementById('labeller-piece-sections');
+            const slotsContainer = document.getElementById('labeller-slots-container');
+            const fb = document.getElementById('labeller-feedback');
+            if (fb) fb.textContent = '';
+
+            if (titleEl) titleEl.textContent = state.currentPiece.title;
+            if (typeEl) typeEl.textContent = state.currentPiece.formType;
+
+            if (sectionsEl) {
+                sectionsEl.innerHTML = state.currentPiece.sections.map((sec, idx) => `
+                    <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-3">
+                        <span class="font-bold text-slate-700 bg-white border border-slate-300 px-2 py-0.5 rounded text-xs">${idx + 1}</span>
+                        <div>
+                            <span class="font-bold text-slate-800">${sec.label}:</span>
+                            <span class="text-slate-600">${sec.desc}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            if (slotsContainer) {
+                slotsContainer.innerHTML = state.currentPiece.pattern.map((_, idx) => `
+                    <div id="labeller-slot-${idx}" ondragover="event.preventDefault()" ondrop="handleLabellerDrop(event, ${idx})" onclick="handleLabellerSlotClick(${idx})" class="w-20 h-20 rounded-2xl border-2 border-dashed border-slate-300 bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition select-none shadow-xs">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 mb-0.5">Part ${idx + 1}</span>
+                        <span class="slot-val text-xl font-extrabold text-slate-300">?</span>
+                    </div>
+                `).join('');
+            }
+        };
+
+        window.handleLabellerDragStart = function(e, token) {
+            e.dataTransfer.setData('text/plain', token);
+        };
+
+        window.handleLabellerDrop = function(e, slotIdx) {
+            e.preventDefault();
+            const token = e.dataTransfer.getData('text/plain');
+            if (token === 'A' || token === 'B') {
+                assignLabellerSlot(token, slotIdx);
+            }
+        };
+
+        window.handleLabellerTokenClick = function(token) {
+            const state = window.structureLesson3GameState;
+            if (state.selectedToken === token) {
+                document.getElementById(`token-${token}`)?.classList.remove('ring-4', 'ring-amber-400');
+                state.selectedToken = null;
+                return;
+            }
+            if (state.selectedToken) {
+                document.getElementById(`token-${state.selectedToken}`)?.classList.remove('ring-4', 'ring-amber-400');
+            }
+            state.selectedToken = token;
+            document.getElementById(`token-${token}`)?.classList.add('ring-4', 'ring-amber-400');
+        };
+
+        window.handleLabellerSlotClick = function(slotIdx) {
+            const state = window.structureLesson3GameState;
+            if (state.selectedToken) {
+                assignLabellerSlot(state.selectedToken, slotIdx);
+                document.getElementById(`token-${state.selectedToken}`)?.classList.remove('ring-4', 'ring-amber-400');
+                state.selectedToken = null;
+            } else if (state.assignments[slotIdx]) {
+                delete state.assignments[slotIdx];
+                const slotEl = document.getElementById(`labeller-slot-${slotIdx}`);
+                if (slotEl) {
+                    slotEl.className = "w-20 h-20 rounded-2xl border-2 border-dashed border-slate-300 bg-white flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition select-none shadow-xs";
+                    slotEl.innerHTML = `
+                        <span class="text-[10px] uppercase font-bold text-slate-400 mb-0.5">Part ${slotIdx + 1}</span>
+                        <span class="slot-val text-xl font-extrabold text-slate-300">?</span>
+                    `;
+                }
+            }
+        };
+
+        function assignLabellerSlot(token, slotIdx) {
+            const state = window.structureLesson3GameState;
+            state.assignments[slotIdx] = token;
+
+            const slotEl = document.getElementById(`labeller-slot-${slotIdx}`);
+            if (slotEl) {
+                const colorClass = token === 'A' ? 'bg-blue-600 text-white border-blue-600' : 'bg-purple-600 text-white border-purple-600';
+                slotEl.className = `w-20 h-20 rounded-2xl border-2 border-solid flex flex-col items-center justify-center cursor-pointer transition select-none shadow-md ${colorClass}`;
+                slotEl.innerHTML = `
+                    <span class="text-[10px] uppercase font-bold opacity-80 mb-0.5">Part ${slotIdx + 1}</span>
+                    <span class="slot-val text-2xl font-black">${token}</span>
+                `;
+            }
+        }
+
+        window.checkStructureLesson3Game = function() {
+            const state = window.structureLesson3GameState;
+            const piece = state.currentPiece;
+            const fb = document.getElementById('labeller-feedback');
+            if (!piece || !fb) return;
+
+            let correct = 0;
+            const total = piece.pattern.length;
+
+            piece.pattern.forEach((expected, idx) => {
+                const assigned = state.assignments[idx];
+                const slotEl = document.getElementById(`labeller-slot-${idx}`);
+
+                if (assigned === expected) {
+                    correct++;
+                    if (slotEl) {
+                        slotEl.classList.remove('ring-4', 'ring-red-400');
+                        slotEl.classList.add('ring-4', 'ring-emerald-400');
+                    }
+                } else {
+                    if (slotEl && assigned) {
+                        slotEl.classList.remove('ring-4', 'ring-emerald-400');
+                        slotEl.classList.add('ring-4', 'ring-red-400');
+                    }
+                }
+            });
+
+            if (correct === total) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                document.getElementById('labeller-streak').textContent = state.streak;
+                document.getElementById('labeller-best').textContent = state.best;
+
+                fb.textContent = `Correct! ${piece.title} is in ${piece.formType} (${piece.pattern.join('-')})!`;
+                fb.className = "font-bold h-6 text-lg mt-4 text-center text-emerald-600";
+                setTimeout(window.startStructureLesson3Game, 1600);
+            } else {
+                state.streak = 0;
+                document.getElementById('labeller-streak').textContent = state.streak;
+                fb.textContent = `Not quite right! You got ${correct} / ${total} correct. Try adjusting the labels.`;
+                fb.className = "font-bold h-6 text-lg mt-4 text-center text-amber-600";
+            }
+        };
+
+        // --- Pitch Lesson 2 Game Helpers (Semitones & Tones Minigame) ---
+        window.toneSemitoneGameState = {
+            streak: 0,
+            best: 0,
+            currentQuestion: null,
+            pool: [
+                { note1: 'C4', note2: 'C#4', type: 'Semitone', label: 'C to C#' },
+                { note1: 'C4', note2: 'D4',  type: 'Tone',     label: 'C to D' },
+                { note1: 'D4', note2: 'D#4', type: 'Semitone', label: 'D to D#' },
+                { note1: 'D4', note2: 'E4',  type: 'Tone',     label: 'D to E' },
+                { note1: 'E4', note2: 'F4',  type: 'Semitone', label: 'E to F' },
+                { note1: 'F4', note2: 'F#4', type: 'Semitone', label: 'F to F#' },
+                { note1: 'F4', note2: 'G4',  type: 'Tone',     label: 'F to G' },
+                { note1: 'G4', note2: 'G#4', type: 'Semitone', label: 'G to G#' },
+                { note1: 'G4', note2: 'A4',  type: 'Tone',     label: 'G to A' },
+                { note1: 'A4', note2: 'A#4', type: 'Semitone', label: 'A to A#' },
+                { note1: 'A4', note2: 'B4',  type: 'Tone',     label: 'A to B' },
+                { note1: 'B4', note2: 'C5',  type: 'Semitone', label: 'B to C' }
+            ]
+        };
+
+        window.startToneSemitoneGame = function() {
+            const state = window.toneSemitoneGameState;
+            state.currentQuestion = state.pool[Math.floor(Math.random() * state.pool.length)];
+            
+            const labelEl = document.getElementById('ts-game-notes-label');
+            if (labelEl) labelEl.textContent = state.currentQuestion.label;
+            
+            const fb = document.getElementById('ts-game-feedback');
+            if (fb) fb.textContent = '';
+
+            renderToneSemitoneKeyboard();
+            playCurrentInterval();
+        };
+
+        function renderToneSemitoneKeyboard() {
+            const container = document.getElementById('ts-keyboard-container');
+            if (!container) return;
+            const q = window.toneSemitoneGameState.currentQuestion;
+            if (!q) return;
+
+            const whiteKeys = ['C4','D4','E4','F4','G4','A4','B4','C5'];
+            const blackKeys = [
+                { note: 'C#4', left: 38 },
+                { note: 'D#4', left: 86 },
+                { note: 'F#4', left: 182 },
+                { note: 'G#4', left: 230 },
+                { note: 'A#4', left: 278 }
+            ];
+
+            let html = '<div class="flex relative bg-slate-800 p-2.5 rounded-xl border border-slate-700 shadow-inner">';
+            
+            // White keys
+            whiteKeys.forEach(note => {
+                const isTarget = (note === q.note1 || note === q.note2);
+                const bgClass = isTarget ? 'bg-amber-300 text-slate-900 ring-2 ring-amber-400 font-extrabold' : 'bg-white text-slate-800';
+                html += `
+                    <div class="w-12 h-40 ${bgClass} border border-slate-300 rounded-b-lg flex flex-col justify-end pb-3 items-center text-sm shadow-sm transition">
+                        ${isTarget ? '<span class="w-2.5 h-2.5 rounded-full bg-amber-500 mb-1 animate-pulse"></span>' : ''}
+                        <span>${note.slice(0,-1)}</span>
+                    </div>
+                `;
+            });
+
+            // Black keys
+            blackKeys.forEach(k => {
+                const isTarget = (k.note === q.note1 || k.note === q.note2);
+                const bgClass = isTarget ? 'bg-amber-400 text-slate-900 ring-2 ring-amber-300 font-extrabold' : 'bg-slate-950 text-white';
+                html += `
+                    <div style="left: ${k.left}px;" class="absolute top-2.5 w-8 h-26 ${bgClass} rounded-b text-[10px] flex flex-col items-center justify-end pb-2 z-10 border border-slate-700 shadow-md transition">
+                        ${isTarget ? '<span class="w-2 h-2 rounded-full bg-slate-900 mb-1 animate-pulse"></span>' : ''}
+                        <span>${k.note.slice(0,-1)}</span>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        window.playCurrentInterval = function() {
+            const q = window.toneSemitoneGameState.currentQuestion;
+            if (!q) return;
+            if (!synth) initChordSynth();
+            
+            // Play note 1 then note 2
+            const now = Tone.now();
+            synth.triggerAttackRelease(q.note1, "0.4n", now);
+            synth.triggerAttackRelease(q.note2, "0.5n", now + 0.45);
+        };
+
+        window.checkToneSemitoneAnswer = function(answer) {
+            const state = window.toneSemitoneGameState;
+            const fb = document.getElementById('ts-game-feedback');
+            if (!fb || !state.currentQuestion) return;
+
+            if (answer === state.currentQuestion.type) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                fb.textContent = `Correct! ${state.currentQuestion.label} is a ${state.currentQuestion.type}!`;
+                fb.className = 'font-bold h-6 text-lg mt-5 text-center text-emerald-500';
+                
+                document.getElementById('ts-game-streak').textContent = state.streak;
+                document.getElementById('ts-game-best').textContent = state.best;
+                setTimeout(window.startToneSemitoneGame, 1000);
+            } else {
+                state.streak = 0;
+                fb.textContent = `Incorrect! ${state.currentQuestion.label} is a ${state.currentQuestion.type}.`;
+                fb.className = 'font-bold h-6 text-lg mt-5 text-center text-red-500';
+                document.getElementById('ts-game-streak').textContent = state.streak;
+                setTimeout(window.startToneSemitoneGame, 1600);
+            }
+        };
+
+        // --- Bass Clef Game Helpers ---
+        window.bassClefGameState = {
+            streak: 0, best: 0, currentNote: null,
+            notes: [
+                { note: 'G', cy: 120 }, { note: 'A', cy: 110 }, { note: 'B', cy: 100 },
+                { note: 'C', cy: 90 },  { note: 'D', cy: 80 },  { note: 'E', cy: 70 },
+                { note: 'F', cy: 60 },  { note: 'G', cy: 50 },  { note: 'A', cy: 40 }
+            ]
+        };
+
+        window.startBassClefGame = function() {
+            const state = window.bassClefGameState;
+            state.currentNote = state.notes[Math.floor(Math.random() * state.notes.length)];
+            const noteEl = document.getElementById('bass-game-note');
+            if (noteEl) noteEl.setAttribute('cy', state.currentNote.cy);
+            const feedback = document.getElementById('bass-game-feedback');
+            if(feedback) feedback.textContent = '';
+        };
+
+        window.checkBassClefAnswer = function(answer) {
+            const state = window.bassClefGameState;
+            const feedback = document.getElementById('bass-game-feedback');
+            if(!feedback) return;
+            
+            if (answer === state.currentNote.note) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                feedback.textContent = 'Correct!';
+                feedback.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
+                document.getElementById('bass-game-streak').textContent = state.streak;
+                document.getElementById('bass-game-best').textContent = state.best;
+                setTimeout(window.startBassClefGame, 800);
+            } else {
+                state.streak = 0;
+                feedback.textContent = 'Incorrect! It was ' + state.currentNote.note + '.';
+                feedback.className = 'mt-4 text-center font-bold h-6 text-red-500';
+                document.getElementById('bass-game-streak').textContent = state.streak;
+                setTimeout(window.startBassClefGame, 1500);
+            }
+        };
+
+        // --- Treble Clef Game Helpers ---
+        window.trebleClefGameState = {
+            streak: 0, best: 0, currentNote: null,
+            notes: [
+                { note: 'E', cy: 120 }, { note: 'F', cy: 110 }, { note: 'G', cy: 100 },
+                { note: 'A', cy: 90 },  { note: 'B', cy: 80 },  { note: 'C', cy: 70 },
+                { note: 'D', cy: 60 },  { note: 'E', cy: 50 },  { note: 'F', cy: 40 }
+            ]
+        };
+
+        window.startTrebleClefGame = function() {
+            const state = window.trebleClefGameState;
+            state.currentNote = state.notes[Math.floor(Math.random() * state.notes.length)];
+            const noteEl = document.getElementById('treble-game-note');
+            if (noteEl) noteEl.setAttribute('cy', state.currentNote.cy);
+            const feedback = document.getElementById('treble-game-feedback');
+            if(feedback) feedback.textContent = '';
+        };
+
+        window.checkTrebleClefAnswer = function(answer) {
+            const state = window.trebleClefGameState;
+            const feedback = document.getElementById('treble-game-feedback');
+            if(!feedback) return;
+            
+            if (answer === state.currentNote.note) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                feedback.textContent = 'Correct!';
+                feedback.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
+                document.getElementById('treble-game-streak').textContent = state.streak;
+                document.getElementById('treble-game-best').textContent = state.best;
+                setTimeout(window.startTrebleClefGame, 800);
+            } else {
+                state.streak = 0;
+                feedback.textContent = 'Incorrect! It was ' + state.currentNote.note + '.';
+                feedback.className = 'mt-4 text-center font-bold h-6 text-red-500';
+                document.getElementById('treble-game-streak').textContent = state.streak;
+                setTimeout(window.startTrebleClefGame, 1500);
+            }
+        };
+
+        // --- Accidentals Game Helpers ---
+        window.accGameState = {
+            streak: 0, best: 0, currentQ: null,
+            notes: [
+                { name: 'E', cy: 120 }, { name: 'F', cy: 110 }, { name: 'G', cy: 100 },
+                { name: 'A', cy: 90 }, { name: 'B', cy: 80 }, { name: 'C', cy: 70 },
+                { name: 'D', cy: 60 }, { name: 'E', cy: 50 }, { name: 'F', cy: 40 }
+            ],
+            accs: [
+                { type: 'Sharp', sym: '&#9839;', color: '#dc2626', offset: 7 },
+                { type: 'Flat', sym: '&#9837;', color: '#3b82f6', offset: 7 },
+                { type: 'Natural', sym: '&#9838;', color: '#10b981', offset: 7 }
+            ]
+        };
+        
+        window.startAccGame = function() {
+            const state = window.accGameState;
+            const note = state.notes[Math.floor(Math.random() * state.notes.length)];
+            const acc = state.accs[Math.floor(Math.random() * state.accs.length)];
+            
+            const correctAnswer = `${note.name} ${acc.type}`;
+            state.currentQ = { note, acc, ans: correctAnswer };
+            
+            const noteEl = document.getElementById('acc-game-note');
+            const symEl = document.getElementById('acc-game-symbol');
+            if (noteEl && symEl) {
+                noteEl.setAttribute('cy', note.cy);
+                symEl.innerHTML = acc.sym;
+                symEl.setAttribute('y', note.cy + acc.offset);
+                symEl.setAttribute('fill', acc.color);
+            }
+            
+            let options = [correctAnswer];
+            while(options.length < 4) {
+                const rNote = state.notes[Math.floor(Math.random() * state.notes.length)].name;
+                const rAcc = state.accs[Math.floor(Math.random() * state.accs.length)].type;
+                const opt = `${rNote} ${rAcc}`;
+                if (!options.includes(opt)) options.push(opt);
+            }
+            options.sort(() => Math.random() - 0.5);
+            
+            const optsContainer = document.getElementById('acc-game-options');
+            if (optsContainer) {
+                optsContainer.innerHTML = options.map(opt => `
+                    <button onclick="checkAccAnswer('${opt}')" class="bg-white border-2 border-gray-200 hover:border-purple-400 hover:bg-purple-50 text-slate-700 font-bold py-3 rounded-xl transition text-lg">
+                        ${opt}
+                    </button>
+                `).join('');
+            }
+            const fb = document.getElementById('acc-game-feedback');
+            if(fb) fb.textContent = '';
+        };
+
+        window.checkAccAnswer = function(answer) {
+            const state = window.accGameState;
+            const fb = document.getElementById('acc-game-feedback');
+            if(!fb) return;
+            
+            if (answer === state.currentQ.ans) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                fb.textContent = 'Correct!';
+                fb.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
+                
+                document.getElementById('acc-game-streak').textContent = state.streak;
+                document.getElementById('acc-game-best').textContent = state.best;
+                setTimeout(window.startAccGame, 800);
+            } else {
+                state.streak = 0;
+                fb.textContent = 'Incorrect! It was ' + state.currentQ.ans + '.';
+                fb.className = 'mt-4 text-center font-bold h-6 text-red-500';
+                document.getElementById('acc-game-streak').textContent = state.streak;
+                setTimeout(window.startAccGame, 1500);
+            }
+        };
+
+        // --- Duration Game 2 Helpers ---
+        window.durationGame2State = {
+            streak: 0, best: 0, currentQ: null,
+            notes: [
+                { name: 'Semibreve', beats: 4, type: 'Semibreve' },
+                { name: 'Dotted Minim', beats: 3, type: 'Dotted Minim' },
+                { name: 'Minim', beats: 2, type: 'Minim' },
+                { name: 'Crotchet', beats: 1, type: 'Crotchet' }
+            ]
+        };
+
+        window.startDurationGame2 = function() {
+            const state = window.durationGame2State;
+            const n1 = state.notes[Math.floor(Math.random() * state.notes.length)];
+            const n2 = state.notes[Math.floor(Math.random() * state.notes.length)];
+            const ans = n1.beats + n2.beats;
+            
+            state.currentQ = { n1, n2, ans };
+
+            const getNoteSVG = (type) => {
+                let svg = '<svg width="60" height="60" viewBox="0 0 60 60" class="inline-block overflow-visible">';
+                if (type === 'Semibreve') {
+                    svg += '<ellipse cx="30" cy="30" rx="14" ry="10" fill="transparent" stroke="#0f172a" stroke-width="3"/>';
+                } else if (type === 'Minim') {
+                    svg += '<ellipse cx="25" cy="40" rx="12" ry="8" fill="transparent" stroke="#0f172a" stroke-width="3"/><line x1="35" y1="40" x2="35" y2="10" stroke="#0f172a" stroke-width="2"/>';
+                } else if (type === 'Dotted Minim') {
+                    svg += '<ellipse cx="20" cy="40" rx="12" ry="8" fill="transparent" stroke="#0f172a" stroke-width="3"/><line x1="30" y1="40" x2="30" y2="10" stroke="#0f172a" stroke-width="2"/><circle cx="44" cy="40" r="3.5" fill="#0f172a"/>';
+                } else if (type === 'Crotchet') {
+                    svg += '<ellipse cx="25" cy="40" rx="12" ry="8" fill="#0f172a"/><line x1="35" y1="40" x2="35" y2="10" stroke="#0f172a" stroke-width="2"/>';
+                }
+                svg += '</svg>';
+                return svg;
+            };
+            
+            const qEl = document.getElementById('dur-game2-q');
+            if (qEl) {
+                qEl.innerHTML = '<div class="flex justify-center items-center h-20">' + getNoteSVG(n1.type) + '</div>' + 
+                                '<span class="text-4xl text-slate-400 mx-4 font-bold">+</span>' + 
+                                '<div class="flex justify-center items-center h-20">' + getNoteSVG(n2.type) + '</div>';
+            }
+            
+            const fb = document.getElementById('dur-game2-feedback');
+            if(fb) fb.textContent = '';
+        };
+
+        window.checkDurationGame2 = function(guess) {
+            const state = window.durationGame2State;
+            const fb = document.getElementById('dur-game2-feedback');
+            if(!fb) return;
+            
+            if (guess === state.currentQ.ans) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                fb.textContent = 'Correct!';
+                fb.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
+                document.getElementById('dur-game2-streak').textContent = state.streak;
+                document.getElementById('dur-game2-best').textContent = state.best;
+                setTimeout(window.startDurationGame2, 800);
+            } else {
+                state.streak = 0;
+                fb.textContent = 'Incorrect! Total was ' + state.currentQ.ans;
+                fb.className = 'mt-4 text-center font-bold h-6 text-red-500';
+                document.getElementById('dur-game2-streak').textContent = state.streak;
+                setTimeout(window.startDurationGame2, 1500);
+            }
+        };
+
+        // --- Quaver Builder Game Helpers (Duration Lesson 3) ---
+        window.quaverGameState = {
+            streak: 0,
+            best: 0,
+            selectedTool: null,
+            currentChallenge: null,
+            pool: [
+                { type: 'single', stem: 'up', cy: 110, expected: 'tail', label: 'Single Crotchet (Stem Up) &rarr; Add Tail' },
+                { type: 'single', stem: 'down', cy: 70, expected: 'tail', label: 'Single Crotchet (Stem Down) &rarr; Add Tail' },
+                { type: 'pair', stem: 'up', cy1: 120, cy2: 110, expected: 'beam', label: 'Two Crotchets (Stems Up) &rarr; Connect with Beam' },
+                { type: 'pair', stem: 'down', cy1: 70, cy2: 60, expected: 'beam', label: 'Two Crotchets (Stems Down) &rarr; Connect with Beam' }
+            ]
+        };
+
+        window.startQuaverGame = function() {
+            const state = window.quaverGameState;
+            state.selectedTool = null;
+            document.getElementById('quaver-tool-tail')?.classList.remove('ring-4', 'ring-amber-400');
+            document.getElementById('quaver-tool-beam')?.classList.remove('ring-4', 'ring-amber-400');
+
+            // Pick a random challenge
+            state.currentChallenge = state.pool[Math.floor(Math.random() * state.pool.length)];
+
+            const instr = document.getElementById('quaver-game-instruction');
+            if (instr) instr.innerHTML = state.currentChallenge.label;
+
+            const fb = document.getElementById('quaver-game-feedback');
+            if (fb) fb.textContent = '';
+
+            renderQuaverSVG(false);
+        };
+
+        function renderQuaverSVG(completed = false) {
+            const state = window.quaverGameState;
+            const ch = state.currentChallenge;
+            const svg = document.getElementById('quaver-game-svg');
+            if (!svg || !ch) return;
+
+            let markup = `
+                <!-- Staff Lines -->
+                <line x1="20" y1="50" x2="430" y2="50" class="staff-line"/>
+                <line x1="20" y1="70" x2="430" y2="70" class="staff-line"/>
+                <line x1="20" y1="90" x2="430" y2="90" class="staff-line"/>
+                <line x1="20" y1="110" x2="430" y2="110" class="staff-line"/>
+                <line x1="20" y1="130" x2="430" y2="130" class="staff-line"/>
+                <text x="30" y="131" font-size="110" font-family="serif" fill="#0f172a">&#119070;</text>
+            `;
+
+            if (ch.type === 'single') {
+                if (ch.stem === 'up') {
+                    // Note at cy: 110, stem up from x=210, y=110 to y=60
+                    markup += `
+                        <ellipse cx="200" cy="${ch.cy}" rx="12" ry="8" fill="#0f172a" />
+                        <line x1="210" y1="${ch.cy}" x2="210" y2="60" stroke="#0f172a" stroke-width="3" />
+                    `;
+                    if (completed) {
+                        markup += `<path d="M 210 60 Q 230 65 225 90 Q 220 75 210 75 Z" fill="#059669" class="animate-pulse" />`;
+                    } else {
+                        // Drop Target Ghost
+                        markup += `
+                            <g class="drop-zone opacity-60">
+                                <rect x="200" y="45" width="50" height="50" fill="transparent" stroke="#f59e0b" stroke-dasharray="4" rx="8" />
+                                <text x="225" y="75" font-family="Inter" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">Drop Tail</text>
+                            </g>
+                        `;
+                    }
+                } else {
+                    // Note at cy: 70, stem down from x=190, y=70 to y=120
+                    markup += `
+                        <ellipse cx="200" cy="${ch.cy}" rx="12" ry="8" fill="#0f172a" />
+                        <line x1="190" y1="${ch.cy}" x2="190" y2="120" stroke="#0f172a" stroke-width="3" />
+                    `;
+                    if (completed) {
+                        markup += `<path d="M 190 120 Q 210 115 205 90 Q 200 105 190 105 Z" fill="#059669" class="animate-pulse" />`;
+                    } else {
+                        markup += `
+                            <g class="drop-zone opacity-60">
+                                <rect x="180" y="90" width="50" height="50" fill="transparent" stroke="#f59e0b" stroke-dasharray="4" rx="8" />
+                                <text x="205" y="120" font-family="Inter" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">Drop Tail</text>
+                            </g>
+                        `;
+                    }
+                }
+            } else {
+                // Pair
+                if (ch.stem === 'up') {
+                    const tip1 = 66, tip2 = 56;
+                    markup += `
+                        <ellipse cx="180" cy="${ch.cy1}" rx="12" ry="8" fill="#0f172a" />
+                        <line x1="190" y1="${ch.cy1}" x2="190" y2="${tip1}" stroke="#0f172a" stroke-width="3" />
+                        <ellipse cx="250" cy="${ch.cy2}" rx="12" ry="8" fill="#0f172a" />
+                        <line x1="260" y1="${ch.cy2}" x2="260" y2="${tip2}" stroke="#0f172a" stroke-width="3" />
+                    `;
+                    if (completed) {
+                        markup += `<polygon points="190,${tip1} 260,${tip2} 260,${tip2-6} 190,${tip1-6}" fill="#059669" class="animate-pulse" />`;
+                    } else {
+                        markup += `
+                            <g class="drop-zone opacity-60">
+                                <rect x="180" y="45" width="90" height="30" fill="transparent" stroke="#f59e0b" stroke-dasharray="4" rx="8" />
+                                <text x="225" y="65" font-family="Inter" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">Drop Beam</text>
+                            </g>
+                        `;
+                    }
+                } else {
+                    const tip1 = 114, tip2 = 104;
+                    markup += `
+                        <ellipse cx="180" cy="${ch.cy1}" rx="12" ry="8" fill="#0f172a" />
+                        <line x1="170" y1="${ch.cy1}" x2="170" y2="${tip1}" stroke="#0f172a" stroke-width="3" />
+                        <ellipse cx="250" cy="${ch.cy2}" rx="12" ry="8" fill="#0f172a" />
+                        <line x1="240" y1="${ch.cy2}" x2="240" y2="${tip2}" stroke="#0f172a" stroke-width="3" />
+                    `;
+                    if (completed) {
+                        markup += `<polygon points="170,${tip1} 240,${tip2} 240,${tip2+6} 170,${tip1+6}" fill="#059669" class="animate-pulse" />`;
+                    } else {
+                        markup += `
+                            <g class="drop-zone opacity-60">
+                                <rect x="160" y="95" width="90" height="30" fill="transparent" stroke="#f59e0b" stroke-dasharray="4" rx="8" />
+                                <text x="205" y="115" font-family="Inter" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">Drop Beam</text>
+                            </g>
+                        `;
+                    }
+                }
+            }
+
+            svg.innerHTML = markup;
+        }
+
+        window.handleQuaverDragStart = function(e, toolType) {
+            e.dataTransfer.setData('text/plain', toolType);
+        };
+
+        window.handleQuaverDrop = function(e) {
+            e.preventDefault();
+            const toolType = e.dataTransfer.getData('text/plain');
+            if (toolType) checkQuaverTool(toolType);
+        };
+
+        window.handleQuaverToolClick = function(toolType) {
+            const state = window.quaverGameState;
+            if (state.selectedTool === toolType) {
+                document.getElementById(`quaver-tool-${toolType}`)?.classList.remove('ring-4', 'ring-amber-400');
+                state.selectedTool = null;
+                return;
+            }
+            document.getElementById('quaver-tool-tail')?.classList.remove('ring-4', 'ring-amber-400');
+            document.getElementById('quaver-tool-beam')?.classList.remove('ring-4', 'ring-amber-400');
+
+            state.selectedTool = toolType;
+            document.getElementById(`quaver-tool-${toolType}`)?.classList.add('ring-4', 'ring-amber-400');
+        };
+
+        window.handleQuaverCanvasClick = function() {
+            const state = window.quaverGameState;
+            if (state.selectedTool) {
+                checkQuaverTool(state.selectedTool);
+                document.getElementById(`quaver-tool-${state.selectedTool}`)?.classList.remove('ring-4', 'ring-amber-400');
+                state.selectedTool = null;
+            }
+        };
+
+        function checkQuaverTool(toolType) {
+            const state = window.quaverGameState;
+            const ch = state.currentChallenge;
+            const fb = document.getElementById('quaver-game-feedback');
+            if (!ch || !fb) return;
+
+            if (toolType === ch.expected) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                renderQuaverSVG(true);
+                fb.textContent = toolType === 'tail' 
+                    ? 'Correct! A single crotchet becomes a quaver with a wavy tail on the right!' 
+                    : 'Correct! Two crotchets become beamed quavers connected with a thick beam!';
+                fb.className = 'font-bold h-6 text-lg mt-5 text-center text-emerald-600';
+
+                document.getElementById('quaver-game-streak').textContent = state.streak;
+                document.getElementById('quaver-game-best').textContent = state.best;
+                setTimeout(window.startQuaverGame, 1400);
+            } else {
+                state.streak = 0;
+                document.getElementById('quaver-game-streak').textContent = state.streak;
+                fb.textContent = ch.expected === 'tail' 
+                    ? 'Incorrect! A single note needs a wavy tail, not a beam.' 
+                    : 'Incorrect! Connecting two notes requires a thick beam, not a single tail.';
+                fb.className = 'font-bold h-6 text-lg mt-5 text-center text-red-500';
+            }
+        }
+
+        // --- Duration Game 4 Helpers (Rests) ---
+        window.durationGame4State = {
+            streak: 0, best: 0, currentQ: null,
+            notes: [
+                { name: 'Semibreve', beats: 4, type: 'Semibreve' },
+                { name: 'Crotchet', beats: 1, type: 'Crotchet' },
+                { name: 'Quaver', beats: 0.5, type: 'Quaver' }
+            ]
+        };
+
+        window.startDurationGame4 = function() {
+            const state = window.durationGame4State;
+            const n1 = state.notes[Math.floor(Math.random() * state.notes.length)];
+            const n2 = state.notes[Math.floor(Math.random() * state.notes.length)];
+            const ans = n1.beats + n2.beats;
+            
+            state.currentQ = { n1, n2, ans };
+
+            const getRestSVG = (type) => {
+                let svg = '<svg width="60" height="60" viewBox="0 0 60 60" class="inline-block overflow-visible">';
+                if (type === 'Semibreve') {
+                    svg += '<line x1="15" y1="20" x2="45" y2="20" stroke="#0f172a" stroke-width="2"/><rect x="22" y="20" width="16" height="8" fill="#0f172a"/>';
+                } else if (type === 'Crotchet') {
+                    // Precise calligraphic silhouette matching Crotchet.png
+                    svg += '<path d="M 23 7 C 22.5 6.5 23.5 6 24 6.5 L 34 16 C 36 18.5 38 21.5 38 24 C 38 27.5 35 32 31.5 36.5 L 35 37 C 37.5 38 41 40 40 41.5 C 39.5 42 36.5 41 33.5 40 C 31 39.2 29 40 25.5 40.5 C 21 41.5 17 44.5 17 48.5 C 17 52.5 21 56 26.5 56 C 29.5 56 31 54.5 31.5 53.5 C 32 52.5 31 51.5 30 52 C 28 53 25.5 53.5 24 53 C 21.5 52.2 20 49.5 20.5 46.5 C 21.2 43 25 41.5 28 41.5 C 31 41.5 33 42.5 33.5 44 C 34 43 32.5 39 30.5 36.5 L 23.5 27 C 21.5 24 24 21 27 18 L 23 7 Z" fill="#0f172a"/>';
+                } else if (type === 'Quaver') {
+                    // Precise arched silhouette matching Quaver.png
+                    svg += '<circle cx="21" cy="18" r="5" fill="#0f172a"/><path d="M 24 19 C 27 21 31 20 36 15 L 37.5 16 C 35 24 28 45 22 52 L 18 52 C 24 45 30.5 25 32.5 20.5 C 29 23 25.5 22.5 24 19 Z" fill="#0f172a"/>';
+                }
+                svg += '</svg>';
+                return svg;
+            };
+            
+            const qEl = document.getElementById('dur-game4-q');
+            if (qEl) {
+                qEl.innerHTML = '<div class="flex justify-center items-center h-20">' + getRestSVG(n1.type) + '</div>' + 
+                                '<span class="text-4xl text-slate-400 mx-4 font-bold">+</span>' + 
+                                '<div class="flex justify-center items-center h-20">' + getRestSVG(n2.type) + '</div>';
+            }
+            
+            const fb = document.getElementById('dur-game4-feedback');
+            if(fb) fb.textContent = '';
+        };
+
+        window.checkDurationGame4 = function(guess) {
+            const state = window.durationGame4State;
+            const fb = document.getElementById('dur-game4-feedback');
+            if(!fb) return;
+            
+            if (guess === state.currentQ.ans) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                fb.textContent = 'Correct!';
+                fb.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
+                document.getElementById('dur-game4-streak').textContent = state.streak;
+                document.getElementById('dur-game4-best').textContent = state.best;
+                setTimeout(window.startDurationGame4, 800);
+            } else {
+                state.streak = 0;
+                fb.textContent = 'Incorrect! Total was ' + state.currentQ.ans;
+                fb.className = 'mt-4 text-center font-bold h-6 text-red-500';
+                document.getElementById('dur-game4-streak').textContent = state.streak;
+                setTimeout(window.startDurationGame4, 1500);
+            }
+        };
+
+        // --- Dynamics Game 1 Helpers (Tempo Memory Game) ---
+        window.tempoMemoryState = {
+            cards: [],
+            flipped: [],
+            matchedCount: 0,
+            turns: 0,
+            isLocked: false,
+            termPairs: [
+                { term: 'Adagio', def: 'Slow and stately' },
+                { term: 'Andante', def: 'At a walking pace' },
+                { term: 'Allegro', def: 'Fast, lively, cheerful' },
+                { term: 'Presto', def: 'Very fast' },
+                { term: 'Accelerando (accel.)', def: 'Gradually getting faster' },
+                { term: 'Rallentando (rall.)', def: 'Gradually slowing down' },
+                { term: 'Ritardando (rit.)', def: 'Gradually holding back' },
+                { term: 'A Tempo', def: 'Return to original speed' }
+            ]
+        };
+
+        window.startTempoMemoryGame = function() {
+            const state = window.tempoMemoryState;
+            state.flipped = [];
+            state.matchedCount = 0;
+            state.turns = 0;
+            state.isLocked = false;
+
+            // Pick 6 random pairs for a snappy 12-card grid
+            const shuffledPool = [...state.termPairs].sort(() => Math.random() - 0.5).slice(0, 6);
+            const deck = [];
+            shuffledPool.forEach((item, pairId) => {
+                deck.push({ id: `${pairId}-term`, pairId, text: item.term, type: 'term' });
+                deck.push({ id: `${pairId}-def`, pairId, text: item.def, type: 'def' });
+            });
+            state.cards = deck.sort(() => Math.random() - 0.5);
+
+            const grid = document.getElementById('tempo-memory-grid');
+            const matchEl = document.getElementById('tempo-matched-count');
+            const turnsEl = document.getElementById('tempo-turns-count');
+            const msgEl = document.getElementById('tempo-game-msg');
+
+            if (matchEl) matchEl.textContent = `0 / 6`;
+            if (turnsEl) turnsEl.textContent = `0`;
+            if (msgEl) msgEl.classList.add('hidden');
+
+            if (grid) {
+                grid.innerHTML = state.cards.map((c, i) => `
+                    <div id="tempo-card-${i}" onclick="flipTempoCard(${i})" class="h-28 bg-white border-2 border-slate-200 hover:border-emerald-400 rounded-2xl p-3 flex items-center justify-center text-center cursor-pointer shadow-sm hover:shadow transition transform active:scale-95">
+                        <div class="card-inner w-full flex items-center justify-center">
+                            <i class="fa-solid fa-music text-slate-300 text-2xl card-back"></i>
+                            <span class="card-front hidden font-bold text-slate-800 text-xs sm:text-sm leading-snug"></span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        };
+
+        window.flipTempoCard = function(index) {
+            const state = window.tempoMemoryState;
+            if (state.isLocked) return;
+            const cardEl = document.getElementById(`tempo-card-${index}`);
+            if (!cardEl || cardEl.classList.contains('matched') || state.flipped.includes(index)) return;
+
+            // Reveal card
+            const card = state.cards[index];
+            const backIcon = cardEl.querySelector('.card-back');
+            const frontText = cardEl.querySelector('.card-front');
+            if (backIcon && frontText) {
+                backIcon.classList.add('hidden');
+                frontText.textContent = card.text;
+                frontText.classList.remove('hidden');
+            }
+            cardEl.classList.remove('bg-white', 'border-slate-200');
+            cardEl.classList.add('bg-emerald-50', 'border-emerald-500');
+
+            state.flipped.push(index);
+
+            if (state.flipped.length === 2) {
+                state.turns++;
+                const turnsEl = document.getElementById('tempo-turns-count');
+                if (turnsEl) turnsEl.textContent = state.turns;
+
+                const [i1, i2] = state.flipped;
+                const c1 = state.cards[i1];
+                const c2 = state.cards[i2];
+
+                if (c1.pairId === c2.pairId) {
+                    // Match found
+                    state.matchedCount++;
+                    const matchEl = document.getElementById('tempo-matched-count');
+                    if (matchEl) matchEl.textContent = `${state.matchedCount} / 6`;
+
+                    const el1 = document.getElementById(`tempo-card-${i1}`);
+                    const el2 = document.getElementById(`tempo-card-${i2}`);
+                    if (el1) {
+                        el1.classList.add('matched', 'bg-emerald-100', 'border-emerald-600', 'opacity-90');
+                        el1.style.cursor = 'default';
+                    }
+                    if (el2) {
+                        el2.classList.add('matched', 'bg-emerald-100', 'border-emerald-600', 'opacity-90');
+                        el2.style.cursor = 'default';
+                    }
+                    state.flipped = [];
+
+                    if (state.matchedCount === 6) {
+                        const msgEl = document.getElementById('tempo-game-msg');
+                        if (msgEl) msgEl.classList.remove('hidden');
+                    }
+                } else {
+                    // Not a match, flip back after short delay
+                    state.isLocked = true;
+                    setTimeout(() => {
+                        [i1, i2].forEach(idx => {
+                            const el = document.getElementById(`tempo-card-${idx}`);
+                            if (el) {
+                                const back = el.querySelector('.card-back');
+                                const front = el.querySelector('.card-front');
+                                if (back && front) {
+                                    back.classList.remove('hidden');
+                                    front.classList.add('hidden');
+                                }
+                                el.classList.remove('bg-emerald-50', 'border-emerald-500');
+                                el.classList.add('bg-white', 'border-slate-200');
+                            }
+                        });
+                        state.flipped = [];
+                        state.isLocked = false;
+                    }, 1000);
+                }
+            }
+        };
+
+        // --- Dynamics Game 2 Helpers (Table Matching Game) ---
+        window.dynamicsMatchingState = {
+            selectedChipId: null,
+            items: [
+                { id: 'p', label: 'Piano (p)', correctKey: 'soft' },
+                { id: 'mp', label: 'Mezzopiano (mp)', correctKey: 'mod_soft' },
+                { id: 'mf', label: 'Mezzoforte (mf)', correctKey: 'mod_loud' },
+                { id: 'f', label: 'Forte (f)', correctKey: 'loud' },
+                { id: 'cresc_word', label: 'Crescendo (cresc.)', correctKey: 'getting_louder' },
+                { id: 'cresc_sign', label: '<svg width="45" height="18" viewBox="0 0 50 20" class="inline overflow-visible pointer-events-none"><polyline points="0,10 45,2 0,10 45,18" fill="none" stroke="#047857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>', isSVG: true, correctKey: 'cresc_symbol' },
+                { id: 'decresc_word', label: 'Decrescendo (decresc.)', correctKey: 'getting_softer' },
+                { id: 'decresc_sign', label: '<svg width="45" height="18" viewBox="0 0 50 20" class="inline overflow-visible pointer-events-none"><polyline points="45,10 0,2 45,10 0,18" fill="none" stroke="#047857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>', isSVG: true, correctKey: 'decresc_symbol' },
+                { id: 'dim_word', label: 'Diminuendo (dim.)', correctKey: 'diminishing' }
+            ],
+            questions: [
+                { key: 'soft', def: 'Soft / Quiet' },
+                { key: 'mod_soft', def: 'Moderately soft' },
+                { key: 'mod_loud', def: 'Moderately loud' },
+                { key: 'loud', def: 'Loud' },
+                { key: 'getting_louder', def: 'Gradually getting louder (word)' },
+                { key: 'cresc_symbol', def: 'Crescendo sign (hairpin)' },
+                { key: 'getting_softer', def: 'Gradually getting softer (word)' },
+                { key: 'decresc_symbol', def: 'Decrescendo sign (hairpin)' },
+                { key: 'diminishing', def: 'Gradually diminishing in sound' }
+            ],
+            assignments: {}
+        };
+
+        window.startDynamicsMatchingGame = function() {
+            const state = window.dynamicsMatchingState;
+            state.selectedChipId = null;
+            state.assignments = {};
+
+            const bank = document.getElementById('dynamics-bank');
+            const tbody = document.getElementById('dynamics-matching-tbody');
+            const fb = document.getElementById('dynamics-game-feedback');
+            if (fb) fb.textContent = '';
+
+            const shuffledItems = [...state.items].sort(() => Math.random() - 0.5);
+
+            if (bank) {
+                bank.innerHTML = shuffledItems.map(item => `
+                    <div id="chip-${item.id}" draggable="true" ondragstart="handleDynamicsDragStart(event, '${item.id}')" onclick="handleDynamicsChipClick('${item.id}')" class="px-3 py-2 bg-emerald-50 border-2 border-emerald-300 hover:border-emerald-500 rounded-xl text-emerald-900 font-bold text-xs sm:text-sm cursor-grab select-none flex items-center justify-center transition active:scale-95">
+                        ${item.label}
+                    </div>
+                `).join('');
+            }
+
+            if (tbody) {
+                tbody.innerHTML = state.questions.map(q => `
+                    <tr class="hover:bg-slate-50 transition" id="row-${q.key}">
+                        <td class="py-3 px-4 font-medium text-slate-800">${q.def}</td>
+                        <td class="py-2 px-4">
+                            <div id="slot-${q.key}" ondragover="event.preventDefault()" ondrop="handleDynamicsDrop(event, '${q.key}')" onclick="handleDynamicsSlotClick('${q.key}')" class="w-full min-h-[46px] border-2 border-dashed border-slate-300 rounded-xl bg-slate-50/70 p-1.5 flex items-center justify-center text-xs text-slate-400 font-medium transition cursor-pointer hover:border-emerald-400">
+                                <span class="slot-placeholder">Drop answer here</span>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        };
+
+        window.handleDynamicsDragStart = function(e, itemId) {
+            e.dataTransfer.setData('text/plain', itemId);
+        };
+
+        window.handleDynamicsDrop = function(e, targetKey) {
+            e.preventDefault();
+            const itemId = e.dataTransfer.getData('text/plain');
+            if (itemId) assignDynamicsItem(itemId, targetKey);
+        };
+
+        window.handleDynamicsChipClick = function(itemId) {
+            const state = window.dynamicsMatchingState;
+            if (state.selectedChipId === itemId) {
+                document.getElementById(`chip-${itemId}`)?.classList.remove('ring-4', 'ring-emerald-400');
+                state.selectedChipId = null;
+                return;
+            }
+            if (state.selectedChipId) {
+                document.getElementById(`chip-${state.selectedChipId}`)?.classList.remove('ring-4', 'ring-emerald-400');
+            }
+            state.selectedChipId = itemId;
+            document.getElementById(`chip-${itemId}`)?.classList.add('ring-4', 'ring-emerald-400');
+        };
+
+        window.handleDynamicsSlotClick = function(targetKey) {
+            const state = window.dynamicsMatchingState;
+            if (state.selectedChipId) {
+                assignDynamicsItem(state.selectedChipId, targetKey);
+                document.getElementById(`chip-${state.selectedChipId}`)?.classList.remove('ring-4', 'ring-emerald-400');
+                state.selectedChipId = null;
+            } else if (state.assignments[targetKey]) {
+                // Return chip to bank on tap
+                const chipId = state.assignments[targetKey];
+                delete state.assignments[targetKey];
+                const chipEl = document.getElementById(`chip-${chipId}`);
+                if (chipEl) chipEl.classList.remove('hidden');
+                const slot = document.getElementById(`slot-${targetKey}`);
+                if (slot) slot.innerHTML = '<span class="slot-placeholder text-slate-400">Drop answer here</span>';
+            }
+        };
+
+        function assignDynamicsItem(itemId, targetKey) {
+            const state = window.dynamicsMatchingState;
+            // Free any previous assignment of this item
+            Object.keys(state.assignments).forEach(k => {
+                if (state.assignments[k] === itemId) {
+                    delete state.assignments[k];
+                    const prevSlot = document.getElementById(`slot-${k}`);
+                    if (prevSlot) prevSlot.innerHTML = '<span class="slot-placeholder text-slate-400">Drop answer here</span>';
+                }
+            });
+
+            // If target slot already held an item, restore it back to visibility
+            if (state.assignments[targetKey]) {
+                const prevItem = state.assignments[targetKey];
+                document.getElementById(`chip-${prevItem}`)?.classList.remove('hidden');
+            }
+
+            state.assignments[targetKey] = itemId;
+            const item = state.items.find(i => i.id === itemId);
+            const slot = document.getElementById(`slot-${targetKey}`);
+            if (slot && item) {
+                slot.innerHTML = `
+                    <div class="px-3 py-1.5 bg-emerald-100 border border-emerald-400 rounded-lg text-emerald-950 font-bold text-xs sm:text-sm flex items-center justify-between gap-2 shadow-xs">
+                        <span>${item.label}</span>
+                        <i class="fa-solid fa-xmark text-slate-400 hover:text-red-500 cursor-pointer" onclick="event.stopPropagation(); unassignDynamicsItem('${targetKey}')"></i>
+                    </div>
+                `;
+            }
+            document.getElementById(`chip-${itemId}`)?.classList.add('hidden');
+        }
+
+        window.unassignDynamicsItem = function(targetKey) {
+            const state = window.dynamicsMatchingState;
+            const itemId = state.assignments[targetKey];
+            if (itemId) {
+                delete state.assignments[targetKey];
+                document.getElementById(`chip-${itemId}`)?.classList.remove('hidden');
+                const slot = document.getElementById(`slot-${targetKey}`);
+                if (slot) slot.innerHTML = '<span class="slot-placeholder text-slate-400">Drop answer here</span>';
+            }
+        };
+
+        window.checkDynamicsMatching = function() {
+            const state = window.dynamicsMatchingState;
+            let correct = 0;
+            const total = state.questions.length;
+
+            state.questions.forEach(q => {
+                const assignedId = state.assignments[q.key];
+                const slot = document.getElementById(`slot-${q.key}`);
+                const row = document.getElementById(`row-${q.key}`);
+                const item = state.items.find(i => i.id === assignedId);
+
+                if (item && item.correctKey === q.key) {
+                    correct++;
+                    if (slot) {
+                        slot.classList.remove('border-red-400', 'bg-red-50');
+                        slot.classList.add('border-emerald-500', 'bg-emerald-50');
+                    }
+                } else {
+                    if (slot && assignedId) {
+                        slot.classList.remove('border-emerald-500', 'bg-emerald-50');
+                        slot.classList.add('border-red-400', 'bg-red-50');
+                    }
+                }
+            });
+
+            const fb = document.getElementById('dynamics-game-feedback');
+            if (fb) {
+                if (correct === total) {
+                    fb.textContent = `Brilliant! All ${total} matched correctly!`;
+                    fb.className = 'font-bold h-6 text-lg mt-4 text-center text-emerald-600';
+                } else {
+                    fb.textContent = `You got ${correct} / ${total} correct. Check the highlighted red rows and try again!`;
+                    fb.className = 'font-bold h-6 text-lg mt-4 text-center text-amber-600';
+                }
+            }
+        };
+
+        // --- Dynamics Game 3 Helpers (Score Hunt Game) ---
+        window.scoreHuntState = {
+            streak: 0,
+            best: 0,
+            currentTarget: null,
+            targets: [
+                { id: 'staccato', label: 'Staccato dot' },
+                { id: 'slur', label: 'Slur' },
+                { id: 'tie', label: 'Tie' },
+                { id: 'barline', label: 'Bar line' },
+                { id: 'doublebar', label: 'Double bar line' }
+            ]
+        };
+
+        window.startScoreHuntGame = function() {
+            const state = window.scoreHuntState;
+            // Pick a random target
+            const next = state.targets[Math.floor(Math.random() * state.targets.length)];
+            state.currentTarget = next;
+
+            const targetEl = document.getElementById('score-hunt-target');
+            if (targetEl) targetEl.textContent = next.label;
+
+            const fb = document.getElementById('score-hunt-feedback');
+            if (fb) fb.textContent = '';
+        };
+
+        window.checkScoreHuntAnswer = function(selectedId) {
+            const state = window.scoreHuntState;
+            const fb = document.getElementById('score-hunt-feedback');
+            if (!state.currentTarget || !fb) return;
+
+            if (selectedId === state.currentTarget.id) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                fb.textContent = `Correct! That is the ${state.currentTarget.label}!`;
+                fb.className = 'font-bold h-6 text-lg mt-4 text-center text-emerald-600';
+                
+                document.getElementById('score-hunt-streak').textContent = state.streak;
+                document.getElementById('score-hunt-best').textContent = state.best;
+                setTimeout(window.startScoreHuntGame, 1000);
+            } else {
+                state.streak = 0;
+                fb.textContent = `Oops! That was not the ${state.currentTarget.label}. Try another!`;
+                fb.className = 'font-bold h-6 text-lg mt-4 text-center text-red-500';
+                document.getElementById('score-hunt-streak').textContent = state.streak;
+            }
+        };
+
+        // --- Stem Game Helpers ---
+        window.stemGameState = {
+            streak: 0, best: 0, isDragging: false, startY: 0, currentY: 80, direction: 'up'
+        };
+
+        window.startStemGame = function() {
+            const state = window.stemGameState;
+            state.direction = Math.random() > 0.5 ? 'up' : 'down';
+            state.currentY = 80;
+            
+            const group = document.getElementById('stem-game-group');
+            const stem = document.getElementById('stem-game-stem');
+            const instr = document.getElementById('stem-game-instruction');
+            
+            if (group && stem && instr) {
+                group.setAttribute('transform', `translate(0, ${state.currentY})`);
+                if (state.direction === 'up') {
+                    stem.setAttribute('x1', '161');
+                    stem.setAttribute('x2', '161');
+                    stem.setAttribute('y1', '0');
+                    stem.setAttribute('y2', '-45');
+                } else {
+                    stem.setAttribute('x1', '139');
+                    stem.setAttribute('x2', '139');
+                    stem.setAttribute('y1', '0');
+                    stem.setAttribute('y2', '45');
+                }
+                instr.textContent = `Place this note correctly!`;
+            }
+            
+            const fb = document.getElementById('stem-game-feedback');
+            if(fb) fb.textContent = '';
+        };
+
+        window.startStemDrag = function(e) {
+            e.preventDefault();
+            const state = window.stemGameState;
+            state.isDragging = true;
+            state.startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const group = document.getElementById('stem-game-group');
+            if (group) group.style.cursor = 'grabbing';
+        };
+
+        window.doStemDrag = function(e) {
+            const state = window.stemGameState;
+            if (!state.isDragging) return;
+            e.preventDefault();
+            
+            const currentClientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const deltaY = currentClientY - state.startY;
+            let newY = state.currentY + deltaY;
+            
+            if (newY < 20) newY = 20;
+            if (newY > 140) newY = 140;
+            
+            const group = document.getElementById('stem-game-group');
+            if (group) group.setAttribute('transform', `translate(0, ${newY})`);
+        };
+
+        window.endStemDrag = function(e) {
+            const state = window.stemGameState;
+            if (!state.isDragging) return;
+            state.isDragging = false;
+            
+            const group = document.getElementById('stem-game-group');
+            if (group) group.style.cursor = 'grab';
+            
+            const currentClientY = e.type.includes('touch') ? (e.changedTouches ? e.changedTouches[0].clientY : state.startY) : e.clientY;
+            const deltaY = currentClientY - state.startY;
+            let finalY = state.currentY + deltaY;
+            
+            finalY = Math.round(finalY / 10) * 10;
+            if (finalY < 20) finalY = 20;
+            if (finalY > 140) finalY = 140;
+            
+            state.currentY = finalY;
+            if (group) group.setAttribute('transform', `translate(0, ${finalY})`);
+            
+            checkStemAnswer();
+        };
+
+        // --- Timbre Lesson 1 Game Helpers ---
+        window.timbreGameState = {
+            streak: 0,
+            best: 0,
+            currentQuestion: null,
+            pool: [
+                { name: "Xylophone", category: "Idiophone", type: "idiophone", desc: "Tuned wooden bars struck with mallets, where the solid material itself vibrates." },
+                { name: "Cymbals", category: "Idiophone", type: "idiophone", desc: "Two thin, round plates of alloy struck together, vibrating throughout their entire body." },
+                { name: "Congas", category: "Membranophone", type: "membranophone", desc: "Tall, narrow drums played with the hands, vibrating a tightly stretched animal skin." },
+                { name: "Timpani (Kettledrum)", category: "Membranophone", type: "membranophone", desc: "Large copper bowls with a calfskin or plastic membrane tuned with a pedal." },
+                { name: "Violin", category: "Chordophone", type: "chordophone", desc: "Four stretched strings bowed or plucked across a wooden resonant body." },
+                { name: "Acoustic Piano", category: "Chordophone", type: "chordophone", desc: "Pressing keys causes felt-covered hammers to strike tightly tensioned interior metal strings." },
+                { name: "Flute", category: "Aerophone", type: "aerophone", desc: "Sound is created by directing a focused stream of breath across an embouchure hole into an air column." },
+                { name: "Trumpet", category: "Aerophone", type: "aerophone", desc: "The player's buzzing lips set a long column of coiled brass tubing into vibration." },
+                { name: "Didgeridoo", category: "Aerophone", type: "aerophone", desc: "A hollowed wooden cylinder where vibrating lips and circular breathing produce deep drones." },
+                { name: "Synthesizer", category: "Electrophone", type: "electrophone", desc: "Generates audio waveforms entirely through electronic oscillators and digital circuits." },
+                { name: "Theremin", category: "Electrophone", type: "electrophone", desc: "Controlled without physical contact; two antennas detect the player's hands to manipulate electronic radio-frequency oscillators." },
+                { name: "Electronic Drum Kit", category: "Electrophone", type: "electrophone", desc: "Rubber or mesh pads trigger digitally stored synthesized sample sounds through a sound module." }
+            ]
+        };
+
+        window.startTimbreGame = function() {
+            const state = window.timbreGameState;
+            state.currentQuestion = state.pool[Math.floor(Math.random() * state.pool.length)];
+
+            const nameEl = document.getElementById('timbre-inst-name');
+            const descEl = document.getElementById('timbre-inst-desc');
+            const boxEl = document.getElementById('timbre-illustration-box');
+            const fb = document.getElementById('timbre-feedback');
+
+            if (nameEl) nameEl.textContent = state.currentQuestion.name;
+            if (descEl) descEl.textContent = state.currentQuestion.desc;
+
+            // Generate category artwork for the question
+            const getIllustrationMarkup = (t) => {
+                if (t === 'idiophone') {
+                    return `<div class="bg-indigo-50/70 p-2 rounded-2xl border border-indigo-100 shadow-xs"><svg width="90" height="60" viewBox="0 0 120 80"><rect x="14" y="16" width="10" height="48" rx="2" fill="#b45309" stroke="#78350f" stroke-width="1.5"/><rect x="27" y="18" width="10" height="44" rx="2" fill="#b45309" stroke="#78350f" stroke-width="1.5"/><rect x="40" y="20" width="10" height="40" rx="2" fill="#d97706" stroke="#78350f" stroke-width="1.5"/><rect x="53" y="22" width="10" height="36" rx="2" fill="#d97706" stroke="#78350f" stroke-width="1.5"/><rect x="66" y="24" width="10" height="32" rx="2" fill="#f59e0b" stroke="#78350f" stroke-width="1.5"/><rect x="79" y="26" width="10" height="28" rx="2" fill="#f59e0b" stroke="#78350f" stroke-width="1.5"/><rect x="92" y="28" width="10" height="24" rx="2" fill="#fbbf24" stroke="#78350f" stroke-width="1.5"/><line x1="28" y1="62" x2="68" y2="28" stroke="#475569" stroke-width="2.5" stroke-linecap="round"/><circle cx="68" cy="28" r="5.5" fill="#ef4444" stroke="#b91c1c" stroke-width="1.5"/></svg></div>`;
+                } else if (t === 'membranophone') {
+                    return `<div class="bg-purple-50/70 p-2 rounded-2xl border border-purple-100 shadow-xs"><svg width="90" height="60" viewBox="0 0 120 80"><rect x="25" y="32" width="70" height="32" fill="#9333ea" stroke="#581c87" stroke-width="2"/><ellipse cx="60" cy="64" rx="35" ry="9" fill="#7e22ce" stroke="#581c87" stroke-width="2"/><ellipse cx="60" cy="32" rx="35" ry="9" fill="#faf5ff" stroke="#581c87" stroke-width="2"/><line x1="20" y1="12" x2="52" y2="30" stroke="#78350f" stroke-width="2.5" stroke-linecap="round"/><circle cx="53" cy="30" r="3" fill="#b45309"/><line x1="100" y1="14" x2="68" y2="30" stroke="#78350f" stroke-width="2.5" stroke-linecap="round"/><circle cx="67" cy="30" r="3" fill="#b45309"/></svg></div>`;
+                } else if (t === 'chordophone') {
+                    return `<div class="bg-blue-50/70 p-2 rounded-2xl border border-blue-100 shadow-xs"><svg width="90" height="60" viewBox="0 0 120 80"><path d="M 46 22 C 38 18 32 26 32 35 C 32 44 42 46 40 54 C 38 64 48 70 60 70 C 72 70 82 64 80 54 C 78 46 88 44 88 35 C 88 26 82 18 74 22 Z" fill="#d97706" stroke="#78350f" stroke-width="2"/><rect x="56" y="8" width="8" height="46" fill="#1e293b"/><line x1="57" y1="6" x2="57" y2="60" stroke="#e2e8f0" stroke-width="1"/><line x1="63" y1="6" x2="63" y2="60" stroke="#e2e8f0" stroke-width="1"/></svg></div>`;
+                } else if (t === 'aerophone') {
+                    return `<div class="bg-emerald-50/70 p-2 rounded-2xl border border-emerald-100 shadow-xs"><svg width="90" height="60" viewBox="0 0 120 80"><rect x="12" y="36" width="96" height="8" rx="3" fill="#cbd5e1" stroke="#475569" stroke-width="2"/><ellipse cx="28" cy="40" rx="3.5" ry="2" fill="#0f172a"/><circle cx="50" cy="35" r="3" fill="#94a3b8" stroke="#334155" stroke-width="1.2"/><circle cx="70" cy="35" r="3" fill="#94a3b8" stroke="#334155" stroke-width="1.2"/><circle cx="90" cy="35" r="3" fill="#94a3b8" stroke="#334155" stroke-width="1.2"/><path d="M 106 36 Q 112 34 116 40 Q 120 46 124 40" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round"/></svg></div>`;
+                } else {
+                    return `<div class="bg-slate-900 p-2 rounded-2xl border border-slate-700 shadow-xs"><svg width="90" height="60" viewBox="0 0 120 80"><rect x="12" y="22" width="96" height="42" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2"/><rect x="20" y="28" width="34" height="16" rx="3" fill="#022c22" stroke="#065f46" stroke-width="1"/><path d="M 22 36 L 27 36 L 31 31 L 36 41 L 41 33 L 45 38 L 51 36" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round"/><circle cx="65" cy="36" r="3.5" fill="#3b82f6"/><circle cx="77" cy="36" r="3.5" fill="#ef4444"/><rect x="20" y="47" width="76" height="13" fill="#ffffff" rx="1"/></svg></div>`;
+                }
+            };
+
+            if (boxEl) boxEl.innerHTML = getIllustrationMarkup(state.currentQuestion.type);
+            if (fb) fb.textContent = '';
+        };
+
+        window.checkTimbreAnswer = function(answer) {
+            const state = window.timbreGameState;
+            const q = state.currentQuestion;
+            const fb = document.getElementById('timbre-feedback');
+            if (!q || !fb) return;
+
+            if (answer === q.category) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                fb.textContent = `Correct! ${q.name} is a ${q.category}!`;
+                fb.className = "font-bold h-6 text-lg mt-5 text-center text-emerald-600";
+                document.getElementById('timbre-streak').textContent = state.streak;
+                document.getElementById('timbre-best').textContent = state.best;
+                setTimeout(window.startTimbreGame, 1200);
+            } else {
+                state.streak = 0;
+                document.getElementById('timbre-streak').textContent = state.streak;
+                fb.textContent = `Incorrect! ${q.name} is classified as a ${q.category}.`;
+                fb.className = "font-bold h-6 text-lg mt-5 text-center text-red-500";
+            }
+        };
+
+        // --- Timbre Lesson 2 Game Helpers (Tone Colour Word Match) ---
+        window.timbreWordGameState = {
+            streak: 0,
+            best: 0,
+            currentQuestion: null,
+            pool: [
+                {
+                    instrument: "Orchestral Cymbals (Crash)",
+                    family: "Idiophone",
+                    prompt: "Two large metal plates are crashed together fortissimo at the climax of a symphony.",
+                    correct: "Metallic & Shimmering",
+                    options: ["Metallic & Shimmering", "Warm & Mellow", "Breathy & Airy", "Deep & Thudding"]
+                },
+                {
+                    instrument: "Acoustic Cello (Bowed Low Register)",
+                    family: "Chordophone",
+                    prompt: "The cellist draws a heavy horsehair bow across the low C string to play a soothing, expressive melody.",
+                    correct: "Warm, Rich & Singing",
+                    options: ["Piercing & Shrill", "Warm, Rich & Singing", "Brittle & Dry", "Buzzing & Robotic"]
+                },
+                {
+                    instrument: "Bass Drum (Gran Cassa)",
+                    family: "Membranophone",
+                    prompt: "Struck firmly with a large padded mallet during an ominous orchestral passage.",
+                    correct: "Deep & Booming",
+                    options: ["Thin & Airy", "Metallic & Ringing", "Deep & Booming", "Nasal & Reedy"]
+                },
+                {
+                    instrument: "Silver Transverse Flute",
+                    family: "Aerophone",
+                    prompt: "The player blows a gentle stream of air across the embouchure hole in a quiet piano solo.",
+                    correct: "Airy, Pure & Breathy",
+                    options: ["Airy, Pure & Breathy", "Punchy & Snappy", "Distorted & Grating", "Dark & Thudding"]
+                },
+                {
+                    instrument: "Lead Synthesizer (Sawtooth Wave)",
+                    family: "Electrophone",
+                    prompt: "A digital synth oscillator playing an aggressive electronic EDM solo.",
+                    correct: "Buzzing & Futuristic",
+                    options: ["Mellow & Woody", "Hollow & Soft", "Buzzing & Futuristic", "Silky & Delicate"]
+                },
+                {
+                    instrument: "Wooden Xylophone",
+                    family: "Idiophone",
+                    prompt: "Hard rubber mallets striking dense rosewood bars to produce rapid, staccato dance notes.",
+                    correct: "Woody, Bright & Brittle",
+                    options: ["Breathy & Silky", "Woody, Bright & Brittle", "Booming & Deep", "Nasal & Plucked"]
+                },
+                {
+                    instrument: "Orchestral Oboe",
+                    family: "Aerophone",
+                    prompt: "Air is forced between two tiny vibrating cane reeds to create a poignant, sorrowful melody.",
+                    correct: "Nasal, Reedy & Piercing",
+                    options: ["Nasal, Reedy & Piercing", "Glassy & Distorted", "Deep & Hollow", "Shimmering & Ringing"]
+                },
+                {
+                    instrument: "Snare Drum (Snare Wire Engaged)",
+                    family: "Membranophone",
+                    prompt: "Wooden sticks playing rapid military rolls across the upper batter skin while wires buzz below.",
+                    correct: "Crisp, Snappy & Sharp",
+                    options: ["Warm & Mellow", "Crisp, Snappy & Sharp", "Airy & Breath-like", "Singing & Rich"]
+                },
+                {
+                    instrument: "Classical Concert Harp",
+                    family: "Chordophone",
+                    prompt: "Fingers plucking tightly tensioned nylon and gut strings, letting them vibrate freely.",
+                    correct: "Delicate, Silky & Resonant",
+                    options: ["Delicate, Silky & Resonant", "Rough & Grating", "Booming & Punchy", "Brassy & Harsh"]
+                },
+                {
+                    instrument: "Orchestral Trumpet (Fanfare)",
+                    family: "Aerophone",
+                    prompt: "Vibrating lips buzz into a metal cup mouthpiece to herald the entrance of royalty.",
+                    correct: "Bold, Brassy & Piercing",
+                    options: ["Soft & Breathy", "Bold, Brassy & Piercing", "Woody & Dry", "Hollow & Thudding"]
+                }
+            ]
+        };
+
+        window.startTimbreWordGame = function() {
+            const state = window.timbreWordGameState;
+            state.currentQuestion = state.pool[Math.floor(Math.random() * state.pool.length)];
+            const q = state.currentQuestion;
+
+            const catEl = document.getElementById('timbre-word-category');
+            const instEl = document.getElementById('timbre-word-instrument');
+            const promptEl = document.getElementById('timbre-word-prompt');
+            const optsContainer = document.getElementById('timbre-word-options');
+            const fb = document.getElementById('timbre-word-feedback');
+
+            if (catEl) catEl.textContent = q.family;
+            if (instEl) instEl.textContent = q.instrument;
+            if (promptEl) promptEl.textContent = `"${q.prompt}"`;
+            if (fb) fb.textContent = '';
+
+            // Shuffle options
+            const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
+            if (optsContainer) {
+                optsContainer.innerHTML = shuffledOptions.map(opt => `
+                    <button onclick="checkTimbreWordAnswer('${opt}')" class="bg-white border-2 border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-800 font-bold py-3.5 px-5 rounded-xl transition shadow-xs active:scale-95 text-sm sm:text-base text-center">
+                        ${opt}
+                    </button>
+                `).join('');
+            }
+        };
+
+        window.checkTimbreWordAnswer = function(answer) {
+            const state = window.timbreWordGameState;
+            const q = state.currentQuestion;
+            const fb = document.getElementById('timbre-word-feedback');
+            if (!q || !fb) return;
+
+            if (answer === q.correct) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                fb.textContent = `Correct! ${q.instrument} produces a ${q.correct} tone colour!`;
+                fb.className = "font-bold h-6 text-lg mt-5 text-center text-emerald-600";
+                document.getElementById('timbre-word-streak').textContent = state.streak;
+                document.getElementById('timbre-word-best').textContent = state.best;
+                setTimeout(window.startTimbreWordGame, 1300);
+            } else {
+                state.streak = 0;
+                document.getElementById('timbre-word-streak').textContent = state.streak;
+                fb.textContent = `Incorrect! The best tone colour description is "${q.correct}".`;
+                fb.className = "font-bold h-6 text-lg mt-5 text-center text-red-500";
+            }
+        };
+
+        window.checkStemAnswer = function() {
+            const state = window.stemGameState;
+            let correct = false;
+            
+            // Stem Up: must be > 80 (below middle line strictly)
+            if (state.direction === 'up' && state.currentY > 80) correct = true;
+            // Stem Down: must be < 80 (above middle line strictly)
+            if (state.direction === 'down' && state.currentY < 80) correct = true;
+            
+            const fb = document.getElementById('stem-game-feedback');
+            if(!fb) return;
+
+            if (correct) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                fb.textContent = 'Correct!';
+                fb.className = 'font-bold h-6 text-lg text-emerald-500 mt-2';
+                
+                const streakEl = document.getElementById('stem-game-streak');
+                const bestEl = document.getElementById('stem-game-best');
+                if(streakEl) streakEl.textContent = state.streak;
+                if(bestEl) bestEl.textContent = state.best;
+                
+                setTimeout(window.startStemGame, 1000);
+            } else {
+                state.streak = 0;
+                fb.textContent = 'For this challenge, place the note either above or below the middle line!';
+                fb.className = 'font-bold h-6 text-lg text-red-500 mt-2';
+                const streakEl = document.getElementById('stem-game-streak');
+                if(streakEl) streakEl.textContent = state.streak;
+                
+                setTimeout(() => {
+                    state.currentY = 80;
+                    const group = document.getElementById('stem-game-group');
+                    if (group) group.setAttribute('transform', `translate(0, ${state.currentY})`);
+                    fb.textContent = '';
+                }, 1500);
+            }
+        };
+
+        // --- Texture Lesson 1 Sound Lab Logic (Experimentation Lab) ---
+        window.textureLabState = {
+            isPlaying: false,
+            loopIntervalId: null,
+            stepIndex: 0,
+            layers: [
+                {
+                    id: 'bass',
+                    name: 'Deep Bass Drone',
+                    desc: 'Low root note anchor (C2)',
+                    color: '#6366f1',
+                    active: false,
+                    notes: ['C2'],
+                    category: 'Bass Foundation'
+                },
+                {
+                    id: 'pad',
+                    name: 'Warm Harmony Pad',
+                    desc: 'Sustained chord body (E3 + G3)',
+                    color: '#ec4899',
+                    active: false,
+                    notes: ['E3', 'G3'],
+                    category: 'Mid Harmony'
+                },
+                {
+                    id: 'arp',
+                    name: 'Arpeggio Motion',
+                    desc: 'Rhythmic pulsing pattern (C4 - E4 - G4 - E4)',
+                    color: '#f59e0b',
+                    active: false,
+                    pattern: ['C4', 'E4', 'G4', 'E4'],
+                    category: 'Rhythmic Texture'
+                },
+                {
+                    id: 'lead',
+                    name: 'Lead Singing Melody',
+                    desc: 'Soaring high phrase (C5 - G4 - A4 - G4)',
+                    color: '#10b981',
+                    active: true,
+                    pattern: ['C5', 'G4', 'A4', 'G4'],
+                    category: 'Top Melody'
+                },
+                {
+                    id: 'sparkle',
+                    name: 'Sparkle Chime',
+                    desc: 'High ambient overtone (C6 twinkle)',
+                    color: '#06b6d4',
+                    active: false,
+                    pattern: ['C6', null, 'E6', null],
+                    category: 'Upper Air'
+                }
+            ]
+        };
+
+        window.initTextureLab = function() {
+            const state = window.textureLabState;
+            const container = document.getElementById('texture-toggles-container');
+            if (container) {
+                container.innerHTML = state.layers.map(layer => `
+                    <div id="texture-card-${layer.id}" onclick="toggleTextureLayer('${layer.id}')" class="p-4 rounded-xl border-2 transition cursor-pointer select-none flex items-center justify-between shadow-xs ${layer.active ? 'bg-white border-pink-500 shadow-sm' : 'bg-slate-50 border-slate-200 opacity-60'}">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">${layer.category}</span>
+                            <h5 class="font-bold text-slate-800 text-sm">${layer.name}</h5>
+                            <p class="text-xs text-slate-500 mt-0.5">${layer.desc}</p>
+                        </div>
+                        <div class="w-10 h-6 rounded-full p-1 transition flex items-center ${layer.active ? 'bg-pink-500 justify-end' : 'bg-slate-300 justify-start'}">
+                            <span class="w-4 h-4 rounded-full bg-white shadow-sm block"></span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            updateTextureLabUI();
+        };
+
+        window.toggleTextureLayer = function(layerId) {
+            const state = window.textureLabState;
+            const layer = state.layers.find(l => l.id === layerId);
+            if (!layer) return;
+
+            layer.active = !layer.active;
+            const card = document.getElementById(`texture-card-${layerId}`);
+            if (card) {
+                if (layer.active) {
+                    card.className = "p-4 rounded-xl border-2 transition cursor-pointer select-none flex items-center justify-between shadow-sm bg-white border-pink-500";
+                    const toggle = card.querySelector('div:last-child');
+                    if (toggle) toggle.className = "w-10 h-6 rounded-full p-1 transition flex items-center bg-pink-500 justify-end";
+                } else {
+                    card.className = "p-4 rounded-xl border-2 transition cursor-pointer select-none flex items-center justify-between shadow-xs bg-slate-50 border-slate-200 opacity-60";
+                    const toggle = card.querySelector('div:last-child');
+                    if (toggle) toggle.className = "w-10 h-6 rounded-full p-1 transition flex items-center bg-slate-300 justify-start";
+                }
+            }
+            updateTextureLabUI();
+        };
+
+        function updateTextureLabUI() {
+            const state = window.textureLabState;
+            const activeLayers = state.layers.filter(l => l.active);
+            const count = activeLayers.length;
+
+            const densityBadge = document.getElementById('texture-density-label');
+            if (densityBadge) {
+                if (count === 0) {
+                    densityBadge.textContent = "Silent (0 Layers)";
+                    densityBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700";
+                } else if (count === 1) {
+                    densityBadge.textContent = "Very Thin (1 Layer)";
+                    densityBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-pink-900/60 text-pink-300 border border-pink-700";
+                } else if (count <= 3) {
+                    densityBadge.textContent = `Medium Texture (${count} Layers)`;
+                    densityBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-900/60 text-amber-300 border border-amber-700";
+                } else {
+                    densityBadge.textContent = `Thick & Dense (${count} Layers)`;
+                    densityBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-900/60 text-rose-300 border border-rose-700";
+                }
+            }
+
+            // Render visual SVG layers
+            const svg = document.getElementById('texture-layers-svg');
+            if (svg) {
+                let markup = '';
+                const layerHeights = {
+                    sparkle: { y: 15, h: 8, stroke: '#06b6d4', label: 'Sparkle (High)' },
+                    lead:    { y: 35, h: 12, stroke: '#10b981', label: 'Lead Melody' },
+                    arp:     { y: 55, h: 10, stroke: '#f59e0b', label: 'Arpeggio Motion' },
+                    pad:     { y: 75, h: 14, stroke: '#ec4899', label: 'Warm Pad' },
+                    bass:    { y: 95, h: 16, stroke: '#6366f1', label: 'Bass Drone (Low)' }
+                };
+
+                Object.keys(layerHeights).forEach(key => {
+                    const lDef = layerHeights[key];
+                    const isAct = state.layers.find(l => l.id === key)?.active;
+                    if (isAct) {
+                        markup += `
+                            <g class="transition-all duration-300">
+                                <line x1="20" y1="${lDef.y}" x2="480" y2="${lDef.y}" stroke="${lDef.stroke}" stroke-width="${lDef.h}" stroke-linecap="round" opacity="0.9" />
+                                <text x="25" y="${lDef.y + 3.5}" font-family="Inter" font-size="8.5" font-weight="bold" fill="#ffffff">${lDef.label}</text>
+                            </g>
+                        `;
+                    } else {
+                        markup += `
+                            <line x1="20" y1="${lDef.y}" x2="480" y2="${lDef.y}" stroke="#334155" stroke-width="2" stroke-dasharray="4" opacity="0.4" />
+                        `;
+                    }
+                });
+                svg.innerHTML = markup;
+            }
+        }
+
+        window.toggleTextureMasterPlay = function() {
+            const state = window.textureLabState;
+            if (state.isPlaying) {
+                window.stopTextureLabAudio();
+            } else {
+                window.startTextureLabAudio();
+            }
+        };
+
+        window.startTextureLabAudio = function() {
+            const state = window.textureLabState;
+            if (!synth) initChordSynth();
+            Tone.start();
+
+            state.isPlaying = true;
+            state.stepIndex = 0;
+
+            const btn = document.getElementById('texture-play-master-btn');
+            if (btn) {
+                btn.className = "bg-rose-500 hover:bg-rose-600 text-white font-extrabold py-3 px-6 rounded-2xl shadow-md transition flex items-center gap-2 flex-shrink-0";
+                btn.innerHTML = `<i class="fa-solid fa-stop"></i> <span>Stop Audio</span>`;
+            }
+
+            // Step through a 4-beat loop pattern at 120bpm (500ms per step)
+            state.loopIntervalId = setInterval(() => {
+                if (!state.isPlaying) return;
+                const idx = state.stepIndex % 4;
+
+                const bassL = state.layers.find(l => l.id === 'bass');
+                const padL = state.layers.find(l => l.id === 'pad');
+                const arpL = state.layers.find(l => l.id === 'arp');
+                const leadL = state.layers.find(l => l.id === 'lead');
+                const sparkL = state.layers.find(l => l.id === 'sparkle');
+
+                const notesToTrigger = [];
+
+                // Bass Drone on beat 0
+                if (bassL && bassL.active && idx === 0) notesToTrigger.push('C2');
+
+                // Pad on beats 0 and 2
+                if (padL && padL.active && (idx === 0 || idx === 2)) notesToTrigger.push(...padL.notes);
+
+                // Arpeggio pulses on every beat
+                if (arpL && arpL.active) {
+                    const n = arpL.pattern[idx];
+                    if (n) notesToTrigger.push(n);
+                }
+
+                // Lead Melody notes on beats
+                if (leadL && leadL.active) {
+                    const n = leadL.pattern[idx];
+                    if (n) notesToTrigger.push(n);
+                }
+
+                // Sparkle chime
+                if (sparkL && sparkL.active) {
+                    const n = sparkL.pattern[idx];
+                    if (n) notesToTrigger.push(n);
+                }
+
+                if (notesToTrigger.length > 0 && synth) {
+                    synth.triggerAttackRelease(notesToTrigger, "0.45n");
+                }
+
+                state.stepIndex++;
+            }, 500);
+        };
+
+        window.stopTextureLabAudio = function() {
+            const state = window.textureLabState;
+            state.isPlaying = false;
+            if (state.loopIntervalId) {
+                clearInterval(state.loopIntervalId);
+                state.loopIntervalId = null;
+            }
+            const btn = document.getElementById('texture-play-master-btn');
+            if (btn) {
+                btn.className = "bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold py-3 px-6 rounded-2xl shadow-md transition flex items-center gap-2 flex-shrink-0";
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>Start Sound Lab</span>`;
+            }
+        };
+
+        // --- Texture Lesson 2 Sound Lab Logic (Gradual Changes & Tension in A Minor) ---
+        window.textureLab2State = {
+            isPlaying: false,
+            loopIntervalId: null,
+            stepIndex: 0,
+            currentBar: 1,
+            totalBars: 6,
+            draggedLayerId: null,
+            layers: [
+                {
+                    id: 'sub',
+                    name: '1. Sub Bass Pulse',
+                    desc: 'Ominous low pedal heartbeat (A1)',
+                    color: '#4f46e5',
+                    active: true,
+                    startBar: 1,
+                    category: 'Low Anchor'
+                },
+                {
+                    id: 'cello',
+                    name: '2. Dark Cello Drone',
+                    desc: 'Sustained minor resonance (A2 + E2)',
+                    color: '#7c3aed',
+                    active: true,
+                    startBar: 2,
+                    category: 'Sustained Core'
+                },
+                {
+                    id: 'arpm',
+                    name: '3. Tension Ostinato',
+                    desc: 'Urgent pulsing arpeggio (A3 - C4 - E4 - B3)',
+                    color: '#d97706',
+                    active: true,
+                    startBar: 3,
+                    pattern: ['A3', 'C4', 'E4', 'B3'],
+                    category: 'Rhythmic Drive'
+                },
+                {
+                    id: 'leadm',
+                    name: '4. Haunting Minor Melody',
+                    desc: 'Sorrowful expressive line (E4 - F4 - E4 - D4)',
+                    color: '#e11d48',
+                    active: true,
+                    startBar: 4,
+                    pattern: ['E4', 'F4', 'E4', 'D4'],
+                    category: 'Melodic Drama'
+                },
+                {
+                    id: 'chimem',
+                    name: '5. High Chime Tremolo',
+                    desc: 'Shimmering metallic tension (A5 - C6)',
+                    color: '#0891b2',
+                    active: true,
+                    startBar: 5,
+                    pattern: ['A5', null, 'C6', null],
+                    category: 'Climax Shimmer'
+                }
+            ]
+        };
+
+        window.initTextureLab2 = function() {
+            const state = window.textureLab2State;
+            const container = document.getElementById('texture2-timeline-tracks');
+            if (container) {
+                container.innerHTML = state.layers.map(layer => {
+                    const barButtons = [1, 2, 3, 4, 5, 6].map(b => {
+                        const isStart = layer.active && layer.startBar === b;
+                        const isSounding = layer.active && b >= layer.startBar;
+                        let btnStyle = "bg-slate-100 text-slate-400 border-slate-200 hover:border-indigo-400";
+                        if (isStart) {
+                            btnStyle = "text-white font-extrabold shadow-sm ring-2 ring-indigo-400";
+                        } else if (isSounding) {
+                            btnStyle = "bg-indigo-50/80 text-indigo-700 border-indigo-200 font-bold";
+                        }
+                        const customBg = isStart ? `style="background-color: ${layer.color}; border-color: ${layer.color};"` : '';
+                        return `
+                            <button onclick="setLayerStartBar('${layer.id}', ${b})" ondragover="event.preventDefault()" ondrop="handleLayerDrop(event, '${layer.id}', ${b})" class="h-9 flex-1 rounded-lg border text-xs font-mono transition flex items-center justify-center ${btnStyle}" ${customBg} title="Enter at Bar ${b}">
+                                ${isStart ? `<i class="fa-solid fa-play text-[9px] mr-1"></i>B${b}` : (isSounding ? `B${b}` : `-`)}
+                            </button>
+                        `;
+                    }).join('');
+
+                    return `
+                    <div id="texture2-row-${layer.id}" draggable="true" ondragstart="handleLayerDragStart(event, '${layer.id}')" class="p-3 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-[220px]">
+                            <div class="w-3 h-8 rounded-full" style="background-color: ${layer.color};"></div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h5 class="font-bold text-slate-800 text-sm">${layer.name}</h5>
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">${layer.category}</span>
+                                </div>
+                                <span class="text-xs text-slate-500">${layer.active ? `Enters at <strong>Bar ${layer.startBar}</strong>` : 'Muted'}</span>
+                            </div>
+                        </div>
+
+                        <!-- Bar Selector Timeline Strip -->
+                        <div class="flex items-center gap-1.5 flex-1 max-w-xl">
+                            ${barButtons}
+                            <button onclick="toggleLayerActive('${layer.id}')" class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition ml-2 ${layer.active ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'}" title="${layer.active ? 'Mute' : 'Unmute'}">
+                                ${layer.active ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>'}
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+            updateTextureLab2UI();
+        };
+
+        window.setLayerStartBar = function(layerId, bar) {
+            const state = window.textureLab2State;
+            const layer = state.layers.find(l => l.id === layerId);
+            if (!layer) return;
+            layer.active = true;
+            layer.startBar = bar;
+            initTextureLab2();
+        };
+
+        window.toggleLayerActive = function(layerId) {
+            const state = window.textureLab2State;
+            const layer = state.layers.find(l => l.id === layerId);
+            if (!layer) return;
+            layer.active = !layer.active;
+            initTextureLab2();
+        };
+
+        window.handleLayerDragStart = function(e, layerId) {
+            window.textureLab2State.draggedLayerId = layerId;
+            e.dataTransfer.setData('text/plain', layerId);
+        };
+
+        window.handleLayerDrop = function(e, targetLayerId, bar) {
+            e.preventDefault();
+            const draggedId = window.textureLab2State.draggedLayerId || e.dataTransfer.getData('text/plain') || targetLayerId;
+            if (draggedId) {
+                window.setLayerStartBar(draggedId, bar);
+            }
+        };
+
+        window.applyTexture2StaggerPreset = function() {
+            const state = window.textureLab2State;
+            state.layers.forEach((l, idx) => {
+                l.active = true;
+                l.startBar = idx + 1; // 1, 2, 3, 4, 5
+            });
+            initTextureLab2();
+            if (!state.isPlaying) window.startTextureLab2Audio();
+        };
+
+        window.applyAllSameBarPreset = function() {
+            const state = window.textureLab2State;
+            state.layers.forEach(l => {
+                l.active = true;
+                l.startBar = 1;
+            });
+            initTextureLab2();
+        };
+
+        window.resetTexture2Timeline = function() {
+            const state = window.textureLab2State;
+            state.layers.forEach(l => { l.active = false; });
+            initTextureLab2();
+        };
+
+        function updateTextureLab2UI() {
+            const state = window.textureLab2State;
+            const currentBar = state.currentBar || 1;
+            const currentBeatInBar = (state.stepIndex % 4) + 1;
+
+            const barDisplay = document.getElementById('texture2-bar-display');
+            if (barDisplay) {
+                barDisplay.textContent = `Bar ${currentBar} (Beat ${currentBeatInBar})`;
+            }
+
+            // Count currently sounding layers at this bar
+            const soundingLayers = state.layers.filter(l => l.active && currentBar >= l.startBar);
+            const count = soundingLayers.length;
+
+            const densityBadge = document.getElementById('texture2-density-label');
+            if (densityBadge) {
+                if (count === 0) {
+                    densityBadge.textContent = "Silent (0 Layers)";
+                    densityBadge.className = "text-xs font-bold px-3 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700";
+                } else if (count === 1) {
+                    densityBadge.textContent = "Thin: Lurking & Sparse (1 Layer)";
+                    densityBadge.className = "text-xs font-bold px-3 py-0.5 rounded-full bg-indigo-900/60 text-indigo-300 border border-indigo-700";
+                } else if (count <= 3) {
+                    densityBadge.textContent = `Medium: Mounting Urgency (${count} Layers)`;
+                    densityBadge.className = "text-xs font-bold px-3 py-0.5 rounded-full bg-purple-900/60 text-purple-300 border border-purple-700";
+                } else if (count === 4) {
+                    densityBadge.textContent = `Dense: High Tension (${count} Layers)`;
+                    densityBadge.className = "text-xs font-bold px-3 py-0.5 rounded-full bg-rose-900/60 text-rose-300 border border-rose-700";
+                } else {
+                    densityBadge.textContent = `Full Climax: Maximum Tension! (5 Layers)`;
+                    densityBadge.className = "text-xs font-bold px-3 py-0.5 rounded-full bg-red-900 text-red-200 border border-red-600 animate-pulse font-extrabold";
+                }
+            }
+
+            // Render SVG timeline with bar grid and playhead
+            const svg = document.getElementById('texture2-layers-svg');
+            if (svg) {
+                const totalBars = state.totalBars || 6;
+                const barWidth = 75;
+                const startX = 90;
+
+                let markup = `
+                    <!-- Background Grid -->
+                    <rect x="0" y="0" width="560" height="150" fill="#090d16" rx="8" />
+                `;
+
+                // Draw Bar vertical columns
+                for (let b = 1; b <= totalBars; b++) {
+                    const bx = startX + (b - 1) * barWidth;
+                    const isCurrent = (b === currentBar && state.isPlaying);
+                    markup += `
+                        <line x1="${bx}" y1="5" x2="${bx}" y2="145" stroke="${isCurrent ? '#4f46e5' : '#1e293b'}" stroke-width="${isCurrent ? '2' : '1'}" stroke-dasharray="${isCurrent ? 'none' : '3'}" />
+                        <text x="${bx + barWidth/2}" y="18" font-family="Inter" font-size="9" font-weight="bold" fill="${isCurrent ? '#f59e0b' : '#64748b'}" text-anchor="middle">BAR ${b}</text>
+                    `;
+                }
+
+                // Render each layer horizontal block along its timeline
+                const layerYMap = {
+                    chimem: { y: 30, h: 12 },
+                    leadm:  { y: 52, h: 14 },
+                    arpm:   { y: 74, h: 14 },
+                    cello:  { y: 96, h: 16 },
+                    sub:    { y: 118, h: 18 }
+                };
+
+                state.layers.forEach(layer => {
+                    const pos = layerYMap[layer.id];
+                    if (!pos) return;
+
+                    // Row label
+                    markup += `
+                        <text x="12" y="${pos.y + pos.h - 3}" font-family="Inter" font-size="8.5" font-weight="bold" fill="${layer.active ? '#cbd5e1' : '#475569'}">${layer.name.split('.')[1] || layer.name}</text>
+                    `;
+
+                    if (layer.active) {
+                        const startXPos = startX + (layer.startBar - 1) * barWidth;
+                        const blockW = (totalBars - layer.startBar + 1) * barWidth;
+                        const isSoundingNow = currentBar >= layer.startBar && state.isPlaying;
+
+                        markup += `
+                            <g class="transition-all duration-200">
+                                <rect x="${startXPos}" y="${pos.y}" width="${blockW}" height="${pos.h}" fill="${layer.color}" rx="4" opacity="${isSoundingNow ? '0.95' : '0.5'}" stroke="${isSoundingNow ? '#ffffff' : 'none'}" stroke-width="${isSoundingNow ? '1.5' : '0'}" />
+                                <text x="${startXPos + 8}" y="${pos.y + pos.h - 3}" font-family="Inter" font-size="8" font-weight="bold" fill="#ffffff">Enters &rarr;</text>
+                            </g>
+                        `;
+                    }
+                });
+
+                // Playhead needle
+                if (state.isPlaying) {
+                    const playheadX = startX + (currentBar - 1) * barWidth + ((currentBeatInBar - 1) / 4) * barWidth;
+                    markup += `
+                        <line x1="${playheadX}" y1="10" x2="${playheadX}" y2="145" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" />
+                        <circle cx="${playheadX}" cy="10" r="4" fill="#f59e0b" />
+                    `;
+                }
+
+                svg.innerHTML = markup;
+            }
+        }
+
+        window.toggleTexture2MasterPlay = function() {
+            const state = window.textureLab2State;
+            if (state.isPlaying) {
+                window.stopTextureLab2Audio();
+            } else {
+                window.startTextureLab2Audio();
+            }
+        };
+
+        window.startTextureLab2Audio = function() {
+            const state = window.textureLab2State;
+            if (!synth) initChordSynth();
+            Tone.start();
+
+            state.isPlaying = true;
+            state.stepIndex = 0;
+            state.currentBar = 1;
+
+            const btn = document.getElementById('texture2-master-btn');
+            if (btn) {
+                btn.className = "bg-rose-500 hover:bg-rose-600 text-white font-extrabold py-3 px-6 rounded-2xl shadow-md transition flex items-center gap-2 flex-shrink-0 text-sm";
+                btn.innerHTML = `<i class="fa-solid fa-stop"></i> <span>Stop Studio</span>`;
+            }
+
+            // Loop in A Minor at 128 BPM (~468ms per step, 4 beats per bar, 6 bars loop = 24 steps)
+            state.loopIntervalId = setInterval(() => {
+                if (!state.isPlaying) return;
+
+                const stepInBar = state.stepIndex % 4; // 0, 1, 2, 3 (Beats 1-4)
+                state.currentBar = Math.floor((state.stepIndex % (state.totalBars * 4)) / 4) + 1; // 1 to 6
+
+                const bar = state.currentBar;
+                const subL = state.layers.find(l => l.id === 'sub');
+                const celloL = state.layers.find(l => l.id === 'cello');
+                const arpL = state.layers.find(l => l.id === 'arpm');
+                const leadL = state.layers.find(l => l.id === 'leadm');
+                const chimeL = state.layers.find(l => l.id === 'chimem');
+
+                const notesToTrigger = [];
+
+                // Sub Bass on beats 0 and 2 (if active and bar reached)
+                if (subL && subL.active && bar >= subL.startBar && (stepInBar === 0 || stepInBar === 2)) {
+                    notesToTrigger.push('A1');
+                }
+
+                // Cello Drone on beat 0 (if active and bar reached)
+                if (celloL && celloL.active && bar >= celloL.startBar && stepInBar === 0) {
+                    notesToTrigger.push('A2', 'E2');
+                }
+
+                // Arpeggio Ostinato on every beat (if active and bar reached)
+                if (arpL && arpL.active && bar >= arpL.startBar) {
+                    const n = arpL.pattern[stepInBar];
+                    if (n) notesToTrigger.push(n);
+                }
+
+                // Haunting Melody on beats (if active and bar reached)
+                if (leadL && leadL.active && bar >= leadL.startBar) {
+                    const n = leadL.pattern[stepInBar];
+                    if (n) notesToTrigger.push(n);
+                }
+
+                // High Chimes (if active and bar reached)
+                if (chimeL && chimeL.active && bar >= chimeL.startBar) {
+                    const n = chimeL.pattern[stepInBar];
+                    if (n) notesToTrigger.push(n);
+                }
+
+                if (notesToTrigger.length > 0 && synth) {
+                    synth.triggerAttackRelease(notesToTrigger, "0.4n");
+                }
+
+                updateTextureLab2UI();
+                state.stepIndex++;
+            }, 468);
+        };
+
+        window.stopTextureLab2Audio = function() {
+            const state = window.textureLab2State;
+            state.isPlaying = false;
+            if (state.loopIntervalId) {
+                clearInterval(state.loopIntervalId);
+                state.loopIntervalId = null;
+            }
+            state.currentBar = 1;
+            const btn = document.getElementById('texture2-master-btn');
+            if (btn) {
+                btn.className = "bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold py-3 px-6 rounded-2xl shadow-md transition flex items-center gap-2 flex-shrink-0 text-sm";
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>Start Studio</span>`;
+            }
+            updateTextureLab2UI();
+        };
+
+        // Boot
+        window.onload = () => {
+            app.navigate('login');
+        };
+    </script>
+</body>
+</html>

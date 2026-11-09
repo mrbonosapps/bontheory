@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BonTheory - Music Theory Learning</title>
+    <title>Boncepts of Music - Music Theory Learning</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
@@ -19,7 +19,7 @@
         .note-head { fill: #0f172a; }
         
         /* Chord UI Styles */
-        .chord-bg { background-google: #1e293b; }
+        .chord-bg { background-color: #1e293b; }
         .chord-panel { background-color: #0f172a; }
         .custom-select { background-color: #1e293b; color: white; border: 1px solid #334155; }
 
@@ -37,14 +37,14 @@
         }
     </style>
 </head>
-<body class="text-gray-801 h-screen flex flex-col overflow-hidden">
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
 
     <!-- Navbar -->
     <header class="bg-white shadow-sm z-10 sticky top-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2 cursor-pointer" onclick="if(app.currentUser) app.navigate(app.currentUser.role === 'teacher' ? 'teacherDash' : 'studentDash')">
                 <i class="fa-solid fa-music text-blue-600 text-2xl"></i>
-                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">BonTheory</h1>
+                <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Boncepts of Music</h1>
             </div>
             <div id="nav-user" class="hidden flex items-center gap-6">
                 <div class="text-sm font-medium text-gray-500">
@@ -66,7 +66,9 @@
     <script>
         // --- Data & State Management ---
         const state = {
-            stats: { completedTests: 0, avgScore: 0 }
+            stats: { completedTests: 0, avgScore: 0 },
+            tokens: 0,
+            inventory: []
         };
 
         const appData = {
@@ -77,6 +79,17 @@
                 { id: 'structure', title: 'Structure', desc: 'Verse/Chorus, Binary, Ternary, Rondo', color: 'from-blue-400 to-blue-500', icon: 'fa-layer-group' },
                 { id: 'timbre', title: 'Performing Media & Timbre', desc: 'Instruments and sound manipulation', color: 'from-indigo-400 to-purple-500', icon: 'fa-guitar' },
                 { id: 'texture', title: 'Texture', desc: 'Combining layers of sound', color: 'from-pink-400 to-rose-500', icon: 'fa-water' },
+            ],
+            shopItems: [
+                { id: 'drumkit', name: 'Drumkit', price: 200, icon: 'fa-drum' },
+                { id: 'eguitar', name: 'Electric Guitar', price: 150, icon: 'fa-guitar' },
+                { id: 'violin', name: 'Violin', price: 100, icon: 'fa-guitar' },
+                { id: 'keyboard', name: 'Keyboard', price: 80, icon: 'fa-keyboard' },
+                { id: 'recorder', name: 'Recorder', price: 25, icon: 'fa-music' },
+                { id: 'trumpet', name: 'Trumpet', price: 200, icon: 'fa-music' },
+                { id: 'clarinet', name: 'Clarinet', price: 100, icon: 'fa-music' },
+                { id: 'whistle', name: 'Whistle', price: 10, icon: 'fa-music' },
+                { id: 'tuba', name: 'Tuba', price: 140, icon: 'fa-music' }
             ],
             teacherLogs: []
         };
@@ -217,55 +230,53 @@
         const app = {
             currentUser: null,
             navigate(viewName, data = null) {
-                // If leaving texture lab, silence its audio loop
-                if (window.stopTextureLabAudio) window.stopTextureLabAudio();
-                if (window.stopTextureLab2Audio) window.stopTextureLab2Audio();
+                try {
+                    // Safely silence any active audio loops before navigating away
+                    if (window.stopTextureLabAudio) window.stopTextureLabAudio();
+                    if (window.stopTextureLab2Audio) window.stopTextureLab2Audio();
+                    if (window.bonusRhythmGameState && window.bonusRhythmGameState.isPlaying) window.toggleBonusRhythmPlay();
 
-                const root = document.getElementById('app-root');
-                if (!views[viewName]) {
-                    console.error("View not found:", viewName);
-                    return;
-                }
-                root.innerHTML = views[viewName](data);
-                
-                // Update Navbar
-                const navUser = document.getElementById('nav-user');
-                if (this.currentUser) {
-                    navUser.classList.remove('hidden');
-                    document.getElementById('nav-username').textContent = this.currentUser.name;
-                    document.getElementById('nav-tests').textContent = state.stats.completedTests;
-                } else {
-                    navUser.classList.add('hidden');
-                }
-
-                // If navigating to Chord Theory, initialize synth & update display
-                if(viewName === 'chordTheoryCentre') {
-                    try {
-                        initChordSynth();
-                        setTimeout(() => { if (window.updateChordDisplay) window.updateChordDisplay(); }, 20);
-                    } catch(err) {
-                        console.error("Chord Theory init error:", err);
+                    const root = document.getElementById('app-root');
+                    if (!views[viewName]) {
+                        console.error("View not found:", viewName);
+                        root.innerHTML = `<div class="p-8 text-center text-red-500 font-bold">Error: Module "${viewName}" could not be found.</div>`;
+                        return;
                     }
+                    
+                    // Render the requested view
+                    root.innerHTML = views[viewName](data);
+                    
+                    // Update Navbar
+                    const navUser = document.getElementById('nav-user');
+                    if (this.currentUser) {
+                        navUser.classList.remove('hidden');
+                        document.getElementById('nav-username').textContent = this.currentUser.name;
+                        document.getElementById('nav-tests').textContent = state.stats.completedTests;
+                    } else {
+                        navUser.classList.add('hidden');
+                    }
+                    
+                    // Game Init Triggers
+                    if(viewName === 'durationLesson1' && data === 'game') setTimeout(() => { if(window.startStemGame) window.startStemGame(); }, 50);
+                    if(viewName === 'durationLesson2' && data === 'game') setTimeout(() => { if(window.startDurationGame2) window.startDurationGame2(); }, 50);
+                    if(viewName === 'durationLesson3' && data === 'game') setTimeout(() => { if(window.startQuaverGame) window.startQuaverGame(); }, 50);
+                    if(viewName === 'durationLesson4' && data === 'game') setTimeout(() => { if(window.startDurationGame4) window.startDurationGame4(); }, 50);
+                    if(viewName === 'dynamicsLesson1' && data === 'game') setTimeout(() => { if(window.startTempoMemoryGame) window.startTempoMemoryGame(); }, 50);
+                    if(viewName === 'dynamicsLesson2' && data === 'game') setTimeout(() => { if(window.startDynamicsMatchingGame) window.startDynamicsMatchingGame(); }, 50);
+                    if(viewName === 'dynamicsLesson3' && data === 'game') setTimeout(() => { if(window.startScoreHuntGame) window.startScoreHuntGame(); }, 50);
+                    if(viewName === 'structureLesson1' && data === 'game') setTimeout(() => { if(window.startStructureLesson1Game) window.startStructureLesson1Game(); }, 50);
+                    if(viewName === 'structureLesson3' && data === 'game') setTimeout(() => { if(window.startStructureLesson3Game) window.startStructureLesson3Game(); }, 50);
+                    if(viewName === 'timbreLesson1' && data === 'game') setTimeout(() => { if(window.startTimbreGame) window.startTimbreGame(); }, 50);
+                    if(viewName === 'timbreLesson2' && data === 'game') setTimeout(() => { if(window.startTimbreWordGame) window.startTimbreWordGame(); }, 50);
+                    if(viewName === 'textureLesson1' && data === 'game') setTimeout(() => { if(window.initTextureLab) window.initTextureLab(); }, 50);
+                    if(viewName === 'textureLesson2' && data === 'game') setTimeout(() => { if(window.initTextureLab2) window.initTextureLab2(); }, 50);
+                    if(viewName === 'pitchLesson4' && data === 'game') setTimeout(() => { if(window.startBassClefGame) window.startBassClefGame(); }, 50);
+                    if(viewName === 'pitchLesson1' && data === 'game') setTimeout(() => { if(window.startTrebleClefGame) window.startTrebleClefGame(); }, 50);
+                    if(viewName === 'pitchLesson2' && data === 'game') setTimeout(() => { if(window.startToneSemitoneGame) window.startToneSemitoneGame(); }, 50);
+                    if(viewName === 'pitchLesson3' && data === 'game') setTimeout(() => { if(window.startAccGame) window.startAccGame(); }, 50);
+                } catch (error) {
+                    console.error("Navigation encountered an error:", error);
                 }
-                
-                // Game Init Triggers
-                if(viewName === 'durationLesson1' && data === 'game') setTimeout(() => { if(window.startStemGame) window.startStemGame(); }, 50);
-                if(viewName === 'durationLesson2' && data === 'game') setTimeout(() => { if(window.startDurationGame2) window.startDurationGame2(); }, 50);
-                if(viewName === 'durationLesson3' && data === 'game') setTimeout(() => { if(window.startQuaverGame) window.startQuaverGame(); }, 50);
-                if(viewName === 'durationLesson4' && data === 'game') setTimeout(() => { if(window.startDurationGame4) window.startDurationGame4(); }, 50);
-                if(viewName === 'dynamicsLesson1' && data === 'game') setTimeout(() => { if(window.startTempoMemoryGame) window.startTempoMemoryGame(); }, 50);
-                if(viewName === 'dynamicsLesson2' && data === 'game') setTimeout(() => { if(window.startDynamicsMatchingGame) window.startDynamicsMatchingGame(); }, 50);
-                if(viewName === 'dynamicsLesson3' && data === 'game') setTimeout(() => { if(window.startScoreHuntGame) window.startScoreHuntGame(); }, 50);
-                if(viewName === 'structureLesson1' && data === 'game') setTimeout(() => { if(window.startStructureLesson1Game) window.startStructureLesson1Game(); }, 50);
-                if(viewName === 'structureLesson3' && data === 'game') setTimeout(() => { if(window.startStructureLesson3Game) window.startStructureLesson3Game(); }, 50);
-                if(viewName === 'timbreLesson1' && data === 'game') setTimeout(() => { if(window.startTimbreGame) window.startTimbreGame(); }, 50);
-                if(viewName === 'timbreLesson2' && data === 'game') setTimeout(() => { if(window.startTimbreWordGame) window.startTimbreWordGame(); }, 50);
-                if(viewName === 'textureLesson1' && data === 'game') setTimeout(() => { if(window.initTextureLab) window.initTextureLab(); }, 50);
-                if(viewName === 'textureLesson2' && data === 'game') setTimeout(() => { if(window.initTextureLab2) window.initTextureLab2(); }, 50);
-                if(viewName === 'pitchLesson4' && data === 'game') setTimeout(() => { if(window.startBassClefGame) window.startBassClefGame(); }, 50);
-                if(viewName === 'pitchLesson1' && data === 'game') setTimeout(() => { if(window.startTrebleClefGame) window.startTrebleClefGame(); }, 50);
-                if(viewName === 'pitchLesson2' && data === 'game') setTimeout(() => { if(window.startToneSemitoneGame) window.startToneSemitoneGame(); }, 50);
-                if(viewName === 'pitchLesson3' && data === 'game') setTimeout(() => { if(window.startAccGame) window.startAccGame(); }, 50);
             }
         };
 
@@ -277,7 +288,7 @@
                     <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full fade-in border border-gray-100">
                         <div class="text-center mb-8">
                             <i class="fa-solid fa-music text-blue-600 text-4xl mb-3"></i>
-                            <h2 class="text-3xl font-extrabold text-gray-800 mb-1">Welcome to BonTheory</h2>
+                            <h2 class="text-3xl font-extrabold text-gray-800 mb-1">Welcome to The BONcepts of Music</h2>
                             <p class="text-gray-500 font-medium text-sm">Please identify yourself to continue</p>
                         </div>
                         <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();" class="space-y-5">
@@ -314,7 +325,7 @@
                 return `
                 <div class="p-8 max-w-6xl mx-auto fade-in pb-20">
                     <h2 class="text-3xl font-bold text-slate-800 mb-1">Learning Areas</h2>
-                    <p class="text-slate-500 mb-8 font-medium">Select a topic to start practicing (Mapped to NESA Stage 4 & 5)</p>
+                    <p class="text-slate-500 mb-8 font-medium">Select a topic to start practicing</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                         ${appData.areas.map(area => `
@@ -328,75 +339,76 @@
                         `).join('')}
                     </div>
 
-                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Specialized Tools & Studios</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div onclick="app.navigate('chordTheoryCentre')" class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 cursor-pointer transform hover:-translate-y-1 hover:shadow-lg transition duration-300">
-                            <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4 text-blue-600">
-                                <i class="fa-solid fa-keyboard text-xl"></i>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">User Profile & Mr Bono's Music Shop</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                        <!-- Profile Card -->
+                        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl shadow-sm">
+                                    <i class="fa-solid fa-user-graduate"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-extrabold text-slate-800">${app.currentUser ? app.currentUser.name : 'Student'}</h3>
+                                    <p class="text-sm text-slate-500 font-medium">Class: ${app.currentUser && app.currentUser.classGroup ? app.currentUser.classGroup : 'N/A'}</p>
+                                </div>
                             </div>
-                            <h3 class="text-xl font-bold text-slate-800 mb-1">Chord Theory Centre</h3>
-                            <p class="text-sm text-slate-500 font-medium">Interactive Piano & Guitar Chord Explorer</p>
+                            <div class="bg-amber-100 border border-amber-200 rounded-xl p-4 flex items-center justify-between mb-4 shadow-inner">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-coins text-amber-500 text-2xl"></i>
+                                    <span class="font-bold text-amber-900 text-lg">Music Tokens</span>
+                                </div>
+                                <span class="text-3xl font-black text-amber-600">${state.tokens}</span>
+                            </div>
+                            <div>
+                                <h4 class="text-xs uppercase font-bold text-slate-400 mb-2">Your Inventory</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    ${state.inventory.length > 0 ? state.inventory.map(item => `
+                                        <div class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1 rounded-lg text-sm font-bold shadow-sm flex items-center gap-2">
+                                            <i class="fa-solid ${item.icon}"></i> ${item.name}
+                                            <button onclick="sellItem('${item.id}')" class="ml-1 text-indigo-400 hover:text-red-500 transition" title="Trade in for tokens">
+                                                <i class="fa-solid fa-right-left"></i>
+                                            </button>
+                                        </div>
+                                    `).join('') : '<span class="text-slate-400 text-sm italic">Empty. Buy items in the shop!</span>'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shop Card -->
+                        <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-sm border border-amber-200 flex flex-col">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-extrabold text-amber-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-store text-amber-500"></i> Mr Bono's Music Shop
+                                </h3>
+                                <span class="text-xs font-bold text-amber-700 bg-amber-200 px-2.5 py-1 rounded-full shadow-sm">Tokens: ${state.tokens}</span>
+                            </div>
+                            <div class="space-y-3 flex-1 overflow-y-auto pr-2">
+                                ${appData.shopItems.map(item => `
+                                    <div class="bg-white p-3 rounded-xl border border-amber-100 flex items-center justify-between shadow-sm">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+                                                <i class="fa-solid ${item.icon}"></i>
+                                            </div>
+                                            <span class="font-bold text-slate-800">${item.name}</span>
+                                        </div>
+                                        <button onclick="buyItem('${item.id}', '${item.name}', ${item.price}, '${item.icon}')" class="${state.tokens >= item.price && !state.inventory.find(i => i.id === item.id) ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md' : 'bg-slate-100 text-slate-400 cursor-not-allowed'} font-bold py-1.5 px-4 rounded-lg transition text-sm">
+                                            ${state.inventory.find(i => i.id === item.id) ? 'Owned' : `<i class="fa-solid fa-coins mr-1"></i>${item.price}`}
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
-                </div>
-                `;
-            },
 
-            chordTheoryCentre() {
-                return `
-                <div class="bg-slate-900 min-h-screen text-slate-300 p-8 fade-in pb-20">
-                    <button onclick="app.navigate('studentDash')" class="text-blue-400 hover:text-blue-300 font-medium mb-6 transition flex items-center bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700 shadow-sm">
-                        <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
-                    </button>
-                    
-                    <div class="max-w-4xl mx-auto">
-                        <div class="mb-8 border-b border-slate-800 pb-4">
-                            <h2 class="text-3xl font-extrabold text-white mb-2 flex items-center gap-3">
-                                <i class="fa-solid fa-keyboard text-blue-500"></i>Chord Theory Centre
-                            </h2>
-                            <p class="text-slate-400">Select parameters below to construct, analyse, and hear musical chords.</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Root Note</label>
-                                <select id="chord-root" class="w-full p-3 rounded-xl font-semibold bg-slate-800 text-white border border-slate-700 outline-none focus:border-blue-500 transition" onchange="updateChordDisplay()">
-                                    ${['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'].map(n => `<option value="${n}">${n}</option>`).join('')}
-                                </select>
+                    <h2 class="text-2xl font-bold text-slate-800 mb-6">Specialized Tools & Studios</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <a href="https://sites.google.com/erc.nsw.edu.au/bonachord/home" target="_blank" rel="noopener noreferrer" class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 cursor-pointer transform hover:-translate-y-1 hover:shadow-lg transition duration-300 block outline-none">
+                            <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mb-4 text-indigo-600">
+                                <i class="fa-solid fa-link text-xl"></i>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Chord Type</label>
-                                <select id="chord-cat" class="w-full p-3 rounded-xl font-semibold bg-slate-800 text-white border border-slate-700 outline-none focus:border-blue-500 transition" onchange="updateChordDisplay()">
-                                    <option value="major">Major (1 - 3 - 5)</option>
-                                    <option value="minor">Minor (1 - b3 - 5)</option>
-                                    <option value="dominant">Dominant 7th (1 - 3 - 5 - b7)</option>
-                                </select>
-                            </div>
-                            <div class="flex items-end">
-                                <button onclick="playCurrentChord()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-extrabold py-3 px-6 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                                    <i class="fa-solid fa-play"></i> Play Sound
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="bg-slate-950/80 rounded-2xl p-8 border border-slate-800 shadow-xl">
-                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 border-b border-slate-800 pb-4">
-                                <div>
-                                    <span class="text-xs uppercase font-extrabold tracking-widest text-slate-500">Chord Analysis</span>
-                                    <h3 id="display-chord-name" class="text-4xl font-black text-blue-400 mt-1">C Major</h3>
-                                </div>
-                                <div class="bg-slate-900 px-4 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-400">
-                                    Formula: <span id="display-formula" class="text-emerald-400 text-sm font-mono ml-1 font-bold">1 - 3 - 5</span>
-                                </div>
-                            </div>
-
-                            <div>
-                                <span class="text-xs uppercase font-bold text-slate-500 block mb-2 tracking-wider">Spelled Notes</span>
-                                <div id="display-notes" class="text-2xl font-black text-white tracking-widest bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 text-center font-mono">
-                                    C - E - G
-                                </div>
-                            </div>
-                        </div>
+                            <h3 class="text-xl font-bold text-slate-800 mb-1">Bonachord</h3>
+                            <p class="text-sm text-slate-500 font-medium">Interactive Chord Structure & Theory Master Tool</p>
+                        </a>
                     </div>
                 </div>
                 `;
@@ -405,6 +417,15 @@
             learningArea(areaId) {
                 const area = appData.areas.find(a => a.id === areaId);
                 const levels = [1, 2, 3, 4];
+                
+                const level1Contents = {
+                    pitch: ['The Staff, Clefs & Ledger Lines', 'Semitones and Tones', 'Sharps, Flats, & Naturals', 'Bass Clef'],
+                    duration: ['Notes with Stems', 'Basic Note Values', 'Quavers (Eighth Notes)', 'Rests in Music'],
+                    dynamics: ['Tempo Terms & Gradations', 'Volume & Dynamics', 'Other Signs & Definitions'],
+                    structure: ['Verse-Chorus Structure', 'Binary Form (AB)', 'Ternary Form (ABA)'],
+                    timbre: ['Instrument Classification', 'Describing Tone Colour'],
+                    texture: ['Thick vs. Thin Texture', 'Gradual Changes in Texture']
+                };
                 
                 return `
                 <div class="p-8 max-w-5xl mx-auto fade-in pb-20">
@@ -426,11 +447,19 @@
                                     <div class="flex justify-between items-start mb-4">
                                         <div>
                                             <h4 class="text-xl font-bold text-slate-800">Level ${level}</h4>
-                                            <p class="text-sm text-slate-500 font-medium">${level <= 2 ? 'Stage 4' : 'Stage 5'}</p>
                                         </div>
                                         <span class="bg-emerald-50 text-emerald-600 border border-emerald-100 text-xs font-bold px-2.5 py-1 rounded-md">Unlocked</span>
                                     </div>
+                                    ${level === 1 && level1Contents[areaId] ? `
+                                    <div class="text-sm text-slate-600 mb-6">
+                                        <p class="font-bold mb-2 text-slate-700">Contents:</p>
+                                        <ul class="list-disc pl-5 space-y-1 text-slate-500">
+                                            ${level1Contents[areaId].map(lesson => `<li>${lesson}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                    ` : `
                                     <p class="text-slate-600 text-sm mb-6 leading-relaxed">Master the concepts and take the end-of-level test to submit results to your teacher.</p>
+                                    `}
                                 </div>
                                 
                                 <button onclick="app.navigate('levelHub', { area: '${areaId}', level: ${level} })" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition shadow-sm">
@@ -574,14 +603,28 @@
                     </button>
                     <div class="flex flex-col md:flex-row gap-8">
                         <div class="w-full md:w-72 flex-shrink-0">
-                            <div class="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 p-4 sticky top-24">
-                                <h3 class="text-[13px] font-bold text-gray-800 uppercase tracking-wide mb-3 px-4 pt-2">Lesson Contents</h3>
-                                <div class="space-y-1">
-                                    ${tabs.map(t => `
-                                        <button onclick="app.navigate('${lessonFunc}', '${t.id}')" class="w-full text-left px-5 py-3 rounded-lg font-medium text-[15px] transition ${currentTab === t.id ? `bg-${colorTheme}-100/50 text-${colorTheme}-700 border-l-[3px] border-${colorTheme}-500` : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-l-[3px] border-transparent'}">
-                                            ${t.label}
-                                        </button>
-                                    `).join('')}
+                            <div class="sticky top-24 flex flex-col gap-6">
+                                <div class="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 p-4">
+                                    <h3 class="text-[13px] font-bold text-gray-800 uppercase tracking-wide mb-3 px-4 pt-2">Lesson Contents</h3>
+                                    <div class="space-y-1">
+                                        ${tabs.map(t => `
+                                            <button onclick="app.navigate('${lessonFunc}', '${t.id}')" class="w-full text-left px-5 py-3 rounded-lg font-medium text-[15px] transition ${currentTab === t.id ? `bg-${colorTheme}-100/50 text-${colorTheme}-700 border-l-[3px] border-${colorTheme}-500` : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-l-[3px] border-transparent'}">
+                                                ${t.label}
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-amber-200 p-5">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-white text-amber-500 rounded-full flex items-center justify-center text-lg shadow-sm border border-amber-100">
+                                                <i class="fa-solid fa-coins"></i>
+                                            </div>
+                                            <span class="font-bold text-amber-900 text-sm">Tokens</span>
+                                        </div>
+                                        <span id="sidebar-token-balance" class="text-2xl font-black text-amber-600">${state.tokens}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1403,7 +1446,7 @@
                 tab = tab || 'theory';
                 const tabs = [
                     { id: 'theory', label: 'Rests in Music' },
-                    { id: 'game', label: 'Rest Adding Game' }
+                    { id: 'game', label: 'Bonus Rhythm Game' }
                 ];
                 
                 const getRestSVG = (type) => {
@@ -1450,28 +1493,21 @@
                     `;
                 } else if (tab === 'game') {
                     content = `
-                        <h3 class="text-3xl font-extrabold text-slate-800 mb-4">Revision Game: Rest Math</h3>
-                        <p class="text-slate-600 mb-6 leading-relaxed text-lg">Add the silent values together and select the total number of beats!</p>
-                        
-                        <div class="flex flex-col md:flex-row gap-8 items-center bg-slate-50 rounded-xl p-8 border border-slate-100">
-                            <div class="relative bg-white rounded-xl p-8 border border-gray-200 flex-1 flex flex-col items-center justify-center w-full shadow-sm min-h-[200px]">
-                                <div id="dur-game4-q" class="flex items-center gap-2"></div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                            <div>
+                                <h3 class="text-3xl font-extrabold text-slate-800 mb-2">Bonus Rhythm Game</h3>
+                                <p class="text-slate-600 leading-relaxed text-sm">
+                                    Tap the boxes to cycle between Crotchets, Quavers, and Rests! Build your own 8-beat rhythm pattern and play it back.
+                                </p>
                             </div>
-                            
-                            <div class="flex-1 w-full">
-                                <div class="flex justify-between items-center mb-6">
-                                    <span class="font-bold text-slate-700">Streak: <span id="dur-game4-streak" class="text-amber-600 text-xl">0</span></span>
-                                    <span class="font-bold text-slate-700">Best: <span id="dur-game4-best" class="text-emerald-600 text-xl">0</span></span>
-                                </div>
-                                
-                                <div class="grid grid-cols-4 gap-2">
-                                    ${[1, 1.5, 2, 2.5, 4, 4.5, 5, 8].map(num => `
-                                        <button onclick="checkDurationGame4(${num})" class="bg-white border-2 border-gray-200 hover:border-amber-400 hover:bg-amber-50 text-slate-700 font-bold py-3 rounded-xl transition text-xl">
-                                            ${num}
-                                        </button>
-                                    `).join('')}
-                                </div>
-                                <div id="dur-game4-feedback" class="mt-4 text-center font-bold h-6 text-lg"></div>
+                            <button id="rhythm-play-btn" onclick="toggleBonusRhythmPlay()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition inline-flex items-center gap-2 shadow-md flex-shrink-0">
+                                <i class="fa-solid fa-play"></i> Play Loop
+                            </button>
+                        </div>
+                        
+                        <div class="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-100 shadow-sm flex justify-center overflow-x-auto">
+                            <div id="rhythm-game-beats" class="flex items-center gap-3 sm:gap-4 min-w-max pb-4">
+                                <!-- Injected by startDurationGame4 -->
                             </div>
                         </div>
                     `;
@@ -1855,75 +1891,129 @@
                                 <div class="flex items-center gap-6">
                                     <span class="text-sm font-bold text-slate-600">Streak: <span id="score-hunt-streak" class="text-emerald-600 text-xl font-extrabold">0</span></span>
                                     <span class="text-sm font-bold text-slate-600">Best: <span id="score-hunt-best" class="text-slate-800 text-xl font-extrabold">0</span></span>
-                                </div>
-                                <div class="bg-emerald-100 text-emerald-900 px-4 py-2 rounded-xl font-bold text-sm">
-                                    Target: <span id="score-hunt-target" class="text-emerald-700 underline underline-offset-4 ml-1">...</span>
+                                    <div class="bg-emerald-100 text-emerald-900 px-4 py-2 rounded-xl font-bold text-sm">
+                                        Target: <span id="score-hunt-target" class="text-emerald-700 underline underline-offset-4 ml-1">...</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="bg-white rounded-2xl p-6 border border-slate-200 overflow-x-auto shadow-sm flex justify-center">
-                                <svg width="600" height="190" viewBox="0 0 600 190" id="score-hunt-svg" class="select-none">
-                                    <line x1="20" y1="50" x2="580" y2="50" class="staff-line"/>
-                                    <line x1="20" y1="70" x2="580" y2="70" class="staff-line"/>
-                                    <line x1="20" y1="90" x2="580" y2="90" class="staff-line"/>
-                                    <line x1="20" y1="110" x2="580" y2="110" class="staff-line"/>
-                                    <line x1="20" y1="130" x2="580" y2="130" class="staff-line"/>
+                            <div class="bg-white rounded-2xl p-6 border border-slate-200 overflow-hidden shadow-sm flex justify-center w-full">
+                                <svg width="100%" height="190" viewBox="0 0 1000 190" id="score-hunt-svg" class="select-none max-w-full">
+                                    <!-- Staff Lines -->
+                                    <line x1="20" y1="50" x2="980" y2="50" class="staff-line"/>
+                                    <line x1="20" y1="70" x2="980" y2="70" class="staff-line"/>
+                                    <line x1="20" y1="90" x2="980" y2="90" class="staff-line"/>
+                                    <line x1="20" y1="110" x2="980" y2="110" class="staff-line"/>
+                                    <line x1="20" y1="130" x2="980" y2="130" class="staff-line"/>
 
-                                    <text x="25" y="131" font-size="110" font-family="serif" fill="#0f172a">&#119070;</text>
-                                    <text x="75" y="85" font-family="Inter" font-weight="bold" font-size="28" fill="#0f172a">4</text>
-                                    <text x="75" y="125" font-family="Inter" font-weight="bold" font-size="28" fill="#0f172a">4</text>
-
-                                    <!-- Bar 1 Notes -->
-                                    <ellipse cx="130" cy="130" rx="10" ry="7" fill="#0f172a"/>
-                                    <line x1="140" y1="130" x2="140" y2="85" stroke="#0f172a" stroke-width="2.5"/>
-                                    <ellipse cx="180" cy="110" rx="10" ry="7" fill="#0f172a"/>
-                                    <line x1="190" y1="110" x2="190" y2="65" stroke="#0f172a" stroke-width="2.5"/>
-
-                                    <!-- Clickable Slur -->
-                                    <g id="hunt-slur" onclick="checkScoreHuntAnswer('slur')" class="cursor-pointer group">
-                                        <rect x="120" y="135" width="70" height="30" fill="transparent"/>
-                                        <path d="M 125 142 Q 155 160 185 122" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" class="group-hover:stroke-emerald-600 transition"/>
+                                    <!-- Bar 1 -->
+                                    <g id="hunt-allegro" onclick="checkScoreHuntAnswer('allegro')" class="cursor-pointer group">
+                                        <rect x="25" y="10" width="80" height="30" fill="transparent"/>
+                                        <text x="30" y="30" font-family="Inter" font-weight="bold" font-size="18" fill="#0f172a" class="group-hover:fill-emerald-600 transition">Allegro</text>
                                     </g>
+                                    <g id="hunt-forte" onclick="checkScoreHuntAnswer('forte')" class="cursor-pointer group">
+                                        <rect x="25" y="145" width="40" height="40" fill="transparent"/>
+                                        <text x="35" y="175" font-family="serif" font-weight="bold" font-style="italic" font-size="28" fill="#0f172a" class="group-hover:fill-emerald-600 transition">f</text>
+                                    </g>
+                                    <ellipse cx="70" cy="130" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="80" y1="130" x2="80" y2="85" stroke="#0f172a" stroke-width="2.5"/>
+                                    <ellipse cx="110" cy="110" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="120" y1="110" x2="120" y2="65" stroke="#0f172a" stroke-width="2.5"/>
 
-                                    <!-- Clickable Single Bar Line 1 -->
                                     <g id="hunt-barline" onclick="checkScoreHuntAnswer('barline')" class="cursor-pointer group">
-                                        <rect x="220" y="40" width="26" height="100" fill="transparent"/>
-                                        <line x1="233" y1="50" x2="233" y2="130" stroke="#0f172a" stroke-width="2.5" class="group-hover:stroke-emerald-600 transition"/>
+                                        <rect x="130" y="40" width="26" height="100" fill="transparent"/>
+                                        <line x1="140" y1="50" x2="140" y2="130" stroke="#0f172a" stroke-width="2.5" class="group-hover:stroke-emerald-600 transition"/>
                                     </g>
 
-                                    <!-- Bar 2: Two B notes connected by a Tie -->
-                                    <ellipse cx="275" cy="90" rx="10" ry="7" fill="#0f172a"/>
-                                    <line x1="285" y1="90" x2="285" y2="45" stroke="#0f172a" stroke-width="2.5"/>
-                                    <ellipse cx="325" cy="90" rx="10" ry="7" fill="#0f172a"/>
-                                    <line x1="335" y1="90" x2="335" y2="45" stroke="#0f172a" stroke-width="2.5"/>
-
-                                    <!-- Clickable Tie -->
-                                    <g id="hunt-tie" onclick="checkScoreHuntAnswer('tie')" class="cursor-pointer group">
-                                        <rect x="270" y="95" width="65" height="25" fill="transparent"/>
-                                        <path d="M 275 102 Q 300 118 325 102" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" class="group-hover:stroke-emerald-600 transition"/>
+                                    <!-- Bar 2 -->
+                                    <ellipse cx="180" cy="90" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="190" y1="90" x2="190" y2="45" stroke="#0f172a" stroke-width="2.5"/>
+                                    <ellipse cx="220" cy="100" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="230" y1="100" x2="230" y2="55" stroke="#0f172a" stroke-width="2.5"/>
+                                    <g id="hunt-slur" onclick="checkScoreHuntAnswer('slur')" class="cursor-pointer group">
+                                        <rect x="170" y="105" width="60" height="30" fill="transparent"/>
+                                        <path d="M 175 102 Q 200 125 225 110" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" class="group-hover:stroke-emerald-600 transition"/>
                                     </g>
+                                    <line x1="260" y1="50" x2="260" y2="130" stroke="#0f172a" stroke-width="2.5"/>
 
-                                    <!-- Single Bar Line 2 -->
-                                    <line x1="365" y1="50" x2="365" y2="130" stroke="#0f172a" stroke-width="2.5"/>
-
-                                    <!-- Bar 3: Staccato note -->
-                                    <ellipse cx="420" cy="70" rx="10" ry="7" fill="#0f172a"/>
-                                    <line x1="410" y1="70" x2="410" y2="115" stroke="#0f172a" stroke-width="2.5"/>
-
-                                    <!-- Clickable Staccato Dot -->
+                                    <!-- Bar 3 -->
+                                    <g id="hunt-piano" onclick="checkScoreHuntAnswer('piano')" class="cursor-pointer group">
+                                        <rect x="270" y="145" width="40" height="40" fill="transparent"/>
+                                        <text x="280" y="175" font-family="serif" font-weight="bold" font-style="italic" font-size="28" fill="#0f172a" class="group-hover:fill-emerald-600 transition">p</text>
+                                    </g>
+                                    <ellipse cx="310" cy="70" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="300" y1="70" x2="300" y2="115" stroke="#0f172a" stroke-width="2.5"/>
+                                    <ellipse cx="350" cy="60" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="340" y1="60" x2="340" y2="105" stroke="#0f172a" stroke-width="2.5"/>
                                     <g id="hunt-staccato" onclick="checkScoreHuntAnswer('staccato')" class="cursor-pointer group">
-                                        <rect x="405" y="42" width="30" height="25" fill="transparent"/>
-                                        <circle cx="420" cy="54" r="4.5" fill="#0f172a" class="group-hover:fill-emerald-600 transition"/>
+                                        <rect x="295" y="42" width="70" height="25" fill="transparent"/>
+                                        <circle cx="310" cy="54" r="4.5" fill="#0f172a" class="group-hover:fill-emerald-600 transition"/>
+                                        <circle cx="350" cy="44" r="4.5" fill="#0f172a" class="group-hover:fill-emerald-600 transition"/>
                                     </g>
+                                    <line x1="380" y1="50" x2="380" y2="130" stroke="#0f172a" stroke-width="2.5"/>
 
-                                    <ellipse cx="475" cy="80" rx="10" ry="7" fill="#0f172a"/>
-                                    <line x1="465" y1="80" x2="465" y2="125" stroke="#0f172a" stroke-width="2.5"/>
+                                    <!-- Bar 4 -->
+                                    <ellipse cx="420" cy="110" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="430" y1="110" x2="430" y2="65" stroke="#0f172a" stroke-width="2.5"/>
+                                    <ellipse cx="470" cy="90" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="480" y1="90" x2="480" y2="45" stroke="#0f172a" stroke-width="2.5"/>
+                                    <g id="hunt-cresc" onclick="checkScoreHuntAnswer('cresc')" class="cursor-pointer group">
+                                        <rect x="400" y="140" width="90" height="40" fill="transparent"/>
+                                        <polyline points="480,145 410,157.5 480,170" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" class="group-hover:stroke-emerald-600 transition"/>
+                                    </g>
+                                    <line x1="500" y1="50" x2="500" y2="130" stroke="#0f172a" stroke-width="2.5"/>
+
+                                    <!-- Bar 5 -->
+                                    <ellipse cx="540" cy="100" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="550" y1="100" x2="550" y2="55" stroke="#0f172a" stroke-width="2.5"/>
+                                    <ellipse cx="590" cy="100" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="600" y1="100" x2="600" y2="55" stroke="#0f172a" stroke-width="2.5"/>
+                                    <g id="hunt-tie" onclick="checkScoreHuntAnswer('tie')" class="cursor-pointer group">
+                                        <rect x="580" y="105" width="80" height="35" fill="transparent"/>
+                                        <path d="M 590 112 Q 620 135 650 112" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" class="group-hover:stroke-emerald-600 transition"/>
+                                    </g>
+                                    <line x1="620" y1="50" x2="620" y2="130" stroke="#0f172a" stroke-width="2.5"/>
+
+                                    <!-- Bar 6 -->
+                                    <ellipse cx="650" cy="100" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="660" y1="100" x2="660" y2="55" stroke="#0f172a" stroke-width="2.5"/>
+                                    <g id="hunt-mp" onclick="checkScoreHuntAnswer('mp')" class="cursor-pointer group">
+                                        <rect x="630" y="145" width="60" height="40" fill="transparent"/>
+                                        <text x="640" y="175" font-family="serif" font-weight="bold" font-style="italic" font-size="28" fill="#0f172a" class="group-hover:fill-emerald-600 transition">mp</text>
+                                    </g>
+                                    <g transform="translate(670, 48)">
+                                        <path d="M 23 7 C 22.5 6.5 23.5 6 24 6.5 L 34 16 C 36 18.5 38 21.5 38 24 C 38 27.5 35 32 31.5 36.5 L 35 37 C 37.5 38 41 40 40 41.5 C 39.5 42 36.5 41 33.5 40 C 31 39.2 29 40 25.5 40.5 C 21 41.5 17 44.5 17 48.5 C 17 52.5 21 56 26.5 56 C 29.5 56 31 54.5 31.5 53.5 C 32 52.5 31 51.5 30 52 C 28 53 25.5 53.5 24 53 C 21.5 52.2 20 49.5 20.5 46.5 C 21.2 43 25 41.5 28 41.5 C 31 41.5 33 42.5 33.5 44 C 34 43 32.5 39 30.5 36.5 L 23.5 27 C 21.5 24 24 21 27 18 L 23 7 Z" fill="#0f172a"/>
+                                    </g>
+                                    <line x1="740" y1="50" x2="740" y2="130" stroke="#0f172a" stroke-width="2.5"/>
+
+                                    <!-- Bar 7 -->
+                                    <g id="hunt-rit" onclick="checkScoreHuntAnswer('rit')" class="cursor-pointer group">
+                                        <rect x="750" y="10" width="40" height="30" fill="transparent"/>
+                                        <text x="760" y="30" font-family="Inter" font-style="italic" font-weight="bold" font-size="18" fill="#0f172a" class="group-hover:fill-emerald-600 transition">rit.</text>
+                                    </g>
+                                    <ellipse cx="780" cy="90" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="790" y1="90" x2="790" y2="45" stroke="#0f172a" stroke-width="2.5"/>
+                                    <ellipse cx="820" cy="110" rx="10" ry="7" fill="#0f172a"/>
+                                    <line x1="830" y1="110" x2="830" y2="65" stroke="#0f172a" stroke-width="2.5"/>
+                                    <g id="hunt-decresc" onclick="checkScoreHuntAnswer('decresc')" class="cursor-pointer group">
+                                        <rect x="750" y="140" width="100" height="40" fill="transparent"/>
+                                        <polyline points="760,145 840,157.5 760,170" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" class="group-hover:stroke-emerald-600 transition"/>
+                                    </g>
+                                    <line x1="860" y1="50" x2="860" y2="130" stroke="#0f172a" stroke-width="2.5"/>
+
+                                    <!-- Bar 8 -->
+                                    <g id="hunt-dim" onclick="checkScoreHuntAnswer('dim')" class="cursor-pointer group">
+                                        <rect x="870" y="145" width="50" height="40" fill="transparent"/>
+                                        <text x="880" y="175" font-family="Inter" font-style="italic" font-weight="bold" font-size="24" fill="#0f172a" class="group-hover:fill-emerald-600 transition">dim.</text>
+                                    </g>
+                                    <!-- Whole Bar Rest -->
+                                    <rect x="910" y="70" width="20" height="10" fill="#0f172a" />
 
                                     <!-- Clickable Double Bar Line -->
                                     <g id="hunt-doublebar" onclick="checkScoreHuntAnswer('doublebar')" class="cursor-pointer group">
-                                        <rect x="545" y="40" width="35" height="100" fill="transparent"/>
-                                        <line x1="555" y1="50" x2="555" y2="130" stroke="#0f172a" stroke-width="2" class="group-hover:stroke-emerald-600 transition"/>
-                                        <line x1="563" y1="50" x2="563" y2="130" stroke="#0f172a" stroke-width="6" class="group-hover:stroke-emerald-600 transition"/>
+                                        <rect x="960" y="40" width="35" height="100" fill="transparent"/>
+                                        <line x1="970" y1="50" x2="970" y2="130" stroke="#0f172a" stroke-width="2" class="group-hover:stroke-emerald-600 transition"/>
+                                        <line x1="978" y1="50" x2="978" y2="130" stroke="#0f172a" stroke-width="6" class="group-hover:stroke-emerald-600 transition"/>
                                     </g>
                                 </svg>
                             </div>
@@ -2804,7 +2894,7 @@
                                     <ul class="list-disc pl-5 text-slate-700 text-sm space-y-2 leading-relaxed mb-4">
                                         <li><strong>Progressive Addition:</strong> Begins with a solitary line (e.g. a soft bass pulse), then adds harmony, rhythm, and screaming lead lines step-by-step.</li>
                                         <li><strong>Psychological Impact:</strong> Creates mounting <strong>suspense, anticipation, urgency, and grandeur</strong>.</li>
-                                        <li><strong>Common In:</strong> Film scores during chase/battle scenes, EDM build-ups before a bass drop, and orchestral crescendos (like Ravel's <em>Boléro</em>).</li>
+                                        <li><strong>Common In:</strong> Film scores during chase/battle scenes, EDM build-ups before a bass drop, and orchestral crescendos.</li>
                                     </ul>
                                 </div>
                                 <div class="bg-white/90 p-3 rounded-xl border border-indigo-100 text-xs text-indigo-950 font-medium">
@@ -2890,7 +2980,7 @@
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="resetTexture2Timeline()" class="text-xs font-bold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">Clear All</button>
-                                <button onclick="applyAllSameBarPreset()" class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-200/80 hover:bg-slate-300 px-3 py-1.5 rounded-lg transition">All at Bar 1 (Instant Thick)</button>
+                                <button onclick="applyAllSameBarPreset()" class="text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-200/80 hover:bg-slate-300 px-3 py-1.5 rounded-lg transition">All at Bar 1</button>
                             </div>
                         </div>
 
@@ -3011,7 +3101,7 @@
 
                                 <div class="flex items-center justify-center gap-3 mb-2">
                                     <i class="fa-solid fa-music text-blue-600 text-3xl"></i>
-                                    <span class="text-2xl font-extrabold text-slate-800 tracking-tight">BonTheory</span>
+                                    <span class="text-2xl font-extrabold text-slate-800 tracking-tight">Boncepts of Music</span>
                                 </div>
                                 <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Certificate of Music Theory Achievement</p>
 
@@ -3151,7 +3241,7 @@
                             <a href="${sheetUrl}" target="_blank" rel="noopener noreferrer" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-md transition inline-flex items-center gap-2 text-sm">
                                 <i class="fa-solid fa-table"></i> Open Results Spreadsheet
                             </a>
-                            <button onclick="setTeacherSpreadsheetUrl()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl transition text-sm" title="Configure Sheet Link">
+                            <button onclick="toggleCustomWebhookBox()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl transition text-sm" title="Configure Sheet Link">
                                 <i class="fa-solid fa-gear"></i> Configure Link
                             </button>
                         </div>
@@ -3259,46 +3349,6 @@
             synth.triggerAttackRelease([note], "0.8n");
         };
 
-        window.playCurrentChord = function() {
-            if(!synth) initChordSynth();
-            Tone.start();
-            const root = document.getElementById('chord-root').value;
-            const type = document.getElementById('chord-cat').value;
-            
-            let notes = [];
-            if(type === 'major') notes = [`${root}4`, Tone.Frequency(`${root}4`).transpose(4).toNote(), Tone.Frequency(`${root}4`).transpose(7).toNote()];
-            else if(type === 'minor') notes = [`${root}4`, Tone.Frequency(`${root}4`).transpose(3).toNote(), Tone.Frequency(`${root}4`).transpose(7).toNote()];
-            else notes = [`${root}4`, Tone.Frequency(`${root}4`).transpose(4).toNote(), Tone.Frequency(`${root}4`).transpose(7).toNote(), Tone.Frequency(`${root}4`).transpose(10).toNote()];
-
-            synth.triggerAttackRelease(notes, "1.5n");
-        };
-
-        window.updateChordDisplay = function() {
-            const rootEl = document.getElementById('chord-root');
-            const catEl = document.getElementById('chord-cat');
-            if (!rootEl || !catEl) return;
-            const root = rootEl.value;
-            const cat = catEl.value;
-            let name = `${root} Major`;
-            let formula = '1 - 3 - 5';
-            
-            if(cat === 'minor') { name = `${root} Minor`; formula = '1 - b3 - 5'; }
-            if(cat === 'dominant') { name = `${root} Dominant 7`; formula = '1 - 3 - 5 - b7'; }
-            
-            document.getElementById('display-chord-name').textContent = name;
-            document.getElementById('display-formula').textContent = formula;
-
-            try {
-                let noteNames = [];
-                if(cat === 'major') noteNames = [root, Tone.Frequency(`${root}4`).transpose(4).toNote().slice(0,-1), Tone.Frequency(`${root}4`).transpose(7).toNote().slice(0,-1)];
-                else if(cat === 'minor') noteNames = [root, Tone.Frequency(`${root}4`).transpose(3).toNote().slice(0,-1), Tone.Frequency(`${root}4`).transpose(7).toNote().slice(0,-1)];
-                else noteNames = [root, Tone.Frequency(`${root}4`).transpose(4).toNote().slice(0,-1), Tone.Frequency(`${root}4`).transpose(7).toNote().slice(0,-1), Tone.Frequency(`${root}4`).transpose(10).toNote().slice(0,-1)];
-                document.getElementById('display-notes').textContent = noteNames.join(' - ');
-            } catch(e) {
-                document.getElementById('display-notes').textContent = root + " - ...";
-            }
-        };
-
         // --- Global Login Helpers ---
         window.loginRole = 'student';
         
@@ -3335,7 +3385,7 @@
             }
         };
 
-        window.handleLogin = function() {
+        window.handleLogin = async function() {
             const nameInput = document.getElementById('login-name');
             const name = nameInput ? nameInput.value.trim() : '';
             if (!name) {
@@ -3359,6 +3409,46 @@
                 app.navigate('teacherDash');
             } else {
                 app.currentUser = { name, role: 'student', classGroup: studentClass };
+                
+                // Show loading state while fetching profile
+                const btn = document.querySelector('#loginForm button:last-child');
+                const originalText = btn.innerHTML;
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading Profile...';
+                    btn.disabled = true;
+                }
+
+                try {
+                    const endpoint = window.getGoogleSheetWebappUrl();
+                    // Only attempt to load if the teacher has saved a custom webhook
+                    if (endpoint && endpoint !== DEFAULT_GOOGLE_SHEET_WEBAPP_URL) {
+                        const params = new URLSearchParams({
+                            action: 'loadProfile',
+                            studentName: name,
+                            classGroup: studentClass
+                        });
+                        
+                        const response = await fetch(endpoint + '?' + params.toString());
+                        const data = await response.json();
+                        
+                        state.tokens = Number(data.tokens) || 0;
+                        state.inventory = data.inventory ? JSON.parse(data.inventory) : [];
+                    } else {
+                        // Default fresh state if no webhook configured
+                        state.tokens = 0;
+                        state.inventory = [];
+                    }
+                } catch(e) {
+                    console.log("Could not load profile, starting fresh.", e);
+                    state.tokens = 0;
+                    state.inventory = [];
+                }
+                
+                if (btn) {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+                
                 app.navigate('studentDash');
             }
         };
@@ -3375,7 +3465,7 @@
         // --- Result Copy Helper for Google Classroom / Email ---
         window.copyResultsForClassroom = function(name, area, level, score, total, percentage) {
             const studentClass = app.currentUser && app.currentUser.classGroup ? `Class: ${app.currentUser.classGroup}\n` : '';
-            const summary = `🎓 BonTheory Test Result\n` +
+            const summary = `🎓 Boncepts of Music Test Result\n` +
                 `Student: ${name}\n` +
                 studentClass +
                 `Topic: ${area} (Level ${level})\n` +
@@ -3397,9 +3487,84 @@
             }
         };
 
+        // --- Gamification Helpers ---
+        window.buyItem = function(id, name, price, icon) {
+            if (state.tokens >= price && !state.inventory.find(i => i.id === id)) {
+                state.tokens -= price;
+                state.inventory.push({ id, name, price, icon });
+                app.navigate('studentDash');
+                window.sendProfileToSpreadsheet();
+            }
+        };
+
+        window.sellItem = function(id) {
+            const itemIndex = state.inventory.findIndex(i => i.id === id);
+            if (itemIndex > -1) {
+                const item = state.inventory[itemIndex];
+                const shopItem = appData.shopItems.find(i => i.id === id);
+                const price = item.price || (shopItem ? shopItem.price : 0);
+                
+                state.tokens += price;
+                state.inventory.splice(itemIndex, 1);
+                app.navigate('studentDash');
+                window.sendProfileToSpreadsheet();
+                
+                const notif = document.createElement('div');
+                notif.className = 'fixed bottom-10 right-10 bg-gradient-to-r from-blue-400 to-indigo-500 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-lg flex items-center gap-3 z-50';
+                notif.innerHTML = `<i class="fa-solid fa-right-left text-2xl"></i> Traded ${item.name} for ${price} Tokens!`;
+                document.body.appendChild(notif);
+                setTimeout(() => {
+                    notif.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => notif.remove(), 500);
+                }, 3000);
+            }
+        };
+
+        window.sendProfileToSpreadsheet = function() {
+            const studentName = app.currentUser ? app.currentUser.name : "Student";
+            const studentClass = app.currentUser && app.currentUser.classGroup ? app.currentUser.classGroup : "-";
+            const endpoint = window.getGoogleSheetWebappUrl();
+            
+            if (endpoint && endpoint !== DEFAULT_GOOGLE_SHEET_WEBAPP_URL) {
+                const payload = {
+                    action: 'saveProfile',
+                    studentName: studentName,
+                    classGroup: studentClass,
+                    tokens: state.tokens,
+                    inventory: JSON.stringify(state.inventory)
+                };
+                
+                const params = new URLSearchParams(payload);
+                // Background save using standard fetch
+                fetch(endpoint + '?' + params.toString()).catch(err => console.log("Profile save error:", err));
+            }
+        };
+
+        window.checkTokenAward = function(streak) {
+            if (streak > 0 && streak % 20 === 0) {
+                const earned = streak / 20;
+                state.tokens += earned;
+                window.sendProfileToSpreadsheet();
+                
+                // Update token balance in the sidebar if it exists
+                const sidebarBalance = document.getElementById('sidebar-token-balance');
+                if (sidebarBalance) sidebarBalance.textContent = state.tokens;
+                
+                const notif = document.createElement('div');
+                notif.className = 'fixed bottom-10 right-10 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-lg flex items-center gap-3 animate-bounce z-50';
+                notif.innerHTML = `<i class="fa-solid fa-coins text-2xl"></i> Streak Bonus! You earned ${earned} Token${earned > 1 ? 's' : ''}!`;
+                document.body.appendChild(notif);
+                setTimeout(() => {
+                    notif.classList.remove('animate-bounce');
+                    notif.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                    setTimeout(() => notif.remove(), 500);
+                }, 3000);
+            }
+        };
+
         // --- Global Quiz Helpers ---
         window.quizState = null;
-        const DEFAULT_GOOGLE_SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby9efiWUNywEUBGBUJATEMc5wjs_iN0R0rlcLxmCUpmKfGtSGjpHPLdRGNmfNPk9kTgvA/exec";
+        const DEFAULT_GOOGLE_SHEET_WEBAPP_URL = "https://docs.google.com/spreadsheets/d/140auyVwux2-WUJZ6DybpfWRrnwOG2FTX-1QpMsvfY0c/edit?gid=0#gid=0";
         const TEACHER_SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/140auyVwux2-WUJZ6DybpfWRrnwOG2FTX-1QpMsvfY0c/edit?gid=0#gid=0";
         
         window.getGoogleSheetWebappUrl = function() {
@@ -3485,7 +3650,7 @@
         window.lastSubmissionKey = null;
         window.sendResultsToGoogleSheet = function(payload) {
             const endpoint = window.getGoogleSheetWebappUrl();
-            if (!endpoint) {
+            if (!endpoint || endpoint === DEFAULT_GOOGLE_SHEET_WEBAPP_URL) {
                 console.warn("No Google Sheet Web App URL configured.");
                 return;
             }
@@ -3545,33 +3710,58 @@
 
         window.submitQuizAnswer = function() {
             if (!window.quizState || window.quizState.selectedOption === null) return;
-            const state = window.quizState;
-            const q = state.questions[state.currentIndex];
+            const qState = window.quizState;
+            const q = qState.questions[qState.currentIndex];
             
-            state.userAnswers.push(state.selectedOption);
-            if (state.selectedOption === q.a) state.score++;
+            qState.userAnswers.push(qState.selectedOption);
+            if (qState.selectedOption === q.a) qState.score++;
             
-            state.currentIndex++;
-            state.selectedOption = null;
+            qState.currentIndex++;
+            qState.selectedOption = null;
             
-            if (state.currentIndex >= state.questions.length) {
-                state.finished = true;
+            if (qState.currentIndex >= qState.questions.length) {
+                qState.finished = true;
+                
+                // --- Token Award Logic ---
+                let tokensEarned = 0;
+                if (qState.type === 'practice') {
+                    tokensEarned = 2;
+                } else if (qState.type === 'test' && qState.score === qState.questions.length) {
+                    tokensEarned = 4;
+                }
+                
+                if (tokensEarned > 0) {
+                    state.tokens += tokensEarned;
+                    window.sendProfileToSpreadsheet();
+                    
+                    setTimeout(() => {
+                        const notif = document.createElement('div');
+                        notif.className = 'fixed bottom-10 right-10 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-lg flex items-center gap-3 animate-bounce z-50';
+                        notif.innerHTML = `<i class="fa-solid fa-coins text-2xl"></i> Module Complete! You earned ${tokensEarned} Tokens!`;
+                        document.body.appendChild(notif);
+                        setTimeout(() => {
+                            notif.classList.remove('animate-bounce');
+                            notif.classList.add('opacity-0', 'transition-opacity', 'duration-500');
+                            setTimeout(() => notif.remove(), 500);
+                        }, 4000);
+                    }, 500);
+                }
                 
                 // Submit to Google Sheet for ALL final test completions across every topic & level
-                if (state.type === 'test') {
+                if (qState.type === 'test') {
                     const studentName = (app.currentUser && app.currentUser.name) ? app.currentUser.name.trim() : "Student";
                     const studentClass = (app.currentUser && app.currentUser.classGroup) ? app.currentUser.classGroup.trim() : "-";
-                    const areaTitle = appData.areas.find(a => a.id === state.area)?.title || state.area.toUpperCase();
-                    const pct = Math.round((state.score / state.questions.length) * 100) + "%";
+                    const areaTitle = appData.areas.find(a => a.id === qState.area)?.title || qState.area.toUpperCase();
+                    const pct = Math.round((qState.score / qState.questions.length) * 100) + "%";
 
                     const payload = {
                         studentName: studentName,
                         classGroup: studentClass,
                         area: areaTitle,
-                        level: String(state.level),
-                        score: String(state.score),
-                        total: String(state.questions.length),
-                        scoreDisplay: `${state.score} / ${state.questions.length}`,
+                        level: String(qState.level),
+                        score: String(qState.score),
+                        total: String(qState.questions.length),
+                        scoreDisplay: `${qState.score} / ${qState.questions.length}`,
                         percentage: pct,
                         timestamp: new Date().toISOString()
                     };
@@ -3786,6 +3976,7 @@
         window.structureLesson3GameState = {
             streak: 0,
             best: 0,
+            isLocked: false,
             selectedToken: null,
             currentPiece: null,
             assignments: {},
@@ -3843,6 +4034,7 @@
 
         window.startStructureLesson3Game = function() {
             const state = window.structureLesson3GameState;
+            state.isLocked = false;
             state.selectedToken = null;
             state.assignments = {};
 
@@ -3943,6 +4135,8 @@
 
         window.checkStructureLesson3Game = function() {
             const state = window.structureLesson3GameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const piece = state.currentPiece;
             const fb = document.getElementById('labeller-feedback');
             if (!piece || !fb) return;
@@ -3971,6 +4165,7 @@
             if (correct === total) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 document.getElementById('labeller-streak').textContent = state.streak;
                 document.getElementById('labeller-best').textContent = state.best;
 
@@ -3989,6 +4184,7 @@
         window.toneSemitoneGameState = {
             streak: 0,
             best: 0,
+            isLocked: false,
             currentQuestion: null,
             pool: [
                 { note1: 'C4', note2: 'C#4', type: 'Semitone', label: 'C to C#' },
@@ -4008,6 +4204,7 @@
 
         window.startToneSemitoneGame = function() {
             const state = window.toneSemitoneGameState;
+            state.isLocked = false;
             state.currentQuestion = state.pool[Math.floor(Math.random() * state.pool.length)];
             
             const labelEl = document.getElementById('ts-game-notes-label');
@@ -4054,7 +4251,7 @@
                 const isTarget = (k.note === q.note1 || k.note === q.note2);
                 const bgClass = isTarget ? 'bg-amber-400 text-slate-900 ring-2 ring-amber-300 font-extrabold' : 'bg-slate-950 text-white';
                 html += `
-                    <div style="left: ${k.left}px;" class="absolute top-2.5 w-8 h-26 ${bgClass} rounded-b text-[10px] flex flex-col items-center justify-end pb-2 z-10 border border-slate-700 shadow-md transition">
+                    <div style="left: ${k.left}px;" class="absolute top-2.5 w-8 h-20 ${bgClass} rounded-b text-[10px] flex flex-col items-center justify-end pb-2 z-10 border border-slate-700 shadow-md transition">
                         ${isTarget ? '<span class="w-2 h-2 rounded-full bg-slate-900 mb-1 animate-pulse"></span>' : ''}
                         <span>${k.note.slice(0,-1)}</span>
                     </div>
@@ -4078,12 +4275,15 @@
 
         window.checkToneSemitoneAnswer = function(answer) {
             const state = window.toneSemitoneGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const fb = document.getElementById('ts-game-feedback');
             if (!fb || !state.currentQuestion) return;
 
             if (answer === state.currentQuestion.type) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 fb.textContent = `Correct! ${state.currentQuestion.label} is a ${state.currentQuestion.type}!`;
                 fb.className = 'font-bold h-6 text-lg mt-5 text-center text-emerald-500';
                 
@@ -4101,7 +4301,7 @@
 
         // --- Bass Clef Game Helpers ---
         window.bassClefGameState = {
-            streak: 0, best: 0, currentNote: null,
+            streak: 0, best: 0, isLocked: false, currentNote: null,
             notes: [
                 { note: 'G', cy: 120 }, { note: 'A', cy: 110 }, { note: 'B', cy: 100 },
                 { note: 'C', cy: 90 },  { note: 'D', cy: 80 },  { note: 'E', cy: 70 },
@@ -4111,6 +4311,7 @@
 
         window.startBassClefGame = function() {
             const state = window.bassClefGameState;
+            state.isLocked = false;
             state.currentNote = state.notes[Math.floor(Math.random() * state.notes.length)];
             const noteEl = document.getElementById('bass-game-note');
             if (noteEl) noteEl.setAttribute('cy', state.currentNote.cy);
@@ -4120,12 +4321,15 @@
 
         window.checkBassClefAnswer = function(answer) {
             const state = window.bassClefGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const feedback = document.getElementById('bass-game-feedback');
             if(!feedback) return;
             
             if (answer === state.currentNote.note) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 feedback.textContent = 'Correct!';
                 feedback.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
                 document.getElementById('bass-game-streak').textContent = state.streak;
@@ -4142,7 +4346,7 @@
 
         // --- Treble Clef Game Helpers ---
         window.trebleClefGameState = {
-            streak: 0, best: 0, currentNote: null,
+            streak: 0, best: 0, isLocked: false, currentNote: null,
             notes: [
                 { note: 'E', cy: 120 }, { note: 'F', cy: 110 }, { note: 'G', cy: 100 },
                 { note: 'A', cy: 90 },  { note: 'B', cy: 80 },  { note: 'C', cy: 70 },
@@ -4152,6 +4356,7 @@
 
         window.startTrebleClefGame = function() {
             const state = window.trebleClefGameState;
+            state.isLocked = false;
             state.currentNote = state.notes[Math.floor(Math.random() * state.notes.length)];
             const noteEl = document.getElementById('treble-game-note');
             if (noteEl) noteEl.setAttribute('cy', state.currentNote.cy);
@@ -4161,12 +4366,15 @@
 
         window.checkTrebleClefAnswer = function(answer) {
             const state = window.trebleClefGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const feedback = document.getElementById('treble-game-feedback');
             if(!feedback) return;
             
             if (answer === state.currentNote.note) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 feedback.textContent = 'Correct!';
                 feedback.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
                 document.getElementById('treble-game-streak').textContent = state.streak;
@@ -4183,7 +4391,7 @@
 
         // --- Accidentals Game Helpers ---
         window.accGameState = {
-            streak: 0, best: 0, currentQ: null,
+            streak: 0, best: 0, isLocked: false, currentQ: null,
             notes: [
                 { name: 'E', cy: 120 }, { name: 'F', cy: 110 }, { name: 'G', cy: 100 },
                 { name: 'A', cy: 90 }, { name: 'B', cy: 80 }, { name: 'C', cy: 70 },
@@ -4198,6 +4406,7 @@
         
         window.startAccGame = function() {
             const state = window.accGameState;
+            state.isLocked = false;
             const note = state.notes[Math.floor(Math.random() * state.notes.length)];
             const acc = state.accs[Math.floor(Math.random() * state.accs.length)];
             
@@ -4236,12 +4445,15 @@
 
         window.checkAccAnswer = function(answer) {
             const state = window.accGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const fb = document.getElementById('acc-game-feedback');
             if(!fb) return;
             
             if (answer === state.currentQ.ans) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 fb.textContent = 'Correct!';
                 fb.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
                 
@@ -4259,7 +4471,7 @@
 
         // --- Duration Game 2 Helpers ---
         window.durationGame2State = {
-            streak: 0, best: 0, currentQ: null,
+            streak: 0, best: 0, isLocked: false, currentQ: null,
             notes: [
                 { name: 'Semibreve', beats: 4, type: 'Semibreve' },
                 { name: 'Dotted Minim', beats: 3, type: 'Dotted Minim' },
@@ -4270,6 +4482,7 @@
 
         window.startDurationGame2 = function() {
             const state = window.durationGame2State;
+            state.isLocked = false;
             const n1 = state.notes[Math.floor(Math.random() * state.notes.length)];
             const n2 = state.notes[Math.floor(Math.random() * state.notes.length)];
             const ans = n1.beats + n2.beats;
@@ -4304,12 +4517,15 @@
 
         window.checkDurationGame2 = function(guess) {
             const state = window.durationGame2State;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const fb = document.getElementById('dur-game2-feedback');
             if(!fb) return;
             
             if (guess === state.currentQ.ans) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 fb.textContent = 'Correct!';
                 fb.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
                 document.getElementById('dur-game2-streak').textContent = state.streak;
@@ -4328,6 +4544,7 @@
         window.quaverGameState = {
             streak: 0,
             best: 0,
+            isLocked: false,
             selectedTool: null,
             currentChallenge: null,
             pool: [
@@ -4340,6 +4557,7 @@
 
         window.startQuaverGame = function() {
             const state = window.quaverGameState;
+            state.isLocked = false;
             state.selectedTool = null;
             document.getElementById('quaver-tool-tail')?.classList.remove('ring-4', 'ring-amber-400');
             document.getElementById('quaver-tool-beam')?.classList.remove('ring-4', 'ring-amber-400');
@@ -4486,6 +4704,8 @@
 
         function checkQuaverTool(toolType) {
             const state = window.quaverGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const ch = state.currentChallenge;
             const fb = document.getElementById('quaver-game-feedback');
             if (!ch || !fb) return;
@@ -4493,6 +4713,7 @@
             if (toolType === ch.expected) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 renderQuaverSVG(true);
                 fb.textContent = toolType === 'tail' 
                     ? 'Correct! A single crotchet becomes a quaver with a wavy tail on the right!' 
@@ -4514,7 +4735,7 @@
 
         // --- Duration Game 4 Helpers (Rests) ---
         window.durationGame4State = {
-            streak: 0, best: 0, currentQ: null,
+            streak: 0, best: 0, isLocked: false, currentQ: null,
             notes: [
                 { name: 'Semibreve', beats: 4, type: 'Semibreve' },
                 { name: 'Crotchet', beats: 1, type: 'Crotchet' },
@@ -4524,6 +4745,7 @@
 
         window.startDurationGame4 = function() {
             const state = window.durationGame4State;
+            state.isLocked = false;
             const n1 = state.notes[Math.floor(Math.random() * state.notes.length)];
             const n2 = state.notes[Math.floor(Math.random() * state.notes.length)];
             const ans = n1.beats + n2.beats;
@@ -4558,12 +4780,15 @@
 
         window.checkDurationGame4 = function(guess) {
             const state = window.durationGame4State;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const fb = document.getElementById('dur-game4-feedback');
             if(!fb) return;
             
             if (guess === state.currentQ.ans) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 fb.textContent = 'Correct!';
                 fb.className = 'mt-4 text-center font-bold h-6 text-emerald-500';
                 document.getElementById('dur-game4-streak').textContent = state.streak;
@@ -4575,6 +4800,166 @@
                 fb.className = 'mt-4 text-center font-bold h-6 text-red-500';
                 document.getElementById('dur-game4-streak').textContent = state.streak;
                 setTimeout(window.startDurationGame4, 1500);
+            }
+        };
+
+        // --- Duration Bonus Game Helpers (Rhythm Composer Lab) ---
+        window.checkQuaverTool = function(toolType) {
+            const state = window.quaverGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
+            const ch = state.currentChallenge;
+            const fb = document.getElementById('quaver-game-feedback');
+            if (!ch || !fb) return;
+
+            if (toolType === ch.expected) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                renderQuaverSVG(true);
+                fb.textContent = toolType === 'tail' 
+                    ? 'Correct! A single crotchet becomes a quaver with a wavy tail on the right!' 
+                    : 'Correct! Two crotchets become beamed quavers connected with a thick beam!';
+                fb.className = 'font-bold h-6 text-lg mt-5 text-center text-emerald-600';
+
+                document.getElementById('quaver-game-streak').textContent = state.streak;
+                document.getElementById('quaver-game-best').textContent = state.best;
+                setTimeout(window.startQuaverGame, 1400);
+            } else {
+                state.streak = 0;
+                document.getElementById('quaver-game-streak').textContent = state.streak;
+                fb.textContent = ch.expected === 'tail' 
+                    ? 'Incorrect! A single note needs a wavy tail, not a beam.' 
+                    : 'Incorrect! Connecting two notes requires a thick beam, not a single tail.';
+                fb.className = 'font-bold h-6 text-lg mt-5 text-center text-red-500';
+            }
+        }
+
+        // --- Bonus Rhythm Game Helpers (Duration Lesson 4) ---
+        window.bonusRhythmGameState = {
+            isPlaying: false, loopId: null, step: 0,
+            beats: Array(8).fill().map((_, i) => ({
+                id: i,
+                inst: i % 2 === 0 ? 'kick' : 'snare', // 0,2,4,6 Kick, 1,3,5,7 Snare
+                val: 'crotchet'
+            }))
+        };
+
+        window.startDurationGame4 = function() {
+            window.renderBonusRhythmGame();
+        };
+
+        const getBonusRhythmSVG = (val, isKick) => {
+            const color = isKick ? '#1e3a8a' : '#7f1d1d';
+            let svg = `<svg width="100%" height="100%" viewBox="0 0 60 60" style="color: ${color}; fill: currentColor; stroke: currentColor;" class="overflow-visible">`;
+            if (val === 'crotchet') {
+                svg += `<ellipse cx="30" cy="45" rx="12" ry="8" stroke="none"/><line x1="40" y1="45" x2="40" y2="15" stroke-width="2"/>`;
+            } else if (val === 'quavers') {
+                svg += `<ellipse cx="18" cy="45" rx="10" ry="7" stroke="none"/><line x1="26" y1="45" x2="26" y2="15" stroke-width="2"/><ellipse cx="42" cy="45" rx="10" ry="7" stroke="none"/><line x1="50" y1="45" x2="50" y2="15" stroke-width="2"/><polygon points="26,15 50,15 50,9 26,9" stroke="none"/>`;
+            } else if (val === 'rest') {
+                svg += `<path d="M 23 12 C 22.5 11.5 23.5 11 24 11.5 L 34 21 C 36 23.5 38 26.5 38 29 C 38 32.5 35 37 31.5 41.5 L 35 42 C 37.5 43 41 45 40 46.5 C 39.5 47 36.5 46 33.5 45 C 31 44.2 29 45 25.5 45.5 C 21 46.5 17 49.5 17 53.5 C 17 57.5 21 61 26.5 61 C 29.5 61 31 59.5 31.5 58.5 C 32 57.5 31 56.5 30 57 C 28 58 25.5 58.5 24 58 C 21.5 57.2 20 54.5 20.5 51.5 C 21.2 48 25 46.5 28 46.5 C 31 46.5 33 47.5 33.5 49 C 34 48 32.5 44 30.5 41.5 L 23.5 32 C 21.5 29 24 26 27 23 L 23 12 Z" stroke="none"/>`;
+            } else if (val === 'rest_quaver') {
+                svg += `<g transform="translate(-10, 5)"><circle cx="21" cy="18" r="5" stroke="none"/><path d="M 24 19 C 27 21 31 20 36 15 L 37.5 16 C 35 24 28 45 22 52 L 18 52 C 24 45 30.5 25 32.5 20.5 C 29 23 25.5 22.5 24 19 Z" stroke="none"/></g>`;
+                svg += `<ellipse cx="45" cy="45" rx="8" ry="6" stroke="none"/><line x1="51" y1="45" x2="51" y2="15" stroke-width="2"/><path d="M 51 15 Q 60 20 55 35 Q 52 25 51 25 Z" stroke="none"/>`;
+            } else if (val === 'quaver_rest') {
+                svg += `<ellipse cx="15" cy="45" rx="8" ry="6" stroke="none"/><line x1="21" y1="45" x2="21" y2="15" stroke-width="2"/><path d="M 21 15 Q 30 20 25 35 Q 22 25 21 25 Z" stroke="none"/>`;
+                svg += `<g transform="translate(15, 5)"><circle cx="21" cy="18" r="5" stroke="none"/><path d="M 24 19 C 27 21 31 20 36 15 L 37.5 16 C 35 24 28 45 22 52 L 18 52 C 24 45 30.5 25 32.5 20.5 C 29 23 25.5 22.5 24 19 Z" stroke="none"/></g>`;
+            }
+            svg += `</svg>`;
+            return svg;
+        };
+
+        window.renderBonusRhythmGame = function() {
+            const state = window.bonusRhythmGameState;
+            const container = document.getElementById('rhythm-game-beats');
+            if (!container) return;
+
+            container.innerHTML = state.beats.map((b, i) => {
+                const isKick = b.inst === 'kick';
+                const boxClass = isKick 
+                    ? 'bg-blue-50 border-blue-400 text-blue-900 hover:bg-blue-100' 
+                    : 'bg-red-50 border-red-400 text-red-900 hover:bg-red-100';
+                const label = isKick ? 'Kick' : 'Snare';
+                const labelColor = isKick ? 'text-blue-600' : 'text-red-600';
+
+                return `
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="text-sm font-bold text-slate-500">${i + 1}</span>
+                        <button id="rhythm-beat-${i}" onclick="toggleBonusRhythmBeat(${i})" class="rhythm-beat-col w-16 h-20 border-2 rounded-xl flex items-center justify-center transition ${boxClass} cursor-pointer shadow-sm active:scale-95 p-2">
+                            ${getBonusRhythmSVG(b.val, isKick)}
+                        </button>
+                        <span class="text-xs font-bold ${labelColor} uppercase tracking-wider">${label}</span>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.toggleBonusRhythmBeat = function(idx) {
+            const cycle = ['crotchet', 'quavers', 'rest', 'rest_quaver', 'quaver_rest'];
+            const state = window.bonusRhythmGameState;
+            const beat = state.beats[idx];
+            const nextIdx = (cycle.indexOf(beat.val) + 1) % cycle.length;
+            beat.val = cycle[nextIdx];
+            window.renderBonusRhythmGame();
+        };
+
+        window.toggleBonusRhythmPlay = function() {
+            const state = window.bonusRhythmGameState;
+            const btn = document.getElementById('rhythm-play-btn');
+            
+            if (state.isPlaying) {
+                clearInterval(state.loopId);
+                state.isPlaying = false;
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-play"></i> Play Loop';
+                    btn.className = 'bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition inline-flex items-center gap-2 shadow-md flex-shrink-0';
+                }
+                state.step = 0;
+                document.querySelectorAll('.rhythm-beat-col').forEach(el => el.classList.remove('ring-4', 'ring-amber-400', 'scale-110'));
+            } else {
+                if (!window.kickSynth) {
+                    window.kickSynth = new Tone.MembraneSynth().toDestination();
+                    window.kickSynth.volume.value = 5;
+                }
+                if (!window.snareSynth) {
+                    window.snareSynth = new Tone.NoiseSynth({noise: {type: 'white'}, envelope: {attack: 0.001, decay: 0.2, sustain: 0}}).toDestination();
+                    window.snareSynth.volume.value = 2;
+                }
+                Tone.start();
+
+                state.isPlaying = true;
+                if (btn) {
+                    btn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop Loop';
+                    btn.className = 'bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-8 rounded-xl transition inline-flex items-center gap-2 shadow-md flex-shrink-0';
+                }
+
+                state.loopId = setInterval(() => {
+                    const beatIdx = state.step % 8;
+                    const beat = state.beats[beatIdx];
+                    const now = Tone.now();
+                    
+                    const playInst = (time) => {
+                        if (beat.inst === 'kick') window.kickSynth.triggerAttackRelease("C2", "8n", time);
+                        else window.snareSynth.triggerAttackRelease("8n", time);
+                    };
+
+                    if (beat.val === 'crotchet') {
+                        playInst(now);
+                    } else if (beat.val === 'quavers') {
+                        playInst(now);
+                        playInst(now + 0.25);
+                    } else if (beat.val === 'rest_quaver') {
+                        playInst(now + 0.25);
+                    } else if (beat.val === 'quaver_rest') {
+                        playInst(now);
+                    }
+                    
+                    document.querySelectorAll('.rhythm-beat-col').forEach((el, i) => {
+                        if (i === beatIdx) el.classList.add('ring-4', 'ring-amber-400', 'scale-110');
+                        else el.classList.remove('ring-4', 'ring-amber-400', 'scale-110');
+                    });
+
+                    state.step++;
+                }, 500); // 120BPM
             }
         };
 
@@ -4895,24 +5280,45 @@
         window.scoreHuntState = {
             streak: 0,
             best: 0,
+            isLocked: false,
             currentTarget: null,
+            remainingTargets: [],
             targets: [
                 { id: 'staccato', label: 'Staccato dot' },
                 { id: 'slur', label: 'Slur' },
                 { id: 'tie', label: 'Tie' },
                 { id: 'barline', label: 'Bar line' },
-                { id: 'doublebar', label: 'Double bar line' }
+                { id: 'doublebar', label: 'Double bar line' },
+                { id: 'piano', label: 'Piano (p)' },
+                { id: 'forte', label: 'Forte (f)' },
+                { id: 'cresc', label: 'Crescendo hairpin (<)' },
+                { id: 'decresc', label: 'Decrescendo hairpin (>)' },
+                { id: 'allegro', label: 'Allegro' },
+                { id: 'mp', label: 'Mezzopiano (mp)' },
+                { id: 'rit', label: 'Ritardando (rit.)' },
+                { id: 'dim', label: 'Diminuendo (dim.)' }
             ]
         };
 
-        window.startScoreHuntGame = function() {
+        window.startScoreHuntGame = function(isReset = false) {
             const state = window.scoreHuntState;
-            // Pick a random target
-            const next = state.targets[Math.floor(Math.random() * state.targets.length)];
-            state.currentTarget = next;
+            state.isLocked = false;
+            
+            // Refill the pool if it's empty or the game is being completely reset
+            if (isReset || !state.remainingTargets || state.remainingTargets.length === 0) {
+                state.remainingTargets = [...state.targets].sort(() => Math.random() - 0.5);
+            }
+            if (isReset) {
+                state.streak = 0;
+                const streakEl = document.getElementById('score-hunt-streak');
+                if (streakEl) streakEl.textContent = '0';
+            }
+
+            // Pick a non-repeating random target
+            state.currentTarget = state.remainingTargets.pop();
 
             const targetEl = document.getElementById('score-hunt-target');
-            if (targetEl) targetEl.textContent = next.label;
+            if (targetEl) targetEl.textContent = state.currentTarget.label;
 
             const fb = document.getElementById('score-hunt-feedback');
             if (fb) fb.textContent = '';
@@ -4920,33 +5326,47 @@
 
         window.checkScoreHuntAnswer = function(selectedId) {
             const state = window.scoreHuntState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const fb = document.getElementById('score-hunt-feedback');
             if (!state.currentTarget || !fb) return;
 
             if (selectedId === state.currentTarget.id) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
-                fb.textContent = `Correct! That is the ${state.currentTarget.label}!`;
-                fb.className = 'font-bold h-6 text-lg mt-4 text-center text-emerald-600';
+                window.checkTokenAward(state.streak);
                 
                 document.getElementById('score-hunt-streak').textContent = state.streak;
                 document.getElementById('score-hunt-best').textContent = state.best;
-                setTimeout(window.startScoreHuntGame, 1000);
+                
+                if (state.remainingTargets.length === 0) {
+                    fb.textContent = `Amazing! You found all the symbols! Restarting...`;
+                    fb.className = 'font-bold h-6 text-lg mt-4 text-center text-emerald-600';
+                    setTimeout(() => window.startScoreHuntGame(true), 2000);
+                } else {
+                    fb.textContent = `Correct! That is the ${state.currentTarget.label}!`;
+                    fb.className = 'font-bold h-6 text-lg mt-4 text-center text-emerald-600';
+                    setTimeout(() => window.startScoreHuntGame(false), 1000);
+                }
             } else {
                 state.streak = 0;
-                fb.textContent = `Oops! That was not the ${state.currentTarget.label}. Try another!`;
+                fb.textContent = `Oops! That was not the ${state.currentTarget.label}. Game reset!`;
                 fb.className = 'font-bold h-6 text-lg mt-4 text-center text-red-500';
                 document.getElementById('score-hunt-streak').textContent = state.streak;
+                
+                // Incorrect answer resets the cycle completely
+                setTimeout(() => window.startScoreHuntGame(true), 1500);
             }
         };
 
         // --- Stem Game Helpers ---
         window.stemGameState = {
-            streak: 0, best: 0, isDragging: false, startY: 0, currentY: 80, direction: 'up'
+            streak: 0, best: 0, isLocked: false, isDragging: false, startY: 0, currentY: 80, direction: 'up'
         };
 
         window.startStemGame = function() {
             const state = window.stemGameState;
+            state.isLocked = false;
             state.direction = Math.random() > 0.5 ? 'up' : 'down';
             state.currentY = 80;
             
@@ -5021,10 +5441,54 @@
             checkStemAnswer();
         };
 
+        window.checkStemAnswer = function() {
+            const state = window.stemGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
+            let correct = false;
+            
+            // Stem Up: must be > 80 (below middle line strictly)
+            if (state.direction === 'up' && state.currentY > 80) correct = true;
+            // Stem Down: must be < 80 (above middle line strictly)
+            if (state.direction === 'down' && state.currentY < 80) correct = true;
+            
+            const fb = document.getElementById('stem-game-feedback');
+            if(!fb) return;
+
+            if (correct) {
+                state.streak++;
+                if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
+                fb.textContent = 'Correct!';
+                fb.className = 'font-bold h-6 text-lg text-emerald-500 mt-2';
+                
+                const streakEl = document.getElementById('stem-game-streak');
+                const bestEl = document.getElementById('stem-game-best');
+                if(streakEl) streakEl.textContent = state.streak;
+                if(bestEl) bestEl.textContent = state.best;
+                
+                setTimeout(window.startStemGame, 1000);
+            } else {
+                state.streak = 0;
+                fb.textContent = 'For this challenge, place the note either above or below the middle line!';
+                fb.className = 'font-bold h-6 text-lg text-red-500 mt-2';
+                const streakEl = document.getElementById('stem-game-streak');
+                if(streakEl) streakEl.textContent = state.streak;
+                
+                setTimeout(() => {
+                    state.currentY = 80;
+                    const group = document.getElementById('stem-game-group');
+                    if (group) group.setAttribute('transform', `translate(0, ${state.currentY})`);
+                    fb.textContent = '';
+                }, 1500);
+            }
+        };
+
         // --- Timbre Lesson 1 Game Helpers ---
         window.timbreGameState = {
             streak: 0,
             best: 0,
+            isLocked: false,
             currentQuestion: null,
             pool: [
                 { name: "Xylophone", category: "Idiophone", type: "idiophone", desc: "Tuned wooden bars struck with mallets, where the solid material itself vibrates." },
@@ -5044,6 +5508,7 @@
 
         window.startTimbreGame = function() {
             const state = window.timbreGameState;
+            state.isLocked = false;
             state.currentQuestion = state.pool[Math.floor(Math.random() * state.pool.length)];
 
             const nameEl = document.getElementById('timbre-inst-name');
@@ -5075,6 +5540,8 @@
 
         window.checkTimbreAnswer = function(answer) {
             const state = window.timbreGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const q = state.currentQuestion;
             const fb = document.getElementById('timbre-feedback');
             if (!q || !fb) return;
@@ -5082,6 +5549,7 @@
             if (answer === q.category) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 fb.textContent = `Correct! ${q.name} is a ${q.category}!`;
                 fb.className = "font-bold h-6 text-lg mt-5 text-center text-emerald-600";
                 document.getElementById('timbre-streak').textContent = state.streak;
@@ -5099,6 +5567,7 @@
         window.timbreWordGameState = {
             streak: 0,
             best: 0,
+            isLocked: false,
             currentQuestion: null,
             pool: [
                 {
@@ -5176,6 +5645,7 @@
 
         window.startTimbreWordGame = function() {
             const state = window.timbreWordGameState;
+            state.isLocked = false;
             state.currentQuestion = state.pool[Math.floor(Math.random() * state.pool.length)];
             const q = state.currentQuestion;
 
@@ -5204,6 +5674,8 @@
 
         window.checkTimbreWordAnswer = function(answer) {
             const state = window.timbreWordGameState;
+            if (state.isLocked) return;
+            state.isLocked = true;
             const q = state.currentQuestion;
             const fb = document.getElementById('timbre-word-feedback');
             if (!q || !fb) return;
@@ -5211,6 +5683,7 @@
             if (answer === q.correct) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
+                window.checkTokenAward(state.streak);
                 fb.textContent = `Correct! ${q.instrument} produces a ${q.correct} tone colour!`;
                 fb.className = "font-bold h-6 text-lg mt-5 text-center text-emerald-600";
                 document.getElementById('timbre-word-streak').textContent = state.streak;
@@ -5221,46 +5694,6 @@
                 document.getElementById('timbre-word-streak').textContent = state.streak;
                 fb.textContent = `Incorrect! The best tone colour description is "${q.correct}".`;
                 fb.className = "font-bold h-6 text-lg mt-5 text-center text-red-500";
-            }
-        };
-
-        window.checkStemAnswer = function() {
-            const state = window.stemGameState;
-            let correct = false;
-            
-            // Stem Up: must be > 80 (below middle line strictly)
-            if (state.direction === 'up' && state.currentY > 80) correct = true;
-            // Stem Down: must be < 80 (above middle line strictly)
-            if (state.direction === 'down' && state.currentY < 80) correct = true;
-            
-            const fb = document.getElementById('stem-game-feedback');
-            if(!fb) return;
-
-            if (correct) {
-                state.streak++;
-                if (state.streak > state.best) state.best = state.streak;
-                fb.textContent = 'Correct!';
-                fb.className = 'font-bold h-6 text-lg text-emerald-500 mt-2';
-                
-                const streakEl = document.getElementById('stem-game-streak');
-                const bestEl = document.getElementById('stem-game-best');
-                if(streakEl) streakEl.textContent = state.streak;
-                if(bestEl) bestEl.textContent = state.best;
-                
-                setTimeout(window.startStemGame, 1000);
-            } else {
-                state.streak = 0;
-                fb.textContent = 'For this challenge, place the note either above or below the middle line!';
-                fb.className = 'font-bold h-6 text-lg text-red-500 mt-2';
-                const streakEl = document.getElementById('stem-game-streak');
-                if(streakEl) streakEl.textContent = state.streak;
-                
-                setTimeout(() => {
-                    state.currentY = 80;
-                    const group = document.getElementById('stem-game-group');
-                    if (group) group.setAttribute('transform', `translate(0, ${state.currentY})`);
-                    fb.textContent = '';
-                }, 1500);
             }
         };
 

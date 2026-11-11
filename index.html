@@ -1304,7 +1304,7 @@
                             <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 shadow-sm text-center">
                                 <span class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold inline-flex items-center justify-center mb-2">3</span>
                                 <h4 class="font-bold text-slate-800 text-lg">The Third</h4>
-                                <p class="text-slate-600 text-xs mt-1">A third above the root. Determines whether the chord sounds <strong>Major</strong> or <strong>Minor</strong>.</p>
+                                <p class="text-slate-600 text-xs mt-1">A third above the root. Determines whether the chord sounds Major or Minor (More about this later!).</p>
                             </div>
                             <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 shadow-sm text-center">
                                 <span class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold inline-flex items-center justify-center mb-2">5</span>
@@ -1313,33 +1313,62 @@
                             </div>
                         </div>
 
-                        <!-- Major vs Minor Triads -->
+                        <!-- Stacked Chords Diagram: C Major and F Major -->
                         <h4 class="text-xl font-bold text-slate-800 mb-3 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Major vs. Minor Triad Construction
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span> Stacked Triads on the Staff: C Major &amp; F Major
                         </h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div class="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h5 class="text-xl font-bold text-blue-900">Major Triad</h5>
-                                    <span class="text-xs uppercase font-extrabold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Happy / Bright</span>
-                                </div>
-                                <p class="text-xs text-slate-600 mb-3">Formula: <strong>Root + Major 3rd (4 semitones) + Minor 3rd (3 semitones)</strong></p>
-                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-sm font-mono font-bold text-slate-800 mb-3">
-                                    C Major: C &ndash; E &ndash; G
-                                </div>
-                                <button onclick="playTriadAudio('C', 'major')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs transition">Hear C Major Triad</button>
-                            </div>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-8 flex flex-col items-center shadow-sm select-none overflow-x-auto">
+                            <svg width="420" height="170" viewBox="0 0 420 170" class="max-w-full h-auto">
+                                <line x1="20" y1="40" x2="400" y2="40" class="staff-line"/>
+                                <line x1="20" y1="60" x2="400" y2="60" class="staff-line"/>
+                                <line x1="20" y1="80" x2="400" y2="80" class="staff-line"/>
+                                <line x1="20" y1="100" x2="400" y2="100" class="staff-line"/>
+                                <line x1="20" y1="120" x2="400" y2="120" class="staff-line"/>
+                                <text x="25" y="121" font-size="100" font-family="serif" fill="#0f172a">&#119070;</text>
 
-                            <div class="bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-sm">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h5 class="text-xl font-bold text-indigo-900">Minor Triad</h5>
-                                    <span class="text-xs uppercase font-extrabold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">Sad / Sombre</span>
-                                </div>
-                                <p class="text-xs text-slate-600 mb-3">Formula: <strong>Root + Minor 3rd (3 semitones) + Major 3rd (4 semitones)</strong></p>
-                                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-sm font-mono font-bold text-slate-800 mb-3">
-                                    A Minor: A &ndash; C &ndash; E
-                                </div>
-                                <button onclick="playTriadAudio('A', 'minor')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs transition">Hear A Minor Triad</button>
+                                <!-- Barline separator -->
+                                <line x1="235" y1="40" x2="235" y2="120" stroke="#cbd5e1" stroke-width="2"/>
+
+                                <!-- C Major Stacked Triad (Middle C ledger line: y=140, E: y=120 line 1, G: y=100 line 2) -->
+                                <g>
+                                    <!-- Ledger line for Middle C -->
+                                    <line x1="110" y1="140" x2="160" y2="140" stroke="#0f172a" stroke-width="2"/>
+                                    <!-- C notehead (Root) -->
+                                    <ellipse cx="135" cy="140" rx="11" ry="7.5" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+                                    <!-- E notehead (3rd) -->
+                                    <ellipse cx="135" cy="120" rx="11" ry="7.5" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+                                    <!-- G notehead (5th) -->
+                                    <ellipse cx="135" cy="100" rx="11" ry="7.5" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+                                    <!-- Common stem -->
+                                    <line x1="146" y1="140" x2="146" y2="65" stroke="#2563eb" stroke-width="2.5"/>
+
+                                    <text x="135" y="24" font-family="Inter" font-weight="900" font-size="14" fill="#1e3a8a" text-anchor="middle">C Major Chord</text>
+                                    <text x="135" y="162" font-family="Inter" font-weight="bold" font-size="12" fill="#2563eb" text-anchor="middle">C - E - G (Line - Line - Line)</text>
+                                </g>
+
+                                <!-- F Major Stacked Triad (F: y=110 space 1, A: y=90 space 2, C: y=70 space 3) -->
+                                <g>
+                                    <!-- F notehead (Root) -->
+                                    <ellipse cx="310" cy="110" rx="11" ry="7.5" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+                                    <!-- A notehead (3rd) -->
+                                    <ellipse cx="310" cy="90" rx="11" ry="7.5" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+                                    <!-- C notehead (5th) -->
+                                    <ellipse cx="310" cy="70" rx="11" ry="7.5" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+                                    <!-- Common stem -->
+                                    <line x1="321" y1="110" x2="321" y2="40" stroke="#7c3aed" stroke-width="2.5"/>
+
+                                    <text x="310" y="24" font-family="Inter" font-weight="900" font-size="14" fill="#4c1d95" text-anchor="middle">F Major Chord</text>
+                                    <text x="310" y="162" font-family="Inter" font-weight="bold" font-size="12" fill="#7c3aed" text-anchor="middle">F - A - C (Space - Space - Space)</text>
+                                </g>
+                            </svg>
+
+                            <div class="flex flex-wrap items-center justify-center gap-4 mt-3">
+                                <button onclick="playTriadAudio('C', 'major')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-volume-high"></i> Hear C Major (C - E - G)
+                                </button>
+                                <button onclick="playTriadAudio('F', 'major')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-volume-high"></i> Hear F Major (F - A - C)
+                                </button>
                             </div>
                         </div>
 

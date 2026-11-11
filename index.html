@@ -154,7 +154,11 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Teacher</label>
-          <input type="text" id="edit-student-teacher" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <select id="edit-student-teacher" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+            <option value="Mr B">Mr B</option>
+            <option value="Mr H">Mr H</option>
+            <option value="Mr T">Mr T</option>
+          </select>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Tokens (Adjust Balance)</label>
@@ -1963,7 +1967,11 @@
 
               <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Music Teacher</label>
-                <input type="text" id="login-teacher" placeholder="e.g. Mr. Davis" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <select id="login-teacher" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                  <option value="Mr B">Mr B</option>
+                  <option value="Mr H">Mr H</option>
+                  <option value="Mr T">Mr T</option>
+                </select>
               </div>
             </div>
 
@@ -2176,7 +2184,8 @@
       document.getElementById('edit-student-firstname').value = s.firstName || '';
       document.getElementById('edit-student-surname').value = s.surname || '';
       document.getElementById('edit-student-class').value = s.class || '7A';
-      document.getElementById('edit-student-teacher').value = s.teacher || '';
+      const teacherSelect = document.getElementById('edit-student-teacher');
+      teacherSelect.value = ['Mr B', 'Mr H', 'Mr T'].includes(s.teacher) ? s.teacher : 'Mr B';
       document.getElementById('edit-student-tokens').value = (s.stats && s.stats.tokens) || 0;
       document.getElementById('edit-student-modal').classList.remove('hidden');
     };

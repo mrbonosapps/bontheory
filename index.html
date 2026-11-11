@@ -8979,8 +8979,9 @@
                 return `
                 <div onclick="toggleDrumStepType(${idx})" class="flex-1 p-2.5 rounded-2xl border flex flex-col items-center justify-between cursor-pointer transition select-none hover:border-amber-400 ${colorClass}" id="drum-step-card-${idx}">
                     <span class="text-[10px] font-black uppercase tracking-wider mb-1 opacity-80">B${idx+1}: ${drumName}</span>
-                    <div class="h-10 flex items-center justify-center font-black text-sm text-white">
-                        ${isCrotchet ? '1 Crotchet' : '2 Quavers'}
+                    <div class="h-12 flex flex-col items-center justify-center">
+                        <span class="text-2xl font-black leading-none text-white">${isCrotchet ? '♩' : '♫'}</span>
+                        <span class="text-xs font-bold mt-1 text-slate-200">${isCrotchet ? 'Crotchet' : '2 Quavers'}</span>
                     </div>
                     <span class="text-[10px] font-semibold text-slate-400 mt-1">${isCrotchet ? '1 hit' : '2 hits'}</span>
                 </div>
@@ -9071,20 +9072,39 @@
             }
             state.currentPattern = targetPattern;
 
-            const makeDistractor = () => {
+            const patternToString = (p) => p.join('-');
+            const targetStr = patternToString(targetPattern);
+            const generated = new Set();
+            generated.add(targetStr);
+
+            const options = [targetPattern];
+
+            // Generate 3 unique distractor patterns
+            let safety = 0;
+            while (options.length < 4 && safety < 100) {
+                safety++;
                 const p = [...targetPattern];
-                const flips = [Math.floor(Math.random() * 8), Math.floor(Math.random() * 8)];
-                flips.forEach(f => p[f] = p[f] === 'crotchet' ? 'quaver' : 'crotchet');
-                return p;
-            };
+                // Mutate 1 to 3 random beats
+                const flipCount = Math.floor(Math.random() * 3) + 1;
+                for (let k = 0; k < flipCount; k++) {
+                    const idx = Math.floor(Math.random() * 8);
+                    p[idx] = p[idx] === 'crotchet' ? 'quaver' : 'crotchet';
+                }
+                const pStr = patternToString(p);
+                if (!generated.has(pStr)) {
+                    generated.add(pStr);
+                    options.push(p);
+                }
+            }
 
-            const options = [
-                targetPattern,
-                makeDistractor(),
-                makeDistractor(),
-                makeDistractor()
-            ].sort(() => Math.random() - 0.5);
+            // Fallback if not enough unique mutations
+            while (options.length < 4) {
+                const p = [];
+                for (let i = 0; i < 8; i++) p.push(Math.random() > 0.5 ? 'crotchet' : 'quaver');
+                options.push(p);
+            }
 
+            options.sort(() => Math.random() - 0.5);
             state.options = options;
 
             const optsContainer = document.getElementById('dictation-options-container');
@@ -9093,14 +9113,31 @@
 
             if (optsContainer) {
                 optsContainer.innerHTML = options.map((opt, optIdx) => `
-                    <div onclick="checkDictationAnswer(${optIdx})" class="p-4 bg-white border-2 border-slate-200 hover:border-amber-400 rounded-2xl cursor-pointer transition shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-black text-sm flex items-center justify-center flex-shrink-0">${String.fromCharCode(65 + optIdx)}</span>
-                        <div class="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-                            ${opt.map((item, b) => `
-                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold font-mono ${item === 'crotchet' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
-                                    ${item === 'crotchet' ? '♩ 1' : '♫ 2'}
-                                </span>
-                            `).join('')}
+                    <div onclick="checkDictationAnswer(${optIdx})" class="p-3.5 sm:p-4 bg-white border-2 border-slate-200 hover:border-amber-400 rounded-2xl cursor-pointer transition shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 group">
+                        <span class="w-9 h-9 rounded-xl bg-slate-100 group-hover:bg-amber-100 group-hover:text-amber-800 text-slate-700 font-black text-base flex items-center justify-center flex-shrink-0 transition">
+                            ${String.fromCharCode(65 + optIdx)}
+                        </span>
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center sm:justify-start">
+                            ${opt.map((item, b) => {
+                                const beatNum = b + 1;
+                                const isOdd = beatNum % 2 !== 0; // Odd beats (1, 3, 5, 7) = Kick (Blue), Even beats (2, 4, 6, 8) = Snare (Red)
+                                const isCrotchet = item === 'crotchet';
+
+                                const colorClass = isOdd 
+                                    ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                                    : 'bg-rose-50 text-rose-700 border-rose-200';
+
+                                return `
+                                <div class="flex flex-col items-center justify-center w-11 sm:w-12 py-1.5 rounded-xl border ${colorClass} select-none">
+                                    <span class="text-xl sm:text-2xl font-black leading-none mb-1">
+                                        ${isCrotchet ? '♩' : '♫'}
+                                    </span>
+                                    <span class="text-[11px] font-black opacity-80 leading-none">
+                                        ${beatNum}
+                                    </span>
+                                </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 `).join('');

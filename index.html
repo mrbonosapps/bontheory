@@ -202,6 +202,30 @@
                             localStorage.setItem('boncepts_users_db', JSON.stringify(updatedRecords));
                         } catch (e) {}
 
+                        // If current logged-in student had their data updated on another device or by teacher, sync local memory
+                        if (window.app && window.app.currentUser && window.app.currentUser.role === 'student') {
+                            const myKey = window.getUserRecordKey(window.app.currentUser);
+                            if (myKey && updatedRecords[myKey]) {
+                                const remoteRec = updatedRecords[myKey];
+                                if (remoteRec.stats) {
+                                    window.state.stats.tokens = Number(remoteRec.stats.tokens) || 0;
+                                    window.state.stats.completedTests = Number(remoteRec.stats.completedTests) || 0;
+                                    window.state.stats.avgScore = Number(remoteRec.stats.avgScore) || 0;
+                                }
+                                if (Array.isArray(remoteRec.inventory)) {
+                                    window.state.inventory = remoteRec.inventory;
+                                }
+                                if (Array.isArray(remoteRec.testResults)) {
+                                    window.state.testResults = remoteRec.testResults;
+                                }
+                                // Update navbar counters live
+                                const navTok = document.getElementById('nav-tokens');
+                                if (navTok) navTok.textContent = window.state.stats.tokens;
+                                const navTst = document.getElementById('nav-tests');
+                                if (navTst) navTst.textContent = window.state.stats.completedTests;
+                            }
+                        }
+
                         // Refresh active marquee ticker and leaderboards immediately across devices
                         if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
 
@@ -271,24 +295,28 @@
         };
         window.state = state;
 
-        // Helper to generate a unique key per user based on name and class
+        // Standardized deterministic key generator based on clean Name to strictly prevent duplicate entries
         function getUserRecordKey(user) {
             if (!user || !user.name) return null;
-            const cleanName = (user.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
-            const cleanClass = (user.classGroup || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
-            const cleanTeacher = (user.teacher || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const firstName = (user.firstName || user.name.split(' ')[0] || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const surname = (user.surname || user.name.split(' ').slice(1).join(' ') || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
             const role = user.role || 'student';
-            return `${role}_${cleanTeacher}_${cleanClass}_${cleanName}`;
-        }
-
-        // Get the entire dictionary of saved accounts (merges cloud realtime cache with local)
-        function getAllUserRecords() {
-            if (window.cachedCloudUsers && Object.keys(window.cachedCloudUsers).length > 0) {
-                return window.cachedCloudUsers;
+            if (role === 'teacher') {
+                const cleanTeacher = (user.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return `teacher_${cleanTeacher}`;
             }
+            return `student_${firstName}_${surname}`;
+        }
+        window.getUserRecordKey = getUserRecordKey;
+
+        // Get the entire dictionary of saved accounts (prioritizes cloud real-time cache)
+        function getAllUserRecords() {
             if (typeof window.getCloudUsers === 'function') {
                 const cloud = window.getCloudUsers();
                 if (cloud && Object.keys(cloud).length > 0) return cloud;
+            }
+            if (window.cachedCloudUsers && Object.keys(window.cachedCloudUsers).length > 0) {
+                return window.cachedCloudUsers;
             }
             try {
                 const raw = localStorage.getItem(DB_STORAGE_KEY);
@@ -296,6 +324,29 @@
             } catch (err) {
                 return {};
             }
+        }
+        window.getAllUserRecords = getAllUserRecords;
+
+        // Deduplicate records array so each student name only appears once
+        function getDeduplicatedStudents(recordsDict) {
+            const list = Object.values(recordsDict).filter(rec => rec.currentUser && rec.currentUser.role === 'student');
+            const uniqueMap = new Map();
+            list.forEach(rec => {
+                const u = rec.currentUser;
+                const normalizedName = `${u.firstName || ''} ${u.surname || ''}`.trim().toLowerCase() || (u.name || '').trim().toLowerCase();
+                if (!uniqueMap.has(normalizedName)) {
+                    uniqueMap.set(normalizedName, rec);
+                } else {
+                    // If duplicate encountered, keep the record with higher tokens or latest activity
+                    const existing = uniqueMap.get(normalizedName);
+                    const existingTokens = Number(existing.stats?.tokens) || 0;
+                    const newTokens = Number(rec.stats?.tokens) || 0;
+                    if (newTokens >= existingTokens) {
+                        uniqueMap.set(normalizedName, rec);
+                    }
+                }
+            });
+            return Array.from(uniqueMap.values());
         }
 
         // Shop catalog price registry used to compute total net worth / lifetime tokens
@@ -385,9 +436,8 @@
             bar.classList.remove('hidden');
 
             const db = getAllUserRecords();
-            // Filter strictly for registered student accounts
-            const students = Object.values(db)
-                .filter(rec => rec.currentUser && rec.currentUser.role === 'student');
+            // Strictly deduplicate so students never show up twice
+            const students = getDeduplicatedStudents(db);
 
             if (students.length === 0) {
                 ticker.innerHTML = `
@@ -397,14 +447,14 @@
             }
 
             // Sort by current active tokens in wallet (descending)
-            students.sort((a, b) => (b.stats?.tokens || 0) - (a.stats?.tokens || 0));
+            students.sort((a, b) => (Number(b.stats?.tokens) || 0) - (Number(a.stats?.tokens) || 0));
 
             // Generate ticker pill items
             const studentItemsHTML = students.map(s => {
                 const u = s.currentUser;
-                const tokens = s.stats?.tokens || 0;
+                const tokens = Number(s.stats?.tokens) || 0;
                 const medal = getTokenMedal(tokens);
-                const isMe = (app.currentUser && app.currentUser.name === u.name);
+                const isMe = (app.currentUser && app.currentUser.name && app.currentUser.name.toLowerCase() === u.name.toLowerCase());
 
                 return `
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border ${medal.badgeClass} ${isMe ? 'ring-2 ring-amber-400 bg-amber-500/20' : 'bg-slate-800/80'} shadow-xs flex-shrink-0">
@@ -430,8 +480,7 @@
             if (!tbody) return;
 
             const db = getAllUserRecords();
-            const allStudents = Object.values(db)
-                .filter(rec => rec.currentUser && rec.currentUser.role === 'student');
+            const allStudents = getDeduplicatedStudents(db);
 
             const rankedStudents = allStudents.map(s => {
                 const netWorth = calculateStudentOverallNetWorth(s);
@@ -459,7 +508,7 @@
             }
 
             tbody.innerHTML = rankedStudents.map((entry, idx) => {
-                const isMe = (app.currentUser && app.currentUser.name === entry.user.name);
+                const isMe = (app.currentUser && app.currentUser.name && app.currentUser.name.toLowerCase() === entry.user.name.toLowerCase());
                 return `
                 <tr class="transition ${isMe ? 'bg-amber-50/60 font-bold' : 'hover:bg-slate-50/80'}">
                     <td class="py-3.5 px-4 font-black text-slate-400">
@@ -492,7 +541,7 @@
             }).join('');
         };
 
-        // Save current user state to their isolated profile entry in the database
+        // Save current user state to both local storage and shared cloud storage
         function saveUserState() {
             if (!app.currentUser) return;
             try {
@@ -510,10 +559,12 @@
 
                 db[key] = record;
 
-                localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
-                localStorage.setItem(SESSION_STORAGE_KEY, key);
+                try {
+                    localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
+                    localStorage.setItem(SESSION_STORAGE_KEY, key);
+                } catch (e) {}
 
-                // Broadcast save to cloud storage across devices
+                // Broadcast save to cloud storage across all devices
                 if (typeof window.saveUserRecordToCloud === 'function') {
                     window.saveUserRecordToCloud(key, record);
                 }
@@ -521,6 +572,7 @@
                 console.warn('Unable to save user record:', err);
             }
         }
+        window.saveUserState = saveUserState;
 
         // Restore a specific user profile or the last active session
         function loadUserState(specificKey = null) {
@@ -10062,8 +10114,10 @@
                 }
                 app.currentUser = { name: teacherChoice, role: 'teacher', classGroup: 'Staff', teacher: teacherChoice };
             } else {
-                const firstName = document.getElementById('login-firstname')?.value.trim();
-                const surname = document.getElementById('login-surname')?.value.trim();
+                const rawFirst = document.getElementById('login-firstname')?.value || '';
+                const rawSurname = document.getElementById('login-surname')?.value || '';
+                const firstName = rawFirst.trim().charAt(0).toUpperCase() + rawFirst.trim().slice(1);
+                const surname = rawSurname.trim().charAt(0).toUpperCase() + rawSurname.trim().slice(1);
                 if (!firstName || !surname) return;
                 const studentClass = document.getElementById('login-class')?.value.trim() || '7A';
                 const fullName = `${firstName} ${surname}`;
@@ -10077,11 +10131,32 @@
                 };
             }
 
-            // Look up existing profile for this specific user or initialise clean progress
+            // Determine unique key and check if account already exists in shared cloud / local DB
             const userKey = getUserRecordKey(app.currentUser);
-            const existingRecord = loadUserState(userKey);
+            const allDb = getAllUserRecords();
+            let existingRecord = allDb[userKey];
 
-            if (!existingRecord) {
+            // If not found by exact key, scan by normalized student full name to prevent duplicates
+            if (!existingRecord && app.currentUser.role === 'student') {
+                const searchName = app.currentUser.name.trim().toLowerCase();
+                const matchKey = Object.keys(allDb).find(k => {
+                    const u = allDb[k]?.currentUser;
+                    return u && (u.name || '').trim().toLowerCase() === searchName;
+                });
+                if (matchKey) {
+                    existingRecord = allDb[matchKey];
+                }
+            }
+
+            if (existingRecord) {
+                // Restore existing student's progress and stats
+                state.stats = existingRecord.stats ? { ...existingRecord.stats } : { completedTests: 0, avgScore: 0, tokens: 0 };
+                state.inventory = Array.isArray(existingRecord.inventory) ? [...existingRecord.inventory] : [];
+                state.testResults = Array.isArray(existingRecord.testResults) ? [...existingRecord.testResults] : [];
+                // Update their current class/teacher if changed
+                app.currentUser.classGroup = document.getElementById('login-class')?.value.trim() || existingRecord.currentUser.classGroup || '7A';
+                app.currentUser.teacher = teacherChoice;
+            } else {
                 // New user: fresh state
                 state.stats = { completedTests: 0, avgScore: 0, tokens: 0 };
                 state.inventory = [];
@@ -10185,7 +10260,7 @@
         };
 
         window.addTokens = function(amount) {
-            state.stats.tokens += amount;
+            state.stats.tokens = (Number(state.stats.tokens) || 0) + Number(amount);
             saveUserState();
             const tokenEl = document.getElementById('nav-tokens');
             if (tokenEl) {
@@ -10204,8 +10279,9 @@
         };
 
         window.buyItem = function(id, cost) {
-            if (state.stats.tokens >= cost && !state.inventory.includes(id)) {
-                state.stats.tokens -= cost;
+            const currentTokens = Number(state.stats.tokens) || 0;
+            if (currentTokens >= cost && !state.inventory.includes(id)) {
+                state.stats.tokens = currentTokens - cost;
                 state.inventory.push(id);
                 saveUserState();
                 const tokenEl = document.getElementById('nav-tokens');

@@ -5849,6 +5849,25 @@
             app.navigate(activeView);
         };
 
+        window.openDeleteStudentModal = function(userKey) {
+            const db = getAllUserRecords();
+            const rec = db[userKey];
+            if (!rec || !rec.currentUser) return;
+
+            const modal = document.getElementById('delete-student-modal');
+            const keyInput = document.getElementById('delete-student-key');
+            const nameEl = document.getElementById('delete-student-name');
+
+            if (keyInput) keyInput.value = userKey;
+            if (nameEl) nameEl.textContent = rec.currentUser.name || 'this student';
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.closeDeleteStudentModal = function() {
+            const modal = document.getElementById('delete-student-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
         window.confirmDeleteStudent = function() {
             const keyInput = document.getElementById('delete-student-key');
             if (!keyInput) return;

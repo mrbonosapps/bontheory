@@ -25,68 +25,88 @@
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(8px);
     }
+    .note-btn {
+      transition: all 0.15s ease-in-out;
+    }
+    .note-btn:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
 
-  <!-- TOP LIVE TOKEN WALLET TICKER (Visible on all views) -->
-  <header class="bg-indigo-900 text-white text-xs py-2 px-4 shadow-md overflow-hidden relative z-40 border-b border-indigo-700">
+  <!-- TOP LIVE TOKEN WALLET TICKER (Live synced across classroom) -->
+  <header class="bg-indigo-950 text-white text-xs py-2 px-4 shadow-md overflow-hidden relative z-40 border-b border-indigo-800">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-      <div class="flex items-center gap-2 font-bold uppercase tracking-wider text-amber-300 shrink-0">
+      <div class="flex items-center gap-2 font-black uppercase tracking-wider text-amber-300 shrink-0">
         <i class="fa-solid fa-coins animate-bounce"></i>
         <span>Live Token Wallet:</span>
       </div>
       <div class="overflow-hidden relative w-full h-5">
         <div id="global-ticker-content" class="animate-marquee font-medium text-slate-200">
-          Syncing classroom scores...
+          Syncing live classroom wallet balances...
         </div>
       </div>
       <div class="shrink-0 hidden sm:flex items-center gap-2 text-indigo-200">
-        <span id="cloud-status-indicator" class="flex items-center gap-1.5 text-[11px] bg-indigo-950/80 px-2 py-0.5 rounded-full border border-indigo-500/30">
+        <span id="cloud-status-indicator" class="flex items-center gap-1.5 text-[11px] bg-indigo-900/80 px-2.5 py-0.5 rounded-full border border-indigo-600/40">
           <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span> Connecting Cloud
         </span>
       </div>
     </div>
   </header>
 
-  <!-- NAVIGATION BAR -->
+  <!-- MAIN NAVIGATION BAR -->
   <nav class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3 cursor-pointer" onclick="app.navigate('home')">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-200">
           <i class="fa-solid fa-music text-lg"></i>
         </div>
         <div>
           <span class="font-black text-lg sm:text-xl tracking-tight bg-gradient-to-r from-indigo-700 to-violet-700 bg-clip-text text-transparent block leading-tight">
             The Boncepts of Music
           </span>
-          <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Classroom Edition</span>
+          <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">Curriculum & Concepts</span>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-3">
-        <!-- Student token pill (only when logged in as student) -->
-        <div id="nav-token-badge" class="hidden items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200/80 px-3 py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-sm">
-          <i class="fa-solid fa-coins text-amber-500"></i>
-          <span id="nav-user-tokens">0</span> Tokens
-        </div>
-
-        <!-- Leaderboard Jump Button -->
-        <button onclick="scrollToStudentLeaderboard()" class="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-slate-100 transition-all flex items-center gap-1.5">
-          <i class="fa-solid fa-trophy text-amber-500"></i>
-          <span>Leaderboard</span>
+      <!-- Navigation Links & User Controls -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        <button onclick="app.navigate('conceptsHub')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+          <i class="fa-solid fa-book-open"></i> Concepts
+        </button>
+        <button onclick="app.navigate('rhythmModule')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+          <i class="fa-solid fa-drum"></i> 8-Beat Drum
+        </button>
+        <button onclick="app.navigate('dictationChallenge')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+          <i class="fa-solid fa-headphones"></i> Dictation
+        </button>
+        <button onclick="app.navigate('shop')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+          <i class="fa-solid fa-store"></i> Shop
         </button>
 
-        <!-- User profile / logout button -->
+        <!-- Student Token Pill -->
+        <div id="nav-token-badge" class="hidden items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-sm">
+          <i class="fa-solid fa-coins text-amber-500"></i>
+          <span id="nav-user-tokens">0</span>
+        </div>
+
+        <!-- Leaderboard Scroll Target -->
+        <button onclick="scrollToStudentLeaderboard()" class="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-slate-100 transition-all flex items-center gap-1.5">
+          <i class="fa-solid fa-trophy text-amber-500"></i>
+          <span class="hidden sm:inline">Leaderboard</span>
+        </button>
+
+        <!-- User Controls / Auth -->
         <div id="nav-user-controls" class="flex items-center gap-2">
-          <button id="nav-login-btn" onclick="app.navigate('login')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5">
+          <button id="nav-login-btn" onclick="app.navigate('login')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
             <i class="fa-solid fa-right-to-bracket"></i> Login
           </button>
           <div id="nav-user-profile" class="hidden items-center gap-2">
-            <div class="text-right hidden sm:block">
+            <button onclick="openCurrentPortal()" class="text-right hidden sm:block hover:opacity-80 transition-opacity">
               <div id="nav-user-name" class="font-bold text-xs text-slate-800 leading-tight">Student Name</div>
-              <div id="nav-user-role" class="text-[10px] text-slate-500 font-medium">Class 7A</div>
-            </div>
+              <div id="nav-user-role" class="text-[10px] text-slate-500 font-semibold">Class 7A</div>
+            </button>
             <button onclick="logoutUser()" title="Logout" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 flex items-center justify-center transition-all">
               <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
             </button>
@@ -96,33 +116,33 @@
     </div>
   </nav>
 
-  <!-- MAIN APPLICATION CONTAINER -->
+  <!-- VIEWPORT CONTAINER -->
   <main id="app-viewport" class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-    <!-- Content views rendered dynamically by JS -->
+    <!-- Views rendered dynamically -->
   </main>
 
-  <!-- EDIT STUDENT MODAL -->
+  <!-- EDIT STUDENT MODAL (For Teachers) -->
   <div id="edit-student-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-100">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-slate-100">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
         <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
           <i class="fa-solid fa-user-pen text-indigo-600"></i> Edit Student Profile
         </h3>
-        <button onclick="closeEditStudentModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+        <button onclick="closeEditStudentModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
       </div>
       <input type="hidden" id="edit-student-key">
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">First Name</label>
-          <input type="text" id="edit-student-firstname" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">First Name</label>
+          <input type="text" id="edit-student-firstname" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Surname</label>
-          <input type="text" id="edit-student-surname" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Surname</label>
+          <input type="text" id="edit-student-surname" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Class Group</label>
-          <select id="edit-student-class" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Class Group</label>
+          <select id="edit-student-class" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
             <option value="7A">7A</option><option value="7B">7B</option><option value="7C">7C</option><option value="7D">7D</option>
             <option value="7E">7E</option><option value="7F">7F</option><option value="7G">7G</option><option value="7H">7H</option>
             <option value="7I">7I</option><option value="7J">7J</option>
@@ -134,24 +154,24 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Teacher</label>
-          <input type="text" id="edit-student-teacher" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Teacher</label>
+          <input type="text" id="edit-student-teacher" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Tokens (Adjust balance)</label>
-          <input type="number" id="edit-student-tokens" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Tokens (Adjust Balance)</label>
+          <input type="number" id="edit-student-tokens" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
       </div>
       <div class="mt-6 flex items-center justify-end gap-2">
-        <button onclick="closeEditStudentModal()" class="px-4 py-2 border rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
-        <button onclick="saveEditedStudent()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm">Save Changes</button>
+        <button onclick="closeEditStudentModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+        <button onclick="saveEditedStudent()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm">Save Changes</button>
       </div>
     </div>
   </div>
 
   <!-- DELETE STUDENT MODAL -->
   <div id="delete-student-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-100 text-center">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-slate-100 text-center">
       <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3">
         <i class="fa-solid fa-triangle-exclamation text-xl"></i>
       </div>
@@ -161,13 +181,27 @@
       </p>
       <input type="hidden" id="delete-student-key">
       <div class="flex items-center justify-center gap-2">
-        <button onclick="closeDeleteStudentModal()" class="px-4 py-2 border rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
-        <button onclick="confirmDeleteStudent()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold shadow-sm">Delete Student</button>
+        <button onclick="closeDeleteStudentModal()" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
+        <button onclick="confirmDeleteStudent()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm">Delete Student</button>
       </div>
     </div>
   </div>
 
-  <!-- FIREBASE CREDENTIALS (Pre-configured) -->
+  <!-- IN-APP MESSAGE MODAL (Replaces window.alert) -->
+  <div id="app-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-slate-100 text-center">
+      <div id="app-modal-icon" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-indigo-100 text-indigo-600">
+        <i class="fa-solid fa-info"></i>
+      </div>
+      <h3 id="app-modal-title" class="font-bold text-lg text-slate-800 mb-2">Notification</h3>
+      <p id="app-modal-body" class="text-xs text-slate-600 mb-5 leading-relaxed"></p>
+      <button onclick="closeAppModal()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm">
+        Got It
+      </button>
+    </div>
+  </div>
+
+  <!-- FIREBASE PROJECT CONFIGURATION -->
   <script>
     window.__app_id = 'boncepts-c84d3';
     window.__firebase_config = JSON.stringify({
@@ -182,7 +216,7 @@
     });
   </script>
 
-  <!-- FIREBASE CLOUD REAL-TIME ENGINE (Safe ES-Module with Resilient Fallback) -->
+  <!-- FIREBASE CLOUD REAL-TIME ENGINE (Multiplayer Sync) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -198,7 +232,7 @@
     window.cloudAvailable = false;
     window.cachedCloudUsers = {};
 
-    async function setupFirebase() {
+    async function initFirebaseCloud() {
       try {
         if (!window.__firebase_config) return;
         const config = JSON.parse(window.__firebase_config);
@@ -206,79 +240,337 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Sign in anonymously
+        // Anonymous auth for students and teachers across devices
         await signInAnonymously(auth);
 
-        // Public classroom collection path
         const appId = window.__app_id || 'boncepts-c84d3';
         const usersCol = collection(db, 'artifacts', appId, 'public', 'data', 'users');
 
-        // Expose direct write and delete functions globally
-        window.saveUserRecordToCloud = async (userKey, data) => {
+        window.saveUserRecordToCloud = async (key, data) => {
           try {
-            const userDoc = doc(db, 'artifacts', appId, 'public', 'data', 'users', userKey);
+            const userDoc = doc(db, 'artifacts', appId, 'public', 'data', 'users', key);
             await setDoc(userDoc, data, { merge: true });
-          } catch (err) {
-            console.warn("Cloud save warning:", err.message);
+          } catch (e) {
+            console.warn("Cloud save:", e.message);
           }
         };
 
-        window.deleteUserRecordFromCloud = async (userKey) => {
+        window.deleteUserRecordFromCloud = async (key) => {
           try {
-            const userDoc = doc(db, 'artifacts', appId, 'public', 'data', 'users', userKey);
+            const userDoc = doc(db, 'artifacts', appId, 'public', 'data', 'users', key);
             await deleteDoc(userDoc);
-          } catch (err) {
-            console.warn("Cloud delete warning:", err.message);
+          } catch (e) {
+            console.warn("Cloud delete:", e.message);
           }
         };
 
-        // Real-time snapshot listener across all connected devices
+        // Real-time listener for updates across all classroom laptops & tablets
         onSnapshot(usersCol, (snapshot) => {
-          const fresh = {};
-          snapshot.forEach((d) => {
-            fresh[d.id] = d.data();
+          const remoteUsers = {};
+          snapshot.forEach(d => {
+            remoteUsers[d.id] = d.data();
           });
-          window.cachedCloudUsers = fresh;
+          window.cachedCloudUsers = remoteUsers;
           window.cloudAvailable = true;
 
-          // Update connection indicator badge
-          const status = document.getElementById('cloud-status-indicator');
-          if (status) {
-            status.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Live Cloud Sync`;
+          const indicator = document.getElementById('cloud-status-indicator');
+          if (indicator) {
+            indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Live Cloud Sync`;
           }
 
-          // If current logged-in student had tokens updated elsewhere, reflect it
-          if (window.app && window.app.currentUser && fresh[window.app.currentUser.key]) {
-            const remote = fresh[window.app.currentUser.key];
-            if (remote.stats && remote.stats.tokens !== undefined) {
-              window.state.stats.tokens = remote.stats.tokens;
-              const tokenEl = document.getElementById('nav-user-tokens');
-              if (tokenEl) tokenEl.textContent = remote.stats.tokens;
+          // If current logged-in user tokens were updated remotely, reflect live
+          if (window.app && window.app.currentUser && remoteUsers[window.app.currentUser.key]) {
+            const remoteMe = remoteUsers[window.app.currentUser.key];
+            if (remoteMe.stats && remoteMe.stats.tokens !== undefined) {
+              window.state.stats.tokens = remoteMe.stats.tokens;
+              const tokEl = document.getElementById('nav-user-tokens');
+              if (tokEl) tokEl.textContent = remoteMe.stats.tokens;
             }
           }
 
-          // Refresh leaderboards live
           if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
           if (window.refreshLeaderboardTableInPlace) window.refreshLeaderboardTableInPlace();
         }, (err) => {
-          console.warn("Firestore snapshot listener:", err.message);
+          console.warn("Cloud snapshot error:", err.message);
         });
 
       } catch (err) {
-        console.warn("Firebase Init fallback:", err.message);
-        const status = document.getElementById('cloud-status-indicator');
-        if (status) {
-          status.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span> Local Sandbox`;
+        console.warn("Firebase Init status:", err.message);
+        const indicator = document.getElementById('cloud-status-indicator');
+        if (indicator) {
+          indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span> Local Sandbox`;
         }
       }
     }
 
-    setupFirebase();
+    initFirebaseCloud();
   </script>
 
-  <!-- CORE LOGIC & VIEWS SCRIPT -->
+  <!-- CURRICULUM DATA & CORE LOGIC SCRIPT -->
   <script>
-    // Audio Context Setup
+    // ==========================================
+    // COMPLETE CURRICULUM TOPICS & LEVELS
+    // ==========================================
+    const conceptsCurriculum = [
+      {
+        id: 'duration',
+        title: 'Duration & Rhythm',
+        icon: 'fa-drum',
+        color: 'from-blue-600 to-indigo-600',
+        textColor: 'text-blue-600',
+        bgLight: 'bg-blue-50',
+        borderColor: 'border-blue-200',
+        desc: 'Pulse, beat, note lengths, meter, tempo, and rhythmic syncopation.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: The Pulse & Note Values',
+            badge: 'Beginner',
+            readTime: '3 min read',
+            summary: 'Music moves through time. The beat is the regular heartbeat of a piece of music.',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">1. The Beat (Pulse)</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                The beat is steady like a ticking clock. In standard 4/4 time, there are four steady beats per bar.
+              </p>
+              <h4 class="font-bold text-slate-800 text-base mb-2">2. Crotchets & Quavers</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                • <strong>Crotchet (♩)</strong> = 1 beat (Quarter note). Often spoken as "Ta".<br>
+                • <strong>Pair of Quavers (♫)</strong> = Two sounds evenly sharing 1 beat (Eighth notes). Often spoken as "Ti-Ti".<br>
+                • <strong>Minim (𝅗𝅥)</strong> = 2 beats (Half note). Held for two pulses.
+              </p>
+              <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-200 my-4">
+                <p class="text-xs font-bold text-indigo-900">💡 Concept Checklist:</p>
+                <p class="text-xs text-indigo-700">Rhythm is created when sounds of different durations are layered on top of the steady pulse.</p>
+              </div>
+            `,
+            quiz: [
+              { q: 'How many beats does a standard Crotchet (♩) receive in 4/4 time?', options: ['1 beat', '2 beats', '4 beats', 'Half a beat'], correct: 0 },
+              { q: 'How many hits occur in 1 beat when playing a pair of Quavers (♫)?', options: ['1 hit', '2 hits', '3 hits', '4 hits'], correct: 1 },
+              { q: 'What is the regular recurring heartbeat of a musical piece called?', options: ['The Beat / Pulse', 'The Melody', 'The Dynamics', 'The Timbre'], correct: 0 }
+            ]
+          },
+          {
+            level: 2,
+            title: 'Level 2: Meter & Time Signatures',
+            badge: 'Intermediate',
+            readTime: '4 min read',
+            summary: 'Grouping beats into measures: 2/4, 3/4, 4/4, and compound time (6/8).',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">Time Signatures Explained</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                • <strong>4/4 Time (Common Time)</strong>: 4 beats per bar, counted 1 - 2 - 3 - 4.<br>
+                • <strong>3/4 Time (Triple Meter)</strong>: 3 beats per bar (Waltz rhythm), counted 1 - 2 - 3.<br>
+                • <strong>2/4 Time (Duple Meter)</strong>: 2 beats per bar (March rhythm), counted 1 - 2.<br>
+                • <strong>6/8 Time (Compound Time)</strong>: 2 big dotted-beat pulses divided into triplets (1-2-3, 4-5-6).
+              </p>
+            `,
+            quiz: [
+              { q: 'Which time signature is famously known as the Waltz time with 3 beats per bar?', options: ['3/4', '4/4', '2/4', '6/8'], correct: 0 },
+              { q: 'In 4/4 time, how many crotchet beats fit into each bar?', options: ['4 beats', '2 beats', '3 beats', '8 beats'], correct: 0 }
+            ]
+          },
+          {
+            level: 3,
+            title: 'Level 3: Syncopation & Off-beats',
+            badge: 'Advanced',
+            readTime: '5 min read',
+            summary: 'Accent patterns, groovy syncopation, and playing across the beat.',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">Syncopation</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                Syncopation occurs when accents are placed on normally weak beats or off-beats (the "and" of the beat). This is the foundation of Funk, Reggae, Jazz, and Pop grooves!
+              </p>
+            `,
+            quiz: [
+              { q: 'What is the definition of syncopation?', options: ['Stressing weak or off-beats', 'Playing strictly on beat 1', 'Speeding up the tempo', 'Playing louder'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'pitch',
+        title: 'Pitch & Melody',
+        icon: 'fa-wave-square',
+        color: 'from-violet-600 to-purple-600',
+        textColor: 'text-violet-600',
+        bgLight: 'bg-violet-50',
+        borderColor: 'border-violet-200',
+        desc: 'High vs low frequencies, melodic contour, intervals, harmony, and keys.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: High vs Low & Melodic Contour',
+            badge: 'Beginner',
+            readTime: '3 min read',
+            summary: 'Understanding pitch frequency, ascending and descending lines.',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">Pitch Frequency</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                Pitch refers to how high or low a sound is. Faster sound wave vibrations produce <strong>higher pitches</strong> (flute, violin), while slower vibrations produce <strong>lower pitches</strong> (tuba, bass guitar).
+              </p>
+              <h4 class="font-bold text-slate-800 text-base mb-2">Melodic Contour</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                The melodic shape can move by <strong>step</strong> (adjacent notes), by <strong>leap</strong> (skipping notes), or remain on <strong>repeated notes</strong>.
+              </p>
+            `,
+            quiz: [
+              { q: 'What causes a sound to have a higher pitch?', options: ['Faster vibrations', 'Slower vibrations', 'Playing louder', 'Using more instruments'], correct: 0 },
+              { q: 'When a melody moves between neighboring notes without skipping, it moves by:', options: ['Step', 'Leap', 'Glissando', 'Staccato'], correct: 0 }
+            ]
+          },
+          {
+            level: 2,
+            title: 'Level 2: Major vs Minor Tonality',
+            badge: 'Intermediate',
+            readTime: '4 min read',
+            summary: 'Recognizing uplifting Major keys and melancholic Minor keys.',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">Tonality and Mood</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                • <strong>Major</strong>: Often perceived as bright, heroic, happy, or triumphant.<br>
+                • <strong>Minor</strong>: Built with a flattened 3rd interval, often perceived as dark, sad, mysterious, or dramatic.
+              </p>
+            `,
+            quiz: [
+              { q: 'Which tonality is most commonly associated with bright or happy moods?', options: ['Major', 'Minor', 'Atonal', 'Chromatic'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'dynamics',
+        title: 'Dynamics & Expression',
+        icon: 'fa-volume-high',
+        color: 'from-amber-500 to-orange-600',
+        textColor: 'text-amber-600',
+        bgLight: 'bg-amber-50',
+        borderColor: 'border-amber-200',
+        desc: 'Volume levels, Italian terminology, crescendo, diminuendo, and articulation.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Italian Dynamic Markings',
+            badge: 'Beginner',
+            readTime: '3 min read',
+            summary: 'Forte, piano, mezzo, crescendo, and diminuendo.',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">Core Terms</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                • <strong>Piano (p)</strong> = Soft<br>
+                • <strong>Forte (f)</strong> = Loud<br>
+                • <strong>Mezzo-forte (mf)</strong> = Moderately loud<br>
+                • <strong>Mezzo-piano (mp)</strong> = Moderately soft<br>
+                • <strong>Crescendo (<)</strong> = Gradually getting louder<br>
+                • <strong>Diminuendo (>)</strong> = Gradually getting softer
+              </p>
+            `,
+            quiz: [
+              { q: 'What does the dynamic marking "Forte" (f) instruct the performer to do?', options: ['Play loudly', 'Play softly', 'Play fast', 'Stop playing'], correct: 0 },
+              { q: 'What does a "Crescendo" indicate?', options: ['Gradually getting louder', 'Gradually getting softer', 'Gradually speeding up', 'Sudden silence'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'tonecolour',
+        title: 'Tone Colour (Timbre)',
+        icon: 'fa-guitar',
+        color: 'from-emerald-600 to-teal-600',
+        textColor: 'text-emerald-600',
+        bgLight: 'bg-emerald-50',
+        borderColor: 'border-emerald-200',
+        desc: 'Instrument families, sound quality, acoustic vs electronic timbre.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: The Four Orchestral Families',
+            badge: 'Beginner',
+            readTime: '4 min read',
+            summary: 'Strings, Woodwind, Brass, and Percussion families.',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">Instrument Families</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                • <strong>Strings</strong>: Violin, Viola, Cello, Double Bass, Harp.<br>
+                • <strong>Woodwind</strong>: Flute, Clarinet, Oboe, Bassoon, Saxophone.<br>
+                • <strong>Brass</strong>: Trumpet, French Horn, Trombone, Tuba.<br>
+                • <strong>Percussion</strong>: Snare drum, Bass drum, Cymbals, Timpani, Xylophone.
+              </p>
+            `,
+            quiz: [
+              { q: 'Which family does the Cello belong to?', options: ['Strings', 'Woodwind', 'Brass', 'Percussion'], correct: 0 },
+              { q: 'What term describes the distinct sonic quality that makes a trumpet sound different from a clarinet?', options: ['Timbre / Tone Colour', 'Pitch', 'Tempo', 'Texture'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'texture',
+        title: 'Musical Texture',
+        icon: 'fa-layer-group',
+        color: 'from-rose-600 to-pink-600',
+        textColor: 'text-rose-600',
+        bgLight: 'bg-rose-50',
+        borderColor: 'border-rose-200',
+        desc: 'Layers of sound: Monophonic, Homophonic, and Polyphonic layers.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: The Three Textural Types',
+            badge: 'Beginner',
+            readTime: '4 min read',
+            summary: 'Single line vs melody with accompaniment vs independent intertwining lines.',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">Types of Texture</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                • <strong>Monophonic</strong>: A single unaccompanied melodic line (solo flute or unison singing).<br>
+                • <strong>Homophonic</strong>: A clear melody supported by chordal accompaniment (e.g., singer with acoustic guitar).<br>
+                • <strong>Polyphonic</strong>: Two or more independent melodic lines playing at the same time (e.g., a Bach Fugue or a vocal round).
+              </p>
+            `,
+            quiz: [
+              { q: 'What is a single melodic line with no chordal accompaniment called?', options: ['Monophonic', 'Homophonic', 'Polyphonic', 'Heterophonic'], correct: 0 },
+              { q: 'A pop singer performing with a backing band strumming chords is an example of which texture?', options: ['Homophonic', 'Monophonic', 'Polyphonic', 'Atonal'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'structure',
+        title: 'Structure & Form',
+        icon: 'fa-puzzle-piece',
+        color: 'from-cyan-600 to-blue-600',
+        textColor: 'text-cyan-600',
+        bgLight: 'bg-cyan-50',
+        borderColor: 'border-cyan-200',
+        desc: 'Musical architecture: Binary (AB), Ternary (ABA), Rondo, and Verse-Chorus.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Binary, Ternary, & Rondo',
+            badge: 'Beginner',
+            readTime: '4 min read',
+            summary: 'Architectural blueprints of compositions.',
+            content: `
+              <h4 class="font-bold text-slate-800 text-base mb-2">Common Formal Structures</h4>
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                • <strong>Binary Form (A - B)</strong>: Two contrasting sections.<br>
+                • <strong>Ternary Form (A - B - A)</strong>: Statement, contrast, and return to original theme.<br>
+                • <strong>Rondo Form (A - B - A - C - A)</strong>: Recurring main theme interspersed with contrasting episodes.<br>
+                • <strong>Verse - Chorus</strong>: The standard blueprint for contemporary pop and rock songwriting.
+              </p>
+            `,
+            quiz: [
+              { q: 'Which musical form has an A - B - A structure?', options: ['Ternary Form', 'Binary Form', 'Rondo Form', '12-Bar Blues'], correct: 0 }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // ==========================================
+    // AUDIO ENGINE (Web Audio API)
+    // ==========================================
     let audioCtx = null;
     function getAudioContext() {
       if (!audioCtx) {
@@ -296,17 +588,16 @@
       if (type === 'kick') {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.45);
         gain.gain.setValueAtTime(1, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.5);
+        osc.stop(now + 0.45);
       } else if (type === 'snare') {
-        // Noise buffer
-        const bufferSize = ctx.sampleRate * 0.2;
+        const bufferSize = ctx.sampleRate * 0.18;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
@@ -314,49 +605,96 @@
         }
         const noise = ctx.createBufferSource();
         noise.buffer = buffer;
-        const noiseFilter = ctx.createBiquadFilter();
-        noiseFilter.type = 'highpass';
-        noiseFilter.frequency.value = 1000;
-        const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(1, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(ctx.destination);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1100;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.9, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
         noise.start(now);
 
-        // Tone part
         const osc = ctx.createOscillator();
         const oscGain = ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(250, now);
+        osc.frequency.setValueAtTime(260, now);
         oscGain.gain.setValueAtTime(0.6, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
         osc.connect(oscGain);
         oscGain.connect(ctx.destination);
         osc.start(now);
-        osc.stop(now + 0.2);
+        osc.stop(now + 0.18);
       }
     }
 
-    // Default In-Memory State
+    function playTonePitch(freq, duration = 0.4) {
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+
+    // ==========================================
+    // IN-APP NOTIFICATION MODAL
+    // ==========================================
+    function showAppModal(title, message, isSuccess = true) {
+      const modal = document.getElementById('app-modal');
+      const titleEl = document.getElementById('app-modal-title');
+      const bodyEl = document.getElementById('app-modal-body');
+      const iconEl = document.getElementById('app-modal-icon');
+      if (!modal) return;
+
+      titleEl.textContent = title;
+      bodyEl.textContent = message;
+
+      if (isSuccess) {
+        iconEl.className = "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-emerald-100 text-emerald-600";
+        iconEl.innerHTML = '<i class="fa-solid fa-check"></i>';
+      } else {
+        iconEl.className = "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-amber-100 text-amber-600";
+        iconEl.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeAppModal() {
+      const modal = document.getElementById('app-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // ==========================================
+    // STATE & APP ROUTER
+    // ==========================================
     window.state = {
       stats: { tokens: 10, testsTaken: 0 },
       inventory: [],
       testHistory: []
     };
 
-    // Global App Router & Session Holder
     window.app = {
       currentUser: null,
       currentView: 'home',
-      navigate: function(view, param) {
+      currentParam: null,
+      navigate: function(view, param = null) {
         this.currentView = view;
+        this.currentParam = param;
         const container = document.getElementById('app-viewport');
         if (!container) return;
 
-        // Render target view
         if (view === 'home') renderHomeView(container);
+        else if (view === 'conceptsHub') renderConceptsHub(container);
+        else if (view === 'conceptDetail') renderConceptDetail(container, param);
+        else if (view === 'levelDetail') renderLevelDetail(container, param);
         else if (view === 'login') renderLoginView(container);
         else if (view === 'studentDash') renderStudentDash(container);
         else if (view === 'teacherDash') renderTeacherDash(container);
@@ -372,7 +710,17 @@
       }
     };
 
-    // User Records Helper: Read strictly from real-time cloud or memory
+    function openCurrentPortal() {
+      if (!app.currentUser) {
+        app.navigate('login');
+      } else if (app.currentUser.role === 'teacher') {
+        app.navigate('teacherDash');
+      } else {
+        app.navigate('studentDash');
+      }
+    }
+
+    // Read deduplicated users from live cloud memory or fallback storage
     function getAllUserRecords() {
       if (window.cachedCloudUsers && Object.keys(window.cachedCloudUsers).length > 0) {
         return window.cachedCloudUsers;
@@ -415,12 +763,10 @@
         lastActive: new Date().toISOString()
       };
 
-      // Save to cloud if live
       if (window.saveUserRecordToCloud) {
         window.saveUserRecordToCloud(key, record);
       }
 
-      // Safe local storage backup
       try {
         const users = getAllUserRecords();
         users[key] = record;
@@ -453,8 +799,10 @@
         if (userRoleEl) userRoleEl.textContent = app.currentUser.role === 'teacher' ? 'Music Teacher' : `Class ${app.currentUser.class}`;
 
         if (app.currentUser.role === 'student') {
-          if (tokenBadge) tokenBadge.classList.remove('hidden');
-          if (tokenBadge) tokenBadge.classList.add('flex');
+          if (tokenBadge) {
+            tokenBadge.classList.remove('hidden');
+            tokenBadge.classList.add('inline-flex');
+          }
           if (tokenCountEl) tokenCountEl.textContent = state.stats.tokens || 0;
         } else {
           if (tokenBadge) tokenBadge.classList.add('hidden');
@@ -471,20 +819,19 @@
       state = { stats: { tokens: 10, testsTaken: 0 }, inventory: [], testHistory: [] };
       localStorage.removeItem('boncepts_active_session');
       app.navigate('home');
+      showAppModal('Logged Out', 'You have been signed out of your session.');
     }
 
-    // Dynamic Overall Leaderboard Marquee & Table
     window.updateGlobalLeaderboard = function() {
       const ticker = document.getElementById('global-ticker-content');
       if (!ticker) return;
 
       const students = getDeduplicatedStudents();
       if (students.length === 0) {
-        ticker.innerHTML = `<span>Welcome to The Boncepts of Music! Students join now to compete on the live leaderboard.</span>`;
+        ticker.innerHTML = `<span>Welcome to The Boncepts of Music! Students join now to compete on the classroom leaderboard.</span>`;
         return;
       }
 
-      // Sort by tokens held descending
       students.sort((a, b) => ((b.stats && b.stats.tokens) || 0) - ((a.stats && a.stats.tokens) || 0));
 
       const itemsHtml = students.map((s, idx) => {
@@ -515,7 +862,6 @@
 
       tbody.innerHTML = students.map((s, idx) => {
         const tokens = (s.stats && s.stats.tokens) || 0;
-        const items = (s.inventory && s.inventory.length) || 0;
         const medal = idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : idx === 2 ? '🥉 3rd' : `#${idx + 1}`;
         return `
           <tr class="hover:bg-slate-50 border-b border-slate-100">
@@ -533,13 +879,7 @@
       if (section) {
         section.scrollIntoView({ behavior: 'smooth' });
       } else {
-        if (app.currentUser && app.currentUser.role === 'teacher') {
-          app.navigate('teacherDash');
-        } else if (app.currentUser && app.currentUser.role === 'student') {
-          app.navigate('studentDash');
-        } else {
-          app.navigate('home');
-        }
+        openCurrentPortal();
         setTimeout(() => {
           const s = document.getElementById('overall-student-leaderboard-section');
           if (s) s.scrollIntoView({ behavior: 'smooth' });
@@ -548,77 +888,305 @@
     }
 
     // ==========================================
-    // VIEW RENDERING FUNCTIONS
+    // VIEW RENDERING: HOME
     // ==========================================
-
     function renderHomeView(container) {
       container.innerHTML = `
         <div class="space-y-8">
           <!-- Hero Section -->
-          <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 text-white p-8 sm:p-12 shadow-xl">
+          <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-indigo-900 to-violet-950 text-white p-8 sm:p-12 shadow-2xl border border-indigo-800/40">
             <div class="relative z-10 max-w-2xl">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 mb-4">
-                <i class="fa-solid fa-graduation-cap"></i> Interactive Music Curriculum
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 mb-4 uppercase tracking-wider">
+                <i class="fa-solid fa-graduation-cap text-amber-400"></i> The Complete Music Curriculum
               </span>
               <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-4 leading-tight">
                 Master the Building Blocks of Music.
               </h1>
               <p class="text-indigo-200 text-sm sm:text-base leading-relaxed mb-6">
-                Explore interactive sound modules, complete rhythmic dictation challenges, earn classroom tokens, and unlock awards on the live leaderboard.
+                Explore all 6 core musical concepts, test your ears with live synthesis, complete rhythm dictations, and climb the live classroom leaderboard!
               </p>
               <div class="flex flex-wrap gap-3">
-                <button onclick="app.navigate('rhythmModule')" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl shadow-lg transition-all flex items-center gap-2">
+                <button onclick="app.navigate('conceptsHub')" class="px-6 py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
+                  <i class="fa-solid fa-book-open"></i> Browse All 6 Concepts
+                </button>
+                <button onclick="app.navigate('rhythmModule')" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
                   <i class="fa-solid fa-drum"></i> 8-Beat Drum Module
                 </button>
-                <button onclick="app.navigate('dictationChallenge')" class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold rounded-xl backdrop-blur-sm transition-all flex items-center gap-2">
+                <button onclick="app.navigate('dictationChallenge')" class="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold rounded-2xl backdrop-blur-sm transition-all flex items-center gap-2">
                   <i class="fa-solid fa-headphones"></i> Dictation Challenge
                 </button>
               </div>
             </div>
             <div class="absolute right-0 bottom-0 opacity-10 sm:opacity-20 pointer-events-none translate-x-12 translate-y-12">
-              <i class="fa-solid fa-music text-[260px]"></i>
+              <i class="fa-solid fa-music text-[280px]"></i>
             </div>
           </div>
 
-          <!-- Feature Cards Grid -->
+          <!-- The 6 Musical Concepts Quick-Grid -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h2 class="text-2xl font-black text-slate-800">The 6 Musical Concepts</h2>
+                <p class="text-xs sm:text-sm text-slate-500">Select any concept to explore graded levels, interactive theory, and tests</p>
+              </div>
+              <button onclick="app.navigate('conceptsHub')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                View All &rarr;
+              </button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              ${conceptsCurriculum.map(c => `
+                <div onclick="app.navigate('conceptDetail', '${c.id}')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:border-indigo-400 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between">
+                  <div>
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform shadow-md">
+                      <i class="fa-solid ${c.icon}"></i>
+                    </div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">${c.title}</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-4">${c.desc}</p>
+                  </div>
+                  <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span class="font-bold ${c.textColor}">${c.levels.length} Graded Levels</span>
+                    <span class="font-bold text-slate-400 group-hover:text-indigo-600">Start &rarr;</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Feature Quick-Launch Cards -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div onclick="app.navigate('rhythmModule')" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group">
-              <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+            <div onclick="app.navigate('rhythmModule')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer">
+              <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-3">
                 <i class="fa-solid fa-drum"></i>
               </div>
               <h3 class="font-bold text-lg text-slate-800 mb-1">8-Beat Drum Module</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">
-                Build rhythmic patterns with Crotchets (♩) and Quavers (♫) featuring Kick and Snare drum sounds.
-              </p>
+              <p class="text-xs text-slate-500">Toggle Crotchet (♩) and Quavers (♫) with real kick and snare drums.</p>
             </div>
-
-            <div onclick="app.navigate('dictationChallenge')" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-violet-300 transition-all cursor-pointer group">
-              <div class="w-12 h-12 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-headphones-simple"></i>
+            <div onclick="app.navigate('dictationChallenge')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer">
+              <div class="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center text-xl mb-3">
+                <i class="fa-solid fa-headphones"></i>
               </div>
               <h3 class="font-bold text-lg text-slate-800 mb-1">Dictation Challenge</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">
-                Listen to mystery drum sequences and identify matching musical notations with colored beat steps.
-              </p>
+              <p class="text-xs text-slate-500">Listen to mystery 8-beat rhythms and identify matching musical notations.</p>
             </div>
-
-            <div onclick="app.navigate('shop')" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-amber-300 transition-all cursor-pointer group">
-              <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+            <div onclick="app.navigate('shop')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer">
+              <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-3">
                 <i class="fa-solid fa-store"></i>
               </div>
               <h3 class="font-bold text-lg text-slate-800 mb-1">Classroom Rewards Shop</h3>
-              <p class="text-xs text-slate-500 leading-relaxed">
-                Spend tokens earned from rhythmic challenges to unlock custom badges, student titles, and instruments.
-              </p>
+              <p class="text-xs text-slate-500">Use tokens earned from tests to unlock equipment and avatar badges.</p>
             </div>
           </div>
 
-          <!-- Overall Classroom Leaderboard Section -->
+          <!-- Classroom Overall Leaderboard -->
           ${renderLeaderboardMarkup()}
+        </div>
+      `;
+      refreshLeaderboardTableInPlace();
+    }
+
+    // ==========================================
+    // VIEW RENDERING: CONCEPTS HUB & TOPICS
+    // ==========================================
+    function renderConceptsHub(container) {
+      container.innerHTML = `
+        <div class="space-y-8">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Syllabus Overview</span>
+              <h1 class="text-3xl font-black text-slate-800">The 6 Musical Concepts</h1>
+              <p class="text-xs sm:text-sm text-slate-500">Study each topic through progressive levels, listening guides, and quizzes.</p>
+            </div>
+            <button onclick="app.navigate('home')" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              &larr; Back to Home
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            ${conceptsCurriculum.map(c => `
+              <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
+                <div class="p-6">
+                  <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-xl mb-4 shadow">
+                    <i class="fa-solid ${c.icon}"></i>
+                  </div>
+                  <h3 class="font-bold text-xl text-slate-800 mb-2">${c.title}</h3>
+                  <p class="text-xs text-slate-500 leading-relaxed mb-4">${c.desc}</p>
+
+                  <div class="space-y-2 mt-4 pt-4 border-t border-slate-100">
+                    <span class="text-[11px] font-bold uppercase text-slate-400 block tracking-wider">Available Levels:</span>
+                    ${c.levels.map(l => `
+                      <button onclick="app.navigate('levelDetail', { conceptId: '${c.id}', levelNum: ${l.level} })" class="w-full text-left px-3 py-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 transition-all text-xs font-semibold text-slate-700 flex items-center justify-between">
+                        <span>${l.title}</span>
+                        <span class="text-[10px] font-bold text-indigo-600">${l.badge}</span>
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 border-t border-slate-100">
+                  <button onclick="app.navigate('conceptDetail', '${c.id}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all text-center">
+                    Explore Topic Curriculum &rarr;
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
         </div>
       `;
     }
 
+    function renderConceptDetail(container, conceptId) {
+      const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
+
+      container.innerHTML = `
+        <div class="space-y-8">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr ${concept.color} text-white flex items-center justify-center text-2xl shadow-lg shrink-0">
+                <i class="fa-solid ${concept.icon}"></i>
+              </div>
+              <div>
+                <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">Concept Deep Dive</span>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-800">${concept.title}</h1>
+                <p class="text-xs sm:text-sm text-slate-500">${concept.desc}</p>
+              </div>
+            </div>
+            <button onclick="app.navigate('conceptsHub')" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              &larr; All Concepts
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <h3 class="font-bold text-lg text-slate-800">Select a Graded Level:</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              ${concept.levels.map(l => `
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <div class="flex items-center justify-between mb-3">
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        ${l.badge}
+                      </span>
+                      <span class="text-xs text-slate-400 font-medium">${l.readTime}</span>
+                    </div>
+                    <h4 class="font-bold text-lg text-slate-800 mb-2">${l.title}</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-4">${l.summary}</p>
+                  </div>
+                  <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${l.level} })" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play text-[10px]"></i> Launch Level & Quiz
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderLevelDetail(container, { conceptId, levelNum }) {
+      const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
+      const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
+
+      container.innerHTML = `
+        <div class="space-y-8 max-w-4xl mx-auto">
+          <!-- Header -->
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">${concept.title}</span>
+              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">${level.title}</h1>
+              <p class="text-xs text-slate-400 font-medium">${level.badge} • ${level.readTime}</p>
+            </div>
+            <button onclick="app.navigate('conceptDetail', '${concept.id}')" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              &larr; Back to Topic
+            </button>
+          </div>
+
+          <!-- Lesson Content -->
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm prose max-w-none">
+            ${level.content}
+          </div>
+
+          <!-- Interactive Level Assessment -->
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+              <div>
+                <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                  <i class="fa-solid fa-circle-question text-indigo-600"></i> Level Quiz Assessment
+                </h3>
+                <p class="text-xs text-slate-500">Answer all questions correctly to earn +10 classroom tokens!</p>
+              </div>
+              <span class="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-bold">
+                +10 Tokens Reward
+              </span>
+            </div>
+
+            <form id="level-quiz-form" onsubmit="handleLevelQuizSubmit(event, '${concept.id}', ${level.level})" class="space-y-6">
+              ${level.quiz.map((qItem, qIdx) => `
+                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                  <div class="font-bold text-sm text-slate-800 flex items-start gap-2">
+                    <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] shrink-0 mt-0.5">${qIdx + 1}</span>
+                    <span>${qItem.q}</span>
+                  </div>
+                  <div class="space-y-2 ml-7">
+                    ${qItem.options.map((opt, optIdx) => `
+                      <label class="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-300 transition-all cursor-pointer text-xs font-semibold text-slate-700">
+                        <input type="radio" name="quiz_q_${qIdx}" value="${optIdx}" required class="text-indigo-600 focus:ring-indigo-500">
+                        <span>${opt}</span>
+                      </label>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+
+              <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-md transition-all text-sm flex items-center justify-center gap-2">
+                <i class="fa-solid fa-paper-plane"></i> Submit Assessment & Claim Tokens
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleLevelQuizSubmit(e, conceptId, levelNum) {
+      e.preventDefault();
+      const concept = conceptsCurriculum.find(c => c.id === conceptId);
+      const level = concept.levels.find(l => l.level === levelNum);
+      const quiz = level.quiz;
+
+      let score = 0;
+      for (let i = 0; i < quiz.length; i++) {
+        const selected = document.querySelector(`input[name="quiz_q_${i}"]:checked`);
+        if (selected && parseInt(selected.value, 10) === quiz[i].correct) {
+          score++;
+        }
+      }
+
+      const total = quiz.length;
+      const passed = score === total;
+
+      if (!state.testHistory) state.testHistory = [];
+      state.testHistory.push({
+        title: `${concept.title} - ${level.title}`,
+        score,
+        total,
+        date: new Date().toISOString()
+      });
+
+      if (!state.stats) state.stats = { tokens: 10, testsTaken: 0 };
+      state.stats.testsTaken = (state.stats.testsTaken || 0) + 1;
+
+      if (passed) {
+        addTokens(10);
+        showAppModal('🎉 Outstanding Result!', `Perfect score: ${score}/${total}! You mastered this level and earned +10 Tokens!`, true);
+      } else {
+        addTokens(3);
+        showAppModal('Keep Practicing!', `You scored ${score}/${total}. Review the concepts and try again! Earned +3 effort tokens.`, false);
+      }
+
+      saveUserState();
+    }
+
+    // ==========================================
+    // LEADERBOARD SECTION MARKUP
+    // ==========================================
     function renderLeaderboardMarkup() {
       return `
         <div id="overall-student-leaderboard-section" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
@@ -627,9 +1195,9 @@
               <h2 class="text-xl sm:text-2xl font-black text-slate-800 flex items-center gap-2">
                 <i class="fa-solid fa-trophy text-amber-500"></i> Overall Classroom Leaderboard
               </h2>
-              <p class="text-xs sm:text-sm text-slate-500">Live token tallies synced across all devices</p>
+              <p class="text-xs sm:text-sm text-slate-500">Live token rankings synchronized across all classroom devices</p>
             </div>
-            <button onclick="window.refreshLeaderboardTableInPlace()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5">
+            <button onclick="window.refreshLeaderboardTableInPlace()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all">
               <i class="fa-solid fa-rotate"></i> Refresh
             </button>
           </div>
@@ -637,14 +1205,14 @@
             <table class="w-full text-left text-sm">
               <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-bold tracking-wider">
                 <tr>
-                  <th class="px-4 py-3 rounded-l-lg">Rank</th>
-                  <th class="px-4 py-3">Student</th>
+                  <th class="px-4 py-3 rounded-l-xl">Rank</th>
+                  <th class="px-4 py-3">Student Name</th>
                   <th class="px-4 py-3">Class</th>
-                  <th class="px-4 py-3 text-right rounded-r-lg">Tokens</th>
+                  <th class="px-4 py-3 text-right rounded-r-xl">Tokens Held</th>
                 </tr>
               </thead>
               <tbody id="overall-leaderboard-tbody" class="divide-y divide-slate-100">
-                <!-- Populated dynamically -->
+                <!-- Injected dynamically -->
               </tbody>
             </table>
           </div>
@@ -652,6 +1220,9 @@
       `;
     }
 
+    // ==========================================
+    // AUTH & ROLE LOGIN
+    // ==========================================
     function renderLoginView(container) {
       container.innerHTML = `
         <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-6 sm:p-8">
@@ -659,16 +1230,15 @@
             <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
               <i class="fa-solid fa-music"></i>
             </div>
-            <h2 class="text-2xl font-black text-slate-800">Welcome Back</h2>
-            <p class="text-xs text-slate-500 mt-1">Sign in with your student or teacher details</p>
+            <h2 class="text-2xl font-black text-slate-800">Classroom Portal</h2>
+            <p class="text-xs text-slate-500 mt-1">Sign in with your student or teacher account</p>
           </div>
 
-          <!-- Role Selector -->
-          <div class="flex bg-slate-100 p-1 rounded-xl mb-5">
-            <button id="role-btn-student" onclick="setLoginRole('student')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white shadow text-indigo-600 transition-all">
+          <div class="flex bg-slate-100 p-1 rounded-2xl mb-5">
+            <button id="role-btn-student" onclick="setLoginRole('student')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow text-indigo-600 transition-all">
               Student
             </button>
-            <button id="role-btn-teacher" onclick="setLoginRole('teacher')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition-all">
+            <button id="role-btn-teacher" onclick="setLoginRole('teacher')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition-all">
               Teacher
             </button>
           </div>
@@ -722,12 +1292,12 @@
       const sFields = document.getElementById('login-student-fields');
 
       if (role === 'student') {
-        sBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white shadow text-indigo-600 transition-all";
-        tBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition-all";
+        sBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow text-indigo-600 transition-all";
+        tBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition-all";
         sFields.classList.remove('hidden');
       } else {
-        tBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white shadow text-indigo-600 transition-all";
-        sBtn.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 transition-all";
+        tBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow text-indigo-600 transition-all";
+        sBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition-all";
         sFields.classList.add('hidden');
       }
     }
@@ -772,8 +1342,12 @@
       } else {
         app.navigate('studentDash');
       }
+      showAppModal('Welcome', `Signed in as ${firstName} ${surname}`);
     }
 
+    // ==========================================
+    // STUDENT PORTAL
+    // ==========================================
     function renderStudentDash(container) {
       container.innerHTML = `
         <div class="space-y-8">
@@ -791,6 +1365,21 @@
               <button onclick="app.navigate('studentTests')" class="px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-2xl text-xs flex items-center gap-2 transition-all">
                 <i class="fa-solid fa-clock-rotate-left"></i> My Test History
               </button>
+            </div>
+          </div>
+
+          <!-- Quick Navigation to Concepts -->
+          <div>
+            <h3 class="font-bold text-lg text-slate-800 mb-3">Jump into Curriculum Concepts</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              ${conceptsCurriculum.map(c => `
+                <button onclick="app.navigate('conceptDetail', '${c.id}')" class="p-3 bg-white hover:bg-indigo-50/50 rounded-2xl border border-slate-200 hover:border-indigo-300 transition-all text-center">
+                  <div class="w-8 h-8 rounded-xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-sm mx-auto mb-1.5">
+                    <i class="fa-solid ${c.icon}"></i>
+                  </div>
+                  <span class="font-bold text-[11px] text-slate-700 block truncate">${c.title}</span>
+                </button>
+              `).join('')}
             </div>
           </div>
 
@@ -813,6 +1402,9 @@
       refreshLeaderboardTableInPlace();
     }
 
+    // ==========================================
+    // TEACHER MARKBOOK DASHBOARD
+    // ==========================================
     function renderTeacherDash(container) {
       const students = getDeduplicatedStudents();
       students.sort((a, b) => a.surname.localeCompare(b.surname));
@@ -823,30 +1415,30 @@
             <div>
               <span class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Teacher Markbook</span>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-800">Classroom Control Center</h1>
-              <p class="text-xs sm:text-sm text-slate-500">Manage enrolled students, monitor assessments, and edit scores</p>
+              <p class="text-xs sm:text-sm text-slate-500">Live multi-device student tracking, test records, and assessment management</p>
             </div>
             <div class="flex items-center gap-2">
-              <span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-lg">
+              <span class="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl">
                 ${students.length} Enrolled Students
               </span>
             </div>
           </div>
 
-          <!-- Student Roster Table -->
+          <!-- Markbook Table -->
           <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
             <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
-              <i class="fa-solid fa-users text-indigo-600"></i> Student Roster & Markbook
+              <i class="fa-solid fa-users text-indigo-600"></i> Student Roster & Assessment Results
             </h3>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-sm">
                 <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-bold tracking-wider">
                   <tr>
-                    <th class="px-4 py-3 rounded-l-lg">Student</th>
+                    <th class="px-4 py-3 rounded-l-xl">Student</th>
                     <th class="px-4 py-3">Class</th>
                     <th class="px-4 py-3">Teacher</th>
                     <th class="px-4 py-3">Tokens</th>
-                    <th class="px-4 py-3">Tests Done</th>
-                    <th class="px-4 py-3 text-right rounded-r-lg">Actions</th>
+                    <th class="px-4 py-3">Completed Tests</th>
+                    <th class="px-4 py-3 text-right rounded-r-xl">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -858,12 +1450,17 @@
                       <td class="px-4 py-3 text-slate-600">${s.class}</td>
                       <td class="px-4 py-3 text-slate-600">${s.teacher || '-'}</td>
                       <td class="px-4 py-3 font-black text-amber-600">${(s.stats && s.stats.tokens) || 0}</td>
-                      <td class="px-4 py-3 text-slate-500">${(s.testHistory && s.testHistory.length) || 0}</td>
+                      <td class="px-4 py-3 text-slate-500">
+                        ${(s.testHistory && s.testHistory.length > 0) ? `
+                          <span class="font-semibold text-slate-800">${s.testHistory.length} test(s)</span>
+                          <span class="text-[10px] text-indigo-600 block">Latest: ${s.testHistory[s.testHistory.length - 1].score}/${s.testHistory[s.testHistory.length - 1].total}</span>
+                        ` : '<span class="text-slate-400">0</span>'}
+                      </td>
                       <td class="px-4 py-3 text-right space-x-1">
-                        <button onclick="openEditStudentModal('${s.key}')" class="px-2.5 py-1 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg">
+                        <button onclick="openEditStudentModal('${s.key}')" class="px-3 py-1 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg">
                           <i class="fa-solid fa-pen-to-square"></i> Edit
                         </button>
-                        <button onclick="openDeleteStudentModal('${s.key}', '${s.firstName} ${s.surname}')" class="px-2.5 py-1 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg">
+                        <button onclick="openDeleteStudentModal('${s.key}', '${s.firstName} ${s.surname}')" class="px-3 py-1 text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg">
                           <i class="fa-solid fa-trash"></i> Delete
                         </button>
                       </td>
@@ -921,6 +1518,7 @@
 
       closeEditStudentModal();
       app.navigate(app.currentView);
+      showAppModal('Student Profile Updated', `${s.firstName} ${s.surname} was successfully updated.`);
     };
 
     window.openDeleteStudentModal = function(key, name) {
@@ -946,20 +1544,21 @@
 
       closeDeleteStudentModal();
       app.navigate(app.currentView);
+      showAppModal('Record Deleted', 'Student was removed from classroom rosters and leaderboards.');
     };
 
     // ==========================================
     // 8-BEAT DRUM SOUND MODULE VIEW
     // ==========================================
     let drumPattern = [
-      { beat: 1, type: 'crotchet' }, // Kick
-      { beat: 2, type: 'crotchet' }, // Snare
-      { beat: 3, type: 'quavers'  }, // Kick
-      { beat: 4, type: 'crotchet' }, // Snare
-      { beat: 5, type: 'quavers'  }, // Kick
-      { beat: 6, type: 'quavers'  }, // Snare
-      { beat: 7, type: 'crotchet' }, // Kick
-      { beat: 8, type: 'quavers'  }  // Snare
+      { beat: 1, type: 'crotchet' },
+      { beat: 2, type: 'crotchet' },
+      { beat: 3, type: 'quavers'  },
+      { beat: 4, type: 'crotchet' },
+      { beat: 5, type: 'quavers'  },
+      { beat: 6, type: 'quavers'  },
+      { beat: 7, type: 'crotchet' },
+      { beat: 8, type: 'quavers'  }
     ];
 
     function renderRhythmModule(container) {
@@ -969,7 +1568,7 @@
             <div>
               <h1 class="text-3xl font-black text-slate-800">8-Beat Drum Sound Module</h1>
               <p class="text-xs sm:text-sm text-slate-500">
-                Tap any beat to toggle between a <strong>Crotchet (♩)</strong> and <strong>Quavers (♫)</strong>. Odd beats play <span class="text-blue-600 font-bold">KICK</span> and even beats play <span class="text-rose-600 font-bold">SNARE</span>.
+                Tap any beat to toggle between a <strong>Crotchet (♩)</strong> and <strong>Quavers (♫)</strong>. Odd beats play <span class="text-blue-600 font-bold">KICK (Blue)</span> and even beats play <span class="text-rose-600 font-bold">SNARE (Red)</span>.
               </p>
             </div>
             <div class="flex items-center gap-2">
@@ -1027,7 +1626,6 @@
     }
 
     async function playCurrentPattern() {
-      const beatDuration = 0.5; // 120 bpm
       for (let i = 0; i < drumPattern.length; i++) {
         const item = drumPattern[i];
         const isKick = i % 2 === 0;
@@ -1036,11 +1634,10 @@
         if (item.type === 'crotchet') {
           playDrumSound(soundType);
         } else {
-          // Two quavers (half a beat apart)
           playDrumSound(soundType);
-          setTimeout(() => playDrumSound(soundType), 250);
+          setTimeout(() => playDrumSound(soundType), 240);
         }
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 480));
       }
     }
 
@@ -1117,13 +1714,11 @@
     }
 
     function generateMysteryPattern() {
-      // 1 = crotchet (1 hit), 2 = quavers (2 hits)
       currentMysteryPattern = [];
       for (let i = 0; i < 8; i++) {
         currentMysteryPattern.push(Math.random() > 0.5 ? 1 : 2);
       }
 
-      // Generate 3 unique distractors
       mysteryOptions = [currentMysteryPattern];
       while (mysteryOptions.length < 4) {
         const distractor = [];
@@ -1137,8 +1732,6 @@
           mysteryOptions.push(distractor);
         }
       }
-
-      // Shuffle options array
       mysteryOptions.sort(() => Math.random() - 0.5);
     }
 
@@ -1157,9 +1750,9 @@
           playDrumSound(soundType);
         } else {
           playDrumSound(soundType);
-          setTimeout(() => playDrumSound(soundType), 250);
+          setTimeout(() => playDrumSound(soundType), 240);
         }
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 480));
       }
 
       if (btn) btn.disabled = false;
@@ -1174,20 +1767,20 @@
         streakCount++;
         if (streakCount > bestStreak) bestStreak = streakCount;
         addTokens(5);
-        alert("🎉 Correct rhythm! You earned +5 Tokens!");
+        showAppModal('🎉 Correct Rhythm!', 'Fantastic ear! You identified the mystery pattern and earned +5 Tokens.', true);
       } else {
         streakCount = 0;
-        alert("❌ Not quite! Listen closely to the beats and try again.");
+        showAppModal('❌ Not Quite', 'That was not the matching pattern. Listen carefully to the bass and snare beats and try again!', false);
       }
 
       renderDictationChallenge(document.getElementById('app-viewport'));
     }
 
     // ==========================================
-    // REWARDS SHOP VIEW
+    // REWARDS SHOP
     // ==========================================
     const shopCatalog = [
-      { id: 'item_gold_mic', name: 'Golden Microphone', cost: 15, icon: 'fa-microphone-lines', desc: 'Classroom audio privilege' },
+      { id: 'item_gold_mic', name: 'Golden Microphone', cost: 15, icon: 'fa-microphone-lines', desc: 'Classroom audio privilege badge' },
       { id: 'item_drum_sticks', name: 'Master Drumsticks', cost: 25, icon: 'fa-drum', desc: 'Rhythm speed badge' },
       { id: 'item_dj_crown', name: 'DJ Crown', cost: 40, icon: 'fa-crown', desc: 'Leaderboard special avatar' },
       { id: 'item_synth_badge', name: 'Synthesizer Pro', cost: 50, icon: 'fa-compact-disc', desc: 'Music theory virtuoso' }
@@ -1239,7 +1832,7 @@
 
     function buyShopItem(itemId, cost) {
       if ((state.stats.tokens || 0) < cost) {
-        alert("⚠️ You need more tokens to unlock this item!");
+        showAppModal('Insufficient Tokens', 'You need more tokens to unlock this item. Complete challenges or level quizzes to earn more!', false);
         return;
       }
       state.stats.tokens -= cost;
@@ -1247,10 +1840,11 @@
       state.inventory.push(itemId);
       saveUserState();
       renderShopView(document.getElementById('app-viewport'));
+      showAppModal('Reward Unlocked! 🎁', 'Item has been added to your inventory.', true);
     }
 
     // ==========================================
-    // PRIVATE STUDENT TESTS VIEW
+    // CONFIDENTIAL STUDENT TESTS VIEW
     // ==========================================
     function renderStudentTestsView(container) {
       if (!app.currentUser || app.currentUser.role !== 'student') {
@@ -1265,7 +1859,7 @@
           <div class="flex items-center justify-between">
             <div>
               <h1 class="text-3xl font-black text-slate-800">My Assessment Results</h1>
-              <p class="text-xs sm:text-sm text-slate-500">Confidential record visible only to you and your teacher</p>
+              <p class="text-xs sm:text-sm text-slate-500">Confidential mark record visible only to you and your teacher</p>
             </div>
             <button onclick="app.navigate('studentDash')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">
               &larr; Back to Dashboard
@@ -1276,7 +1870,7 @@
             ${tests.length === 0 ? `
               <div class="text-center py-8 text-slate-400">
                 <i class="fa-solid fa-clipboard-check text-4xl mb-2 text-slate-300"></i>
-                <p class="text-sm">No completed tests recorded yet.</p>
+                <p class="text-sm">No completed tests recorded yet. Start exploring the concepts to take your first quiz!</p>
               </div>
             ` : `
               <div class="divide-y divide-slate-100">
@@ -1299,7 +1893,9 @@
       `;
     }
 
+    // ==========================================
     // APPLICATION STARTUP BOOTSTRAP
+    // ==========================================
     window.onload = function() {
       try {
         const savedSession = localStorage.getItem('boncepts_active_session');

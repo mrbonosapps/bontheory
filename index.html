@@ -982,12 +982,15 @@
                 if (area === 'texture') colorTheme = 'pink';
                 return `
                 <div class="p-8 max-w-6xl mx-auto fade-in pb-20 bg-[#f4f6f8]">
-                    <button onclick="app.navigate('levelHub', { area: '${area}', level: ${level} })" class="text-${colorTheme}-600 font-medium mb-6 hover:text-${colorTheme}-800 transition inline-flex items-center text-sm">
-                        <i class="fa-solid fa-arrow-left mr-2"></i> Back to Level ${level}
-                    </button>
+                    <!-- Sticky pinned Back button header -->
+                    <div class="sticky top-0 z-20 bg-[#f4f6f8]/95 backdrop-blur-sm py-3 mb-4 -mt-2 border-b border-slate-200/60 flex items-center">
+                        <button onclick="app.navigate('levelHub', { area: '${area}', level: ${level} })" class="text-${colorTheme}-600 hover:text-${colorTheme}-800 font-bold transition inline-flex items-center text-sm bg-white px-4 py-2 rounded-xl shadow-xs border border-slate-200">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Back to Level ${level}
+                        </button>
+                    </div>
                     <div class="flex flex-col md:flex-row gap-8">
                         <div class="w-full md:w-72 flex-shrink-0">
-                            <div class="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 p-4 sticky top-24">
+                            <div class="bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-gray-100 p-4 sticky top-20">
                                 <h3 class="text-[13px] font-bold text-gray-800 uppercase tracking-wide mb-3 px-4 pt-2">Lesson Contents</h3>
                                 <div class="space-y-1">
                                     ${tabs.map(t => `
@@ -1411,38 +1414,38 @@
                                 <text x="25" y="121" font-size="100" font-family="serif" fill="#0f172a">&#119070;</text>
 
                                 <!-- Barline separator -->
-                                <line x1="235" y1="40" x2="235" y2="120" stroke="#cbd5e1" stroke-width="2"/>
+                                <line x1="230" y1="40" x2="230" y2="120" stroke="#cbd5e1" stroke-width="2"/>
 
                                 <!-- C Major Stacked Triad (Middle C ledger line: y=140, E: y=120 line 1, G: y=100 line 2) -->
                                 <g>
-                                    <!-- Ledger line for Middle C -->
-                                    <line x1="110" y1="140" x2="160" y2="140" stroke="#0f172a" stroke-width="2"/>
-                                    <!-- C notehead (Root) -->
-                                    <ellipse cx="135" cy="140" rx="11" ry="7.5" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
-                                    <!-- E notehead (3rd) -->
-                                    <ellipse cx="135" cy="120" rx="11" ry="7.5" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
-                                    <!-- G notehead (5th) -->
-                                    <ellipse cx="135" cy="100" rx="11" ry="7.5" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+                                    <!-- Ledger line for Middle C running directly through the notehead -->
+                                    <line x1="110" y1="140" x2="160" y2="140" class="staff-line"/>
+                                    <!-- C notehead (Root) - transparent fill so ledger line passes through -->
+                                    <ellipse cx="135" cy="140" rx="11" ry="7.5" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+                                    <!-- E notehead (3rd) - transparent fill so staff line 1 passes through -->
+                                    <ellipse cx="135" cy="120" rx="11" ry="7.5" fill="none" stroke="#2563eb" stroke-width="2.5"/>
+                                    <!-- G notehead (5th) - transparent fill so staff line 2 passes through -->
+                                    <ellipse cx="135" cy="100" rx="11" ry="7.5" fill="none" stroke="#2563eb" stroke-width="2.5"/>
                                     <!-- Common stem -->
                                     <line x1="146" y1="140" x2="146" y2="65" stroke="#2563eb" stroke-width="2.5"/>
 
                                     <text x="135" y="24" font-family="Inter" font-weight="900" font-size="14" fill="#1e3a8a" text-anchor="middle">C Major Chord</text>
-                                    <text x="135" y="162" font-family="Inter" font-weight="bold" font-size="12" fill="#2563eb" text-anchor="middle">C - E - G (Line - Line - Line)</text>
+                                    <text x="130" y="162" font-family="Inter" font-weight="bold" font-size="11" fill="#2563eb" text-anchor="middle">C - E - G (Line - Line - Line)</text>
                                 </g>
 
                                 <!-- F Major Stacked Triad (F: y=110 space 1, A: y=90 space 2, C: y=70 space 3) -->
                                 <g>
                                     <!-- F notehead (Root) -->
-                                    <ellipse cx="310" cy="110" rx="11" ry="7.5" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+                                    <ellipse cx="320" cy="110" rx="11" ry="7.5" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
                                     <!-- A notehead (3rd) -->
-                                    <ellipse cx="310" cy="90" rx="11" ry="7.5" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+                                    <ellipse cx="320" cy="90" rx="11" ry="7.5" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
                                     <!-- C notehead (5th) -->
-                                    <ellipse cx="310" cy="70" rx="11" ry="7.5" fill="#ffffff" stroke="#7c3aed" stroke-width="2.5"/>
+                                    <ellipse cx="320" cy="70" rx="11" ry="7.5" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
                                     <!-- Common stem -->
-                                    <line x1="321" y1="110" x2="321" y2="40" stroke="#7c3aed" stroke-width="2.5"/>
+                                    <line x1="331" y1="110" x2="331" y2="40" stroke="#7c3aed" stroke-width="2.5"/>
 
-                                    <text x="310" y="24" font-family="Inter" font-weight="900" font-size="14" fill="#4c1d95" text-anchor="middle">F Major Chord</text>
-                                    <text x="310" y="162" font-family="Inter" font-weight="bold" font-size="12" fill="#7c3aed" text-anchor="middle">F - A - C (Space - Space - Space)</text>
+                                    <text x="320" y="24" font-family="Inter" font-weight="900" font-size="14" fill="#4c1d95" text-anchor="middle">F Major Chord</text>
+                                    <text x="325" y="162" font-family="Inter" font-weight="bold" font-size="11" fill="#7c3aed" text-anchor="middle">F - A - C (Space - Space - Space)</text>
                                 </g>
                             </svg>
 

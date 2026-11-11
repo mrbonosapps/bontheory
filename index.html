@@ -1471,24 +1471,29 @@
                 } else if (tab === 'game') {
                     content = `
                         <h3 class="text-3xl font-extrabold text-slate-800 mb-2">Triad Builder Game</h3>
-                        <p class="text-slate-600 mb-6 leading-relaxed text-lg">
-                            Build the triad! Click the correct lines or spaces directly above the root note to stack the <strong>3rd</strong> and <strong>5th</strong>. Remember the Snowman Rule!
-                        </p>
+                        <div class="bg-blue-50/80 border-2 border-blue-200 rounded-2xl p-5 mb-6 text-slate-800 shadow-xs">
+                            <h4 class="text-xl sm:text-2xl font-black text-blue-950 mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-info text-blue-600"></i> INSTRUCTIONS: Complete The Triad
+                            </h4>
+                            <p class="text-base sm:text-lg text-slate-700 leading-relaxed font-semibold">
+                                Look closely at the fixed note on the staff. It could be the <strong>Root</strong>, the <strong>3rd</strong>, or the <strong>5th</strong>! Click the staff to add the <span class="text-blue-700 underline font-black">other two missing notes</span> of the triad. Remember: a triad always stacks in consecutive lines or consecutive spaces (the Snowman Rule)!
+                            </p>
+                        </div>
 
                         <div class="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-100 shadow-sm flex flex-col items-center">
                             <div class="flex justify-between items-center w-full mb-6">
                                 <span class="font-bold text-slate-700">Streak: <span id="triad-streak" class="text-blue-600 text-xl font-extrabold">0</span></span>
-                                <div class="bg-blue-100 text-blue-900 border border-blue-200 px-4 py-1.5 rounded-xl font-bold text-xs uppercase tracking-wider">
-                                    Triad Stacking
+                                <div class="bg-blue-100 text-blue-900 border border-blue-200 px-4 py-1.5 rounded-xl font-black text-sm uppercase tracking-wider">
+                                    Triad Builder
                                 </div>
                                 <span class="font-bold text-slate-700">Best: <span id="triad-best" class="text-emerald-600 text-xl font-extrabold">0</span></span>
                             </div>
 
                             <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm w-full max-w-xl text-center mb-6">
-                                <span id="triad-q-cat" class="inline-block text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-3 py-1 rounded-full mb-3">...</span>
-                                <h4 id="triad-q-prompt" class="text-xl sm:text-2xl font-black text-slate-800 mb-4">Loading challenge...</h4>
+                                <span id="triad-q-cat" class="inline-block text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-3 py-1 rounded-full mb-2">...</span>
+                                <h4 id="triad-q-prompt" class="text-2xl sm:text-3xl font-black text-slate-900 mb-3 tracking-tight">Loading challenge...</h4>
                                 <div id="triad-display" class="bg-slate-900 rounded-xl p-4 flex items-center justify-center min-h-[180px] border border-slate-800 select-none overflow-x-auto"></div>
-                                <p id="triad-q-hint" class="text-xs text-slate-400 mt-3 font-medium">Hover and click the staff to place your notes!</p>
+                                <p id="triad-q-hint" class="text-sm text-slate-500 mt-3 font-bold">Click the staff lines or spaces to place your 2 notes!</p>
                             </div>
 
                             <div class="flex gap-4 w-full max-w-xl justify-center">
@@ -5077,28 +5082,65 @@
             currentQ: null,
             placedNotes: [],
             pool: [
-                { root: "C", rootCy: 140 },
-                { root: "F", rootCy: 110 },
-                { root: "G", rootCy: 100 },
-                { root: "A", rootCy: 90 },
-                { root: "D", rootCy: 130 }
+                { root: "C", rootCy: 140, thirdCy: 120, fifthCy: 100 },
+                { root: "D", rootCy: 130, thirdCy: 110, fifthCy: 90 },
+                { root: "E", rootCy: 120, thirdCy: 100, fifthCy: 80 },
+                { root: "F", rootCy: 110, thirdCy: 90, fifthCy: 70 },
+                { root: "G", rootCy: 100, thirdCy: 80, fifthCy: 60 },
+                { root: "A", rootCy: 90, thirdCy: 70, fifthCy: 50 }
             ]
         };
 
         window.startTriadGame = function() {
             const state = window.triadGameState;
-            state.currentQ = state.pool[Math.floor(Math.random() * state.pool.length)];
+            const chord = state.pool[Math.floor(Math.random() * state.pool.length)];
             state.placedNotes = [];
-            
+
+            // Randomly choose which note is provided: 'root', 'third', or 'fifth'
+            const roleChoices = ['root', 'third', 'fifth'];
+            const givenRole = roleChoices[Math.floor(Math.random() * roleChoices.length)];
+
+            let givenCy, givenName, missingRoles, requiredNotes;
+            if (givenRole === 'root') {
+                givenCy = chord.rootCy;
+                givenName = "Root";
+                missingRoles = "the 3rd and 5th";
+                requiredNotes = [chord.thirdCy, chord.fifthCy];
+            } else if (givenRole === 'third') {
+                givenCy = chord.thirdCy;
+                givenName = "3rd";
+                missingRoles = "the Root and 5th";
+                requiredNotes = [chord.rootCy, chord.fifthCy];
+            } else {
+                givenCy = chord.fifthCy;
+                givenName = "5th";
+                missingRoles = "the Root and 3rd";
+                requiredNotes = [chord.rootCy, chord.thirdCy];
+            }
+
+            state.currentQ = {
+                root: chord.root,
+                rootCy: chord.rootCy,
+                thirdCy: chord.thirdCy,
+                fifthCy: chord.fifthCy,
+                givenRole,
+                givenCy,
+                givenName,
+                missingRoles,
+                requiredNotes
+            };
+
             const q = state.currentQ;
             const promptEl = document.getElementById('triad-q-prompt');
             const catEl = document.getElementById('triad-q-cat');
+            const hintEl = document.getElementById('triad-q-hint');
             const fb = document.getElementById('triad-feedback');
 
-            if (promptEl) promptEl.textContent = `Build a ${q.root} triad!`;
-            if (catEl) catEl.textContent = `Stack the 3rd and 5th`;
+            if (promptEl) promptEl.textContent = `Build a ${q.root} Triad: Add ${q.missingRoles}!`;
+            if (catEl) catEl.textContent = `Given Note: ${q.givenName}`;
+            if (hintEl) hintEl.textContent = `The white note is the ${q.givenName}. Place 2 blue notes to complete the triad!`;
             if (fb) fb.textContent = '';
-            
+
             renderTriadGameSVG();
         };
 
@@ -5106,10 +5148,10 @@
             const state = window.triadGameState;
             const q = state.currentQ;
             const displayEl = document.getElementById('triad-display');
-            
-            if (!displayEl) return;
-            
-            let svg = `<svg width="220" height="170" viewBox="0 0 220 170">
+
+            if (!displayEl || !q) return;
+
+            let svg = `<svg width="220" height="170" viewBox="0 0 220 170" class="overflow-visible select-none">
                 <line x1="20" y1="40" x2="200" y2="40" class="staff-line stroke-slate-500"/>
                 <line x1="20" y1="60" x2="200" y2="60" class="staff-line stroke-slate-500"/>
                 <line x1="20" y1="80" x2="200" y2="80" class="staff-line stroke-slate-500"/>
@@ -5117,29 +5159,29 @@
                 <line x1="20" y1="120" x2="200" y2="120" class="staff-line stroke-slate-500"/>
                 <text x="25" y="121" font-size="90" font-family="serif" fill="#94a3b8">&#119070;</text>
             `;
-            
-            // Render C ledger line if needed
-            if (q.rootCy === 140 || state.placedNotes.includes(140)) {
+
+            // Render Middle C ledger line (y=140) if either given note or placed note is on it
+            if (q.givenCy === 140 || state.placedNotes.includes(140) || (q.rootCy === 140 && state.placedNotes.length === 2)) {
                 svg += `<line x1="95" y1="140" x2="145" y2="140" stroke="#f8fafc" stroke-width="2"/>`;
             }
 
-            // Root Note
-            svg += `<ellipse cx="120" cy="${q.rootCy}" rx="12" ry="8" fill="#f8fafc"/>`;
-            
-            // Placed Notes
+            // Fixed Given Note (white note)
+            svg += `<ellipse cx="120" cy="${q.givenCy}" rx="12" ry="8" fill="#f8fafc"/>`;
+
+            // Placed Notes (blue notes)
             state.placedNotes.forEach(cy => {
-                svg += `<ellipse cx="120" cy="${cy}" rx="12" ry="8" fill="#60a5fa" class="fade-in"/>`;
+                svg += `<ellipse cx="120" cy="${cy}" rx="12" ry="8" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5" class="fade-in"/>`;
             });
-            
-            // Interactive Drop/Click Zones
+
+            // Interactive Click/Tap Strips for staff lines and spaces
             if (state.placedNotes.length < 2) {
-                for(let y = 30; y <= 150; y += 10) {
-                    if (y !== q.rootCy && !state.placedNotes.includes(y)) {
-                        svg += `<rect x="90" y="${y-5}" width="60" height="10" fill="transparent" class="hover:fill-blue-500/40 cursor-pointer transition-colors duration-200" onclick="placeTriadNote(${y})" />`;
+                for (let y = 30; y <= 150; y += 10) {
+                    if (y !== q.givenCy && !state.placedNotes.includes(y)) {
+                        svg += `<rect x="90" y="${y-5}" width="60" height="10" fill="transparent" class="hover:fill-blue-500/40 cursor-pointer transition-colors duration-150" onclick="placeTriadNote(${y})" />`;
                     }
                 }
             }
-            
+
             svg += `</svg>`;
             displayEl.innerHTML = svg;
         };
@@ -5147,10 +5189,10 @@
         window.placeTriadNote = function(cy) {
             const state = window.triadGameState;
             if (state.placedNotes.length >= 2) return;
-            
+
             state.placedNotes.push(cy);
             renderTriadGameSVG();
-            
+
             if (state.placedNotes.length === 2) {
                 checkTriadConstruction();
             }
@@ -5160,36 +5202,33 @@
             const state = window.triadGameState;
             const q = state.currentQ;
             const fb = document.getElementById('triad-feedback');
-            if (!fb) return;
+            if (!fb || !q) return;
 
-            // A root position triad stacks thirds (cy - 20) and fifths (cy - 40) directly above the root
-            const requiredNotes = [q.rootCy - 20, q.rootCy - 40];
-            const correct = state.placedNotes.includes(requiredNotes[0]) && state.placedNotes.includes(requiredNotes[1]);
-            
+            // Check if both required missing notes were placed
+            const correct = state.placedNotes.includes(q.requiredNotes[0]) && state.placedNotes.includes(q.requiredNotes[1]);
+
             if (correct) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
                 window.addTokens(10);
-                fb.textContent = `Correct! Perfect snowman shape!`;
+                fb.textContent = `Correct! Perfect ${q.root} triad (${q.root} - 3rd - 5th)!`;
                 fb.className = "font-bold h-6 text-lg mt-5 text-center text-emerald-500";
-                
+
                 document.getElementById('triad-streak').textContent = state.streak;
                 document.getElementById('triad-best').textContent = state.best;
-                
+
                 if (window.playTriadAudio) {
-                    // Quick map for reward chord quality
                     const quality = (q.root === 'C' || q.root === 'F' || q.root === 'G') ? 'major' : 'minor';
                     window.playTriadAudio(q.root, quality);
                 }
-                
+
                 setTimeout(window.startTriadGame, 1600);
             } else {
                 state.streak = 0;
                 document.getElementById('triad-streak').textContent = state.streak;
-                fb.textContent = `Incorrect! Stack the notes in the adjacent spaces or lines directly above the root!`;
+                fb.textContent = `Incorrect! Check the lines and spaces to form the ${q.root} triad!`;
                 fb.className = "font-bold h-6 text-lg mt-5 text-center text-red-500";
-                
-                // Clear the notes after a short delay so the user can try again
+
                 setTimeout(() => {
                     state.placedNotes = [];
                     renderTriadGameSVG();

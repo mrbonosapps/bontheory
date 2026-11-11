@@ -1167,7 +1167,7 @@
                 tab = tab || 'theory';
                 const tabs = [
                     { id: 'theory', label: 'Intervals (Basic)' },
-                    { id: 'game', label: 'Interval Identifier Game' }
+                    { id: 'game', label: 'Interval Locator' }
                 ];
 
                 let content = '';
@@ -1248,30 +1248,65 @@
                     `;
                 } else if (tab === 'game') {
                     content = `
-                        <h3 class="text-3xl font-extrabold text-slate-800 mb-2">Interval Identifier Game</h3>
-                        <p class="text-slate-600 mb-6 leading-relaxed text-lg">
-                            Look at the two notes on the staff, listen to the interval, and name the distance!
-                        </p>
+                        <div class="mb-4">
+                            <h3 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-2">Interval Locator</h3>
+                            <p class="text-slate-600 text-base sm:text-lg leading-relaxed">
+                                Drag the blue note up or down to form the requested interval starting from Middle C.
+                            </p>
+                        </div>
 
-                        <div class="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-100 shadow-sm flex flex-col items-center">
-                            <div class="flex justify-between items-center w-full mb-6">
-                                <span class="font-bold text-slate-700">Streak: <span id="interval-streak" class="text-blue-600 text-xl font-extrabold">0</span></span>
-                                <div class="bg-blue-100 text-blue-900 border border-blue-200 px-4 py-1.5 rounded-xl font-bold text-xs uppercase tracking-wider">
-                                    Interval Distance Practice
+                        <div class="bg-slate-50/80 rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
+                            <div class="flex justify-end items-center gap-6 mb-6">
+                                <span class="text-sm font-bold text-slate-700">Streak: <span id="interval-streak" class="text-blue-600 text-xl font-black">0</span></span>
+                                <span class="text-sm font-bold text-slate-700">Best: <span id="interval-best" class="text-emerald-600 text-xl font-black">0</span></span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                                <!-- Interactive Staff Surface -->
+                                <div class="md:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm flex items-center justify-center select-none touch-none min-h-[280px]">
+                                    <svg id="locator-staff-svg" width="340" height="220" viewBox="0 0 340 220" class="cursor-pointer max-w-full h-auto select-none overflow-visible"
+                                         onmousedown="startLocatorDrag(event)" onmousemove="doLocatorDrag(event)" onmouseup="endLocatorDrag(event)" onmouseleave="endLocatorDrag(event)"
+                                         ontouchstart="startLocatorDrag(event)" ontouchmove="doLocatorDrag(event)" ontouchend="endLocatorDrag(event)">
+                                        <!-- Staff Lines -->
+                                        <line x1="40" y1="50" x2="300" y2="50" stroke="#1e293b" stroke-width="2.5"/>
+                                        <line x1="40" y1="70" x2="300" y2="70" stroke="#1e293b" stroke-width="2.5"/>
+                                        <line x1="40" y1="90" x2="300" y2="90" stroke="#1e293b" stroke-width="2.5"/>
+                                        <line x1="40" y1="110" x2="300" y2="110" stroke="#1e293b" stroke-width="2.5"/>
+                                        <line x1="40" y1="130" x2="300" y2="130" stroke="#1e293b" stroke-width="2.5"/>
+
+                                        <!-- Treble Clef -->
+                                        <text x="35" y="132" font-size="115" font-family="serif" fill="#0f172a" pointer-events="none">&#119070;</text>
+
+                                        <!-- Middle C Base Note (Fixed Black Note with Ledger Line) -->
+                                        <line x1="125" y1="150" x2="165" y2="150" stroke="#0f172a" stroke-width="2.5" pointer-events="none"/>
+                                        <ellipse cx="145" cy="150" rx="14" ry="9.5" fill="#0f172a" pointer-events="none"/>
+
+                                        <!-- Movable Blue Target Note -->
+                                        <g id="locator-blue-group" transform="translate(185, 150)" style="cursor: grab;">
+                                            <!-- Dynamic ledger line rendered by JS if note is on Middle C ledger line (y=150) or High A ledger line (y=30) -->
+                                            <line id="locator-blue-ledger" x1="-20" y1="0" x2="20" y2="0" stroke="#2563eb" stroke-width="2.5" opacity="1"/>
+                                            <ellipse cx="0" cy="0" rx="14" ry="9.5" fill="#2563eb"/>
+                                        </g>
+
+                                        <!-- Clickable Staff Step Zones -->
+                                        <g id="locator-click-zones"></g>
+                                    </svg>
                                 </div>
-                                <span class="font-bold text-slate-700">Best: <span id="interval-best" class="text-emerald-600 text-xl font-extrabold">0</span></span>
+
+                                <!-- Target & Action Column -->
+                                <div class="flex flex-col gap-4">
+                                    <div class="bg-blue-100/70 border border-blue-200/80 rounded-3xl p-6 text-center shadow-xs flex flex-col justify-center min-h-[160px]">
+                                        <span class="text-xs font-black uppercase tracking-widest text-blue-900 block mb-2">TARGET INTERVAL</span>
+                                        <span id="locator-target-text" class="text-3xl sm:text-4xl font-black text-blue-600 block leading-tight">Perfect 4th</span>
+                                    </div>
+
+                                    <button onclick="submitLocatorAnswer()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-black py-4 px-6 rounded-2xl shadow-md transition text-lg tracking-wide flex items-center justify-center gap-2">
+                                        <span>Submit Answer</span>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm w-full max-w-xl text-center mb-6">
-                                <h4 id="interval-prompt" class="text-xl sm:text-2xl font-black text-slate-800 mb-3">Name this interval:</h4>
-                                <div id="interval-staff-display" class="bg-white rounded-xl p-3 flex justify-center items-center min-h-[140px] border border-slate-200 select-none"></div>
-                                <button onclick="replayCurrentIntervalAudio()" class="mt-4 bg-slate-800 hover:bg-slate-900 text-amber-300 font-bold py-2 px-5 rounded-xl text-xs transition inline-flex items-center gap-2">
-                                    <i class="fa-solid fa-volume-high"></i> Replay Interval
-                                </button>
-                            </div>
-
-                            <div id="interval-options-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-xl"></div>
-                            <div id="interval-feedback" class="font-bold h-6 text-lg mt-5 text-center"></div>
+                            <div id="locator-feedback" class="font-bold h-6 text-lg mt-5 text-center"></div>
                         </div>
                     `;
                 }
@@ -4677,85 +4712,166 @@
             synth.triggerAttackRelease(n2, "0.7n", now + 0.5);
         };
 
-        window.intervalGameState = {
+        // Interactive Interval Locator Game Implementation
+        window.intervalLocatorState = {
             streak: 0,
             best: 0,
-            currentQ: null,
-            pool: [
-                { n1: "C4", n2: "D4", cy1: 140, cy2: 130, name: "2nd (Second)", options: ["Unison", "2nd (Second)", "3rd (Third)", "5th (Fifth)"] },
-                { n1: "C4", n2: "E4", cy1: 140, cy2: 120, name: "3rd (Third)", options: ["2nd (Second)", "3rd (Third)", "4th (Fourth)", "5th (Fifth)"] },
-                { n1: "C4", n2: "F4", cy1: 140, cy2: 110, name: "4th (Fourth)", options: ["3rd (Third)", "4th (Fourth)", "5th (Fifth)", "6th (Sixth)"] },
-                { n1: "C4", n2: "G4", cy1: 140, cy2: 100, name: "5th (Fifth)", options: ["4th (Fourth)", "5th (Fifth)", "6th (Sixth)", "Octave (8ve)"] },
-                { n1: "C4", n2: "C5", cy1: 140, cy2: 70, name: "Octave (8ve)", options: ["5th (Fifth)", "6th (Sixth)", "7th (Seventh)", "Octave (8ve)"] }
+            currentTarget: null,
+            currentY: 150, // Default on Middle C (y=150)
+            isDragging: false,
+            startY: 0,
+            isLocked: false,
+            // Step map from Middle C (y=150) ascending to C5 (y=80)
+            steps: [
+                { name: "Unison (1st)", note: "C4", y: 150 },
+                { name: "Major 2nd", note: "D4", y: 140 },
+                { name: "Major 3rd", note: "E4", y: 130 },
+                { name: "Perfect 4th", note: "F4", y: 120 },
+                { name: "Perfect 5th", note: "G4", y: 110 },
+                { name: "Major 6th", note: "A4", y: 100 },
+                { name: "Major 7th", note: "B4", y: 90 },
+                { name: "Octave (8ve)", note: "C5", y: 80 }
             ]
         };
 
         window.startIntervalGame = function() {
-            const state = window.intervalGameState;
-            state.currentQ = state.pool[Math.floor(Math.random() * state.pool.length)];
-            const q = state.currentQ;
+            const state = window.intervalLocatorState;
+            state.isLocked = false;
 
-            const staffEl = document.getElementById('interval-staff-display');
-            const optsContainer = document.getElementById('interval-options-container');
-            const fb = document.getElementById('interval-feedback');
+            // Pick a random target interval
+            let next;
+            do {
+                next = state.steps[Math.floor(Math.random() * state.steps.length)];
+            } while (state.currentTarget && next.name === state.currentTarget.name && state.steps.length > 1);
+            state.currentTarget = next;
+
+            // Set blue note initially to Middle C (or offset slightly if desired)
+            state.currentY = 150;
+
+            const targetTextEl = document.getElementById('locator-target-text');
+            const fb = document.getElementById('locator-feedback');
+            if (targetTextEl) targetTextEl.textContent = state.currentTarget.name;
             if (fb) fb.textContent = '';
 
-            if (staffEl) {
-                staffEl.innerHTML = `
-                    <svg width="260" height="130" viewBox="0 0 260 130">
-                        <line x1="20" y1="30" x2="240" y2="30" class="staff-line"/>
-                        <line x1="20" y1="50" x2="240" y2="50" class="staff-line"/>
-                        <line x1="20" y1="70" x2="240" y2="70" class="staff-line"/>
-                        <line x1="20" y1="90" x2="240" y2="90" class="staff-line"/>
-                        <line x1="20" y1="110" x2="240" y2="110" class="staff-line"/>
-                        <text x="25" y="111" font-size="90" font-family="serif" fill="#0f172a">&#119070;</text>
-
-                        <!-- Note 1 -->
-                        ${q.cy1 === 140 ? '<line x1="85" y1="140" x2="115" y2="140" stroke="#0f172a" stroke-width="2"/>' : ''}
-                        <ellipse cx="100" cy="${q.cy1}" rx="9" ry="6" fill="#2563eb"/>
-
-                        <!-- Note 2 -->
-                        ${q.cy2 === 140 ? '<line x1="155" y1="140" x2="185" y2="140" stroke="#0f172a" stroke-width="2"/>' : ''}
-                        <ellipse cx="170" cy="${q.cy2}" rx="9" ry="6" fill="#2563eb"/>
-                    </svg>
-                `;
-            }
-
-            if (optsContainer) {
-                optsContainer.innerHTML = q.options.map(opt => `
-                    <button onclick="checkIntervalAnswer('${opt}')" class="bg-white border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-800 font-extrabold py-3.5 px-4 rounded-xl transition text-sm shadow-sm">
-                        ${opt}
-                    </button>
-                `).join('');
-            }
-
-            replayCurrentIntervalAudio();
+            updateLocatorBlueNote();
+            buildLocatorClickZones();
         };
 
-        window.replayCurrentIntervalAudio = function() {
-            const q = window.intervalGameState.currentQ;
-            if (q) window.playIntervalDemo(q.n1, q.n2);
+        function updateLocatorBlueNote() {
+            const state = window.intervalLocatorState;
+            const group = document.getElementById('locator-blue-group');
+            const ledger = document.getElementById('locator-blue-ledger');
+            if (group) {
+                group.setAttribute('transform', `translate(185, ${state.currentY})`);
+            }
+            if (ledger) {
+                // Middle C ledger line is at y=150
+                ledger.style.display = (state.currentY === 150) ? 'block' : 'none';
+            }
+        }
+
+        function buildLocatorClickZones() {
+            const zonesG = document.getElementById('locator-click-zones');
+            if (!zonesG) return;
+            const state = window.intervalLocatorState;
+
+            // Build transparent click strips across every staff position from y=75 to y=155
+            zonesG.innerHTML = state.steps.map(s => `
+                <rect x="150" y="${s.y - 7}" width="70" height="14" fill="transparent" class="hover:fill-blue-500/10 cursor-pointer" onclick="setLocatorNoteY(${s.y})"/>
+            `).join('');
+        }
+
+        window.setLocatorNoteY = function(y) {
+            const state = window.intervalLocatorState;
+            if (state.isLocked) return;
+            state.currentY = y;
+            updateLocatorBlueNote();
+            // Play note sound preview
+            const step = state.steps.find(s => s.y === y);
+            if (step && window.playNoteAudio) {
+                window.playNoteAudio(step.note);
+            }
         };
 
-        window.checkIntervalAnswer = function(chosen) {
-            const state = window.intervalGameState;
-            const q = state.currentQ;
-            const fb = document.getElementById('interval-feedback');
-            if (!q || !fb) return;
+        window.startLocatorDrag = function(e) {
+            const state = window.intervalLocatorState;
+            if (state.isLocked) return;
+            e.preventDefault();
+            state.isDragging = true;
+            state.startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const group = document.getElementById('locator-blue-group');
+            if (group) group.style.cursor = 'grabbing';
+        };
 
-            if (chosen === q.name) {
+        window.doLocatorDrag = function(e) {
+            const state = window.intervalLocatorState;
+            if (!state.isDragging || state.isLocked) return;
+            e.preventDefault();
+
+            const currentClientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+            const deltaY = currentClientY - state.startY;
+            let targetY = state.currentY + deltaY;
+
+            // Clamp between C5 (y=80) and Middle C (y=150)
+            if (targetY < 75) targetY = 75;
+            if (targetY > 155) targetY = 155;
+
+            // Snap to nearest 10px pitch step
+            const snappedY = Math.round(targetY / 10) * 10;
+            if (snappedY !== state.currentY && snappedY >= 80 && snappedY <= 150) {
+                state.currentY = snappedY;
+                state.startY = currentClientY;
+                updateLocatorBlueNote();
+            }
+        };
+
+        window.endLocatorDrag = function(e) {
+            const state = window.intervalLocatorState;
+            if (!state.isDragging) return;
+            state.isDragging = false;
+            const group = document.getElementById('locator-blue-group');
+            if (group) group.style.cursor = 'grab';
+
+            // Snap final and play audio preview
+            state.currentY = Math.max(80, Math.min(150, Math.round(state.currentY / 10) * 10));
+            updateLocatorBlueNote();
+            const step = state.steps.find(s => s.y === state.currentY);
+            if (step && window.playNoteAudio) {
+                window.playNoteAudio(step.note);
+            }
+        };
+
+        window.submitLocatorAnswer = function() {
+            const state = window.intervalLocatorState;
+            const fb = document.getElementById('locator-feedback');
+            if (!state.currentTarget || !fb || state.isLocked) return;
+
+            const isCorrect = (state.currentY === state.currentTarget.y);
+            const userStep = state.steps.find(s => s.y === state.currentY);
+
+            // Play the interval audio from Middle C (C4) to the student's selected note
+            if (window.playIntervalDemo && userStep) {
+                window.playIntervalDemo("C4", userStep.note);
+            }
+
+            if (isCorrect) {
+                state.isLocked = true;
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
                 window.addTokens(5);
-                fb.textContent = `Correct! ${q.n1} to ${q.n2} is a ${q.name}!`;
+
+                fb.textContent = `Correct! Middle C up to ${state.currentTarget.note} is a ${state.currentTarget.name}!`;
                 fb.className = "font-bold h-6 text-lg mt-5 text-center text-emerald-600";
+
                 document.getElementById('interval-streak').textContent = state.streak;
                 document.getElementById('interval-best').textContent = state.best;
-                setTimeout(window.startIntervalGame, 1200);
+
+                setTimeout(window.startIntervalGame, 1500);
             } else {
                 state.streak = 0;
                 document.getElementById('interval-streak').textContent = state.streak;
-                fb.textContent = `Incorrect! The correct interval is ${q.name}.`;
+                const placedName = userStep ? userStep.name : "another note";
+                fb.textContent = `That forms a ${placedName}. Try again to find the ${state.currentTarget.name}!`;
                 fb.className = "font-bold h-6 text-lg mt-5 text-center text-red-500";
             }
         };

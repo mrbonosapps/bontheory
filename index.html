@@ -1168,29 +1168,43 @@
                     `;
                 } else if (tab === 'game') {
                     content = `
-                        <h3 class="text-3xl font-extrabold text-slate-800 mb-2">Scale Builder Game</h3>
-                        <p class="text-slate-600 mb-6 leading-relaxed text-lg">
-                            Apply the <strong>T-T-S-T-T-T-S</strong> pattern to identify missing notes, semitone locations, and accidental requirements!
-                        </p>
+                        <div class="mb-5">
+                            <h3 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-2">Tone & Semitone Slur Game</h3>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed max-w-3xl">
+                                Look at the two highlighted notes in the target interval. Drag and drop the correct answer to place either a <strong>Tone (T)</strong> or a <strong>Semitone (S)</strong> slur above them! Earn a token for every 5 correct answers.
+                            </p>
+                        </div>
 
-                        <div class="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-100 shadow-sm flex flex-col items-center">
-                            <div class="flex justify-between items-center w-full mb-6">
-                                <span class="font-bold text-slate-700">Streak: <span id="scale-game-streak" class="text-blue-600 text-xl font-extrabold">0</span></span>
-                                <div class="bg-blue-100 text-blue-900 border border-blue-200 px-4 py-1.5 rounded-xl font-bold text-xs uppercase tracking-wider">
-                                    Major Scale Mastery
+                        <div class="bg-slate-50/70 rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs max-w-3xl mx-auto flex flex-col items-center">
+                            <!-- Top Status Bar -->
+                            <div class="flex items-center justify-between w-full mb-6">
+                                <div class="text-base font-bold text-slate-700">Streak: <span id="scale-slur-streak" class="text-blue-600 text-2xl font-black ml-1">0</span></div>
+                                <div class="bg-blue-100/80 text-blue-900 border border-blue-200 px-4 py-1.5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-xs">
+                                    <span class="text-slate-600 font-semibold">Target Notes:</span>
+                                    <span id="scale-slur-target-label" class="text-blue-700 font-black tracking-wide underline underline-offset-2">E &amp; F</span>
                                 </div>
-                                <span class="font-bold text-slate-700">Best: <span id="scale-game-best" class="text-emerald-600 text-xl font-extrabold">0</span></span>
+                                <div class="text-base font-bold text-slate-700">Best: <span id="scale-slur-best" class="text-emerald-600 text-2xl font-black ml-1">0</span></div>
                             </div>
 
-                            <div class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm w-full max-w-xl text-center mb-6">
-                                <span id="scale-q-cat" class="inline-block text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-3 py-1 rounded-full mb-3">...</span>
-                                <h4 id="scale-q-prompt" class="text-xl sm:text-2xl font-black text-slate-800 mb-4">Loading challenge...</h4>
-                                <div id="scale-display" class="bg-slate-900 rounded-xl p-4 flex items-center justify-center min-h-[80px] border border-slate-800 text-white font-mono text-lg font-bold select-none tracking-widest"></div>
-                                <p id="scale-q-hint" class="text-xs text-slate-400 mt-3 font-medium">Remember: Semitones fall between degrees 3-4 and 7-8.</p>
+                            <!-- Interactive Staff Card -->
+                            <div class="bg-white rounded-3xl p-4 sm:p-8 border border-slate-200/80 shadow-sm w-full flex flex-col items-center justify-center select-none overflow-x-auto min-h-[260px] mb-8"
+                                 ondragover="event.preventDefault()" ondrop="handleSlurDrop(event)">
+                                <div id="scale-slur-svg-container" class="w-full flex justify-center"></div>
                             </div>
 
-                            <div id="scale-options-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-xl"></div>
-                            <div id="scale-feedback" class="font-bold h-6 text-lg mt-5 text-center"></div>
+                            <!-- Slur Option Buttons (Drag or Click) -->
+                            <div class="grid grid-cols-2 gap-4 w-full max-w-lg mb-2">
+                                <div id="slur-btn-T" draggable="true" ondragstart="handleSlurDragStart(event, 'Tone')" onclick="submitSlurAnswer('Tone')"
+                                     class="bg-white border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 text-slate-800 font-black py-4 px-6 rounded-2xl transition shadow-xs flex items-center justify-center cursor-grab active:scale-95 select-none text-base sm:text-lg">
+                                    <span>Tone (T)</span>
+                                </div>
+                                <div id="slur-btn-S" draggable="true" ondragstart="handleSlurDragStart(event, 'Semitone')" onclick="submitSlurAnswer('Semitone')"
+                                     class="bg-white border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 text-slate-800 font-black py-4 px-6 rounded-2xl transition shadow-xs flex items-center justify-center cursor-grab active:scale-95 select-none text-base sm:text-lg">
+                                    <span>Semitone (S)</span>
+                                </div>
+                            </div>
+
+                            <div id="scale-slur-feedback" class="font-bold h-6 text-base sm:text-lg mt-3 text-center"></div>
                         </div>
                     `;
                 }
@@ -4647,94 +4661,224 @@
             });
         };
 
-        window.scaleGameState = {
+        // --- Pitch Level 2 Lesson 1: Tone & Semitone Slur Game Logic ---
+        window.scaleSlurGameState = {
             streak: 0,
             best: 0,
-            currentQ: null,
-            pool: [
-                {
-                    prompt: "What is the 7th note (Leading Tone) of G Major?",
-                    display: "G &ndash; A &ndash; B &ndash; C &ndash; D &ndash; E &ndash; [ ? ] &ndash; G",
-                    ans: "F#",
-                    cat: "Accidental Rule",
-                    options: ["F", "F#", "Gb", "E"]
+            currentChallenge: null,
+            draggedAnswer: null,
+            isLocked: false,
+            answeredSlur: null, // holds rendered arch once answered
+            scales: {
+                C: {
+                    tonic: "C",
+                    name: "C Major",
+                    // Notes from C4 up to C5 with staff line cy coordinates
+                    // Treble staff lines: 45, 68, 91, 114, 137 (Middle C is ledger line 160)
+                    notes: [
+                        { name: "C", pitch: "C4", cy: 160, ledger: true },
+                        { name: "D", pitch: "D4", cy: 148, ledger: false },
+                        { name: "E", pitch: "E4", cy: 137, ledger: false },
+                        { name: "F", pitch: "F4", cy: 125, ledger: false },
+                        { name: "G", pitch: "G4", cy: 114, ledger: false },
+                        { name: "A", pitch: "A4", cy: 102, ledger: false },
+                        { name: "B", pitch: "B4", cy: 91, ledger: false },
+                        { name: "C", pitch: "C5", cy: 79, ledger: false }
+                    ]
                 },
-                {
-                    prompt: "What is the 4th note (Subdominant) of F Major?",
-                    display: "F &ndash; G &ndash; A &ndash; [ ? ] &ndash; C &ndash; D &ndash; E &ndash; F",
-                    ans: "Bb",
-                    cat: "Accidental Rule",
-                    options: ["B", "Bb", "A#", "C"]
+                G: {
+                    tonic: "G",
+                    name: "G Major",
+                    notes: [
+                        { name: "G", pitch: "G4", cy: 114, ledger: false },
+                        { name: "A", pitch: "A4", cy: 102, ledger: false },
+                        { name: "B", pitch: "B4", cy: 91, ledger: false },
+                        { name: "C", pitch: "C5", cy: 79, ledger: false },
+                        { name: "D", pitch: "D5", cy: 68, ledger: false },
+                        { name: "E", pitch: "E5", cy: 56, ledger: false },
+                        { name: "F♯", pitch: "F#5", cy: 45, ledger: false, accidental: "♯" },
+                        { name: "G", pitch: "G5", cy: 34, ledger: false }
+                    ]
                 },
-                {
-                    prompt: "Between which degrees do semitones occur in ANY Major scale?",
-                    display: "Degrees 1 to 8",
-                    ans: "3-4 & 7-8",
-                    cat: "Formula Check",
-                    options: ["2-3 & 6-7", "3-4 & 7-8", "1-2 & 5-6", "4-5 & 7-8"]
-                },
-                {
-                    prompt: "Which accidental belongs in the G Major key signature?",
-                    display: "G Major Scale",
-                    ans: "F#",
-                    cat: "Key Signature",
-                    options: ["Bb", "C#", "F#", "G#"]
-                },
-                {
-                    prompt: "Which accidental belongs in the F Major key signature?",
-                    display: "F Major Scale",
-                    ans: "Bb",
-                    cat: "Key Signature",
-                    options: ["Bb", "F#", "Eb", "Ab"]
+                F: {
+                    tonic: "F",
+                    name: "F Major",
+                    notes: [
+                        { name: "F", pitch: "F4", cy: 125, ledger: false },
+                        { name: "G", pitch: "G4", cy: 114, ledger: false },
+                        { name: "A", pitch: "A4", cy: 102, ledger: false },
+                        { name: "B♭", pitch: "Bb4", cy: 91, ledger: false, accidental: "♭" },
+                        { name: "C", pitch: "C5", cy: 79, ledger: false },
+                        { name: "D", pitch: "D5", cy: 68, ledger: false },
+                        { name: "E", pitch: "E5", cy: 56, ledger: false },
+                        { name: "F", pitch: "F5", cy: 45, ledger: false }
+                    ]
                 }
-            ]
-        };
-
-        window.startScaleGame = function() {
-            const state = window.scaleGameState;
-            state.currentQ = state.pool[Math.floor(Math.random() * state.pool.length)];
-            const q = state.currentQ;
-
-            const promptEl = document.getElementById('scale-q-prompt');
-            const catEl = document.getElementById('scale-q-cat');
-            const displayEl = document.getElementById('scale-display');
-            const optsContainer = document.getElementById('scale-options-container');
-            const fb = document.getElementById('scale-feedback');
-
-            if (promptEl) promptEl.textContent = q.prompt;
-            if (catEl) catEl.textContent = q.cat;
-            if (displayEl) displayEl.innerHTML = q.display;
-            if (fb) fb.textContent = '';
-
-            if (optsContainer) {
-                optsContainer.innerHTML = q.options.map(opt => `
-                    <button onclick="checkScaleAnswer('${opt}')" class="bg-white border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-800 font-extrabold py-3.5 px-4 rounded-xl transition text-base shadow-sm">
-                        ${opt}
-                    </button>
-                `).join('');
             }
         };
 
-        window.checkScaleAnswer = function(chosen) {
-            const state = window.scaleGameState;
-            const q = state.currentQ;
-            const fb = document.getElementById('scale-feedback');
-            if (!q || !fb) return;
+        window.startScaleGame = function() {
+            const state = window.scaleSlurGameState;
+            state.isLocked = false;
+            state.answeredSlur = null;
 
-            if (chosen === q.ans) {
+            // Pick a random scale (C, G, or F Major)
+            const scaleKeys = ["C", "G", "F"];
+            const chosenKey = scaleKeys[Math.floor(Math.random() * scaleKeys.length)];
+            const scaleObj = state.scales[chosenKey];
+
+            // Pick a random consecutive step pair (0 to 6, giving notes 1-2 up to 7-8)
+            const stepIndex = Math.floor(Math.random() * 7);
+            const n1 = scaleObj.notes[stepIndex];
+            const n2 = scaleObj.notes[stepIndex + 1];
+
+            // Major scale semitones always fall between degrees 3-4 (stepIndex 2) and 7-8 (stepIndex 6)
+            const isSemitone = (stepIndex === 2 || stepIndex === 6);
+            const expected = isSemitone ? "Semitone" : "Tone";
+
+            state.currentChallenge = {
+                scaleKey: chosenKey,
+                scaleName: scaleObj.name,
+                stepIndex,
+                n1,
+                n2,
+                expected,
+                notes: scaleObj.notes
+            };
+
+            const labelEl = document.getElementById('scale-slur-target-label');
+            const fb = document.getElementById('scale-slur-feedback');
+            if (labelEl) labelEl.textContent = `${n1.name} & ${n2.name}`;
+            if (fb) fb.textContent = '';
+
+            renderScaleSlurSVG();
+        };
+
+        function renderScaleSlurSVG() {
+            const state = window.scaleSlurGameState;
+            const container = document.getElementById('scale-slur-svg-container');
+            const ch = state.currentChallenge;
+            if (!container || !ch) return;
+
+            const startX = 115;
+            const spacing = 68;
+
+            let svg = `
+                <svg width="680" height="210" viewBox="0 0 680 210" class="max-w-full h-auto select-none overflow-visible">
+                    <!-- Staff Lines -->
+                    <line x1="25" y1="45" x2="655" y2="45" stroke="#1e293b" stroke-width="2.5"/>
+                    <line x1="25" y1="68" x2="655" y2="68" stroke="#1e293b" stroke-width="2.5"/>
+                    <line x1="25" y1="91" x2="655" y2="91" stroke="#1e293b" stroke-width="2.5"/>
+                    <line x1="25" y1="114" x2="655" y2="114" stroke="#1e293b" stroke-width="2.5"/>
+                    <line x1="25" y1="137" x2="655" y2="137" stroke="#1e293b" stroke-width="2.5"/>
+
+                    <!-- Treble Clef -->
+                    <text x="35" y="146" font-size="120" font-family="serif" fill="#0f172a">&#119070;</text>
+            `;
+
+            // Draw all 8 scale notes
+            ch.notes.forEach((note, idx) => {
+                const cx = startX + idx * spacing;
+                const isTarget = (idx === ch.stepIndex || idx === ch.stepIndex + 1);
+
+                // Middle C Ledger Line
+                if (note.ledger) {
+                    svg += `<line x1="${cx - 22}" y1="${note.cy}" x2="${cx + 22}" y2="${note.cy}" stroke="#0f172a" stroke-width="3"/>`;
+                }
+
+                // Accidental symbol if present
+                if (note.accidental) {
+                    svg += `<text x="${cx - 24}" y="${note.cy + 6}" font-size="20" font-family="serif" font-weight="bold" fill="#0f172a">${note.accidental}</text>`;
+                }
+
+                // Notehead: Uniform styling for all notes (no distinct highlight colour or glow)
+                svg += `<ellipse cx="${cx}" cy="${note.cy}" rx="18" ry="11.5" fill="#0f172a"/>`;
+            });
+
+            // Slur Arch coordinates between stepIndex and stepIndex + 1
+            const x1 = startX + ch.stepIndex * spacing;
+            const y1 = ch.n1.cy - 16;
+            const x2 = startX + (ch.stepIndex + 1) * spacing;
+            const y2 = ch.n2.cy - 16;
+            const midX = (x1 + x2) / 2;
+            const peakY = Math.min(y1, y2) - 18;
+
+            if (state.answeredSlur) {
+                // Completed Slur Arch with T or S label
+                const isTone = (state.answeredSlur === "Tone");
+                const strokeColor = isTone ? "#2563eb" : "#10b981";
+                const strokeWidth = isTone ? "3" : "4";
+                const label = isTone ? "T" : "S";
+
+                svg += `
+                    <path d="M ${x1} ${y1} Q ${midX} ${peakY} ${x2} ${y2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linecap="round"/>
+                    <text x="${midX}" y="${peakY - 6}" font-family="Inter" font-weight="900" font-size="16" fill="${strokeColor}" text-anchor="middle">${label}</text>
+                `;
+            }
+
+            svg += `</svg>`;
+            container.innerHTML = svg;
+        }
+
+        window.handleSlurDragStart = function(e, answerType) {
+            window.scaleSlurGameState.draggedAnswer = answerType;
+            if (e.dataTransfer) {
+                e.dataTransfer.setData('text/plain', answerType);
+            }
+        };
+
+        window.handleSlurDrop = function(e) {
+            e.preventDefault();
+            const state = window.scaleSlurGameState;
+            const ans = state.draggedAnswer || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
+            if (ans) {
+                submitSlurAnswer(ans);
+            }
+        };
+
+        window.submitSlurAnswer = function(chosenAnswer) {
+            const state = window.scaleSlurGameState;
+            const ch = state.currentChallenge;
+            const fb = document.getElementById('scale-slur-feedback');
+            if (!ch || !fb || state.isLocked) return;
+
+            state.isLocked = true;
+
+            // Play audio for both notes
+            if (window.playNoteAudio) {
+                window.playNoteAudio(ch.n1.pitch);
+                setTimeout(() => window.playNoteAudio(ch.n2.pitch), 350);
+            }
+
+            if (chosenAnswer === ch.expected) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
-                window.addTokens(5);
-                fb.textContent = `Correct! ${q.ans} is correct!`;
-                fb.className = "font-bold h-6 text-lg mt-5 text-center text-emerald-600";
-                document.getElementById('scale-game-streak').textContent = state.streak;
-                document.getElementById('scale-game-best').textContent = state.best;
-                setTimeout(window.startScaleGame, 1100);
+                state.answeredSlur = ch.expected;
+                renderScaleSlurSVG();
+
+                let tokenMsg = '';
+                // Earn 1 token for every 5 correct answers in a row
+                if (state.streak > 0 && state.streak % 5 === 0) {
+                    window.addTokens(1);
+                    tokenMsg = ' <span class="text-amber-500 font-black ml-1">(+1 Token!)</span>';
+                }
+
+                fb.innerHTML = `Correct! ${ch.n1.name} to ${ch.n2.name} is a <strong>${ch.expected}</strong> in ${ch.scaleName}!${tokenMsg}`;
+                fb.className = "font-bold h-6 text-base sm:text-lg mt-3 text-center text-emerald-600";
+
+                document.getElementById('scale-slur-streak').textContent = state.streak;
+                document.getElementById('scale-slur-best').textContent = state.best;
+
+                setTimeout(window.startScaleGame, 1400);
             } else {
                 state.streak = 0;
-                document.getElementById('scale-game-streak').textContent = state.streak;
-                fb.textContent = `Incorrect! The correct answer is ${q.ans}.`;
-                fb.className = "font-bold h-6 text-lg mt-5 text-center text-red-500";
+                document.getElementById('scale-slur-streak').textContent = state.streak;
+                fb.textContent = `Incorrect! ${ch.n1.name} to ${ch.n2.name} is a ${ch.expected}. Remember: Semitones are between degrees 3-4 and 7-8!`;
+                fb.className = "font-bold h-6 text-base sm:text-lg mt-3 text-center text-red-500";
+
+                setTimeout(() => {
+                    state.isLocked = false;
+                }, 1600);
             }
         };
 

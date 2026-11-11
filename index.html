@@ -163,6 +163,11 @@
 
         window.isCloudReady = false;
         window.cachedCloudUsers = {};
+        window.firestoreDb = null;
+        window.firestoreDoc = doc;
+        window.firestoreSetDoc = setDoc;
+        window.firestoreDeleteDoc = deleteDoc;
+        window.appId = appId;
 
         async function initCloudSync() {
             try {
@@ -171,6 +176,7 @@
                     const appInstance = initializeApp(firebaseConfig);
                     auth = getAuth(appInstance);
                     db = getFirestore(appInstance);
+                    window.firestoreDb = db;
 
                     // Authentication first - Strict auth before queries rule
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -180,6 +186,11 @@
                     }
 
                     window.isCloudReady = true;
+
+                    // Purge legacy machine-isolated local users database to prevent stale ghost records
+                    try {
+                        localStorage.removeItem('boncepts_users_db');
+                    } catch (e) {}
 
                     // Setup realtime listener across all connected devices using Rule 1 strict paths
                     const usersCol = collection(db, 'artifacts', appId, 'public', 'data', 'users');
@@ -194,12 +205,7 @@
 
                         window.cachedCloudUsers = updatedRecords;
 
-                        // Save cache locally as backup
-                        try {
-                            localStorage.setItem('boncepts_users_db', JSON.stringify(updatedRecords));
-                        } catch (e) {}
-
-                        // If current logged-in student had their data updated on another device or by teacher, sync local memory
+                        // If current logged-in student exists in remote snapshot, keep local memory perfectly synchronized
                         if (window.app && window.app.currentUser && window.app.currentUser.role === 'student') {
                             const myKey = window.getUserRecordKey(window.app.currentUser);
                             if (myKey && updatedRecords[myKey]) {
@@ -215,7 +221,6 @@
                                 if (Array.isArray(remoteRec.testResults)) {
                                     window.state.testResults = remoteRec.testResults;
                                 }
-                                // Update navbar tokens live
                                 const navTok = document.getElementById('nav-tokens');
                                 if (navTok) navTok.textContent = window.state.stats.tokens;
                             }
@@ -243,7 +248,7 @@
                     });
                 }
             } catch (err) {
-                console.warn("Cloud storage initialization failed, falling back to local memory:", err);
+                console.warn("Cloud storage initialization failed:", err);
             }
         }
 
@@ -293,16 +298,11 @@
             }
         };
 
-        window.getCloudUsers = function() {
-            return window.cachedCloudUsers || {};
-        };
-
         initCloudSync();
     </script>
 
     <script>
         // --- Data & State Management ---
-        const DB_STORAGE_KEY = 'boncepts_users_db';
         const SESSION_STORAGE_KEY = 'boncepts_active_session';
 
         const state = {
@@ -327,21 +327,12 @@
         }
         window.getUserRecordKey = getUserRecordKey;
 
-        // Get unified dictionary of saved accounts - STRICTLY prefers live cloud snapshot data
+        // Unified dictionary of saved accounts - STRICTLY reads from shared live cloud snapshot
         function getAllUserRecords() {
             if (window.cachedCloudUsers && Object.keys(window.cachedCloudUsers).length > 0) {
                 return window.cachedCloudUsers;
             }
-            if (typeof window.getCloudUsers === 'function') {
-                const cloud = window.getCloudUsers();
-                if (cloud && Object.keys(cloud).length > 0) return cloud;
-            }
-            try {
-                const raw = localStorage.getItem(DB_STORAGE_KEY);
-                return raw ? JSON.parse(raw) : {};
-            } catch (err) {
-                return {};
-            }
+            return {};
         }
         window.getAllUserRecords = getAllUserRecords;
 
@@ -358,11 +349,12 @@
                 if (!uniqueMap.has(uniqueKey)) {
                     uniqueMap.set(uniqueKey, rec);
                 } else {
-                    // Pick the record with greater activity timestamp or higher tokens to prevent race condition regressions
                     const existing = uniqueMap.get(uniqueKey);
+                    const existingTokens = Number(existing.stats?.tokens) || 0;
+                    const newTokens = Number(rec.stats?.tokens) || 0;
                     const existingTime = existing.lastActive || 0;
                     const newTime = rec.lastActive || 0;
-                    if (newTime >= existingTime) {
+                    if (newTokens > existingTokens || (newTokens === existingTokens && newTime >= existingTime)) {
                         uniqueMap.set(uniqueKey, rec);
                     }
                 }
@@ -563,14 +555,13 @@
             }).join('');
         };
 
-        // Save current user state to both local storage and shared cloud storage
+        // Save current user state to shared cloud storage
         function saveUserState() {
             if (!app.currentUser) return;
             try {
                 const key = getUserRecordKey(app.currentUser);
                 if (!key) return;
 
-                const db = getAllUserRecords();
                 const record = {
                     currentUser: app.currentUser,
                     stats: state.stats,
@@ -579,12 +570,10 @@
                     lastActive: Date.now()
                 };
 
-                db[key] = record;
                 if (!window.cachedCloudUsers) window.cachedCloudUsers = {};
                 window.cachedCloudUsers[key] = record;
 
                 try {
-                    localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
                     localStorage.setItem(SESSION_STORAGE_KEY, key);
                 } catch (e) {}
 
@@ -598,7 +587,7 @@
         }
         window.saveUserState = saveUserState;
 
-        // Restore a specific user profile or the last active session
+        // Restore a specific user profile or the last active session from the shared cloud
         function loadUserState(specificKey = null) {
             try {
                 const targetKey = specificKey || localStorage.getItem(SESSION_STORAGE_KEY);
@@ -5842,8 +5831,7 @@
             }
             db[newKey] = record;
 
-            // Persist back to storage and cloud
-            localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
+            // Broadcast to cloud directly
             if (typeof window.saveUserRecordToCloud === 'function') {
                 window.saveUserRecordToCloud(newKey, record);
             }
@@ -5856,29 +5844,9 @@
             }
 
             window.closeEditStudentModal();
-            // Immediate real-time sync across scrolling ticker & leaderboards
             if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
             const activeView = (app.currentUser && app.currentUser.role === 'student') ? 'studentDash' : 'teacherDash';
             app.navigate(activeView);
-        };
-
-        window.openDeleteStudentModal = function(userKey) {
-            const db = getAllUserRecords();
-            const rec = db[userKey];
-            if (!rec || !rec.currentUser) return;
-
-            const nameEl = document.getElementById('delete-student-name');
-            const keyInput = document.getElementById('delete-student-key');
-            const modal = document.getElementById('delete-student-modal');
-
-            if (nameEl) nameEl.textContent = rec.currentUser.name || 'this student';
-            if (keyInput) keyInput.value = userKey;
-            if (modal) modal.classList.remove('hidden');
-        };
-
-        window.closeDeleteStudentModal = function() {
-            const modal = document.getElementById('delete-student-modal');
-            if (modal) modal.classList.add('hidden');
         };
 
         window.confirmDeleteStudent = function() {
@@ -5889,18 +5857,17 @@
             const db = getAllUserRecords();
             let targetStudentName = '';
             
-            // Locate target record to grab student's clean name
             if (db[targetKey] && db[targetKey].currentUser) {
                 targetStudentName = (db[targetKey].currentUser.name || '').trim().toLowerCase();
             }
 
-            // Remove from local and cloud
+            // Delete from cloud directly
             delete db[targetKey];
             if (typeof window.deleteUserRecordFromCloud === 'function') {
                 window.deleteUserRecordFromCloud(targetKey);
             }
 
-            // Also purge any duplicate keys or legacy entries referencing the same student name
+            // Purge any variant or duplicate keys with the same student name
             if (targetStudentName) {
                 Object.keys(db).forEach(k => {
                     const u = db[k]?.currentUser;
@@ -5912,9 +5879,6 @@
                     }
                 });
             }
-
-            // Persist the sanitized database back to storage
-            localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
 
             // Clear session pointer if the currently active session belongs to this deleted student
             const activeSession = localStorage.getItem(SESSION_STORAGE_KEY);
@@ -5930,7 +5894,6 @@
 
             window.closeDeleteStudentModal();
 
-            // Immediately force-refresh the live marquee ticker and the view
             if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
 
             if (!app.currentUser) {

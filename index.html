@@ -699,6 +699,82 @@
                 const area = appData.areas.find(a => a.id === areaId);
                 const levels = [1, 2, 3, 4];
                 
+                // Table of contents definitions per area and level
+                const levelLessonsMap = {
+                    pitch: {
+                        1: [
+                            "1. The Staff, Clefs & Ledger Lines",
+                            "2. Semitones and Tones",
+                            "3. Sharps, Flats, & Naturals",
+                            "4. Bass Clef"
+                        ],
+                        2: [
+                            "1. Major Scales & Formula",
+                            "2. Intervals (Unison to Octave)",
+                            "3. Basic Triads (Root, 3rd, 5th)"
+                        ],
+                        3: ["Advanced Scales & Key Signatures", "Minor Scales (Natural, Harmonic, Melodic)", "Circle of Fifths"],
+                        4: ["Modes (Dorian, Phrygian, Lydian, etc.)", "Extended Chords (7ths & 9ths)", "Transposition"]
+                    },
+                    duration: {
+                        1: [
+                            "1. Basic Note Values",
+                            "2. Notes with Stems",
+                            "3. Quavers (Eighth Notes) & Drum Lab",
+                            "4. Rests in Music"
+                        ],
+                        2: [
+                            "1. Time Signatures & Bars",
+                            "2. Tied Notes",
+                            "3. Triplets in Simple Time",
+                            "4. Semiquavers (16th Notes)"
+                        ],
+                        3: ["Compound Time (6/8, 9/8, 12/8)", "Syncopation & Offbeat Rhythms", "Dotted Quavers & Semiquavers"],
+                        4: ["Irregular Meters (5/4, 7/8)", "Polyrhythms & Cross-Rhythms", "Complex Meter Changes"]
+                    },
+                    dynamics: {
+                        1: [
+                            "1. Tempo Terms & Gradations",
+                            "2. Volume & Dynamics (p, mp, mf, f)",
+                            "3. Other Signs & Definitions (Score Hunt)"
+                        ],
+                        2: ["Advanced Expressive Techniques", "Accents (Tenuto, Marcato, Sforzando)", "Rubato & Articulation Nuances"],
+                        3: ["Stylistic Dynamics (Baroque vs Romantic)", "Phrasing & Dynamic Architecture"],
+                        4: ["Contemporary & Avant-Garde Expression Marks", "Extended Performance Directions"]
+                    },
+                    structure: {
+                        1: [
+                            "1. Repeat Signs (Start & Paired)",
+                            "2. 1st and 2nd Time Bars (Volta Brackets)"
+                        ],
+                        2: [
+                            "1. Verse-Chorus Structure",
+                            "2. Binary Form (AB)",
+                            "3. Ternary Form (ABA)"
+                        ],
+                        3: ["Rondo Form (ABACA)", "Theme & Variations", "12-Bar Blues"],
+                        4: ["Sonata Form (Exposition, Development, Recapitulation)", "Through-Composed & Cyclic Forms"]
+                    },
+                    timbre: {
+                        1: [
+                            "1. Instrument Classification (Hornbostel-Sachs)",
+                            "2. Describing Tone Colour & Timbre"
+                        ],
+                        2: ["Orchestral Scoring & Acoustic Registers", "Instrument Combinations & Vocal Types"],
+                        3: ["World Music Media & Traditional Idiophones", "Extended Techniques (Mutes, Pizzicato, Glissando)"],
+                        4: ["Electronic Synthesis, Filtering & Sound Manipulation", "Audio Production Timbre"]
+                    },
+                    texture: {
+                        1: [
+                            "1. Thick vs. Thin Texture (Sound Lab 1)",
+                            "2. Gradual Changes in Texture (Minor Tension Lab)"
+                        ],
+                        2: ["Monophonic, Homophonic & Polyphonic Textures", "Countermelody & Canon"],
+                        3: ["Heterophony & Layer Roles in Ensembles", "Fugue & Imitative Polyphony"],
+                        4: ["Micropolyphony, Klangfarbenmelodie & Textural Soundscapes"]
+                    }
+                };
+
                 return `
                 <div class="p-8 max-w-5xl mx-auto fade-in pb-20">
                     <button onclick="app.navigate('studentDash')" class="text-blue-600 font-medium mb-6 hover:text-blue-800 transition inline-flex items-center bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
@@ -713,24 +789,55 @@
                     
                     <h3 class="text-2xl font-bold text-slate-800 mb-6">Select a Level</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        ${levels.map(level => `
+                        ${levels.map(level => {
+                            const lessonsList = (levelLessonsMap[areaId] && levelLessonsMap[areaId][level]) || [];
+                            const isAvailable = (areaId === 'pitch' && level <= 2) || 
+                                                (areaId === 'duration' && level <= 2) || 
+                                                (areaId === 'dynamics' && level === 1) || 
+                                                (areaId === 'structure' && (level === 1 || level === 2)) || 
+                                                (areaId === 'timbre' && level === 1) || 
+                                                (areaId === 'texture' && level === 1);
+
+                            return `
                             <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between">
                                 <div>
-                                    <div class="flex justify-between items-start mb-4">
+                                    <div class="flex justify-between items-start mb-3">
                                         <div>
                                             <h4 class="text-xl font-bold text-slate-800">Level ${level}</h4>
-                                            <p class="text-sm text-slate-500 font-medium">${level <= 2 ? 'Stage 4' : 'Stage 5'}</p>
+                                            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">${level <= 2 ? 'Stage 4' : 'Stage 5'}</p>
                                         </div>
-                                        <span class="bg-emerald-50 text-emerald-600 border border-emerald-100 text-xs font-bold px-2.5 py-1 rounded-md">Unlocked</span>
+                                        <span class="${isAvailable ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-100'} border text-xs font-bold px-2.5 py-1 rounded-md">
+                                            ${isAvailable ? 'Lessons Ready' : 'In Development'}
+                                        </span>
                                     </div>
-                                    <p class="text-slate-600 text-sm mb-6 leading-relaxed">Master the concepts and take the end-of-level test to submit results to your teacher.</p>
+                                    <p class="text-slate-600 text-xs mb-4 leading-relaxed">
+                                        Master the core musical concepts and test your knowledge with end-of-level assessments.
+                                    </p>
+
+                                    <!-- Table of Contents Preview -->
+                                    <div class="mb-6 bg-slate-50/80 rounded-xl p-3.5 border border-slate-100">
+                                        <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                                            <i class="fa-solid fa-list-ul text-slate-400"></i>
+                                            <span>Table of Contents</span>
+                                        </div>
+                                        <ul class="space-y-1.5 text-xs text-slate-700 font-medium">
+                                            ${lessonsList.map(item => `
+                                                <li class="flex items-start gap-2">
+                                                    <span class="w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-blue-500' : 'bg-slate-300'} mt-1.5 flex-shrink-0"></span>
+                                                    <span class="leading-snug">${item}</span>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
                                 </div>
                                 
-                                <button onclick="app.navigate('levelHub', { area: '${areaId}', level: ${level} })" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition shadow-sm">
-                                    Open Level ${level}
+                                <button onclick="app.navigate('levelHub', { area: '${areaId}', level: ${level} })" class="w-full ${isAvailable ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-800 hover:bg-slate-900 text-amber-300'} font-semibold py-2.5 rounded-xl transition shadow-sm text-sm flex items-center justify-center gap-2">
+                                    <span>${isAvailable ? `Open Level ${level}` : `View Level ${level} Hub`}</span>
+                                    <i class="fa-solid fa-arrow-right text-xs"></i>
                                 </button>
                             </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
                 `;

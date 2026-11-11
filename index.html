@@ -121,11 +121,6 @@
                     <i class="fa-solid fa-crown text-amber-500"></i>
                     <span class="hidden sm:inline">Leaderboard</span>
                 </button>
-                <div onclick="if(app.currentUser && app.currentUser.role === 'student') app.navigate('studentTests')" class="cursor-pointer flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-bold shadow-sm border border-slate-200 transition text-sm" title="View Completed Tests">
-                    <i class="fa-solid fa-clipboard-check text-blue-600"></i>
-                    <span>Tests:</span>
-                    <span id="nav-tests" class="text-blue-700 font-extrabold">0</span>
-                </div>
                 <div class="flex items-center gap-3 bg-blue-50 py-1.5 px-4 rounded-full border border-blue-100">
                     <span id="nav-username" class="font-bold text-blue-700">Student</span>
                     <button onclick="logout()" class="text-blue-500 hover:text-blue-700 transition" title="Logout">
@@ -159,7 +154,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global Configuration provided by environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'boncepts-music-app';
@@ -168,6 +163,7 @@
         let cloudSyncedUsers = {};
 
         window.isCloudReady = false;
+        window.cachedCloudUsers = {};
 
         async function initCloudSync() {
             try {
@@ -177,7 +173,7 @@
                     auth = getAuth(appInstance);
                     db = getFirestore(appInstance);
 
-                    // Authentication first
+                    // Authentication first - Strict auth before queries rule
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
@@ -186,12 +182,15 @@
 
                     window.isCloudReady = true;
 
-                    // Setup realtime listener across all connected devices
+                    // Setup realtime listener across all connected devices using Rule 1 strict paths
                     const usersCol = collection(db, 'artifacts', appId, 'public', 'data', 'users');
                     onSnapshot(usersCol, (snapshot) => {
                         const updatedRecords = {};
                         snapshot.forEach((docSnap) => {
-                            updatedRecords[docSnap.id] = docSnap.data();
+                            const data = docSnap.data();
+                            if (data && data.currentUser) {
+                                updatedRecords[docSnap.id] = data;
+                            }
                         });
 
                         cloudSyncedUsers = updatedRecords;
@@ -218,15 +217,13 @@
                                 if (Array.isArray(remoteRec.testResults)) {
                                     window.state.testResults = remoteRec.testResults;
                                 }
-                                // Update navbar counters live
+                                // Update navbar tokens live
                                 const navTok = document.getElementById('nav-tokens');
                                 if (navTok) navTok.textContent = window.state.stats.tokens;
-                                const navTst = document.getElementById('nav-tests');
-                                if (navTst) navTst.textContent = window.state.stats.completedTests;
                             }
                         }
 
-                        // Refresh active marquee ticker and leaderboards immediately across devices
+                        // Refresh active marquee ticker and leaderboards immediately across all devices
                         if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
 
                         // Dynamically update the Overall Student Leaderboard table if it's currently on screen
@@ -236,12 +233,10 @@
                         }
 
                         // If teacher dashboard is active, re-render to reflect live student arrivals and test attempts
-                        if (window.app && window.app.currentUser) {
-                            if (window.app.currentUser.role === 'teacher') {
-                                const root = document.getElementById('app-root');
-                                if (root && window.views && window.views.teacherDash && !window.teacherFilterState?.isModalOpen) {
-                                    root.innerHTML = window.views.teacherDash();
-                                }
+                        if (window.app && window.app.currentUser && window.app.currentUser.role === 'teacher') {
+                            const root = document.getElementById('app-root');
+                            if (root && window.views && window.views.teacherDash && !window.teacherFilterState?.isModalOpen) {
+                                root.innerHTML = window.views.teacherDash();
                             }
                         }
                     }, (err) => {
@@ -257,7 +252,6 @@
         window.saveUserRecordToCloud = async function(key, record) {
             if (!window.isCloudReady || !db || !key) return;
             try {
-                // Ensure plain object without undefined
                 const cleanData = JSON.parse(JSON.stringify(record));
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', key);
                 await setDoc(docRef, cleanData);
@@ -273,6 +267,30 @@
                 await deleteDoc(docRef);
             } catch (err) {
                 console.warn("Error deleting user from cloud:", err);
+            }
+        };
+
+        window.resetAllCloudStudents = async function() {
+            if (!window.isCloudReady || !db) return;
+            try {
+                const usersCol = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                const snap = await getDocs(usersCol);
+                const deletePromises = [];
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data?.currentUser?.role === 'student') {
+                        deletePromises.push(deleteDoc(docSnap.ref));
+                    }
+                });
+                await Promise.all(deletePromises);
+                window.cachedCloudUsers = {};
+                try {
+                    localStorage.removeItem('boncepts_users_db');
+                } catch (e) {}
+                if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
+                if (typeof window.refreshLeaderboardTableInPlace === 'function') window.refreshLeaderboardTableInPlace();
+            } catch (err) {
+                console.warn("Error resetting cloud students:", err);
             }
         };
 
@@ -295,28 +313,29 @@
         };
         window.state = state;
 
-        // Standardized deterministic key generator based on clean Name to strictly prevent duplicate entries
+        // Canonical deterministic key generator (lowercase alphanumeric only)
         function getUserRecordKey(user) {
-            if (!user || !user.name) return null;
-            const firstName = (user.firstName || user.name.split(' ')[0] || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-            const surname = (user.surname || user.name.split(' ').slice(1).join(' ') || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!user) return null;
             const role = user.role || 'student';
             if (role === 'teacher') {
                 const cleanTeacher = (user.name || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
                 return `teacher_${cleanTeacher}`;
             }
-            return `student_${firstName}_${surname}`;
+            const rawFirst = (user.firstName || (user.name ? user.name.split(' ')[0] : '') || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            const rawSurname = (user.surname || (user.name ? user.name.split(' ').slice(1).join(' ') : '') || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!rawFirst || !rawSurname) return null;
+            return `student_${rawFirst}_${rawSurname}`;
         }
         window.getUserRecordKey = getUserRecordKey;
 
-        // Get the entire dictionary of saved accounts (prioritizes cloud real-time cache)
+        // Get unified dictionary of saved accounts - STRICTLY prefers real-time cloud data
         function getAllUserRecords() {
+            if (window.cachedCloudUsers && Object.keys(window.cachedCloudUsers).length > 0) {
+                return window.cachedCloudUsers;
+            }
             if (typeof window.getCloudUsers === 'function') {
                 const cloud = window.getCloudUsers();
                 if (cloud && Object.keys(cloud).length > 0) return cloud;
-            }
-            if (window.cachedCloudUsers && Object.keys(window.cachedCloudUsers).length > 0) {
-                return window.cachedCloudUsers;
             }
             try {
                 const raw = localStorage.getItem(DB_STORAGE_KEY);
@@ -327,27 +346,31 @@
         }
         window.getAllUserRecords = getAllUserRecords;
 
-        // Deduplicate records array so each student name only appears once
+        // Canonical deduplication across all devices by normalized firstName + surname
         function getDeduplicatedStudents(recordsDict) {
-            const list = Object.values(recordsDict).filter(rec => rec.currentUser && rec.currentUser.role === 'student');
+            const list = Object.values(recordsDict).filter(rec => rec && rec.currentUser && rec.currentUser.role === 'student');
             const uniqueMap = new Map();
             list.forEach(rec => {
                 const u = rec.currentUser;
-                const normalizedName = `${u.firstName || ''} ${u.surname || ''}`.trim().toLowerCase() || (u.name || '').trim().toLowerCase();
-                if (!uniqueMap.has(normalizedName)) {
-                    uniqueMap.set(normalizedName, rec);
+                const normFirst = (u.firstName || (u.name ? u.name.split(' ')[0] : '') || '').trim().toLowerCase();
+                const normSurname = (u.surname || (u.name ? u.name.split(' ').slice(1).join(' ') : '') || '').trim().toLowerCase();
+                const uniqueKey = `${normFirst}_${normSurname}`;
+
+                if (!uniqueMap.has(uniqueKey)) {
+                    uniqueMap.set(uniqueKey, rec);
                 } else {
-                    // If duplicate encountered, keep the record with higher tokens or latest activity
-                    const existing = uniqueMap.get(normalizedName);
-                    const existingTokens = Number(existing.stats?.tokens) || 0;
-                    const newTokens = Number(rec.stats?.tokens) || 0;
-                    if (newTokens >= existingTokens) {
-                        uniqueMap.set(normalizedName, rec);
+                    // Pick the record with greater activity timestamp or higher tokens to prevent race condition regressions
+                    const existing = uniqueMap.get(uniqueKey);
+                    const existingTime = existing.lastActive || 0;
+                    const newTime = rec.lastActive || 0;
+                    if (newTime >= existingTime) {
+                        uniqueMap.set(uniqueKey, rec);
                     }
                 }
             });
             return Array.from(uniqueMap.values());
         }
+        window.getDeduplicatedStudents = getDeduplicatedStudents;
 
         // Shop catalog price registry used to compute total net worth / lifetime tokens
         const SHOP_CATALOG = [
@@ -435,9 +458,9 @@
 
             bar.classList.remove('hidden');
 
-            const db = getAllUserRecords();
+            const allDb = getAllUserRecords();
             // Strictly deduplicate so students never show up twice
-            const students = getDeduplicatedStudents(db);
+            const students = getDeduplicatedStudents(allDb);
 
             if (students.length === 0) {
                 ticker.innerHTML = `
@@ -454,7 +477,7 @@
                 const u = s.currentUser;
                 const tokens = Number(s.stats?.tokens) || 0;
                 const medal = getTokenMedal(tokens);
-                const isMe = (app.currentUser && app.currentUser.name && app.currentUser.name.toLowerCase() === u.name.toLowerCase());
+                const isMe = (app.currentUser && app.currentUser.name && app.currentUser.name.trim().toLowerCase() === u.name.trim().toLowerCase());
 
                 return `
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border ${medal.badgeClass} ${isMe ? 'ring-2 ring-amber-400 bg-amber-500/20' : 'bg-slate-800/80'} shadow-xs flex-shrink-0">
@@ -479,8 +502,8 @@
             const tbody = document.querySelector('#overall-student-leaderboard-section tbody');
             if (!tbody) return;
 
-            const db = getAllUserRecords();
-            const allStudents = getDeduplicatedStudents(db);
+            const allDb = getAllUserRecords();
+            const allStudents = getDeduplicatedStudents(allDb);
 
             const rankedStudents = allStudents.map(s => {
                 const netWorth = calculateStudentOverallNetWorth(s);
@@ -508,7 +531,7 @@
             }
 
             tbody.innerHTML = rankedStudents.map((entry, idx) => {
-                const isMe = (app.currentUser && app.currentUser.name && app.currentUser.name.toLowerCase() === entry.user.name.toLowerCase());
+                const isMe = (app.currentUser && app.currentUser.name && app.currentUser.name.trim().toLowerCase() === entry.user.name.trim().toLowerCase());
                 return `
                 <tr class="transition ${isMe ? 'bg-amber-50/60 font-bold' : 'hover:bg-slate-50/80'}">
                     <td class="py-3.5 px-4 font-black text-slate-400">
@@ -558,6 +581,9 @@
                 };
 
                 db[key] = record;
+                if (window.cachedCloudUsers) {
+                    window.cachedCloudUsers[key] = record;
+                }
 
                 try {
                     localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
@@ -860,7 +886,6 @@
                 if (this.currentUser) {
                     navUser.classList.remove('hidden');
                     document.getElementById('nav-username').textContent = this.currentUser.name;
-                    document.getElementById('nav-tests').textContent = state.stats.completedTests;
                     const tokenNav = document.getElementById('nav-tokens');
                     if (tokenNav) tokenNav.textContent = state.stats.tokens;
                 } else {
@@ -1027,11 +1052,28 @@
                 `;
             },
             studentTests() {
+                // Privacy Guard: Test results are strictly accessible to teachers in the Markbook or by the student themselves
+                if (!app.currentUser) {
+                    return `
+                    <div class="p-8 max-w-md mx-auto text-center fade-in mt-16 bg-white rounded-3xl p-8 border border-slate-200">
+                        <i class="fa-solid fa-lock text-3xl text-rose-500 mb-3"></i>
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Access Restricted</h3>
+                        <p class="text-sm text-slate-500 mb-4">Please log in to access your assessment records.</p>
+                        <button onclick="app.navigate('login')" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-xl">Go to Login</button>
+                    </div>`;
+                }
+
+                // If teacher inadvertently visits studentTests, redirect cleanly to teacherDash
+                if (app.currentUser.role === 'teacher') {
+                    setTimeout(() => app.navigate('teacherDash'), 10);
+                    return '';
+                }
+
                 const results = Array.isArray(state.testResults) ? [...state.testResults].reverse() : [];
                 const totalTests = results.length;
                 const passedCount = results.filter(r => r.passed).length;
                 const avg = totalTests > 0 ? Math.round(results.reduce((acc, r) => acc + (r.percentage || 0), 0) / totalTests) : 0;
-                const studentName = app.currentUser ? app.currentUser.name : 'Student';
+                const studentName = app.currentUser.name || 'Student';
 
                 return `
                 <div class="p-8 max-w-5xl mx-auto fade-in pb-20">
@@ -1041,8 +1083,8 @@
 
                     <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl p-8 sm:p-10 text-white shadow-xl mb-8 relative overflow-hidden">
                         <i class="fa-solid fa-graduation-cap absolute -right-6 -bottom-6 text-9xl opacity-15"></i>
-                        <h2 class="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight">${studentName}'s Test Results</h2>
-                        <p class="text-sm sm:text-base font-medium opacity-90">Review all your completed end-of-level final tests and the marks you achieved.</p>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight">My Private Test Results</h2>
+                        <p class="text-sm sm:text-base font-medium opacity-90">Confidential personal assessment records for ${studentName}. (Teachers can review submissions in the Teacher Markbook).</p>
                     </div>
 
                     <!-- Summary Cards -->
@@ -1065,8 +1107,8 @@
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                         <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-                                <i class="fa-solid fa-list-check text-indigo-600"></i>
-                                <span>Completed Assessments History</span>
+                                <i class="fa-solid fa-user-shield text-indigo-600"></i>
+                                <span>Confidential Personal Assessment History</span>
                             </h3>
                             <span class="text-xs text-slate-400 font-semibold">${totalTests} Attempt${totalTests === 1 ? '' : 's'}</span>
                         </div>
@@ -1162,8 +1204,7 @@
             studentDash() {
                 // Compute students list and sort by Overall Net Worth (Current wallet tokens + shop purchases)
                 const db = getAllUserRecords();
-                const allStudents = Object.values(db)
-                    .filter(rec => rec.currentUser && rec.currentUser.role === 'student');
+                const allStudents = getDeduplicatedStudents(db);
 
                 const rankedStudents = allStudents.map(s => {
                     const netWorth = calculateStudentOverallNetWorth(s);
@@ -5270,9 +5311,7 @@
             teacherDash() {
                 const currentTeacher = app.currentUser ? app.currentUser.name : 'Teacher';
                 const db = getAllUserRecords();
-                const studentList = Object.keys(db)
-                    .map(k => db[k])
-                    .filter(rec => rec.currentUser && rec.currentUser.role === 'student');
+                const studentList = getDeduplicatedStudents(db);
 
                 const myStudents = studentList.filter(s => (s.currentUser.teacher || '').toLowerCase() === currentTeacher.toLowerCase());
                 const displayList = myStudents.length > 0 ? myStudents : studentList;
@@ -5361,6 +5400,9 @@
                             </button>
                             <button onclick="window.openStatsModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition inline-flex items-center gap-2 text-sm">
                                 <i class="fa-solid fa-chart-pie"></i> Statistics &amp; Analytics
+                            </button>
+                            <button onclick="window.openClearAllRosterModal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold py-2.5 px-4 rounded-xl border border-rose-200 shadow-sm transition inline-flex items-center gap-2 text-sm" title="Clear all students across devices">
+                                <i class="fa-solid fa-broom"></i> Reset Roster
                             </button>
                         </div>
                     </div>
@@ -10296,6 +10338,25 @@
             }
         };
 
+        // Modal opener for teacher clear all roster action
+        window.openClearAllRosterModal = function() {
+            const modal = document.getElementById('reset-roster-modal');
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.closeClearAllRosterModal = function() {
+            const modal = document.getElementById('reset-roster-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.confirmResetAllRoster = async function() {
+            if (typeof window.resetAllCloudStudents === 'function') {
+                await window.resetAllCloudStudents();
+            }
+            window.closeClearAllRosterModal();
+            app.navigate('teacherDash');
+        };
+
         // --- App Bootstrapping ---
         window.onload = () => {
             const savedData = loadUserState();
@@ -10399,6 +10460,23 @@
             <div class="flex gap-3 justify-center">
                 <button onclick="window.closeDeleteStudentModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-100 transition">Cancel</button>
                 <button onclick="window.confirmDeleteStudent()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-sm transition">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog for Teacher Reset Cloud Roster -->
+    <div id="reset-roster-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden fade-in text-center p-6">
+            <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-broom"></i>
+            </div>
+            <h3 class="font-black text-slate-800 text-xl mb-2">Reset All Students?</h3>
+            <p class="text-sm text-slate-500 mb-6">
+                This will clear all enrolled student accounts across every device so everyone can start fresh with clean real-time data.
+            </p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="window.closeClearAllRosterModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-100 transition">Cancel</button>
+                <button onclick="window.confirmResetAllRoster()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-sm transition">Reset All</button>
             </div>
         </div>
     </div>

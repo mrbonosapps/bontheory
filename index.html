@@ -8032,7 +8032,11 @@
 
         window.startAccGame = function() {
             const state = window.accGameState;
-            state.currentQ = state.pool[Math.floor(Math.random() * state.pool.length)];
+            let next;
+            do {
+                next = state.pool[Math.floor(Math.random() * state.pool.length)];
+            } while (state.currentQ && next.ans === state.currentQ.ans && state.pool.length > 1);
+            state.currentQ = next;
             const q = state.currentQ;
 
             const noteEl = document.getElementById('acc-game-note');
@@ -8047,8 +8051,11 @@
             }
             if (fb) fb.textContent = '';
 
+            // Randomize the answer option positions so the correct answer is not always in the same box
+            const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
             if (optsContainer) {
-                optsContainer.innerHTML = q.options.map(opt => `
+                optsContainer.innerHTML = shuffledOptions.map(opt => `
                     <button onclick="checkAccAnswer('${opt}')" class="bg-white border-2 border-gray-200 hover:border-purple-400 hover:bg-purple-50 text-slate-700 font-bold py-3 rounded-xl transition text-base shadow-sm">
                         ${opt}
                     </button>

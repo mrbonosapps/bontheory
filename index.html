@@ -266,8 +266,8 @@
             const ticker = document.getElementById('global-ticker-content');
             if (!bar || !ticker) return;
 
-            // Only display ticker if a student is logged in
-            if (!app.currentUser || app.currentUser.role !== 'student') {
+            // Display ticker if either a student or teacher is logged in
+            if (!app.currentUser) {
                 bar.classList.add('hidden');
                 return;
             }
@@ -281,7 +281,7 @@
 
             if (students.length === 0) {
                 ticker.innerHTML = `
-                    <span class="text-slate-400 italic">No students registered yet. Practice lessons and complete games to collect tokens!</span>
+                    <span class="text-slate-400 italic">No students registered yet. Once students earn tokens, their balances will appear here!</span>
                 `;
                 return;
             }
@@ -5063,6 +5063,23 @@
                     filteredTests.sort((a, b) => b.pct - a.pct);
                 }
 
+                // Ranked students for overall leaderboard display
+                const rankedStudents = [...filteredStudents].map(s => {
+                    const netWorth = calculateStudentOverallNetWorth(s);
+                    const walletTokens = (s.stats && s.stats.tokens) ? Number(s.stats.tokens) : 0;
+                    const itemsBought = Array.isArray(s.inventory) ? s.inventory.length : 0;
+                    const shopInvestment = netWorth - walletTokens;
+                    return {
+                        record: s,
+                        user: s.currentUser,
+                        walletTokens,
+                        shopInvestment,
+                        itemsBought,
+                        netWorth,
+                        medal: getTokenMedal(netWorth)
+                    };
+                }).sort((a, b) => b.netWorth - a.netWorth);
+
                 return `
                 <div class="p-8 max-w-7xl mx-auto fade-in pb-20">
                     <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 border-b pb-4">
@@ -5071,6 +5088,9 @@
                             <p class="text-slate-500 font-medium text-sm mt-1">Logged in as: <span class="font-bold text-indigo-600">${currentTeacher}</span></p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2.5">
+                            <button onclick="scrollToStudentLeaderboard()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-2.5 px-4 rounded-xl border border-indigo-200 shadow-sm transition inline-flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-crown text-amber-500"></i> View Leaderboard
+                            </button>
                             <button onclick="window.openStatsModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition inline-flex items-center gap-2 text-sm">
                                 <i class="fa-solid fa-chart-pie"></i> Statistics &amp; Analytics
                             </button>
@@ -5090,6 +5110,56 @@
                         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                             <span class="text-xs font-bold uppercase text-slate-400">Tokens Earned (Class Total)</span>
                             <div class="text-3xl font-black text-amber-500 mt-1">${filteredStudents.reduce((acc, s) => acc + (s.stats?.tokens || 0), 0)}</div>
+                        </div>
+                    </div>
+
+                    <!-- Student Management Roster Panel (Quick Edit / Delete) -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 mb-6">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
+                            <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                                <i class="fa-solid fa-user-gear text-indigo-600"></i>
+                                <span>Student Management Roster (Edit / Delete)</span>
+                            </h3>
+                            <span class="text-xs text-slate-400 font-semibold">${filteredStudents.length} Registered Student${filteredStudents.length === 1 ? '' : 's'}</span>
+                        </div>
+                        <div class="overflow-x-auto max-h-56 overflow-y-auto">
+                            <table class="w-full text-left text-xs sm:text-sm">
+                                <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 text-xs uppercase tracking-wider sticky top-0">
+                                    <tr>
+                                        <th class="py-2.5 px-3">Student Name</th>
+                                        <th class="py-2.5 px-3">Class</th>
+                                        <th class="py-2.5 px-3">Assigned Teacher</th>
+                                        <th class="py-2.5 px-3">Wallet Tokens</th>
+                                        <th class="py-2.5 px-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-medium">
+                                    ${filteredStudents.length === 0 ? `
+                                        <tr>
+                                            <td colspan="5" class="py-4 text-center text-slate-400">No students registered yet.</td>
+                                        </tr>
+                                    ` : filteredStudents.map(rec => {
+                                        const u = rec.currentUser || {};
+                                        const key = getUserRecordKey(u);
+                                        return `
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="py-2.5 px-3 font-bold text-slate-800">${u.name}</td>
+                                            <td class="py-2.5 px-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-xs">${u.classGroup || 'N/A'}</span></td>
+                                            <td class="py-2.5 px-3 text-slate-600">${u.teacher || 'Mr B'}</td>
+                                            <td class="py-2.5 px-3 font-mono font-bold text-amber-600"><i class="fa-solid fa-coins text-xs mr-1"></i>${rec.stats?.tokens || 0}</td>
+                                            <td class="py-2.5 px-3 text-right">
+                                                <button onclick="window.openEditStudentModal('${key}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-lg text-xs font-bold transition mr-1.5" title="Edit Student">
+                                                    <i class="fa-solid fa-pen-to-square mr-1"></i>Edit
+                                                </button>
+                                                <button onclick="window.openDeleteStudentModal('${key}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2.5 py-1 rounded-lg text-xs font-bold transition" title="Delete Student">
+                                                    <i class="fa-solid fa-trash-can mr-1"></i>Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -5134,6 +5204,74 @@
                     ${tf.viewMode === 'student' ? window.renderStudentDrillDownView(filteredStudents) : 
                       tf.viewMode === 'class' ? window.renderClassGroupView(filteredStudents, filteredTests) : 
                       window.renderSubmissionsTableView(filteredTests)}
+
+                    <!-- Overall Student Leaderboard (Embedded on Teacher Dashboard) -->
+                    <div id="overall-student-leaderboard-section" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm scroll-mt-24 mt-8">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 border-b border-slate-100 pb-4">
+                            <div>
+                                <h3 class="text-2xl font-black text-slate-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-crown text-amber-500"></i>
+                                    <span>Overall Student Leaderboard</span>
+                                </h3>
+                                <p class="text-slate-500 text-xs sm:text-sm font-medium mt-1">
+                                    Ranks student values across classes: <strong>Tokens Held + Value of Shop Items Purchased</strong>.
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2 bg-slate-50 px-3.5 py-1.5 rounded-full border border-slate-200 text-xs font-bold text-slate-600 self-start sm:self-auto">
+                                <i class="fa-solid fa-medal text-indigo-600"></i>
+                                <span>Medals: 50+ 🥉, 301+ 🥈, 601+ 🥇, 1000+ 💎</span>
+                            </div>
+                        </div>
+
+                        <!-- Top 10 visible with side scrollbar for remainder -->
+                        <div class="overflow-x-auto max-h-[520px] overflow-y-auto pr-1">
+                            <table class="w-full text-left text-sm">
+                                <thead class="sticky top-0 bg-slate-50 shadow-xs z-10">
+                                    <tr class="text-slate-600 font-bold border-b border-slate-200 text-xs uppercase tracking-wider">
+                                        <th class="py-3 px-4">Rank</th>
+                                        <th class="py-3 px-4">Student</th>
+                                        <th class="py-3 px-4">Class</th>
+                                        <th class="py-3 px-4 text-center">Medal Tier</th>
+                                        <th class="py-3 px-4 text-right">Wallet (Held)</th>
+                                        <th class="py-3 px-4 text-right">Shop Purchases</th>
+                                        <th class="py-3 px-4 text-right">Total Net Worth</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 font-medium">
+                                    ${rankedStudents.length === 0 ? `
+                                        <tr>
+                                            <td colspan="7" class="py-8 text-center text-slate-400 font-medium">No students registered yet.</td>
+                                        </tr>
+                                    ` : rankedStudents.map((entry, idx) => `
+                                        <tr class="transition hover:bg-slate-50/80">
+                                            <td class="py-3.5 px-4 font-black text-slate-400">
+                                                ${idx === 0 ? '<span class="text-amber-500 text-base">👑 #1</span>' :
+                                                  idx === 1 ? '<span class="text-slate-400 text-base">🥈 #2</span>' :
+                                                  idx === 2 ? '<span class="text-amber-700 text-base">🥉 #3</span>' : `#${idx + 1}`}
+                                            </td>
+                                            <td class="py-3.5 px-4 font-bold text-slate-800">${entry.user.name}</td>
+                                            <td class="py-3.5 px-4"><span class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded font-bold text-xs">${entry.user.classGroup || 'N/A'}</span></td>
+                                            <td class="py-3.5 px-4 text-center">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black border ${entry.medal.badgeClass}">
+                                                    <span>${entry.medal.symbol}</span>
+                                                    <span>${entry.medal.tier}</span>
+                                                </span>
+                                            </td>
+                                            <td class="py-3.5 px-4 text-right font-mono text-slate-600">
+                                                <i class="fa-solid fa-coins text-amber-500 text-xs mr-1"></i>${entry.walletTokens}
+                                            </td>
+                                            <td class="py-3.5 px-4 text-right font-mono text-slate-600">
+                                                ${entry.shopInvestment > 0 ? `<span class="text-emerald-600 font-bold">+${entry.shopInvestment}</span> <span class="text-xs text-slate-400">(${entry.itemsBought} items)</span>` : '<span class="text-slate-400">0</span>'}
+                                            </td>
+                                            <td class="py-3.5 px-4 text-right font-mono font-black text-indigo-700 text-base">
+                                                ${entry.netWorth} pts
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                     <!-- Statistics Modal Container (Expanded Size) -->
                     <div id="teacher-stats-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-6 lg:p-8 overflow-y-auto">
@@ -9671,13 +9809,13 @@
             return "https://docs.google.com/spreadsheets/d/140auyVwux2-WUJZ6DybpfWRrnwOG2FTX-1QpMsvfY0c/edit?gid=0#gid=0";
         };
 
-        // Smooth scroll shortcut to Overall Student Leaderboard
+        // Smooth scroll shortcut to Overall Student Leaderboard (Works in both student and teacher modes)
         window.scrollToStudentLeaderboard = function() {
-            if (!app.currentUser || app.currentUser.role !== 'student') return;
-            // If user is currently in a lesson or another view, return to studentDash first
+            if (!app.currentUser) return;
+            const targetDash = app.currentUser.role === 'teacher' ? 'teacherDash' : 'studentDash';
             const el = document.getElementById('overall-student-leaderboard-section');
             if (!el) {
-                app.navigate('studentDash');
+                app.navigate(targetDash);
                 setTimeout(() => {
                     const target = document.getElementById('overall-student-leaderboard-section');
                     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -9777,5 +9915,69 @@
             }
         };
     </script>
+
+    <!-- Modal Dialogs for Teacher Student Edit & Delete -->
+    <div id="edit-student-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden fade-in">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen text-indigo-600"></i> Edit Student Record
+                </h3>
+                <button onclick="window.closeEditStudentModal()" class="w-8 h-8 rounded-full bg-white hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="edit-student-key" />
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">First Name</label>
+                        <input type="text" id="edit-student-firstname" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Surname</label>
+                        <input type="text" id="edit-student-surname" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Class / Year Group</label>
+                    <input type="text" id="edit-student-class" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Assigned Teacher</label>
+                    <select id="edit-student-teacher" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <option value="Mr B">Mr B</option>
+                        <option value="Mr H">Mr H</option>
+                        <option value="Mr T">Mr T</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Wallet Tokens</label>
+                    <input type="number" id="edit-student-tokens" min="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-amber-600 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                </div>
+            </div>
+            <div class="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                <button onclick="window.closeEditStudentModal()" class="px-4 py-2 rounded-xl text-slate-600 font-bold text-sm hover:bg-slate-200 transition">Cancel</button>
+                <button onclick="window.saveEditedStudent()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-sm transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-student-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden fade-in text-center p-6">
+            <input type="hidden" id="delete-student-key" />
+            <div class="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-black text-slate-800 text-xl mb-2">Delete Student Account?</h3>
+            <p class="text-sm text-slate-500 mb-6">
+                Are you sure you want to permanently delete <strong id="delete-student-name" class="text-slate-800">this student</strong>? All their completed tests, token wallet, and inventory will be removed.
+            </p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="window.closeDeleteStudentModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-100 transition">Cancel</button>
+                <button onclick="window.confirmDeleteStudent()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-sm transition">Delete</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

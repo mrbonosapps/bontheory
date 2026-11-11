@@ -944,17 +944,22 @@
 
     function getDeduplicatedStudents() {
       const records = getAllUserRecords();
+      if (!records || typeof records !== 'object') return [];
       const unique = {};
       Object.keys(records).forEach(key => {
         const r = records[key];
-        if (r && r.role === 'student' && r.firstName && r.surname) {
-          const normName = `${r.firstName.trim().toLowerCase()} ${r.surname.trim().toLowerCase()}`;
+        if (r && typeof r === 'object' && r.role === 'student' && r.firstName && r.surname) {
+          const normName = `${String(r.firstName).trim().toLowerCase()} ${String(r.surname).trim().toLowerCase()}`;
           if (!unique[normName]) {
-            unique[normName] = { key, ...r };
+            unique[normName] = { 
+              key, 
+              ...r,
+              stats: r.stats || { tokens: 0, testsTaken: 0 }
+            };
           }
         }
       });
-      return Object.values(unique);
+      return Object.values(unique).filter(Boolean);
     }
 
     function saveUserState() {
@@ -1036,25 +1041,30 @@
       if (!ticker) return;
 
       const students = getDeduplicatedStudents();
-      if (students.length === 0) {
+      if (!students || students.length === 0) {
         ticker.innerHTML = `<span>Welcome to The Boncepts of Music! Students join now to compete on the classroom leaderboard.</span>`;
         return;
       }
 
-      students.sort((a, b) => ((b.stats && b.stats.tokens) || 0) - ((a.stats && a.stats.tokens) || 0));
+      students.sort((a, b) => {
+        const aTok = (a && a.stats && typeof a.stats.tokens === 'number') ? a.stats.tokens : 0;
+        const bTok = (b && b.stats && typeof b.stats.tokens === 'number') ? b.stats.tokens : 0;
+        return bTok - aTok;
+      });
 
       const itemsHtml = students.map((s, idx) => {
-        const tokens = (s.stats && s.stats.tokens) || 0;
+        if (!s) return '';
+        const tokens = (s.stats && typeof s.stats.tokens === 'number') ? s.stats.tokens : 0;
         const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🪙';
         return `<span class="inline-flex items-center gap-1.5 mx-4">
           <span>${medal}</span>
-          <span class="font-bold text-white">${s.firstName} ${s.surname}</span>
-          <span class="text-indigo-300">(${s.class})</span>:
+          <span class="font-bold text-white">${s.firstName || 'Student'} ${s.surname || ''}</span>
+          <span class="text-indigo-300">(${s.class || 'Class'})</span>:
           <span class="font-extrabold text-amber-300">${tokens} Tokens</span>
         </span>`;
-      }).join(' • ');
+      }).filter(Boolean).join(' • ');
 
-      ticker.innerHTML = itemsHtml;
+      ticker.innerHTML = itemsHtml || `<span>Welcome to The Boncepts of Music!</span>`;
     };
 
     window.refreshLeaderboardTableInPlace = function() {
@@ -1062,25 +1072,30 @@
       if (!tbody) return;
 
       const students = getDeduplicatedStudents();
-      students.sort((a, b) => ((b.stats && b.stats.tokens) || 0) - ((a.stats && a.stats.tokens) || 0));
-
-      if (students.length === 0) {
+      if (!students || students.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">No students enrolled yet.</td></tr>`;
         return;
       }
 
+      students.sort((a, b) => {
+        const aTok = (a && a.stats && typeof a.stats.tokens === 'number') ? a.stats.tokens : 0;
+        const bTok = (b && b.stats && typeof b.stats.tokens === 'number') ? b.stats.tokens : 0;
+        return bTok - aTok;
+      });
+
       tbody.innerHTML = students.map((s, idx) => {
-        const tokens = (s.stats && s.stats.tokens) || 0;
+        if (!s) return '';
+        const tokens = (s.stats && typeof s.stats.tokens === 'number') ? s.stats.tokens : 0;
         const medal = idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : idx === 2 ? '🥉 3rd' : `#${idx + 1}`;
         return `
           <tr class="hover:bg-slate-50 border-b border-slate-100">
             <td class="px-4 py-3 font-bold text-slate-700">${medal}</td>
-            <td class="px-4 py-3 font-semibold text-slate-900">${s.firstName} ${s.surname}</td>
-            <td class="px-4 py-3 text-slate-500">${s.class}</td>
+            <td class="px-4 py-3 font-semibold text-slate-900">${s.firstName || ''} ${s.surname || ''}</td>
+            <td class="px-4 py-3 text-slate-500">${s.class || '-'}</td>
             <td class="px-4 py-3 text-right font-black text-amber-600">${tokens} 🪙</td>
           </tr>
         `;
-      }).join('');
+      }).filter(Boolean).join('');
     };
 
     function scrollToStudentLeaderboard() {

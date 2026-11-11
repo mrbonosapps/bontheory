@@ -202,20 +202,21 @@
                             localStorage.setItem('boncepts_users_db', JSON.stringify(updatedRecords));
                         } catch (e) {}
 
-                        // Refresh active leaderboards across devices
+                        // Refresh active marquee ticker and leaderboards immediately across devices
                         if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
 
-                        // If teacher dashboard is active, re-render to reflect live updates
+                        // Dynamically update the Overall Student Leaderboard table if it's currently on screen
+                        const leaderboardContainer = document.getElementById('overall-student-leaderboard-section');
+                        if (leaderboardContainer && typeof window.refreshLeaderboardTableInPlace === 'function') {
+                            window.refreshLeaderboardTableInPlace();
+                        }
+
+                        // If teacher dashboard is active, re-render to reflect live student arrivals and test attempts
                         if (window.app && window.app.currentUser) {
                             if (window.app.currentUser.role === 'teacher') {
                                 const root = document.getElementById('app-root');
-                                if (root && window.views && window.views.teacherDash) {
+                                if (root && window.views && window.views.teacherDash && !window.teacherFilterState?.isModalOpen) {
                                     root.innerHTML = window.views.teacherDash();
-                                }
-                            } else if (document.getElementById('overall-student-leaderboard-section')) {
-                                const root = document.getElementById('app-root');
-                                if (root && window.views && window.views.studentDash) {
-                                    root.innerHTML = window.views.studentDash();
                                 }
                             }
                         }
@@ -369,7 +370,7 @@
             };
         }
 
-        // Live Wallet Ticker Synchronizer (shows unspent tokens held right now)
+        // Live Wallet Ticker Synchronizer (shows unspent tokens held right now across all connected devices)
         window.updateGlobalLeaderboard = function() {
             const bar = document.getElementById('global-live-ticker-bar');
             const ticker = document.getElementById('global-ticker-content');
@@ -390,7 +391,7 @@
 
             if (students.length === 0) {
                 ticker.innerHTML = `
-                    <span class="text-slate-400 italic">No students registered yet. Once students earn tokens, their balances will appear here!</span>
+                    <span class="text-slate-400 italic">No students registered yet. Once students log in and earn tokens, their balances will appear here in real time!</span>
                 `;
                 return;
             }
@@ -421,6 +422,74 @@
 
             // Duplicate array for seamless infinite marquee scroll
             ticker.innerHTML = studentItemsHTML + studentItemsHTML;
+        };
+
+        // In-place real-time re-renderer for the Overall Student Leaderboard table
+        window.refreshLeaderboardTableInPlace = function() {
+            const tbody = document.querySelector('#overall-student-leaderboard-section tbody');
+            if (!tbody) return;
+
+            const db = getAllUserRecords();
+            const allStudents = Object.values(db)
+                .filter(rec => rec.currentUser && rec.currentUser.role === 'student');
+
+            const rankedStudents = allStudents.map(s => {
+                const netWorth = calculateStudentOverallNetWorth(s);
+                const walletTokens = (s.stats && s.stats.tokens) ? Number(s.stats.tokens) : 0;
+                const itemsBought = Array.isArray(s.inventory) ? s.inventory.length : 0;
+                const shopInvestment = netWorth - walletTokens;
+                return {
+                    record: s,
+                    user: s.currentUser,
+                    walletTokens,
+                    shopInvestment,
+                    itemsBought,
+                    netWorth,
+                    medal: getTokenMedal(netWorth)
+                };
+            }).sort((a, b) => b.netWorth - a.netWorth);
+
+            if (rankedStudents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400 font-medium">No students registered yet. Complete lessons to earn your place on the leaderboard!</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = rankedStudents.map((entry, idx) => {
+                const isMe = (app.currentUser && app.currentUser.name === entry.user.name);
+                return `
+                <tr class="transition ${isMe ? 'bg-amber-50/60 font-bold' : 'hover:bg-slate-50/80'}">
+                    <td class="py-3.5 px-4 font-black text-slate-400">
+                        ${idx === 0 ? '<span class="text-amber-500 text-base">👑 #1</span>' :
+                          idx === 1 ? '<span class="text-slate-400 text-base">🥈 #2</span>' :
+                          idx === 2 ? '<span class="text-amber-700 text-base">🥉 #3</span>' : `#${idx + 1}`}
+                    </td>
+                    <td class="py-3.5 px-4 font-bold text-slate-800 flex items-center gap-2">
+                        <span>${entry.user.name}</span>
+                        ${isMe ? '<span class="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-black">YOU</span>' : ''}
+                    </td>
+                    <td class="py-3.5 px-4"><span class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded font-bold text-xs">${entry.user.classGroup || 'N/A'}</span></td>
+                    <td class="py-3.5 px-4 text-center">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-black border ${entry.medal.badgeClass}">
+                            <span>${entry.medal.symbol}</span>
+                            <span>${entry.medal.tier}</span>
+                        </span>
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-mono text-slate-600">
+                        <i class="fa-solid fa-coins text-amber-500 text-xs mr-1"></i>${entry.walletTokens}
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-mono text-slate-600">
+                        ${entry.shopInvestment > 0 ? `<span class="text-emerald-600 font-bold">+${entry.shopInvestment}</span> <span class="text-xs text-slate-400">(${entry.itemsBought} items)</span>` : '<span class="text-slate-400">0</span>'}
+                    </td>
+                    <td class="py-3.5 px-4 text-right font-mono font-black text-indigo-700 text-base">
+                        ${entry.netWorth} pts
+                    </td>
+                </tr>
+                `;
+            }).join('');
         };
 
         // Save current user state to their isolated profile entry in the database
@@ -5471,12 +5540,19 @@
 
         window.openStatsModal = function() {
             const modal = document.getElementById('teacher-stats-modal');
-            if (modal) modal.classList.remove('hidden');
+            if (modal) {
+                if (!window.teacherFilterState) window.teacherFilterState = {};
+                window.teacherFilterState.isModalOpen = true;
+                modal.classList.remove('hidden');
+            }
         };
 
         window.closeStatsModal = function() {
             const modal = document.getElementById('teacher-stats-modal');
-            if (modal) modal.classList.add('hidden');
+            if (modal) {
+                if (window.teacherFilterState) window.teacherFilterState.isModalOpen = false;
+                modal.classList.add('hidden');
+            }
         };
 
         // Submissions Table View (Default)
@@ -10012,7 +10088,11 @@
                 state.testResults = [];
             }
 
+            // Save immediately to local and broadcast to cloud across all devices
             saveUserState();
+
+            // Force immediate update of global leaderboard and in-place tables
+            if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
 
             if (app.currentUser.role === 'teacher') {
                 app.navigate('teacherDash');
@@ -10118,6 +10198,9 @@
             if (window.updateGlobalLeaderboard) {
                 window.updateGlobalLeaderboard();
             }
+            if (typeof window.refreshLeaderboardTableInPlace === 'function') {
+                window.refreshLeaderboardTableInPlace();
+            }
         };
 
         window.buyItem = function(id, cost) {
@@ -10129,6 +10212,9 @@
                 if (tokenEl) tokenEl.textContent = state.stats.tokens;
                 if (window.updateGlobalLeaderboard) {
                     window.updateGlobalLeaderboard();
+                }
+                if (typeof window.refreshLeaderboardTableInPlace === 'function') {
+                    window.refreshLeaderboardTableInPlace();
                 }
                 app.navigate('shop');
             }

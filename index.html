@@ -75,8 +75,10 @@
                     <i class="fa-solid fa-coins text-amber-500"></i>
                     <span id="nav-tokens" class="transition-all duration-300 inline-block">0</span>
                 </div>
-                <div class="text-sm font-medium text-gray-500">
-                    Tests: <span id="nav-tests" class="text-gray-800 font-bold">0</span>
+                <div onclick="if(app.currentUser && app.currentUser.role === 'student') app.navigate('studentTests')" class="cursor-pointer flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-bold shadow-sm border border-slate-200 transition text-sm" title="View Completed Tests">
+                    <i class="fa-solid fa-clipboard-check text-blue-600"></i>
+                    <span>Tests:</span>
+                    <span id="nav-tests" class="text-blue-700 font-extrabold">0</span>
                 </div>
                 <div class="flex items-center gap-3 bg-blue-50 py-1.5 px-4 rounded-full border border-blue-100">
                     <span id="nav-username" class="font-bold text-blue-700">Student</span>
@@ -399,6 +401,95 @@
 
         // --- Views ---
         const views = {
+            studentTests() {
+                const results = Array.isArray(state.testResults) ? [...state.testResults].reverse() : [];
+                const totalTests = results.length;
+                const passedCount = results.filter(r => r.passed).length;
+                const avg = totalTests > 0 ? Math.round(results.reduce((acc, r) => acc + (r.percentage || 0), 0) / totalTests) : 0;
+                const studentName = app.currentUser ? app.currentUser.name : 'Student';
+
+                return `
+                <div class="p-8 max-w-5xl mx-auto fade-in pb-20">
+                    <button onclick="app.navigate('studentDash')" class="text-blue-600 font-medium mb-6 hover:text-blue-800 transition inline-flex items-center bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-100">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Back to Dashboard
+                    </button>
+
+                    <div class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl p-8 sm:p-10 text-white shadow-xl mb-8 relative overflow-hidden">
+                        <i class="fa-solid fa-graduation-cap absolute -right-6 -bottom-6 text-9xl opacity-15"></i>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold mb-2 tracking-tight">${studentName}'s Test Results</h2>
+                        <p class="text-sm sm:text-base font-medium opacity-90">Review all your completed end-of-level final tests and the marks you achieved.</p>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+                            <span class="text-xs font-bold uppercase text-slate-400">Tests Completed</span>
+                            <div class="text-3xl font-black text-slate-800 mt-1">${totalTests}</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+                            <span class="text-xs font-bold uppercase text-slate-400">Tests Passed</span>
+                            <div class="text-3xl font-black text-emerald-600 mt-1">${passedCount}</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+                            <span class="text-xs font-bold uppercase text-slate-400">Average Mark</span>
+                            <div class="text-3xl font-black text-indigo-600 mt-1">${avg}%</div>
+                        </div>
+                    </div>
+
+                    <!-- Test History Table -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-indigo-600"></i>
+                                <span>Completed Assessments History</span>
+                            </h3>
+                            <span class="text-xs text-slate-400 font-semibold">${totalTests} Attempt${totalTests === 1 ? '' : 's'}</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 text-xs uppercase tracking-wider">
+                                        <th class="py-3.5 px-4">Topic / Area</th>
+                                        <th class="py-3.5 px-4">Level</th>
+                                        <th class="py-3.5 px-4">Raw Score</th>
+                                        <th class="py-3.5 px-4">Percentage</th>
+                                        <th class="py-3.5 px-4">Result</th>
+                                        <th class="py-3.5 px-4">Date Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${results.length === 0 ? `
+                                        <tr>
+                                            <td colspan="6" class="py-10 text-center text-slate-400 font-medium">
+                                                <i class="fa-solid fa-file-pen text-3xl mb-2 text-slate-300 block"></i>
+                                                You haven't completed any final tests yet. Open any learning area to take a test!
+                                            </td>
+                                        </tr>
+                                    ` : results.map(r => {
+                                        const areaTitle = appData.areas.find(a => a.id === r.area)?.title || (r.area ? r.area.toUpperCase() : 'General');
+                                        const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleDateString() + ' ' + new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                                        return `
+                                        <tr class="hover:bg-slate-50/80 transition">
+                                            <td class="py-3.5 px-4 font-bold text-slate-800">${areaTitle}</td>
+                                            <td class="py-3.5 px-4"><span class="bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded font-bold text-xs">Level ${r.level || 1}</span></td>
+                                            <td class="py-3.5 px-4 font-mono font-bold text-slate-800">${r.score} / ${r.total}</td>
+                                            <td class="py-3.5 px-4 font-black ${r.percentage >= 50 ? 'text-emerald-600' : 'text-red-500'}">${r.percentage}%</td>
+                                            <td class="py-3.5 px-4">
+                                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${r.passed ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                                                    ${r.passed ? 'PASSED' : 'RETRY'}
+                                                </span>
+                                            </td>
+                                            <td class="py-3.5 px-4 text-xs text-slate-400">${dateStr}</td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                `;
+            },
             shop() {
                 const items = [
                     { id: 'gold_clef', name: 'Golden Clef Trophy', cost: 50, icon: 'fa-trophy', color: 'text-yellow-500' },

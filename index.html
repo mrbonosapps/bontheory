@@ -93,38 +93,73 @@
 
     <script>
         // --- Data & State Management ---
-        const STORAGE_KEY = 'boncepts_user_state';
+        const DB_STORAGE_KEY = 'boncepts_users_db';
+        const SESSION_STORAGE_KEY = 'boncepts_active_session';
 
         const state = {
             stats: { completedTests: 0, avgScore: 0, tokens: 0 },
             inventory: []
         };
 
-        // Helper functions to save and load state from localStorage
-        function saveUserState() {
+        // Helper to generate a unique key per user based on name and class
+        function getUserRecordKey(user) {
+            if (!user || !user.name) return null;
+            const cleanName = (user.name || '').trim().toLowerCase();
+            const cleanClass = (user.classGroup || '').trim().toLowerCase();
+            const role = user.role || 'student';
+            return `${role}::${cleanClass}::${cleanName}`;
+        }
+
+        // Get the entire local dictionary of saved accounts
+        function getAllUserRecords() {
             try {
-                const dataToSave = {
-                    currentUser: app.currentUser,
-                    stats: state.stats,
-                    inventory: state.inventory
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+                const raw = localStorage.getItem(DB_STORAGE_KEY);
+                return raw ? JSON.parse(raw) : {};
             } catch (err) {
-                console.warn('Unable to save user state to localStorage:', err);
+                console.warn('Unable to load users db:', err);
+                return {};
             }
         }
 
-        function loadUserState() {
+        // Save current user state to their isolated profile entry in the database
+        function saveUserState() {
+            if (!app.currentUser) return;
             try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (!raw) return null;
-                const parsed = JSON.parse(raw);
-                if (parsed.stats) Object.assign(state.stats, parsed.stats);
-                if (Array.isArray(parsed.inventory)) state.inventory = parsed.inventory;
-                if (parsed.currentUser) app.currentUser = parsed.currentUser;
-                return parsed;
+                const key = getUserRecordKey(app.currentUser);
+                if (!key) return;
+
+                const db = getAllUserRecords();
+                db[key] = {
+                    currentUser: app.currentUser,
+                    stats: state.stats,
+                    inventory: state.inventory,
+                    lastActive: Date.now()
+                };
+
+                localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
+                localStorage.setItem(SESSION_STORAGE_KEY, key);
             } catch (err) {
-                console.warn('Unable to restore user state from localStorage:', err);
+                console.warn('Unable to save user record:', err);
+            }
+        }
+
+        // Restore a specific user profile or the last active session
+        function loadUserState(specificKey = null) {
+            try {
+                const targetKey = specificKey || localStorage.getItem(SESSION_STORAGE_KEY);
+                if (!targetKey) return null;
+
+                const db = getAllUserRecords();
+                const record = db[targetKey];
+                if (!record) return null;
+
+                if (record.stats) Object.assign(state.stats, record.stats);
+                if (Array.isArray(record.inventory)) state.inventory = record.inventory;
+                if (record.currentUser) app.currentUser = record.currentUser;
+
+                return record;
+            } catch (err) {
+                console.warn('Unable to load user record:', err);
                 return null;
             }
         }
@@ -7524,20 +7559,39 @@
                     document.getElementById('login-error')?.classList.remove('hidden');
                     return;
                 }
-                app.currentUser = { name, role: 'teacher' };
-                saveUserState();
-                app.navigate('teacherDash');
+                app.currentUser = { name, role: 'teacher', classGroup: 'Staff' };
             } else {
                 app.currentUser = { name, role: 'student', classGroup: studentClass };
-                saveUserState();
+            }
+
+            // Look up existing profile for this specific user or initialise clean progress
+            const userKey = getUserRecordKey(app.currentUser);
+            const existingRecord = loadUserState(userKey);
+
+            if (!existingRecord) {
+                // New user: fresh state
+                state.stats = { completedTests: 0, avgScore: 0, tokens: 0 };
+                state.inventory = [];
+            }
+
+            saveUserState();
+
+            if (app.currentUser.role === 'teacher') {
+                app.navigate('teacherDash');
+            } else {
                 app.navigate('studentDash');
             }
         };
 
         window.logout = function() {
+            // Save current progress before logout
+            saveUserState();
             app.currentUser = null;
+            state.stats = { completedTests: 0, avgScore: 0, tokens: 0 };
+            state.inventory = [];
             try {
-                localStorage.removeItem(STORAGE_KEY);
+                // Clear active session pointer so next session starts at login screen
+                localStorage.removeItem(SESSION_STORAGE_KEY);
             } catch (e) {}
             app.navigate('login');
         };

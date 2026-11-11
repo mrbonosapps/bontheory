@@ -72,16 +72,10 @@
 
       <!-- Navigation Links & User Controls -->
       <div class="flex items-center gap-2 sm:gap-4">
-        <button onclick="app.navigate('conceptsHub')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+        <button onclick="protectedNavigate('conceptsHub')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
           <i class="fa-solid fa-book-open"></i> Concepts
         </button>
-        <button onclick="app.navigate('rhythmModule')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
-          <i class="fa-solid fa-drum"></i> 8-Beat Drum
-        </button>
-        <button onclick="app.navigate('dictationChallenge')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
-          <i class="fa-solid fa-headphones"></i> Dictation
-        </button>
-        <button onclick="app.navigate('shop')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+        <button onclick="protectedNavigate('shop')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
           <i class="fa-solid fa-store"></i> Shop
         </button>
 
@@ -311,6 +305,19 @@
     // ==========================================
     // COMPLETE CURRICULUM TOPICS & LEVELS
     // ==========================================
+    const shopCatalog = [
+      { id: 'badge_drummer', name: 'Master Drummer Badge', category: 'Trophies', cost: 15, icon: 'fa-drum', desc: 'Display your rhythm prowess with this golden badge.' },
+      { id: 'badge_ear', name: 'Golden Ear Trophy', category: 'Trophies', cost: 25, icon: 'fa-ear-listen', desc: 'Awarded to master rhythm dictation listeners.' },
+      { id: 'inst_electric_guitar', name: 'Custom Stratocaster', category: 'Instruments', cost: 30, icon: 'fa-guitar', desc: 'High-output electric guitar with custom pickguard.' },
+      { id: 'inst_synth', name: 'Analog Poly-Synth', category: 'Instruments', cost: 40, icon: 'fa-sliders', desc: 'Dual oscillator vintage synthesizer powerhouse.' },
+      { id: 'inst_grand_piano', name: 'Concert Grand Piano', category: 'Instruments', cost: 50, icon: 'fa-music', desc: 'Handcrafted concert grand with rich acoustics.' },
+      { id: 'avatar_crown', name: 'Golden Crown Avatar', category: 'Avatars', cost: 35, icon: 'fa-crown', desc: 'Royalty emblem on the classroom leaderboard.' },
+      { id: 'avatar_headphones', name: 'Studio Monitor Cans', category: 'Hardware', cost: 20, icon: 'fa-headphones', desc: 'Pro-grade studio headphones for focused dictation.' },
+      { id: 'avatar_mic', name: 'Vintage Tube Mic', category: 'Hardware', cost: 30, icon: 'fa-microphone', desc: 'Warm vintage tone condenser microphone.' },
+      { id: 'equip_metronome', name: 'Precision Metronome', category: 'Equipment', cost: 15, icon: 'fa-stopwatch', desc: 'Keep flawless time through every rehearsal.' },
+      { id: 'equip_pedal', name: 'Overdrive FX Pedal', category: 'Equipment', cost: 25, icon: 'fa-compact-disc', desc: 'Add punch and gritty overdrive tone colour.' }
+    ];
+
     const conceptsCurriculum = [
       {
         id: 'duration',
@@ -324,66 +331,129 @@
         levels: [
           {
             level: 1,
-            title: 'Level 1: The Pulse & Note Values',
+            title: 'Level 1: The Pulse, Crotchets & Quavers',
             badge: 'Beginner',
             readTime: '3 min read',
-            summary: 'Music moves through time. The beat is the regular heartbeat of a piece of music.',
+            summary: 'The steady heartbeat of music and note values with real drum synthesis.',
+            interactiveTool: 'drumModule',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">1. The Beat (Pulse)</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                The beat is steady like a ticking clock. In standard 4/4 time, there are four steady beats per bar.
-              </p>
-              <h4 class="font-bold text-slate-800 text-base mb-2">2. Crotchets & Quavers</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                • <strong>Crotchet (♩)</strong> = 1 beat (Quarter note). Often spoken as "Ta".<br>
-                • <strong>Pair of Quavers (♫)</strong> = Two sounds evenly sharing 1 beat (Eighth notes). Often spoken as "Ti-Ti".<br>
-                • <strong>Minim (𝅗𝅥)</strong> = 2 beats (Half note). Held for two pulses.
-              </p>
-              <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-200 my-4">
-                <p class="text-xs font-bold text-indigo-900">💡 Concept Checklist:</p>
-                <p class="text-xs text-indigo-700">Rhythm is created when sounds of different durations are layered on top of the steady pulse.</p>
+              <div class="space-y-4">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5">
+                  <h4 class="font-extrabold text-blue-950 text-base mb-1">1. The Beat (Pulse)</h4>
+                  <p class="text-xs sm:text-sm text-blue-900 leading-relaxed">
+                    The beat is steady and continuous, like your heartbeat or the regular tick of a clock. All musical rhythms exist in relation to this underlying foundation.
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="bg-white border-2 border-blue-200 rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-3xl text-blue-600 font-black">♩</span>
+                      <div>
+                        <h5 class="font-black text-slate-800 text-sm">Crotchet (Quarter Note)</h5>
+                        <span class="text-[10px] font-bold text-blue-600 uppercase">Duration = 1 Beat</span>
+                      </div>
+                    </div>
+                    <p class="text-xs text-slate-600">Spoken with the syllable <em>"Ta"</em>. One sound per pulse.</p>
+                  </div>
+
+                  <div class="bg-white border-2 border-rose-200 rounded-2xl p-4 shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-3xl text-rose-600 font-black">♫</span>
+                      <div>
+                        <h5 class="font-black text-slate-800 text-sm">Two Quavers (Pair of Eighths)</h5>
+                        <span class="text-[10px] font-bold text-rose-600 uppercase">Duration = 1/2 + 1/2 Beat</span>
+                      </div>
+                    </div>
+                    <p class="text-xs text-slate-600">Spoken with the syllables <em>"Ti-Ti"</em>. Two equal sounds dividing one pulse.</p>
+                  </div>
+                </div>
+
+                <!-- Interactive Embedded Tool Container -->
+                <div class="mt-6">
+                  <div class="flex items-center justify-between mb-3">
+                    <h5 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                      <i class="fa-solid fa-gamepad text-blue-600"></i> Interactive 8-Beat Sound Module
+                    </h5>
+                    <span class="text-[11px] font-semibold text-slate-500">Tap pads to toggle notation</span>
+                  </div>
+                  <div id="embedded-tool-container" class="border border-slate-200 rounded-3xl overflow-hidden shadow-sm"></div>
+                </div>
               </div>
             `,
             quiz: [
               { q: 'How many beats does a standard Crotchet (♩) receive in 4/4 time?', options: ['1 beat', '2 beats', '4 beats', 'Half a beat'], correct: 0 },
-              { q: 'How many hits occur in 1 beat when playing a pair of Quavers (♫)?', options: ['1 hit', '2 hits', '3 hits', '4 hits'], correct: 1 },
-              { q: 'What is the regular recurring heartbeat of a musical piece called?', options: ['The Beat / Pulse', 'The Melody', 'The Dynamics', 'The Timbre'], correct: 0 }
+              { q: 'How many equal hits occur during 1 beat when playing a pair of Quavers (♫)?', options: ['1 hit', '2 hits', '3 hits', '4 hits'], correct: 1 },
+              { q: 'What is the regular, recurring heartbeat of a musical piece called?', options: ['The Beat / Pulse', 'The Melody', 'The Dynamics', 'The Timbre'], correct: 0 }
             ]
           },
           {
             level: 2,
-            title: 'Level 2: Meter & Time Signatures',
+            title: 'Level 2: 8-Beat Rhythm Dictation',
             badge: 'Intermediate',
             readTime: '4 min read',
-            summary: 'Grouping beats into measures: 2/4, 3/4, 4/4, and compound time (6/8).',
+            summary: 'Develop your ear by listening to mystery 8-beat drum patterns and choosing the matching notation.',
+            interactiveTool: 'dictationChallenge',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">Time Signatures Explained</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                • <strong>4/4 Time (Common Time)</strong>: 4 beats per bar, counted 1 - 2 - 3 - 4.<br>
-                • <strong>3/4 Time (Triple Meter)</strong>: 3 beats per bar (Waltz rhythm), counted 1 - 2 - 3.<br>
-                • <strong>2/4 Time (Duple Meter)</strong>: 2 beats per bar (March rhythm), counted 1 - 2.<br>
-                • <strong>6/8 Time (Compound Time)</strong>: 2 big dotted-beat pulses divided into triplets (1-2-3, 4-5-6).
-              </p>
+              <div class="space-y-4">
+                <div class="bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-5">
+                  <h4 class="font-extrabold text-violet-950 text-base mb-1">How Rhythm Dictation Works</h4>
+                  <p class="text-xs sm:text-sm text-violet-900 leading-relaxed">
+                    Musical dictation connects what your ears hear to written notation. In this challenge, Odd beats (1, 3, 5, 7) trigger the <strong>Kick Drum (Blue)</strong> and Even beats (2, 4, 6, 8) trigger the <strong>Snare Drum (Red)</strong>.
+                  </p>
+                </div>
+
+                <div class="p-4 bg-white border border-slate-200 rounded-2xl">
+                  <h5 class="font-bold text-xs uppercase text-slate-500 mb-2">Dictation Strategy:</h5>
+                  <ul class="text-xs text-slate-700 space-y-1.5 list-disc list-inside">
+                    <li>Count along quietly: <em>1, 2, 3, 4, 5, 6, 7, 8</em>.</li>
+                    <li>Notice if each beat has <strong>1 hit (♩ Crotchet)</strong> or a fast double-hit <strong>(♫ Quavers)</strong>.</li>
+                    <li>Match the notation cards below the audio player!</li>
+                  </ul>
+                </div>
+
+                <!-- Interactive Embedded Tool Container -->
+                <div class="mt-6">
+                  <div class="flex items-center justify-between mb-3">
+                    <h5 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                      <i class="fa-solid fa-headphones text-violet-600"></i> Ear Training Challenge Lab
+                    </h5>
+                    <span class="text-[11px] font-semibold text-slate-500">Listen & identify patterns</span>
+                  </div>
+                  <div id="embedded-tool-container" class="border border-slate-200 rounded-3xl overflow-hidden shadow-sm"></div>
+                </div>
+              </div>
             `,
             quiz: [
-              { q: 'Which time signature is famously known as the Waltz time with 3 beats per bar?', options: ['3/4', '4/4', '2/4', '6/8'], correct: 0 },
-              { q: 'In 4/4 time, how many crotchet beats fit into each bar?', options: ['4 beats', '2 beats', '3 beats', '8 beats'], correct: 0 }
+              { q: 'In 4/4 time, how many beats are in a single bar?', options: ['4 beats', '2 beats', '3 beats', '8 beats'], correct: 0 },
+              { q: 'If beat 2 has two fast snare hits, which notation represents it?', options: ['Two Quavers (♫)', 'A Crotchet (♩)', 'A Minim (𝅗𝅥)', 'A Semibreve'], correct: 0 }
             ]
           },
           {
             level: 3,
-            title: 'Level 3: Syncopation & Off-beats',
+            title: 'Level 3: Syncopation & Off-Beats',
             badge: 'Advanced',
             readTime: '5 min read',
             summary: 'Accent patterns, groovy syncopation, and playing across the beat.',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">Syncopation</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                Syncopation occurs when accents are placed on normally weak beats or off-beats (the "and" of the beat). This is the foundation of Funk, Reggae, Jazz, and Pop grooves!
-              </p>
+              <div class="space-y-4">
+                <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
+                  <h4 class="font-bold text-indigo-950 text-base mb-1">What is Syncopation?</h4>
+                  <p class="text-xs sm:text-sm text-indigo-900 leading-relaxed">
+                    Syncopation occurs when accents or stress fall on unexpected moments—such as weak beats (beats 2 and 4 in 4/4) or on the off-beat <em>"and"</em> between beats.
+                  </p>
+                </div>
+                <div class="p-4 bg-white border border-slate-200 rounded-2xl">
+                  <h5 class="font-bold text-slate-800 text-sm mb-2">Where do we hear syncopation?</h5>
+                  <p class="text-xs text-slate-600 leading-relaxed">
+                    Syncopation is the heartbeat of funk, jazz, reggae, and pop music. It creates energy, anticipation, and dance grooves.
+                  </p>
+                </div>
+              </div>
             `,
             quiz: [
-              { q: 'What is the definition of syncopation?', options: ['Stressing weak or off-beats', 'Playing strictly on beat 1', 'Speeding up the tempo', 'Playing louder'], correct: 0 }
+              { q: 'What is the definition of syncopation?', options: ['Stressing weak or off-beats', 'Playing strictly on beat 1', 'Speeding up the tempo', 'Playing louder'], correct: 0 },
+              { q: 'Which genre relies heavily on off-beat guitar or keyboard skanks?', options: ['Reggae', 'Gregorian Chant', 'Baroque Fugue', 'Military March'], correct: 0 }
             ]
           }
         ]
@@ -404,18 +474,44 @@
             badge: 'Beginner',
             readTime: '3 min read',
             summary: 'Understanding pitch frequency, ascending and descending lines.',
+            interactiveTool: 'pitchKeyboard',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">Pitch Frequency</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                Pitch refers to how high or low a sound is. Faster sound wave vibrations produce <strong>higher pitches</strong> (flute, violin), while slower vibrations produce <strong>lower pitches</strong> (tuba, bass guitar).
-              </p>
-              <h4 class="font-bold text-slate-800 text-base mb-2">Melodic Contour</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                The melodic shape can move by <strong>step</strong> (adjacent notes), by <strong>leap</strong> (skipping notes), or remain on <strong>repeated notes</strong>.
-              </p>
+              <div class="space-y-4">
+                <div class="bg-violet-50 border border-violet-200 rounded-2xl p-5">
+                  <h4 class="font-bold text-violet-950 text-base mb-1">Pitch Frequency</h4>
+                  <p class="text-xs sm:text-sm text-violet-900 leading-relaxed">
+                    Pitch refers to how high or low a musical sound is. Faster sound vibrations create <strong>high pitches</strong> (piccolo, violin), while slower vibrations create <strong>low pitches</strong> (tuba, double bass).
+                  </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl text-center">
+                    <span class="text-xs font-bold text-violet-600 uppercase block mb-1">Steps</span>
+                    <p class="text-xs text-slate-600">Moving to immediately adjacent notes (e.g. C to D).</p>
+                  </div>
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl text-center">
+                    <span class="text-xs font-bold text-violet-600 uppercase block mb-1">Leaps</span>
+                    <p class="text-xs text-slate-600">Skipping over notes to wider intervals (e.g. C to G).</p>
+                  </div>
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl text-center">
+                    <span class="text-xs font-bold text-violet-600 uppercase block mb-1">Repeated</span>
+                    <p class="text-xs text-slate-600">Staying on the same continuous pitch line.</p>
+                  </div>
+                </div>
+
+                <!-- Interactive Embedded Tool Container -->
+                <div class="mt-6">
+                  <div class="flex items-center justify-between mb-3">
+                    <h5 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                      <i class="fa-solid fa-music text-violet-600"></i> Interactive Pitch Keyboard
+                    </h5>
+                    <span class="text-[11px] font-semibold text-slate-500">Tap keys to hear pitches</span>
+                  </div>
+                  <div id="embedded-tool-container" class="border border-slate-200 rounded-3xl overflow-hidden shadow-sm"></div>
+                </div>
+              </div>
             `,
             quiz: [
-              { q: 'What causes a sound to have a higher pitch?', options: ['Faster vibrations', 'Slower vibrations', 'Playing louder', 'Using more instruments'], correct: 0 },
+              { q: 'What causes a musical sound to have a higher pitch?', options: ['Faster vibrations', 'Slower vibrations', 'Playing louder', 'Using more instruments'], correct: 0 },
               { q: 'When a melody moves between neighboring notes without skipping, it moves by:', options: ['Step', 'Leap', 'Glissando', 'Staccato'], correct: 0 }
             ]
           },
@@ -426,14 +522,19 @@
             readTime: '4 min read',
             summary: 'Recognizing uplifting Major keys and melancholic Minor keys.',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">Tonality and Mood</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                • <strong>Major</strong>: Often perceived as bright, heroic, happy, or triumphant.<br>
-                • <strong>Minor</strong>: Built with a flattened 3rd interval, often perceived as dark, sad, mysterious, or dramatic.
-              </p>
+              <div class="space-y-4">
+                <div class="bg-purple-50 border border-purple-200 rounded-2xl p-5">
+                  <h4 class="font-bold text-purple-950 text-base mb-1">Tonality and Musical Emotion</h4>
+                  <p class="text-xs sm:text-sm text-purple-900 leading-relaxed">
+                    • <strong>Major Tonality:</strong> Formed with a natural 3rd interval. Often perceived as bright, joyful, triumphant, or heroic.<br>
+                    • <strong>Minor Tonality:</strong> Formed with a flattened 3rd interval. Often perceived as mysterious, melancholy, serious, or dark.
+                  </p>
+                </div>
+              </div>
             `,
             quiz: [
-              { q: 'Which tonality is most commonly associated with bright or happy moods?', options: ['Major', 'Minor', 'Atonal', 'Chromatic'], correct: 0 }
+              { q: 'Which tonality is most commonly associated with bright or happy moods?', options: ['Major', 'Minor', 'Atonal', 'Chromatic'], correct: 0 },
+              { q: 'Which interval is flattened in a minor scale compared to a major scale?', options: ['The 3rd', 'The 5th', 'The Octave', 'The 2nd'], correct: 0 }
             ]
           }
         ]
@@ -450,24 +551,67 @@
         levels: [
           {
             level: 1,
-            title: 'Level 1: Italian Dynamic Markings',
+            title: 'Level 1: Italian Dynamic Markings & Volume',
             badge: 'Beginner',
             readTime: '3 min read',
-            summary: 'Forte, piano, mezzo, crescendo, and diminuendo.',
+            summary: 'Master Piano, Forte, Mezzo, Crescendo, and Diminuendo.',
+            interactiveTool: 'dynamicsSimulator',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">Core Terms</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                • <strong>Piano (p)</strong> = Soft<br>
-                • <strong>Forte (f)</strong> = Loud<br>
-                • <strong>Mezzo-forte (mf)</strong> = Moderately loud<br>
-                • <strong>Mezzo-piano (mp)</strong> = Moderately soft<br>
-                • <strong>Crescendo (<)</strong> = Gradually getting louder<br>
-                • <strong>Diminuendo (>)</strong> = Gradually getting softer
-              </p>
+              <div class="space-y-4">
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                  <h4 class="font-bold text-amber-950 text-base mb-1">Understanding Dynamics</h4>
+                  <p class="text-xs sm:text-sm text-amber-900 leading-relaxed">
+                    Dynamics describe the volume of sound—how loud or soft the music is played. Composers use standardized Italian terms to guide musicians.
+                  </p>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div class="p-3 bg-white border border-slate-200 rounded-xl text-center">
+                    <span class="font-black text-amber-600 text-lg">p</span>
+                    <span class="text-xs font-bold block text-slate-800">Piano</span>
+                    <span class="text-[10px] text-slate-500">Soft</span>
+                  </div>
+                  <div class="p-3 bg-white border border-slate-200 rounded-xl text-center">
+                    <span class="font-black text-amber-600 text-lg">f</span>
+                    <span class="text-xs font-bold block text-slate-800">Forte</span>
+                    <span class="text-[10px] text-slate-500">Loud</span>
+                  </div>
+                  <div class="p-3 bg-white border border-slate-200 rounded-xl text-center">
+                    <span class="font-black text-amber-600 text-lg">mp</span>
+                    <span class="text-xs font-bold block text-slate-800">Mezzo-Piano</span>
+                    <span class="text-[10px] text-slate-500">Moderately Soft</span>
+                  </div>
+                  <div class="p-3 bg-white border border-slate-200 rounded-xl text-center">
+                    <span class="font-black text-amber-600 text-lg">mf</span>
+                    <span class="text-xs font-bold block text-slate-800">Mezzo-Forte</span>
+                    <span class="text-[10px] text-slate-500">Moderately Loud</span>
+                  </div>
+                  <div class="p-3 bg-white border border-slate-200 rounded-xl text-center">
+                    <span class="font-black text-amber-600 text-lg">&lt;</span>
+                    <span class="text-xs font-bold block text-slate-800">Crescendo</span>
+                    <span class="text-[10px] text-slate-500">Gradually Louder</span>
+                  </div>
+                  <div class="p-3 bg-white border border-slate-200 rounded-xl text-center">
+                    <span class="font-black text-amber-600 text-lg">&gt;</span>
+                    <span class="text-xs font-bold block text-slate-800">Diminuendo</span>
+                    <span class="text-[10px] text-slate-500">Gradually Softer</span>
+                  </div>
+                </div>
+
+                <!-- Interactive Embedded Tool Container -->
+                <div class="mt-6">
+                  <div class="flex items-center justify-between mb-3">
+                    <h5 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                      <i class="fa-solid fa-volume-high text-amber-500"></i> Interactive Decibel & Expression Simulator
+                    </h5>
+                    <span class="text-[11px] font-semibold text-slate-500">Test volume & crescendo</span>
+                  </div>
+                  <div id="embedded-tool-container" class="border border-slate-200 rounded-3xl overflow-hidden shadow-sm"></div>
+                </div>
+              </div>
             `,
             quiz: [
               { q: 'What does the dynamic marking "Forte" (f) instruct the performer to do?', options: ['Play loudly', 'Play softly', 'Play fast', 'Stop playing'], correct: 0 },
-              { q: 'What does a "Crescendo" indicate?', options: ['Gradually getting louder', 'Gradually getting softer', 'Gradually speeding up', 'Sudden silence'], correct: 0 }
+              { q: 'What does a "Crescendo" (<) indicate?', options: ['Gradually getting louder', 'Gradually getting softer', 'Gradually speeding up', 'Sudden silence'], correct: 0 }
             ]
           }
         ]
@@ -489,13 +633,32 @@
             readTime: '4 min read',
             summary: 'Strings, Woodwind, Brass, and Percussion families.',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">Instrument Families</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                • <strong>Strings</strong>: Violin, Viola, Cello, Double Bass, Harp.<br>
-                • <strong>Woodwind</strong>: Flute, Clarinet, Oboe, Bassoon, Saxophone.<br>
-                • <strong>Brass</strong>: Trumpet, French Horn, Trombone, Tuba.<br>
-                • <strong>Percussion</strong>: Snare drum, Bass drum, Cymbals, Timpani, Xylophone.
-              </p>
+              <div class="space-y-4">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
+                  <h4 class="font-bold text-emerald-950 text-base mb-1">What is Timbre (Tone Colour)?</h4>
+                  <p class="text-xs sm:text-sm text-emerald-900 leading-relaxed">
+                    Tone colour (timbre) is the unique quality or character of a musical sound that allows your ear to distinguish one instrument from another, even when playing the same pitch and volume!
+                  </p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="p-3 bg-white border border-slate-200 rounded-2xl">
+                    <h5 class="font-bold text-emerald-700 text-xs uppercase mb-1">🎻 Strings</h5>
+                    <p class="text-xs text-slate-600">Violin, Viola, Cello, Double Bass, Harp. Warm, resonant, bowed or plucked.</p>
+                  </div>
+                  <div class="p-3 bg-white border border-slate-200 rounded-2xl">
+                    <h5 class="font-bold text-emerald-700 text-xs uppercase mb-1">🪵 Woodwinds</h5>
+                    <p class="text-xs text-slate-600">Flute, Clarinet, Oboe, Bassoon, Saxophone. Breathy, hollow, reed vibrations.</p>
+                  </div>
+                  <div class="p-3 bg-white border border-slate-200 rounded-2xl">
+                    <h5 class="font-bold text-emerald-700 text-xs uppercase mb-1">🎺 Brass</h5>
+                    <p class="text-xs text-slate-600">Trumpet, French Horn, Trombone, Tuba. Bright, metallic, lip-buzzing vibration.</p>
+                  </div>
+                  <div class="p-3 bg-white border border-slate-200 rounded-2xl">
+                    <h5 class="font-bold text-emerald-700 text-xs uppercase mb-1">🥁 Percussion</h5>
+                    <p class="text-xs text-slate-600">Snare, Bass Drum, Cymbals, Timpani, Xylophone. Struck, shaken, or scraped.</p>
+                  </div>
+                </div>
+              </div>
             `,
             quiz: [
               { q: 'Which family does the Cello belong to?', options: ['Strings', 'Woodwind', 'Brass', 'Percussion'], correct: 0 },
@@ -521,12 +684,28 @@
             readTime: '4 min read',
             summary: 'Single line vs melody with accompaniment vs independent intertwining lines.',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">Types of Texture</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                • <strong>Monophonic</strong>: A single unaccompanied melodic line (solo flute or unison singing).<br>
-                • <strong>Homophonic</strong>: A clear melody supported by chordal accompaniment (e.g., singer with acoustic guitar).<br>
-                • <strong>Polyphonic</strong>: Two or more independent melodic lines playing at the same time (e.g., a Bach Fugue or a vocal round).
-              </p>
+              <div class="space-y-4">
+                <div class="bg-rose-50 border border-rose-200 rounded-2xl p-5">
+                  <h4 class="font-bold text-rose-950 text-base mb-1">How Layers Combine</h4>
+                  <p class="text-xs sm:text-sm text-rose-900 leading-relaxed">
+                    Texture refers to the number of musical layers heard at once and how they relate to each other.
+                  </p>
+                </div>
+                <div class="space-y-3">
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl">
+                    <h5 class="font-bold text-rose-700 text-sm mb-1">1. Monophonic Texture</h5>
+                    <p class="text-xs text-slate-600">A single melodic line with no harmonic accompaniment (e.g. solo flute or unison choir singing).</p>
+                  </div>
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl">
+                    <h5 class="font-bold text-rose-700 text-sm mb-1">2. Homophonic Texture</h5>
+                    <p class="text-xs text-slate-600">A clear primary melody supported by harmonic chords (e.g. a singer backed by guitar strumming).</p>
+                  </div>
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl">
+                    <h5 class="font-bold text-rose-700 text-sm mb-1">3. Polyphonic Texture</h5>
+                    <p class="text-xs text-slate-600">Two or more independent melodic lines playing simultaneously (e.g. a vocal round like "Row Row Row Your Boat" or a Bach fugue).</p>
+                  </div>
+                </div>
+              </div>
             `,
             quiz: [
               { q: 'What is a single melodic line with no chordal accompaniment called?', options: ['Monophonic', 'Homophonic', 'Polyphonic', 'Heterophonic'], correct: 0 },
@@ -552,16 +731,35 @@
             readTime: '4 min read',
             summary: 'Architectural blueprints of compositions.',
             content: `
-              <h4 class="font-bold text-slate-800 text-base mb-2">Common Formal Structures</h4>
-              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                • <strong>Binary Form (A - B)</strong>: Two contrasting sections.<br>
-                • <strong>Ternary Form (A - B - A)</strong>: Statement, contrast, and return to original theme.<br>
-                • <strong>Rondo Form (A - B - A - C - A)</strong>: Recurring main theme interspersed with contrasting episodes.<br>
-                • <strong>Verse - Chorus</strong>: The standard blueprint for contemporary pop and rock songwriting.
-              </p>
+              <div class="space-y-4">
+                <div class="bg-cyan-50 border border-cyan-200 rounded-2xl p-5">
+                  <h4 class="font-bold text-cyan-950 text-base mb-1">The Architecture of Music</h4>
+                  <p class="text-xs sm:text-sm text-cyan-900 leading-relaxed">
+                    Structure (or form) is the overall design and organization of musical sections using repetition, contrast, and variation.
+                  </p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl text-center">
+                    <span class="font-black text-cyan-600 text-lg block mb-1">Binary Form</span>
+                    <span class="text-xs font-bold text-slate-800 block">A - B</span>
+                    <p class="text-[11px] text-slate-500 mt-1">Two contrasting sections.</p>
+                  </div>
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl text-center">
+                    <span class="font-black text-cyan-600 text-lg block mb-1">Ternary Form</span>
+                    <span class="text-xs font-bold text-slate-800 block">A - B - A</span>
+                    <p class="text-[11px] text-slate-500 mt-1">Statement, contrast, return.</p>
+                  </div>
+                  <div class="p-4 bg-white border border-slate-200 rounded-2xl text-center">
+                    <span class="font-black text-cyan-600 text-lg block mb-1">Rondo Form</span>
+                    <span class="text-xs font-bold text-slate-800 block">A - B - A - C - A</span>
+                    <p class="text-[11px] text-slate-500 mt-1">Recurring main theme.</p>
+                  </div>
+                </div>
+              </div>
             `,
             quiz: [
-              { q: 'Which musical form has an A - B - A structure?', options: ['Ternary Form', 'Binary Form', 'Rondo Form', '12-Bar Blues'], correct: 0 }
+              { q: 'Which musical form has an A - B - A structure?', options: ['Ternary Form', 'Binary Form', 'Rondo Form', '12-Bar Blues'], correct: 0 },
+              { q: 'In Rondo Form (ABACA), which section consistently returns?', options: ['Section A', 'Section B', 'Section C', 'None'], correct: 0 }
             ]
           }
         ]
@@ -672,13 +870,16 @@
       if (modal) modal.classList.add('hidden');
     }
 
-    // ==========================================
-    // STATE & APP ROUTER
-    // ==========================================
-    window.state = {
-      stats: { tokens: 10, testsTaken: 0 },
-      inventory: [],
-      testHistory: []
+    let state = { stats: { tokens: 10, testsTaken: 0 }, inventory: [], testHistory: [] };
+
+    // Protected Navigation Helper
+    window.protectedNavigate = function(view, param = null) {
+      if (!app.currentUser) {
+        showAppModal('Login Required 🔒', 'Please sign in with your student or teacher account to access curriculum lessons, sound modules, and quizzes.', false);
+        app.navigate('login');
+        return;
+      }
+      app.navigate(view, param);
     };
 
     window.app = {
@@ -686,6 +887,14 @@
       currentView: 'home',
       currentParam: null,
       navigate: function(view, param = null) {
+        // Enforce login on all learning, modules, and shop views
+        const protectedViews = ['conceptsHub', 'conceptDetail', 'levelDetail', 'studentDash', 'teacherDash', 'rhythmModule', 'dictationChallenge', 'shop', 'studentTests'];
+        if (protectedViews.includes(view) && !this.currentUser) {
+          showAppModal('Login Required 🔒', 'Please sign in with your student or teacher account to access modules, games, and quizzes.', false);
+          view = 'login';
+          param = null;
+        }
+
         this.currentView = view;
         this.currentParam = param;
         const container = document.getElementById('app-viewport');
@@ -891,6 +1100,7 @@
     // VIEW RENDERING: HOME
     // ==========================================
     function renderHomeView(container) {
+      const isLoggedIn = !!app.currentUser;
       container.innerHTML = `
         <div class="space-y-8">
           <!-- Hero Section -->
@@ -906,15 +1116,21 @@
                 Explore all 6 core musical concepts, test your ears with live synthesis, complete rhythm dictations, and climb the live classroom leaderboard!
               </p>
               <div class="flex flex-wrap gap-3">
-                <button onclick="app.navigate('conceptsHub')" class="px-6 py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
-                  <i class="fa-solid fa-book-open"></i> Browse All 6 Concepts
-                </button>
-                <button onclick="app.navigate('rhythmModule')" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
-                  <i class="fa-solid fa-drum"></i> 8-Beat Drum Module
-                </button>
-                <button onclick="app.navigate('dictationChallenge')" class="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold rounded-2xl backdrop-blur-sm transition-all flex items-center gap-2">
-                  <i class="fa-solid fa-headphones"></i> Dictation Challenge
-                </button>
+                ${isLoggedIn ? `
+                  <button onclick="protectedNavigate('conceptsHub')" class="px-6 py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-book-open"></i> Browse All 6 Concepts
+                  </button>
+                  <button onclick="openCurrentPortal()" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-gauge-high"></i> Go to My Dashboard
+                  </button>
+                ` : `
+                  <button onclick="app.navigate('login')" class="px-6 py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Login to Access Modules
+                  </button>
+                  <button onclick="scrollToStudentLeaderboard()" class="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold rounded-2xl backdrop-blur-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400"></i> View Classroom Leaderboard
+                  </button>
+                `}
               </div>
             </div>
             <div class="absolute right-0 bottom-0 opacity-10 sm:opacity-20 pointer-events-none translate-x-12 translate-y-12">
@@ -927,15 +1143,22 @@
             <div class="flex items-center justify-between mb-4">
               <div>
                 <h2 class="text-2xl font-black text-slate-800">The 6 Musical Concepts</h2>
-                <p class="text-xs sm:text-sm text-slate-500">Select any concept to explore graded levels, interactive theory, and tests</p>
+                <p class="text-xs sm:text-sm text-slate-500">
+                  ${isLoggedIn ? 'Select any concept to open lessons, interactive audio tools, and quizzes' : 'Sign in to access graded lessons, audio synthesizers, and assessments'}
+                </p>
               </div>
-              <button onclick="app.navigate('conceptsHub')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+              <button onclick="protectedNavigate('conceptsHub')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
                 View All &rarr;
               </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               ${conceptsCurriculum.map(c => `
-                <div onclick="app.navigate('conceptDetail', '${c.id}')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:border-indigo-400 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between">
+                <div onclick="protectedNavigate('conceptDetail', '${c.id}')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:border-indigo-400 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden">
+                  ${!isLoggedIn ? `
+                    <div class="absolute top-4 right-4 text-xs font-bold text-slate-400 flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-full">
+                      <i class="fa-solid fa-lock text-slate-400"></i> Locked
+                    </div>
+                  ` : ''}
                   <div>
                     <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform shadow-md">
                       <i class="fa-solid ${c.icon}"></i>
@@ -945,7 +1168,9 @@
                   </div>
                   <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span class="font-bold ${c.textColor}">${c.levels.length} Graded Levels</span>
-                    <span class="font-bold text-slate-400 group-hover:text-indigo-600">Start &rarr;</span>
+                    <span class="font-bold text-slate-400 group-hover:text-indigo-600 flex items-center gap-1">
+                      ${isLoggedIn ? 'Launch &rarr;' : '<i class="fa-solid fa-lock text-[10px]"></i> Login to Unlock'}
+                    </span>
                   </div>
                 </div>
               `).join('')}
@@ -954,26 +1179,50 @@
 
           <!-- Feature Quick-Launch Cards -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div onclick="app.navigate('rhythmModule')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer">
+            <div onclick="protectedNavigate('levelDetail', { conceptId: 'duration', levelNum: 1 })" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer relative">
+              ${!isLoggedIn ? `
+                <div class="absolute top-4 right-4 text-xs font-bold text-slate-400 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
+                  <i class="fa-solid fa-lock text-[10px]"></i>
+                </div>
+              ` : ''}
               <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-3">
                 <i class="fa-solid fa-drum"></i>
               </div>
               <h3 class="font-bold text-lg text-slate-800 mb-1">8-Beat Drum Module</h3>
-              <p class="text-xs text-slate-500">Toggle Crotchet (♩) and Quavers (♫) with real kick and snare drums.</p>
+              <p class="text-xs text-slate-500">Toggle Crotchet (♩) and Quavers (♫) with real kick and snare drums in Duration: Level 1.</p>
+              <div class="mt-3 text-xs font-bold ${isLoggedIn ? 'text-indigo-600' : 'text-slate-400'}">
+                ${isLoggedIn ? 'Play Now &rarr;' : 'Login Required 🔒'}
+              </div>
             </div>
-            <div onclick="app.navigate('dictationChallenge')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer">
+            <div onclick="protectedNavigate('levelDetail', { conceptId: 'duration', levelNum: 2 })" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer relative">
+              ${!isLoggedIn ? `
+                <div class="absolute top-4 right-4 text-xs font-bold text-slate-400 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
+                  <i class="fa-solid fa-lock text-[10px]"></i>
+                </div>
+              ` : ''}
               <div class="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center text-xl mb-3">
                 <i class="fa-solid fa-headphones"></i>
               </div>
               <h3 class="font-bold text-lg text-slate-800 mb-1">Dictation Challenge</h3>
-              <p class="text-xs text-slate-500">Listen to mystery 8-beat rhythms and identify matching musical notations.</p>
+              <p class="text-xs text-slate-500">Listen to mystery 8-beat rhythms and identify matching musical notations in Duration: Level 2.</p>
+              <div class="mt-3 text-xs font-bold ${isLoggedIn ? 'text-indigo-600' : 'text-slate-400'}">
+                ${isLoggedIn ? 'Play Now &rarr;' : 'Login Required 🔒'}
+              </div>
             </div>
-            <div onclick="app.navigate('shop')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer">
+            <div onclick="protectedNavigate('shop')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer relative">
+              ${!isLoggedIn ? `
+                <div class="absolute top-4 right-4 text-xs font-bold text-slate-400 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
+                  <i class="fa-solid fa-lock text-[10px]"></i>
+                </div>
+              ` : ''}
               <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-3">
                 <i class="fa-solid fa-store"></i>
               </div>
               <h3 class="font-bold text-lg text-slate-800 mb-1">Classroom Rewards Shop</h3>
               <p class="text-xs text-slate-500">Use tokens earned from tests to unlock equipment and avatar badges.</p>
+              <div class="mt-3 text-xs font-bold ${isLoggedIn ? 'text-indigo-600' : 'text-slate-400'}">
+                ${isLoggedIn ? 'Visit Shop &rarr;' : 'Login Required 🔒'}
+              </div>
             </div>
           </div>
 
@@ -1143,6 +1392,199 @@
           </div>
         </div>
       `;
+
+      // Mount embedded interactive tool if present in this level
+      const toolTarget = document.getElementById('embedded-tool-container');
+      if (toolTarget && level.interactiveTool) {
+        if (level.interactiveTool === 'drumModule') {
+          mountEmbeddedDrumModule(toolTarget);
+        } else if (level.interactiveTool === 'dictationChallenge') {
+          mountEmbeddedDictation(toolTarget);
+        } else if (level.interactiveTool === 'pitchKeyboard') {
+          mountEmbeddedPitchKeyboard(toolTarget);
+        } else if (level.interactiveTool === 'dynamicsSimulator') {
+          mountEmbeddedDynamicsSimulator(toolTarget);
+        }
+      }
+    }
+
+    // ==========================================
+    // EMBEDDED INTERACTIVE MODULES & LABS
+    // ==========================================
+    function mountEmbeddedDrumModule(container) {
+      container.innerHTML = `
+        <div class="bg-slate-950 p-5 rounded-2xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 text-white">
+            <span class="text-xs font-bold text-slate-300">
+              <span class="text-blue-400">Odd Beats = KICK (♩/♫)</span> • 
+              <span class="text-rose-400">Even Beats = SNARE (♩/♫)</span>
+            </span>
+            <div class="flex items-center gap-2">
+              <button onclick="playCurrentPattern()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-play"></i> Play Pattern
+              </button>
+              <button onclick="randomizePattern()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all">
+                <i class="fa-solid fa-shuffle"></i> Random
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-8 gap-1.5 sm:gap-2 overflow-x-auto min-w-[580px] py-1">
+            ${drumPattern.map((p, idx) => {
+              const isKick = idx % 2 === 0;
+              const isCrotchet = p.type === 'crotchet';
+              const colorClass = isKick
+                ? 'border-blue-500/60 bg-blue-950/50 text-blue-400 hover:bg-blue-900/60'
+                : 'border-rose-500/60 bg-rose-950/50 text-rose-400 hover:bg-rose-900/60';
+              return `
+                <button onclick="togglePatternBeat(${idx})" class="flex flex-col items-center justify-between p-2 rounded-xl border-2 transition-all cursor-pointer h-28 ${colorClass}">
+                  <span class="text-[9px] uppercase font-bold text-slate-400">
+                    B${idx + 1}: ${isKick ? 'KICK' : 'SNARE'}
+                  </span>
+                  <span class="text-2xl font-black py-0.5">
+                    ${isCrotchet ? '♩' : '♫'}
+                  </span>
+                  <div class="text-center">
+                    <span class="text-[10px] font-bold block text-white">${isCrotchet ? 'Crotchet' : 'Quavers'}</span>
+                    <span class="text-[8px] text-slate-400">${isCrotchet ? '1 hit' : '2 hits'}</span>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function mountEmbeddedDictation(container) {
+      generateMysteryPattern();
+      container.innerHTML = `
+        <div class="bg-slate-900 text-white p-5 rounded-2xl space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-300">Listen carefully and identify the matching notation</span>
+            <div class="flex items-center gap-3 text-xs font-bold bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+              <span>Streak: <strong id="dictation-streak" class="text-amber-400">${streakCount}</strong></span>
+              <span>Best: <strong id="dictation-best" class="text-emerald-400">${bestStreak}</strong></span>
+            </div>
+          </div>
+
+          <div class="text-center py-4 bg-slate-950 rounded-2xl border border-slate-800">
+            <button id="hear-mystery-btn" onclick="playMysteryAudio()" class="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-lg transition-all text-sm flex items-center gap-2 mx-auto">
+              <i class="fa-solid fa-volume-high"></i> Hear Mystery Rhythm
+            </button>
+            <p id="dictation-status-msg" class="text-[11px] text-slate-400 font-semibold mt-2">
+              Tap button above to listen to the 8-beat pattern.
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            ${mysteryOptions.map((opt, optIdx) => {
+              const letter = String.fromCharCode(65 + optIdx);
+              return `
+                <button onclick="handleOptionSelect(${optIdx})" class="w-full bg-slate-950 hover:bg-slate-800 p-3 rounded-xl border border-slate-800 hover:border-indigo-500 transition-all flex items-center gap-3 text-left group">
+                  <div class="w-8 h-8 rounded-lg bg-slate-800 group-hover:bg-indigo-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                    ${letter}
+                  </div>
+                  <div class="flex-1 grid grid-cols-8 gap-1">
+                    ${opt.map((beatType, bIdx) => {
+                      const isKick = bIdx % 2 === 0;
+                      const isCrotchet = beatType === 1;
+                      const cardStyle = isKick
+                        ? 'bg-blue-950/60 border-blue-600/50 text-blue-400'
+                        : 'bg-rose-950/60 border-rose-600/50 text-rose-400';
+                      return `
+                        <div class="flex flex-col items-center justify-center py-1.5 px-0.5 rounded-lg border ${cardStyle}">
+                          <span class="text-base sm:text-lg font-black leading-none mb-0.5">
+                            ${isCrotchet ? '♩' : '♫'}
+                          </span>
+                          <span class="text-[9px] font-bold text-slate-400">${bIdx + 1}</span>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function mountEmbeddedPitchKeyboard(container) {
+      const keys = [
+        { note: 'C4', freq: 261.63 },
+        { note: 'D4', freq: 293.66 },
+        { note: 'E4', freq: 329.63 },
+        { note: 'F4', freq: 349.23 },
+        { note: 'G4', freq: 392.00 },
+        { note: 'A4', freq: 440.00 },
+        { note: 'B4', freq: 493.88 },
+        { note: 'C5', freq: 523.25 }
+      ];
+      container.innerHTML = `
+        <div class="bg-slate-950 p-5 rounded-2xl text-center space-y-4">
+          <p class="text-xs text-slate-400">Play the keys to hear pitch frequencies ascending by step from Low C4 to High C5</p>
+          <div class="flex justify-center gap-1.5 sm:gap-2">
+            ${keys.map(k => `
+              <button onclick="playTonePitch(${k.freq})" class="w-10 sm:w-12 h-32 bg-white text-slate-900 font-black rounded-b-xl hover:bg-indigo-100 active:bg-indigo-200 transition-all flex flex-col justify-end pb-3 text-xs shadow-md">
+                <span>${k.note}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function mountEmbeddedDynamicsSimulator(container) {
+      container.innerHTML = `
+        <div class="bg-slate-950 text-white p-5 rounded-2xl text-center space-y-4">
+          <p class="text-xs text-slate-300">Preview acoustic decibels across classical dynamic levels</p>
+          <div class="flex flex-wrap justify-center gap-2">
+            <button onclick="playToneWithGain(0.1)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl text-amber-400">
+              Piano (p) - Soft
+            </button>
+            <button onclick="playToneWithGain(0.35)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl text-amber-400">
+              Mezzo-Forte (mf) - Med Loud
+            </button>
+            <button onclick="playToneWithGain(0.75)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl text-amber-400">
+              Forte (f) - Loud
+            </button>
+            <button onclick="playCrescendoDemo()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl">
+              <i class="fa-solid fa-play"></i> Hear Crescendo (<)
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function playToneWithGain(volume) {
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.5);
+    }
+
+    function playCrescendoDemo() {
+      const ctx = getAudioContext();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(330, now);
+      gain.gain.setValueAtTime(0.02, now);
+      gain.gain.linearRampToValueAtTime(0.7, now + 1.8);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 2.2);
     }
 
     function handleLevelQuizSubmit(e, conceptId, levelNum) {
@@ -1615,30 +2057,16 @@
       drumPattern[idx].type = drumPattern[idx].type === 'crotchet' ? 'quavers' : 'crotchet';
       const isKick = idx % 2 === 0;
       playDrumSound(isKick ? 'kick' : 'snare');
-      renderRhythmModule(document.getElementById('app-viewport'));
+      const container = document.getElementById('embedded-tool-container');
+      if (container) mountEmbeddedDrumModule(container);
     }
 
     function randomizePattern() {
       drumPattern.forEach(p => {
         p.type = Math.random() > 0.5 ? 'crotchet' : 'quavers';
       });
-      renderRhythmModule(document.getElementById('app-viewport'));
-    }
-
-    async function playCurrentPattern() {
-      for (let i = 0; i < drumPattern.length; i++) {
-        const item = drumPattern[i];
-        const isKick = i % 2 === 0;
-        const soundType = isKick ? 'kick' : 'snare';
-
-        if (item.type === 'crotchet') {
-          playDrumSound(soundType);
-        } else {
-          playDrumSound(soundType);
-          setTimeout(() => playDrumSound(soundType), 240);
-        }
-        await new Promise(r => setTimeout(r, 480));
-      }
+      const container = document.getElementById('embedded-tool-container');
+      if (container) mountEmbeddedDrumModule(container);
     }
 
     // ==========================================
@@ -1773,7 +2201,8 @@
         showAppModal('❌ Not Quite', 'That was not the matching pattern. Listen carefully to the bass and snare beats and try again!', false);
       }
 
-      renderDictationChallenge(document.getElementById('app-viewport'));
+      const container = document.getElementById('embedded-tool-container');
+      if (container) mountEmbeddedDictation(container);
     }
 
     // ==========================================

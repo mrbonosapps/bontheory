@@ -5535,8 +5535,53 @@
             }
 
             window.closeEditStudentModal();
+            // Immediate real-time sync across scrolling ticker & leaderboards
             if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
-            app.navigate('teacherDash');
+            const activeView = (app.currentUser && app.currentUser.role === 'student') ? 'studentDash' : 'teacherDash';
+            app.navigate(activeView);
+        };
+
+        window.openDeleteStudentModal = function(userKey) {
+            const db = getAllUserRecords();
+            const rec = db[userKey];
+            if (!rec || !rec.currentUser) return;
+
+            const nameEl = document.getElementById('delete-student-name');
+            const keyInput = document.getElementById('delete-student-key');
+            const modal = document.getElementById('delete-student-modal');
+
+            if (nameEl) nameEl.textContent = rec.currentUser.name || 'this student';
+            if (keyInput) keyInput.value = userKey;
+            if (modal) modal.classList.remove('hidden');
+        };
+
+        window.closeDeleteStudentModal = function() {
+            const modal = document.getElementById('delete-student-modal');
+            if (modal) modal.classList.add('hidden');
+        };
+
+        window.confirmDeleteStudent = function() {
+            const keyInput = document.getElementById('delete-student-key');
+            if (!keyInput) return;
+            const targetKey = keyInput.value;
+
+            const db = getAllUserRecords();
+            if (db[targetKey]) {
+                delete db[targetKey];
+                localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
+            }
+
+            // Clear session pointer if the active session was deleted
+            const activeSession = localStorage.getItem(SESSION_STORAGE_KEY);
+            if (activeSession === targetKey) {
+                localStorage.removeItem(SESSION_STORAGE_KEY);
+            }
+
+            window.closeDeleteStudentModal();
+            // Immediate real-time sync across scrolling ticker & leaderboards
+            if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
+            const activeView = (app.currentUser && app.currentUser.role === 'student') ? 'studentDash' : 'teacherDash';
+            app.navigate(activeView);
         };
 
         window.openDeleteStudentModal = function(userKey) {

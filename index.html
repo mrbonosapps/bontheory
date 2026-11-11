@@ -98,16 +98,19 @@
 
         const state = {
             stats: { completedTests: 0, avgScore: 0, tokens: 0 },
-            inventory: []
+            inventory: [],
+            testResults: []
         };
+        window.state = state;
 
         // Helper to generate a unique key per user based on name and class
         function getUserRecordKey(user) {
             if (!user || !user.name) return null;
             const cleanName = (user.name || '').trim().toLowerCase();
             const cleanClass = (user.classGroup || '').trim().toLowerCase();
+            const cleanTeacher = (user.teacher || '').trim().toLowerCase();
             const role = user.role || 'student';
-            return `${role}::${cleanClass}::${cleanName}`;
+            return `${role}::${cleanTeacher}::${cleanClass}::${cleanName}`;
         }
 
         // Get the entire local dictionary of saved accounts
@@ -133,6 +136,7 @@
                     currentUser: app.currentUser,
                     stats: state.stats,
                     inventory: state.inventory,
+                    testResults: state.testResults || [],
                     lastActive: Date.now()
                 };
 
@@ -155,6 +159,7 @@
 
                 if (record.stats) Object.assign(state.stats, record.stats);
                 if (Array.isArray(record.inventory)) state.inventory = record.inventory;
+                state.testResults = Array.isArray(record.testResults) ? record.testResults : [];
                 if (record.currentUser) app.currentUser = record.currentUser;
 
                 return record;
@@ -488,14 +493,58 @@
                                     <button type="button" id="roleTeacher" onclick="setRole('teacher')" class="text-slate-500 hover:text-slate-800 rounded-xl py-2.5 font-bold transition">Teacher</button>
                                 </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Full Name</label>
-                                <input type="text" id="login-name" required class="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium text-slate-800" placeholder="e.g. Alex Smith">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="nameFieldsContainer">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">First Name</label>
+                                    <input type="text" id="login-firstname" required class="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium text-slate-800" placeholder="e.g. Alex">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Surname</label>
+                                    <input type="text" id="login-surname" required class="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium text-slate-800" placeholder="e.g. Smith">
+                                </div>
                             </div>
                             <div id="classContainer">
                                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Class / Year Group</label>
-                                <input type="text" id="login-class" class="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium text-slate-800" placeholder="e.g. 7A, 8B, 9, 10">
-                                <p class="text-[11px] text-slate-400 mt-1">Your music class or elective cohort</p>
+                                <select id="login-class" class="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium text-slate-800">
+                                    <optgroup label="Year 7">
+                                        <option value="7A">7A</option>
+                                        <option value="7B">7B</option>
+                                        <option value="7C">7C</option>
+                                        <option value="7D">7D</option>
+                                        <option value="7E">7E</option>
+                                        <option value="7F">7F</option>
+                                        <option value="7G">7G</option>
+                                        <option value="7H">7H</option>
+                                        <option value="7I">7I</option>
+                                        <option value="7J">7J</option>
+                                    </optgroup>
+                                    <optgroup label="Year 8">
+                                        <option value="8A">8A</option>
+                                        <option value="8B">8B</option>
+                                        <option value="8C">8C</option>
+                                        <option value="8D">8D</option>
+                                        <option value="8E">8E</option>
+                                        <option value="8F">8F</option>
+                                        <option value="8G">8G</option>
+                                        <option value="8H">8H</option>
+                                        <option value="8I">8I</option>
+                                        <option value="8J">8J</option>
+                                    </optgroup>
+                                    <optgroup label="Elective Classes">
+                                        <option value="Year 9">Year 9 Music Elective</option>
+                                        <option value="Year 10">Year 10 Music Elective</option>
+                                        <option value="Year 11">Year 11 Music 1</option>
+                                        <option value="Year 12">Year 12 Music 1 / 2</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div id="teacherSelectContainer">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5" id="teacherSelectLabel">Teacher</label>
+                                <select id="login-teacher" class="w-full px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium text-slate-800">
+                                    <option value="Mr B">Mr B</option>
+                                    <option value="Mr H">Mr H</option>
+                                    <option value="Mr T">Mr T</option>
+                                </select>
                             </div>
                             <div id="passwordContainer" class="hidden">
                                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Teacher Passcode</label>
@@ -4024,16 +4073,167 @@
 
             teacherDash() {
                 const sheetUrl = window.getTeacherSpreadsheetUrl();
+                const currentTeacher = app.currentUser ? app.currentUser.name : 'Teacher';
+                const db = getAllUserRecords();
+                const studentList = Object.keys(db)
+                    .map(k => db[k])
+                    .filter(rec => rec.currentUser && rec.currentUser.role === 'student');
+
+                const myStudents = studentList.filter(s => (s.currentUser.teacher || '').toLowerCase() === currentTeacher.toLowerCase());
+                const displayList = myStudents.length > 0 ? myStudents : studentList;
+
+                // Flatten all test submissions across displaying students
+                const allRecentTests = [];
+                displayList.forEach(rec => {
+                    const u = rec.currentUser || {};
+                    const results = Array.isArray(rec.testResults) ? rec.testResults : [];
+                    results.forEach(res => {
+                        allRecentTests.push({
+                            studentName: u.name || 'Anonymous',
+                            classGroup: u.classGroup || 'N/A',
+                            teacher: u.teacher || 'Unassigned',
+                            area: res.area || 'General',
+                            level: res.level || 1,
+                            score: res.score || 0,
+                            total: res.total || 0,
+                            pct: res.percentage || 0,
+                            passed: res.passed,
+                            timestamp: res.timestamp || Date.now()
+                        });
+                    });
+                });
+                // Sort tests by newest first
+                allRecentTests.sort((a, b) => b.timestamp - a.timestamp);
+
                 return `
-                <div class="p-8 max-w-6xl mx-auto fade-in">
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
-                        <h2 class="text-3xl font-extrabold text-slate-800">Teacher Markbook & Results</h2>
-                        <a href="${sheetUrl}" target="_blank" class="bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-xl">Open Results Spreadsheet</a>
+                <div class="p-8 max-w-6xl mx-auto fade-in pb-20">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6 border-b pb-4">
+                        <div>
+                            <h2 class="text-3xl font-extrabold text-slate-800">Teacher Markbook & Results</h2>
+                            <p class="text-slate-500 font-medium text-sm mt-1">Logged in as: <span class="font-bold text-indigo-600">${currentTeacher}</span></p>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="${sheetUrl}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition inline-flex items-center gap-2 text-sm">
+                                <i class="fa-solid fa-file-excel"></i> Live Google Sheet
+                            </a>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
-                        <h3 class="text-2xl font-bold text-slate-800 mb-2">Live Class Results Spreadsheet</h3>
-                        <p class="text-slate-500 mb-6 text-sm">All incoming student test results write directly to this cloud spreadsheet.</p>
-                        <a href="${sheetUrl}" target="_blank" class="bg-emerald-600 text-white font-extrabold py-3 px-8 rounded-xl inline-block">Open Google Sheet</a>
+
+                    <!-- Summary Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-xs font-bold uppercase text-slate-400">Total Registered Students</span>
+                            <div class="text-3xl font-black text-slate-800 mt-1">${displayList.length}</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-xs font-bold uppercase text-slate-400">Total Tests Recorded</span>
+                            <div class="text-3xl font-black text-blue-600 mt-1">${allRecentTests.length}</div>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-xs font-bold uppercase text-slate-400">Total Tokens Earned</span>
+                            <div class="text-3xl font-black text-amber-500 mt-1">${displayList.reduce((acc, s) => acc + (s.stats?.tokens || 0), 0)}</div>
+                        </div>
+                    </div>
+
+                    <!-- Individual Test Submissions Log Table -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-check text-emerald-600"></i>
+                                <span>Recent Test Submissions & Marks</span>
+                            </h3>
+                            <span class="text-xs text-slate-400 font-semibold">${allRecentTests.length} Submissions Logged</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 text-xs uppercase tracking-wider">
+                                        <th class="py-3.5 px-4">Student</th>
+                                        <th class="py-3.5 px-4">Class</th>
+                                        <th class="py-3.5 px-4">Topic / Area</th>
+                                        <th class="py-3.5 px-4">Level</th>
+                                        <th class="py-3.5 px-4">Score</th>
+                                        <th class="py-3.5 px-4">Percentage</th>
+                                        <th class="py-3.5 px-4">Status</th>
+                                        <th class="py-3.5 px-4">Date Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${allRecentTests.length === 0 ? `
+                                        <tr>
+                                            <td colspan="8" class="py-8 text-center text-slate-400 font-medium">No test submissions recorded yet.</td>
+                                        </tr>
+                                    ` : allRecentTests.map(t => {
+                                        const dateStr = new Date(t.timestamp).toLocaleDateString() + ' ' + new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                        return `
+                                        <tr class="hover:bg-slate-50/80 transition">
+                                            <td class="py-3.5 px-4 font-bold text-slate-800">${t.studentName}</td>
+                                            <td class="py-3.5 px-4"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold text-xs">${t.classGroup}</span></td>
+                                            <td class="py-3.5 px-4 capitalize font-semibold text-slate-700">${t.area}</td>
+                                            <td class="py-3.5 px-4 font-bold text-slate-800">Level ${t.level}</td>
+                                            <td class="py-3.5 px-4 font-mono font-bold text-slate-800">${t.score} / ${t.total}</td>
+                                            <td class="py-3.5 px-4 font-black ${t.pct >= 50 ? 'text-emerald-600' : 'text-red-500'}">${t.pct}%</td>
+                                            <td class="py-3.5 px-4">
+                                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${t.passed ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">
+                                                    ${t.passed ? 'PASSED' : 'RETRY'}
+                                                </span>
+                                            </td>
+                                            <td class="py-3.5 px-4 text-xs text-slate-400">${dateStr}</td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Student Profiles Table -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                                <i class="fa-solid fa-users text-indigo-600"></i>
+                                <span>Student Roster (${currentTeacher}'s Classes)</span>
+                            </h3>
+                            <span class="text-xs text-slate-400 font-semibold">${displayList.length} Accounts Found</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 text-xs uppercase tracking-wider">
+                                        <th class="py-3.5 px-4">Student Name</th>
+                                        <th class="py-3.5 px-4">Class</th>
+                                        <th class="py-3.5 px-4">Teacher</th>
+                                        <th class="py-3.5 px-4">Tokens</th>
+                                        <th class="py-3.5 px-4">Tests Passed</th>
+                                        <th class="py-3.5 px-4">Items Owned</th>
+                                        <th class="py-3.5 px-4">Last Active</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${displayList.length === 0 ? `
+                                        <tr>
+                                            <td colspan="7" class="py-8 text-center text-slate-400 font-medium">No students registered under ${currentTeacher} yet.</td>
+                                        </tr>
+                                    ` : displayList.map(rec => {
+                                        const u = rec.currentUser || {};
+                                        const st = rec.stats || {};
+                                        const inv = rec.inventory || [];
+                                        const lastAct = rec.lastActive ? new Date(rec.lastActive).toLocaleDateString() : 'N/A';
+                                        return `
+                                        <tr class="hover:bg-slate-50/80 transition">
+                                            <td class="py-3.5 px-4 font-bold text-slate-800">${u.name || 'Anonymous'}</td>
+                                            <td class="py-3.5 px-4"><span class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-md font-bold text-xs">${u.classGroup || 'N/A'}</span></td>
+                                            <td class="py-3.5 px-4 text-slate-600 font-medium">${u.teacher || 'Unassigned'}</td>
+                                            <td class="py-3.5 px-4"><span class="font-extrabold text-amber-600"><i class="fa-solid fa-coins text-xs mr-1 text-amber-500"></i>${st.tokens || 0}</span></td>
+                                            <td class="py-3.5 px-4"><span class="font-bold text-blue-600">${st.completedTests || 0}</span></td>
+                                            <td class="py-3.5 px-4 text-slate-600">${inv.length}</td>
+                                            <td class="py-3.5 px-4 text-slate-400 text-xs">${lastAct}</td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 `;
@@ -5959,18 +6159,18 @@
             if (qNum === 1) {
                 if (state.q1Answered) return;
                 state.q1Answered = true;
-                const isCorrect = (selectedAnswer === 'Bar 2');
+                const isCorrect = (selectedAnswer === 'Bar 3');
                 if (isCorrect) {
                     window.addTokens(1);
-                    fb.innerHTML = '<span class="text-emerald-600">Correct! Bar 2 has the engraving error (+1 token).</span>';
+                    fb.innerHTML = '<span class="text-emerald-600">Correct! Bar 3 has the engraving error (+1 token).</span>';
                 } else {
-                    fb.innerHTML = '<span class="text-red-500">Incorrect! The error is in Bar 2.</span>';
+                    fb.innerHTML = '<span class="text-red-500">Incorrect! The error is in Bar 3.</span>';
                 }
                 for (let i = 1; i <= 4; i++) {
                     const btn = document.getElementById(`bonus-q1-btn-${i}`);
                     if (btn) {
                         btn.disabled = true;
-                        if (i === 2) {
+                        if (i === 3) {
                             btn.classList.remove('border-slate-200');
                             btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
                         } else if (!isCorrect && selectedAnswer === `Bar ${i}`) {
@@ -7533,35 +7733,54 @@
             const roleTeacher = document.getElementById('roleTeacher');
             const passContainer = document.getElementById('passwordContainer');
             const classContainer = document.getElementById('classContainer');
+            const nameFields = document.getElementById('nameFieldsContainer');
+            const teacherSelect = document.getElementById('teacherSelectContainer');
+            const teacherLabel = document.getElementById('teacherSelectLabel');
+
             if (roleStudent && roleTeacher) {
                 if (role === 'student') {
-                    roleStudent.className = 'bg-white shadow-sm text-blue-600 rounded-lg py-2 font-bold transition';
-                    roleTeacher.className = 'text-gray-500 hover:text-gray-700 rounded-lg py-2 font-bold transition';
+                    roleStudent.className = 'bg-white shadow-sm text-blue-600 rounded-xl py-2.5 font-bold transition';
+                    roleTeacher.className = 'text-slate-500 hover:text-slate-800 rounded-xl py-2.5 font-bold transition';
                     if (classContainer) classContainer.classList.remove('hidden');
                     if (passContainer) passContainer.classList.add('hidden');
+                    if (nameFields) nameFields.classList.remove('hidden');
+                    if (teacherLabel) teacherLabel.textContent = "Teacher";
                 } else {
-                    roleTeacher.className = 'bg-white shadow-sm text-blue-600 rounded-lg py-2 font-bold transition';
-                    roleStudent.className = 'text-gray-500 hover:text-gray-700 rounded-lg py-2 font-bold transition';
+                    roleTeacher.className = 'bg-white shadow-sm text-blue-600 rounded-xl py-2.5 font-bold transition';
+                    roleStudent.className = 'text-slate-500 hover:text-slate-800 rounded-xl py-2.5 font-bold transition';
                     if (classContainer) classContainer.classList.add('hidden');
                     if (passContainer) passContainer.classList.remove('hidden');
+                    if (nameFields) nameFields.classList.add('hidden');
+                    if (teacherLabel) teacherLabel.textContent = "Select Your Teacher Profile";
                 }
             }
         };
 
         window.handleLogin = function() {
-            const name = document.getElementById('login-name')?.value.trim();
-            if (!name) return;
-            const studentClass = document.getElementById('login-class')?.value.trim() || '';
             const role = window.loginRole || 'student';
+            const teacherChoice = document.getElementById('login-teacher')?.value || 'Mr B';
+
             if (role === 'teacher') {
                 const pass = document.getElementById('login-passcode')?.value;
                 if (pass !== 'Rocky') {
                     document.getElementById('login-error')?.classList.remove('hidden');
                     return;
                 }
-                app.currentUser = { name, role: 'teacher', classGroup: 'Staff' };
+                app.currentUser = { name: teacherChoice, role: 'teacher', classGroup: 'Staff', teacher: teacherChoice };
             } else {
-                app.currentUser = { name, role: 'student', classGroup: studentClass };
+                const firstName = document.getElementById('login-firstname')?.value.trim();
+                const surname = document.getElementById('login-surname')?.value.trim();
+                if (!firstName || !surname) return;
+                const studentClass = document.getElementById('login-class')?.value.trim() || '7A';
+                const fullName = `${firstName} ${surname}`;
+                app.currentUser = { 
+                    name: fullName, 
+                    firstName, 
+                    surname, 
+                    role: 'student', 
+                    classGroup: studentClass, 
+                    teacher: teacherChoice 
+                };
             }
 
             // Look up existing profile for this specific user or initialise clean progress
@@ -7572,6 +7791,7 @@
                 // New user: fresh state
                 state.stats = { completedTests: 0, avgScore: 0, tokens: 0 };
                 state.inventory = [];
+                state.testResults = [];
             }
 
             saveUserState();
@@ -7589,6 +7809,7 @@
             app.currentUser = null;
             state.stats = { completedTests: 0, avgScore: 0, tokens: 0 };
             state.inventory = [];
+            state.testResults = [];
             try {
                 // Clear active session pointer so next session starts at login screen
                 localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -7609,20 +7830,34 @@
 
         window.submitQuizAnswer = function() {
             if (!window.quizState || window.quizState.selectedOption === null) return;
-            const state = window.quizState;
-            const q = state.questions[state.currentIndex];
-            state.userAnswers.push(state.selectedOption);
-            if (state.selectedOption === q.a) {
-                state.score++;
+            const stateObj = window.quizState;
+            const q = stateObj.questions[stateObj.currentIndex];
+            stateObj.userAnswers.push(stateObj.selectedOption);
+            if (stateObj.selectedOption === q.a) {
+                stateObj.score++;
                 window.addTokens(10);
             }
-            state.currentIndex++;
-            state.selectedOption = null;
+            stateObj.currentIndex++;
+            stateObj.selectedOption = null;
 
-            if (state.currentIndex >= state.questions.length) {
-                state.finished = true;
-                if (state.type === 'test') {
-                    window.state.stats.completedTests = (window.state.stats.completedTests || 0) + 1;
+            if (stateObj.currentIndex >= stateObj.questions.length) {
+                stateObj.finished = true;
+                if (stateObj.type === 'test') {
+                    const pct = Math.round((stateObj.score / stateObj.questions.length) * 100);
+                    const isPass = pct >= 50;
+
+                    if (!Array.isArray(state.testResults)) state.testResults = [];
+                    state.testResults.push({
+                        area: stateObj.area,
+                        level: stateObj.level,
+                        score: stateObj.score,
+                        total: stateObj.questions.length,
+                        percentage: pct,
+                        passed: isPass,
+                        timestamp: Date.now()
+                    });
+
+                    state.stats.completedTests = (state.stats.completedTests || 0) + 1;
                     saveUserState();
                 }
             }

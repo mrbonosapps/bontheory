@@ -160,7 +160,6 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'boncepts-music-app';
         let db = null;
         let auth = null;
-        let cloudSyncedUsers = {};
 
         window.isCloudReady = false;
         window.cachedCloudUsers = {};
@@ -193,7 +192,6 @@
                             }
                         });
 
-                        cloudSyncedUsers = updatedRecords;
                         window.cachedCloudUsers = updatedRecords;
 
                         // Save cache locally as backup
@@ -224,11 +222,12 @@
                         }
 
                         // Refresh active marquee ticker and leaderboards immediately across all devices
-                        if (window.updateGlobalLeaderboard) window.updateGlobalLeaderboard();
+                        if (typeof window.updateGlobalLeaderboard === 'function') {
+                            window.updateGlobalLeaderboard();
+                        }
 
                         // Dynamically update the Overall Student Leaderboard table if it's currently on screen
-                        const leaderboardContainer = document.getElementById('overall-student-leaderboard-section');
-                        if (leaderboardContainer && typeof window.refreshLeaderboardTableInPlace === 'function') {
+                        if (typeof window.refreshLeaderboardTableInPlace === 'function') {
                             window.refreshLeaderboardTableInPlace();
                         }
 
@@ -254,7 +253,7 @@
             try {
                 const cleanData = JSON.parse(JSON.stringify(record));
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', key);
-                await setDoc(docRef, cleanData);
+                await setDoc(docRef, cleanData, { merge: true });
             } catch (err) {
                 console.warn("Error saving user to cloud:", err);
             }
@@ -295,7 +294,7 @@
         };
 
         window.getCloudUsers = function() {
-            return cloudSyncedUsers;
+            return window.cachedCloudUsers || {};
         };
 
         initCloudSync();
@@ -313,7 +312,7 @@
         };
         window.state = state;
 
-        // Canonical deterministic key generator (lowercase alphanumeric only)
+        // Canonical deterministic key generator (strictly normalized lowercase alphanumeric)
         function getUserRecordKey(user) {
             if (!user) return null;
             const role = user.role || 'student';
@@ -328,7 +327,7 @@
         }
         window.getUserRecordKey = getUserRecordKey;
 
-        // Get unified dictionary of saved accounts - STRICTLY prefers real-time cloud data
+        // Get unified dictionary of saved accounts - STRICTLY prefers live cloud snapshot data
         function getAllUserRecords() {
             if (window.cachedCloudUsers && Object.keys(window.cachedCloudUsers).length > 0) {
                 return window.cachedCloudUsers;
@@ -352,8 +351,8 @@
             const uniqueMap = new Map();
             list.forEach(rec => {
                 const u = rec.currentUser;
-                const normFirst = (u.firstName || (u.name ? u.name.split(' ')[0] : '') || '').trim().toLowerCase();
-                const normSurname = (u.surname || (u.name ? u.name.split(' ').slice(1).join(' ') : '') || '').trim().toLowerCase();
+                const normFirst = (u.firstName || (u.name ? u.name.split(' ')[0] : '') || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                const normSurname = (u.surname || (u.name ? u.name.split(' ').slice(1).join(' ') : '') || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
                 const uniqueKey = `${normFirst}_${normSurname}`;
 
                 if (!uniqueMap.has(uniqueKey)) {
@@ -581,16 +580,15 @@
                 };
 
                 db[key] = record;
-                if (window.cachedCloudUsers) {
-                    window.cachedCloudUsers[key] = record;
-                }
+                if (!window.cachedCloudUsers) window.cachedCloudUsers = {};
+                window.cachedCloudUsers[key] = record;
 
                 try {
                     localStorage.setItem(DB_STORAGE_KEY, JSON.stringify(db));
                     localStorage.setItem(SESSION_STORAGE_KEY, key);
                 } catch (e) {}
 
-                // Broadcast save to cloud storage across all devices
+                // Broadcast save to cloud storage across all devices immediately
                 if (typeof window.saveUserRecordToCloud === 'function') {
                     window.saveUserRecordToCloud(key, record);
                 }
@@ -10312,7 +10310,7 @@
                     tokenEl.classList.remove('scale-125', 'text-amber-600');
                 }, 300);
             }
-            if (window.updateGlobalLeaderboard) {
+            if (typeof window.updateGlobalLeaderboard === 'function') {
                 window.updateGlobalLeaderboard();
             }
             if (typeof window.refreshLeaderboardTableInPlace === 'function') {
@@ -10328,7 +10326,7 @@
                 saveUserState();
                 const tokenEl = document.getElementById('nav-tokens');
                 if (tokenEl) tokenEl.textContent = state.stats.tokens;
-                if (window.updateGlobalLeaderboard) {
+                if (typeof window.updateGlobalLeaderboard === 'function') {
                     window.updateGlobalLeaderboard();
                 }
                 if (typeof window.refreshLeaderboardTableInPlace === 'function') {

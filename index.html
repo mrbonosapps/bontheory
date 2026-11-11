@@ -336,6 +336,8 @@
                 if (window.stopTextureLabAudio) window.stopTextureLabAudio();
                 if (window.stopTextureLab2Audio) window.stopTextureLab2Audio();
                 if (window.stopTimeSigAudio) window.stopTimeSigAudio();
+                if (window.stopQuaverDrumAudio) window.stopQuaverDrumAudio();
+                if (window.stopDictationAudio) window.stopDictationAudio();
 
                 const root = document.getElementById('app-root');
                 if (!views[viewName]) {
@@ -369,7 +371,7 @@
                 // Game Init Triggers
                 if(viewName === 'durationLesson1' && data === 'game') setTimeout(() => { if(window.startStemGame) window.startStemGame(); }, 50);
                 if(viewName === 'durationLesson2' && data === 'game') setTimeout(() => { if(window.startDurationGame2) window.startDurationGame2(); }, 50);
-                if(viewName === 'durationLesson3' && data === 'game') setTimeout(() => { if(window.startQuaverGame) window.startQuaverGame(); }, 50);
+                if(viewName === 'durationLesson3' && data === 'game') setTimeout(() => { if(window.initQuaverGameView) window.initQuaverGameView(); }, 50);
                 if(viewName === 'durationLesson4' && data === 'game') setTimeout(() => { if(window.startDurationGame4) window.startDurationGame4(); }, 50);
                 if(viewName === 'durationL2Lesson1' && data === 'game') setTimeout(() => { if(window.startTimeSigGame) window.startTimeSigGame(); }, 50);
                 if(viewName === 'durationL2Lesson2' && data === 'game') setTimeout(() => { if(window.startTieGame) window.startTieGame(); }, 50);
@@ -2406,7 +2408,7 @@
                 tab = tab || 'theory';
                 const tabs = [
                     { id: 'theory', label: 'Quavers (Eighth Notes)' },
-                    { id: 'game', label: 'Quaver Builder Game' }
+                    { id: 'game', label: 'Drum Module & Dictation Game' }
                 ];
                 let content = '';
                 if (tab === 'theory') {
@@ -2482,28 +2484,59 @@
                     `;
                 } else if (tab === 'game') {
                     content = `
-                        <h3 class="text-3xl font-extrabold text-slate-800 mb-2">Quaver Builder Game</h3>
-                        <p class="text-slate-600 mb-6 leading-relaxed text-lg">Add tails to single notes or beams across pairs of notes!</p>
-                        <div class="bg-slate-50 rounded-2xl p-6 sm:p-8 border border-slate-100 shadow-sm flex flex-col items-center">
-                            <div class="flex justify-between items-center w-full mb-6">
-                                <span class="font-bold text-slate-700">Streak: <span id="quaver-game-streak" class="text-amber-600 text-xl font-extrabold">0</span></span>
-                                <div class="bg-amber-100 text-amber-900 border border-amber-200 px-4 py-1.5 rounded-xl font-bold text-xs"><span id="quaver-game-instruction">Loading...</span></div>
-                                <span class="font-bold text-slate-700">Best: <span id="quaver-game-best" class="text-emerald-600 text-xl font-extrabold">0</span></span>
-                            </div>
-                            <div class="relative bg-white rounded-2xl p-6 border border-slate-200 shadow-sm w-full max-w-xl flex justify-center mb-6 overflow-x-auto select-none">
-                                <svg id="quaver-game-svg" width="450" height="190" viewBox="0 0 450 190" ondragover="event.preventDefault()" ondrop="handleQuaverDrop(event)" onclick="handleQuaverCanvasClick()" class="cursor-pointer"></svg>
-                            </div>
-                            <div class="w-full max-w-xl">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div id="quaver-tool-tail" draggable="true" ondragstart="handleQuaverDragStart(event, 'tail')" onclick="handleQuaverToolClick('tail')" class="p-4 bg-white border-2 border-slate-200 hover:border-amber-400 rounded-xl cursor-grab select-none shadow-xs transition flex items-center justify-center gap-3">
-                                        <span class="font-bold text-slate-800 text-sm">Wavy Tail</span>
-                                    </div>
-                                    <div id="quaver-tool-beam" draggable="true" ondragstart="handleQuaverDragStart(event, 'beam')" onclick="handleQuaverToolClick('beam')" class="p-4 bg-white border-2 border-slate-200 hover:border-amber-400 rounded-xl cursor-grab select-none shadow-xs transition flex items-center justify-center gap-3">
-                                        <span class="font-bold text-slate-800 text-sm">Thick Beam</span>
-                                    </div>
+                        <!-- Module 1: Interactive Drum Sound Module -->
+                        <div class="mb-10">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                                <div>
+                                    <h3 class="text-3xl font-extrabold text-slate-800">8-Beat Drum Sound Module</h3>
+                                    <p class="text-slate-600 text-sm mt-1">
+                                        Tap any beat to toggle between a <strong>Crotchet (1 hit)</strong> and <strong>Quavers (2 hits)</strong>. 
+                                        Odd beats play <span class="text-blue-600 font-bold">KICK (Blue)</span> and even beats play <span class="text-rose-600 font-bold">SNARE (Red)</span>.
+                                    </p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button id="quaver-drum-play-btn" onclick="toggleQuaverDrumPlay()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 px-6 rounded-xl shadow-md transition flex items-center gap-2 text-sm flex-shrink-0">
+                                        <i class="fa-solid fa-play"></i> <span>Play Pattern</span>
+                                    </button>
+                                    <button onclick="randomizeQuaverDrumPattern()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-sm transition" title="Randomize pattern">
+                                        <i class="fa-solid fa-shuffle"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div id="quaver-game-feedback" class="font-bold h-6 text-lg mt-5 text-center"></div>
+
+                            <div class="bg-slate-900 rounded-3xl p-5 sm:p-6 border border-slate-800 shadow-xl overflow-x-auto">
+                                <div class="flex items-center justify-between min-w-[620px] gap-2.5" id="quaver-drum-steps-container"></div>
+                            </div>
+                        </div>
+
+                        <!-- Module 2: Rhythm Dictation Game -->
+                        <div class="bg-slate-50 rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
+                                <div>
+                                    <h4 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                                        <i class="fa-solid fa-headphones text-amber-500"></i>
+                                        <span>Rhythm Dictation Challenge</span>
+                                    </h4>
+                                    <p class="text-slate-600 text-sm mt-0.5">Listen to the mystery 8-beat rhythm and select the matching notation!</p>
+                                </div>
+                                <div class="flex items-center gap-6 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-xs">
+                                    <span class="font-bold text-slate-700 text-sm">Streak: <span id="dictation-streak" class="text-amber-600 text-xl font-extrabold">0</span></span>
+                                    <span class="font-bold text-slate-700 text-sm">Best: <span id="dictation-best" class="text-emerald-600 text-xl font-extrabold">0</span></span>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col items-center justify-center text-center mb-6">
+                                <button id="play-dictation-btn" onclick="playCurrentDictationRhythm()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black py-3.5 px-8 rounded-2xl shadow-md transition flex items-center gap-2 text-base transform hover:scale-105 active:scale-95">
+                                    <i class="fa-solid fa-volume-high text-xl"></i>
+                                    <span>Hear Mystery Rhythm</span>
+                                </button>
+                                <div id="dictation-playhead-indicator" class="h-6 mt-3 text-xs font-bold text-slate-400">Click to listen to the 8-beat pattern.</div>
+                            </div>
+
+                            <!-- 4 Multiple-Choice Notation Options -->
+                            <div class="grid grid-cols-1 gap-3.5" id="dictation-options-container"></div>
+
+                            <div id="dictation-feedback" class="font-bold h-6 text-lg mt-5 text-center"></div>
                         </div>
                     `;
                 }
@@ -5593,185 +5626,397 @@
             }
         };
 
-        // --- Quaver Builder Game Helpers (Duration Lesson 3) ---
-        window.quaverGameState = {
+        // --- Duration Lesson 3: 8-Beat Drum Sound Module & Rhythm Dictation Logic ---
+        window.quaverDrumState = {
+            isPlaying: false,
+            timer: null,
+            currentBeatIndex: -1,
+            // 8 beats: 0 = Crotchet (1 hit), 1 = Quavers (2 hits)
+            pattern: [0, 1, 0, 0, 1, 0, 1, 0]
+        };
+
+        window.quaverDictationState = {
             streak: 0,
             best: 0,
-            selectedTool: null,
+            isPlaying: false,
+            playTimer: null,
             currentChallenge: null,
-            pool: [
-                { type: 'single', stem: 'up', cy: 110, expected: 'tail', label: 'Single Crotchet (Stem Up) &rarr; Add Tail' },
-                { type: 'single', stem: 'down', cy: 70, expected: 'tail', label: 'Single Crotchet (Stem Down) &rarr; Add Tail' },
-                { type: 'pair', stem: 'up', cy1: 120, cy2: 110, expected: 'beam', label: 'Two Crotchets (Stems Up) &rarr; Connect with Beam' },
-                { type: 'pair', stem: 'down', cy1: 70, cy2: 60, expected: 'beam', label: 'Two Crotchets (Stems Down) &rarr; Connect with Beam' }
-            ]
+            isLocked: false
         };
 
-        window.startQuaverGame = function() {
-            const state = window.quaverGameState;
-            state.selectedTool = null;
-            document.getElementById('quaver-tool-tail')?.classList.remove('ring-4', 'ring-amber-400');
-            document.getElementById('quaver-tool-beam')?.classList.remove('ring-4', 'ring-amber-400');
-
-            state.currentChallenge = state.pool[Math.floor(Math.random() * state.pool.length)];
-            const instr = document.getElementById('quaver-game-instruction');
-            if (instr) instr.innerHTML = state.currentChallenge.label;
-            const fb = document.getElementById('quaver-game-feedback');
-            if (fb) fb.textContent = '';
-            renderQuaverSVG(false);
-        };
-
-        function renderQuaverSVG(completed = false) {
-            const state = window.quaverGameState;
-            const ch = state.currentChallenge;
-            const svg = document.getElementById('quaver-game-svg');
-            if (!svg || !ch) return;
-
-            let markup = `
-                <!-- Staff Lines -->
-                <line x1="20" y1="50" x2="430" y2="50" class="staff-line"/>
-                <line x1="20" y1="70" x2="430" y2="70" class="staff-line"/>
-                <line x1="20" y1="90" x2="430" y2="90" class="staff-line"/>
-                <line x1="20" y1="110" x2="430" y2="110" class="staff-line"/>
-                <line x1="20" y1="130" x2="430" y2="130" class="staff-line"/>
-                <text x="30" y="131" font-size="110" font-family="serif" fill="#0f172a">&#119070;</text>
-            `;
-
-            if (ch.type === 'single') {
-                if (ch.stem === 'up') {
-                    markup += `
-                        <ellipse cx="200" cy="${ch.cy}" rx="12" ry="8" fill="#0f172a" />
-                        <line x1="210" y1="${ch.cy}" x2="210" y2="60" stroke="#0f172a" stroke-width="3" />
-                    `;
-                    if (completed) {
-                        markup += `<path d="M 210 60 Q 230 65 225 90 Q 220 75 210 75 Z" fill="#059669" class="animate-pulse" />`;
-                    } else {
-                        markup += `
-                            <g class="drop-zone opacity-60">
-                                <rect x="200" y="45" width="50" height="50" fill="transparent" stroke="#f59e0b" stroke-dasharray="4" rx="8" />
-                                <text x="225" y="75" font-family="Inter" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">Drop Tail</text>
-                            </g>
-                        `;
-                    }
-                } else {
-                    markup += `
-                        <ellipse cx="200" cy="${ch.cy}" rx="12" ry="8" fill="#0f172a" />
-                        <line x1="190" y1="${ch.cy}" x2="190" y2="120" stroke="#0f172a" stroke-width="3" />
-                    `;
-                    if (completed) {
-                        markup += `<path d="M 190 120 Q 210 115 205 90 Q 200 105 190 105 Z" fill="#059669" class="animate-pulse" />`;
-                    } else {
-                        markup += `
-                            <g class="drop-zone opacity-60">
-                                <rect x="180" y="90" width="50" height="50" fill="transparent" stroke="#f59e0b" stroke-dasharray="4" rx="8" />
-                                <text x="205" y="120" font-family="Inter" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">Drop Tail</text>
-                            </g>
-                        `;
-                    }
-                }
-            } else {
-                if (ch.stem === 'up') {
-                    const tip1 = 66, tip2 = 56;
-                    markup += `
-                        <ellipse cx="180" cy="${ch.cy1}" rx="12" ry="8" fill="#0f172a" />
-                        <line x1="190" y1="${ch.cy1}" x2="190" y2="${tip1}" stroke="#0f172a" stroke-width="3" />
-                        <ellipse cx="250" cy="${ch.cy2}" rx="12" ry="8" fill="#0f172a" />
-                        <line x1="260" y1="${ch.cy2}" x2="260" y2="${tip2}" stroke="#0f172a" stroke-width="3" />
-                    `;
-                    if (completed) {
-                        markup += `<polygon points="190,${tip1} 260,${tip2} 260,${tip2-6} 190,${tip1-6}" fill="#059669" class="animate-pulse" />`;
-                    } else {
-                        markup += `
-                            <g class="drop-zone opacity-60">
-                                <rect x="180" y="45" width="90" height="30" fill="transparent" stroke="#f59e0b" stroke-dasharray="4" rx="8" />
-                                <text x="225" y="65" font-family="Inter" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">Drop Beam</text>
-                            </g>
-                        `;
-                    }
-                } else {
-                    const tip1 = 114, tip2 = 104;
-                    markup += `
-                        <ellipse cx="180" cy="${ch.cy1}" rx="12" ry="8" fill="#0f172a" />
-                        <line x1="170" y1="${ch.cy1}" x2="170" y2="${tip1}" stroke="#0f172a" stroke-width="3" />
-                        <ellipse cx="250" cy="${ch.cy2}" rx="12" ry="8" fill="#0f172a" />
-                        <line x1="240" y1="${ch.cy2}" x2="240" y2="${tip2}" stroke="#0f172a" stroke-width="3" />
-                    `;
-                    if (completed) {
-                        markup += `<polygon points="170,${tip1} 240,${tip2} 240,${tip2+6} 170,${tip1+6}" fill="#059669" class="animate-pulse" />`;
-                    } else {
-                        markup += `
-                            <g class="drop-zone opacity-60">
-                                <rect x="160" y="95" width="90" height="30" fill="transparent" stroke="#f59e0b" stroke-dasharray="4" rx="8" />
-                                <text x="205" y="115" font-family="Inter" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">Drop Beam</text>
-                            </g>
-                        `;
-                    }
-                }
+        // Synthesised Drum Instruments via Tone.js
+        let kickDrumSynth = null;
+        let snareDrumSynth = null;
+        function initDrumSynths() {
+            if (!kickDrumSynth) {
+                kickDrumSynth = new Tone.MembraneSynth({
+                    pitchDecay: 0.05,
+                    octaves: 6,
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.001, decay: 0.35, sustain: 0.01, release: 0.4 }
+                }).toDestination();
+                kickDrumSynth.volume.value = 0;
             }
-            svg.innerHTML = markup;
+            if (!snareDrumSynth) {
+                snareDrumSynth = new Tone.NoiseSynth({
+                    noise: { type: "white" },
+                    envelope: { attack: 0.001, decay: 0.18, sustain: 0 }
+                }).toDestination();
+                snareDrumSynth.volume.value = -4;
+            }
         }
 
-        window.handleQuaverDragStart = function(e, toolType) {
-            e.dataTransfer.setData('text/plain', toolType);
-        };
-
-        window.handleQuaverDrop = function(e) {
-            e.preventDefault();
-            const toolType = e.dataTransfer.getData('text/plain');
-            if (toolType) checkQuaverTool(toolType);
-        };
-
-        window.handleQuaverToolClick = function(toolType) {
-            const state = window.quaverGameState;
-            if (state.selectedTool === toolType) {
-                document.getElementById(`quaver-tool-${toolType}`)?.classList.remove('ring-4', 'ring-amber-400');
-                state.selectedTool = null;
-                return;
-            }
-            document.getElementById('quaver-tool-tail')?.classList.remove('ring-4', 'ring-amber-400');
-            document.getElementById('quaver-tool-beam')?.classList.remove('ring-4', 'ring-amber-400');
-
-            state.selectedTool = toolType;
-            document.getElementById(`quaver-tool-${toolType}`)?.classList.add('ring-4', 'ring-amber-400');
-        };
-
-        window.handleQuaverCanvasClick = function() {
-            const state = window.quaverGameState;
-            if (state.selectedTool) {
-                checkQuaverTool(state.selectedTool);
-                document.getElementById(`quaver-tool-${state.selectedTool}`)?.classList.remove('ring-4', 'ring-amber-400');
-                state.selectedTool = null;
+        window.playDrumHit = function(beatNumber, isOffbeat = false) {
+            initDrumSynths();
+            Tone.start();
+            // Odd beats (1, 3, 5, 7) = Kick, Even beats (2, 4, 6, 8) = Snare
+            const isKick = (beatNumber % 2 === 1);
+            if (isKick) {
+                kickDrumSynth.triggerAttackRelease(isOffbeat ? "C1" : "C1", "8n");
+            } else {
+                snareDrumSynth.triggerAttackRelease("16n");
             }
         };
 
-        function checkQuaverTool(toolType) {
-            const state = window.quaverGameState;
+        window.initQuaverGameView = function() {
+            renderQuaverDrumModule();
+            startQuaverDictationChallenge();
+        };
+
+        function renderQuaverDrumModule() {
+            const container = document.getElementById('quaver-drum-steps-container');
+            if (!container) return;
+
+            const state = window.quaverDrumState;
+            container.innerHTML = state.pattern.map((val, idx) => {
+                const beatNum = idx + 1;
+                const isKick = (beatNum % 2 === 1);
+                const instrName = isKick ? "KICK" : "SNARE";
+                const badgeColor = isKick ? "bg-blue-600 text-white" : "bg-rose-600 text-white";
+                const borderHighlight = isKick ? "hover:border-blue-400" : "hover:border-rose-400";
+                const isCurrent = (state.currentBeatIndex === idx);
+
+                // SVGs for Crotchet vs Beamed Quavers
+                const crotchetSVG = `
+                    <svg width="40" height="48" viewBox="0 0 40 48" class="select-none pointer-events-none">
+                        <ellipse cx="16" cy="36" rx="8" ry="5.5" fill="#f8fafc"/>
+                        <line x1="23" y1="36" x2="23" y2="10" stroke="#f8fafc" stroke-width="2.5"/>
+                    </svg>
+                `;
+                const quaversSVG = `
+                    <svg width="48" height="48" viewBox="0 0 48 48" class="select-none pointer-events-none">
+                        <ellipse cx="14" cy="36" rx="6.5" ry="4.5" fill="#f8fafc"/>
+                        <line x1="20" y1="36" x2="20" y2="12" stroke="#f8fafc" stroke-width="2"/>
+                        <ellipse cx="32" cy="36" rx="6.5" ry="4.5" fill="#f8fafc"/>
+                        <line x1="38" y1="36" x2="38" y2="12" stroke="#f8fafc" stroke-width="2"/>
+                        <polygon points="20,14 38,14 38,9 20,9" fill="#f8fafc"/>
+                    </svg>
+                `;
+
+                return `
+                    <div id="drum-step-${idx}" onclick="toggleDrumStepPattern(${idx})" class="flex-1 bg-slate-800/90 rounded-2xl p-3 border-2 ${isCurrent ? 'border-amber-400 ring-2 ring-amber-400 scale-105' : 'border-slate-700'} ${borderHighlight} transition cursor-pointer flex flex-col items-center justify-between min-w-[70px] h-36 shadow-md select-none group">
+                        <div class="w-full flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-mono font-bold text-slate-400">#${beatNum}</span>
+                            <span class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${badgeColor}">${instrName}</span>
+                        </div>
+                        <div class="my-auto transform group-hover:scale-110 transition">
+                            ${val === 0 ? crotchetSVG : quaversSVG}
+                        </div>
+                        <div class="w-full text-center mt-1">
+                            <span class="text-[10px] font-bold ${val === 0 ? 'text-slate-300' : 'text-amber-400'} uppercase">
+                                ${val === 0 ? '1 Hit' : '2 Hits'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        window.toggleDrumStepPattern = function(index) {
+            const state = window.quaverDrumState;
+            state.pattern[index] = state.pattern[index] === 0 ? 1 : 0;
+            // Play sound preview immediately on tap
+            const beatNum = index + 1;
+            window.playDrumHit(beatNum, false);
+            if (state.pattern[index] === 1) {
+                setTimeout(() => window.playDrumHit(beatNum, true), 150);
+            }
+            renderQuaverDrumModule();
+        };
+
+        window.randomizeQuaverDrumPattern = function() {
+            const state = window.quaverDrumState;
+            state.pattern = state.pattern.map(() => (Math.random() > 0.5 ? 1 : 0));
+            renderQuaverDrumModule();
+        };
+
+        window.toggleQuaverDrumPlay = function() {
+            const state = window.quaverDrumState;
+            if (state.isPlaying) {
+                window.stopQuaverDrumAudio();
+            } else {
+                window.startQuaverDrumAudio();
+            }
+        };
+
+        window.startQuaverDrumAudio = function() {
+            window.stopDictationAudio();
+            const state = window.quaverDrumState;
+            state.isPlaying = true;
+            state.currentBeatIndex = -1;
+
+            const btn = document.getElementById('quaver-drum-play-btn');
+            if (btn) {
+                btn.className = "bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-2.5 px-6 rounded-xl shadow-md transition flex items-center gap-2 text-sm flex-shrink-0";
+                btn.innerHTML = `<i class="fa-solid fa-stop"></i> <span>Stop Pattern</span>`;
+            }
+
+            const bpm = 96;
+            const beatIntervalMs = (60 / bpm) * 1000; // ~625ms per beat
+
+            const stepLoop = () => {
+                if (!state.isPlaying) return;
+                state.currentBeatIndex = (state.currentBeatIndex + 1) % 8;
+                const idx = state.currentBeatIndex;
+                const beatNum = idx + 1;
+                const isQuaver = (state.pattern[idx] === 1);
+
+                renderQuaverDrumModule();
+
+                // Downbeat hit
+                window.playDrumHit(beatNum, false);
+
+                // Offbeat quaver hit
+                if (isQuaver) {
+                    setTimeout(() => {
+                        if (state.isPlaying && state.currentBeatIndex === idx) {
+                            window.playDrumHit(beatNum, true);
+                        }
+                    }, beatIntervalMs / 2);
+                }
+
+                state.timer = setTimeout(stepLoop, beatIntervalMs);
+            };
+
+            stepLoop();
+        };
+
+        window.stopQuaverDrumAudio = function() {
+            const state = window.quaverDrumState;
+            state.isPlaying = false;
+            if (state.timer) clearTimeout(state.timer);
+            state.timer = null;
+            state.currentBeatIndex = -1;
+
+            const btn = document.getElementById('quaver-drum-play-btn');
+            if (btn) {
+                btn.className = "bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-2.5 px-6 rounded-xl shadow-md transition flex items-center gap-2 text-sm flex-shrink-0";
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> <span>Play Pattern</span>`;
+            }
+            renderQuaverDrumModule();
+        };
+
+        // Dictation Challenge Logic
+        function renderDictationRhythmSVG(pattern, isCorrectSelection = false) {
+            let svg = `<svg width="100%" height="45" viewBox="0 0 540 45" class="w-full max-w-full h-auto select-none pointer-events-none">`;
+            // Staff pulse line
+            svg += `<line x1="10" y1="26" x2="530" y2="26" stroke="#cbd5e1" stroke-width="2"/>`;
+
+            const stepW = 62;
+            const startX = 25;
+
+            pattern.forEach((val, i) => {
+                const cx = startX + i * stepW;
+                const beatNum = i + 1;
+                const noteColor = (beatNum % 2 === 1) ? "#2563eb" : "#e11d48"; // Blue for Kick, Red for Snare
+
+                if (val === 0) {
+                    // Crotchet (1 beat)
+                    svg += `
+                        <ellipse cx="${cx}" cy="26" rx="6.5" ry="4.5" fill="${noteColor}"/>
+                        <line x1="${cx+5}" y1="26" x2="${cx+5}" y2="9" stroke="${noteColor}" stroke-width="2"/>
+                    `;
+                } else {
+                    // Beamed Quavers (2 eighth notes)
+                    svg += `
+                        <ellipse cx="${cx-9}" cy="26" rx="5" ry="3.5" fill="${noteColor}"/>
+                        <line x1="${cx-5}" y1="26" x2="${cx-5}" y2="10" stroke="${noteColor}" stroke-width="1.8"/>
+                        <ellipse cx="${cx+9}" cy="26" rx="5" ry="3.5" fill="${noteColor}"/>
+                        <line x1="${cx+13}" y1="26" x2="${cx+13}" y2="10" stroke="${noteColor}" stroke-width="1.8"/>
+                        <polygon points="${cx-5},11 ${cx+13},11 ${cx+13},7.5 ${cx-5},7.5" fill="${noteColor}"/>
+                    `;
+                }
+            });
+
+            svg += `</svg>`;
+            return svg;
+        }
+
+        window.startQuaverDictationChallenge = function() {
+            const state = window.quaverDictationState;
+            state.isLocked = false;
+            window.stopDictationAudio();
+
+            // Generate target pattern of 8 beats (0 = crotchet, 1 = quavers)
+            // Ensure at least two crotchets and two quavers for variety
+            let target;
+            do {
+                target = Array.from({ length: 8 }, () => (Math.random() > 0.5 ? 1 : 0));
+            } while (target.filter(v => v === 0).length < 2 || target.filter(v => v === 1).length < 2);
+
+            // Generate 3 unique distractor patterns
+            const options = [target];
+            while (options.length < 4) {
+                const distractor = [...target];
+                // Flip 2 random beats to make it subtle
+                const flipIndex1 = Math.floor(Math.random() * 8);
+                let flipIndex2 = Math.floor(Math.random() * 8);
+                while (flipIndex2 === flipIndex1) flipIndex2 = Math.floor(Math.random() * 8);
+
+                distractor[flipIndex1] = distractor[flipIndex1] === 0 ? 1 : 0;
+                distractor[flipIndex2] = distractor[flipIndex2] === 0 ? 1 : 0;
+
+                const isDup = options.some(opt => opt.every((val, i) => val === distractor[i]));
+                if (!isDup) options.push(distractor);
+            }
+
+            // Shuffle options
+            const shuffledOptions = options.sort(() => Math.random() - 0.5);
+            state.currentChallenge = {
+                target,
+                options: shuffledOptions,
+                correctIndex: shuffledOptions.findIndex(opt => opt.every((v, i) => v === target[i]))
+            };
+
+            const optsContainer = document.getElementById('dictation-options-container');
+            const fb = document.getElementById('dictation-feedback');
+            const playInd = document.getElementById('dictation-playhead-indicator');
+
+            if (fb) fb.textContent = '';
+            if (playInd) playInd.innerHTML = 'Click the button above to listen to the mystery 8-beat pattern.';
+
+            if (optsContainer) {
+                optsContainer.innerHTML = shuffledOptions.map((opt, idx) => {
+                    const optLetter = String.fromCharCode(65 + idx);
+                    return `
+                        <div id="dictation-opt-${idx}" onclick="checkDictationAnswer(${idx})" class="p-3.5 bg-white border-2 border-slate-200 hover:border-amber-400 rounded-2xl flex items-center gap-3 cursor-pointer shadow-xs transition hover:shadow-sm">
+                            <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-extrabold text-sm flex items-center justify-center flex-shrink-0">${optLetter}</span>
+                            <div class="flex-1 overflow-x-auto">
+                                ${renderDictationRhythmSVG(opt)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        };
+
+        window.playCurrentDictationRhythm = function() {
+            window.stopQuaverDrumAudio();
+            const state = window.quaverDictationState;
+            if (state.isPlaying || !state.currentChallenge) return;
+
+            state.isPlaying = true;
+            const targetPattern = state.currentChallenge.target;
+            const playInd = document.getElementById('dictation-playhead-indicator');
+            const playBtn = document.getElementById('play-dictation-btn');
+
+            if (playBtn) playBtn.classList.add('opacity-80', 'cursor-wait');
+
+            const bpm = 100;
+            const beatMs = (60 / bpm) * 1000;
+            let currentStep = 0;
+
+            const playStep = () => {
+                if (currentStep >= 8) {
+                    state.isPlaying = false;
+                    if (playInd) playInd.innerHTML = '<span class="text-slate-500 font-medium">Finished playing! Choose Option A, B, C, or D.</span>';
+                    if (playBtn) playBtn.classList.remove('opacity-80', 'cursor-wait');
+                    return;
+                }
+
+                const beatNum = currentStep + 1;
+                const isQuaver = (targetPattern[currentStep] === 1);
+
+                if (playInd) {
+                    playInd.innerHTML = `Playing Beat <strong class="${beatNum % 2 === 1 ? 'text-blue-600' : 'text-rose-600'}">${beatNum} / 8</strong> (${beatNum % 2 === 1 ? 'KICK' : 'SNARE'})`;
+                }
+
+                // Downbeat
+                window.playDrumHit(beatNum, false);
+
+                // Offbeat
+                if (isQuaver) {
+                    setTimeout(() => {
+                        window.playDrumHit(beatNum, true);
+                    }, beatMs / 2);
+                }
+
+                currentStep++;
+                state.playTimer = setTimeout(playStep, beatMs);
+            };
+
+            playStep();
+        };
+
+        window.stopDictationAudio = function() {
+            const state = window.quaverDictationState;
+            state.isPlaying = false;
+            if (state.playTimer) clearTimeout(state.playTimer);
+            state.playTimer = null;
+            const playBtn = document.getElementById('play-dictation-btn');
+            if (playBtn) playBtn.classList.remove('opacity-80', 'cursor-wait');
+        };
+
+        window.checkDictationAnswer = function(chosenIndex) {
+            const state = window.quaverDictationState;
             const ch = state.currentChallenge;
-            const fb = document.getElementById('quaver-game-feedback');
-            if (!ch || !fb) return;
+            const fb = document.getElementById('dictation-feedback');
+            if (!ch || !fb || state.isLocked) return;
 
-            if (toolType === ch.expected) {
+            state.isLocked = true;
+            window.stopDictationAudio();
+
+            const isCorrect = (chosenIndex === ch.correctIndex);
+            const chosenEl = document.getElementById(`dictation-opt-${chosenIndex}`);
+            const correctEl = document.getElementById(`dictation-opt-${ch.correctIndex}`);
+
+            if (isCorrect) {
                 state.streak++;
                 if (state.streak > state.best) state.best = state.streak;
                 window.addTokens(5);
-                renderQuaverSVG(true);
-                fb.textContent = toolType === 'tail' 
-                    ? 'Correct! A single crotchet becomes a quaver with a wavy tail on the right!' 
-                    : 'Correct! Two crotchets become beamed quavers connected with a thick beam!';
-                fb.className = 'font-bold h-6 text-lg mt-5 text-center text-emerald-600';
 
-                document.getElementById('quaver-game-streak').textContent = state.streak;
-                document.getElementById('quaver-game-best').textContent = state.best;
-                setTimeout(window.startQuaverGame, 1400);
+                if (chosenEl) {
+                    chosenEl.classList.remove('border-slate-200');
+                    chosenEl.classList.add('bg-emerald-50', 'border-emerald-500', 'ring-2', 'ring-emerald-400');
+                }
+
+                fb.textContent = `Correct! Perfect rhythm ear (+5 Tokens)!`;
+                fb.className = "font-bold h-6 text-lg mt-5 text-center text-emerald-600";
+
+                document.getElementById('dictation-streak').textContent = state.streak;
+                document.getElementById('dictation-best').textContent = state.best;
+
+                setTimeout(window.startQuaverDictationChallenge, 1500);
             } else {
                 state.streak = 0;
-                document.getElementById('quaver-game-streak').textContent = state.streak;
-                fb.textContent = ch.expected === 'tail' 
-                    ? 'Incorrect! A single note needs a wavy tail, not a beam.' 
-                    : 'Incorrect! Connecting two notes requires a thick beam, not a single tail.';
-                fb.className = 'font-bold h-6 text-lg mt-5 text-center text-red-500';
+                document.getElementById('dictation-streak').textContent = state.streak;
+
+                if (chosenEl) {
+                    chosenEl.classList.remove('border-slate-200');
+                    chosenEl.classList.add('bg-red-50', 'border-red-400');
+                }
+                if (correctEl) {
+                    correctEl.classList.add('bg-emerald-50', 'border-emerald-400');
+                }
+
+                fb.textContent = `Not quite right! Listen again to compare.`;
+                fb.className = "font-bold h-6 text-lg mt-5 text-center text-red-500";
+
+                setTimeout(() => {
+                    window.startQuaverDictationChallenge();
+                }, 2200);
             }
-        }
+        };
 
         // --- Duration Game 4 Helpers (Rests) ---
         window.durationGame4State = {

@@ -374,6 +374,7 @@
       try { if (typeof stopCrotchetGameLoop === 'function') stopCrotchetGameLoop(); } catch (e) {}
       try { if (typeof stopQuaverGameLoop === 'function') stopQuaverGameLoop(); } catch (e) {}
       try { if (typeof stopLongNoteGameLoop === 'function') stopLongNoteGameLoop(); } catch (e) {}
+      try { if (typeof stopDrumSequencerLoop === 'function') stopDrumSequencerLoop(); } catch (e) {}
     }
 
     window.app = {
@@ -691,6 +692,9 @@
       if (type === 'minim') {
         return `<svg viewBox="0 0 64 80" class="${sizeClass} mx-auto"><line x1="39" y1="12" x2="39" y2="56" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" /><ellipse cx="28" cy="57" rx="11.5" ry="7.8" transform="rotate(-22 28 57)" fill="none" stroke="currentColor" stroke-width="3.8" /></svg>`;
       }
+      if (type === 'singleQuaver') {
+        return `<svg viewBox="0 0 64 80" class="${sizeClass} mx-auto"><line x1="36" y1="12" x2="36" y2="56" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" /><path d="M36 12 C47 16, 51 27, 45 38 C46 28, 42 22, 36 20 Z" fill="currentColor" /><ellipse cx="25" cy="57" rx="11.5" ry="7.8" transform="rotate(-22 25 57)" fill="currentColor" /></svg>`;
+      }
       if (type === 'quavers') {
         return `<svg viewBox="0 0 72 80" class="${sizeClass} mx-auto"><polygon points="24,12 56,12 56,19 24,19" fill="currentColor" /><line x1="25" y1="15" x2="25" y2="57" stroke="currentColor" stroke-width="3.4" /><line x1="55" y1="15" x2="55" y2="57" stroke="currentColor" stroke-width="3.4" /><ellipse cx="16" cy="58" rx="10" ry="7" transform="rotate(-22 16 58)" fill="currentColor" /><ellipse cx="46" cy="58" rx="10" ry="7" transform="rotate(-22 46 58)" fill="currentColor" /></svg>`;
       }
@@ -784,12 +788,21 @@
                 summary: 'Subdivide the beat into two equal half-beat quavers counted "1 & 2 &".',
                 toolType: 'quaverGame',
                 contentHtml: `
-                  <p>A single <strong>Quaver</strong> (eighth note) lasts for <strong>half a beat (½ beat)</strong>. Two quavers equal 1 full crotchet beat and are usually joined together at the top by a horizontal <strong>beam</strong>.</p>
-                  <div class="p-5 rounded-2xl bg-indigo-50 border border-indigo-100 flex flex-col sm:flex-row items-center gap-4">
-                    <div class="text-indigo-700 shrink-0">${renderEngravedNoteDarkSVG('quavers', 'w-16 h-20')}</div>
-                    <div>
-                      <div class="font-black text-sm text-indigo-950">Paired Quavers = ½ + ½ = 1 Beat</div>
-                      <p class="text-xs text-slate-700 mt-1">Count paired quavers evenly as <strong>"1 &amp; 2 &amp; 3 &amp; 4 &amp;"</strong>—two quick, even taps inside one steady beat.</p>
+                  <p>A single <strong>Quaver</strong> (eighth note) lasts for <strong>half a beat (½ beat)</strong> and has a curved <strong>flag (tail)</strong> on its stem. Two quavers equal 1 full crotchet beat and are usually joined together at the top by a horizontal <strong>beam</strong>.</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-4">
+                      <div class="text-indigo-700 shrink-0">${renderEngravedNoteDarkSVG('singleQuaver', 'w-14 h-20')}</div>
+                      <div>
+                        <div class="font-black text-sm text-slate-800">Single Quaver = ½ Beat</div>
+                        <p class="text-xs text-slate-600 mt-1">A filled notehead with a stem and a single flag—half as long as one crotchet.</p>
+                      </div>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center gap-4">
+                      <div class="text-indigo-700 shrink-0">${renderEngravedNoteDarkSVG('quavers', 'w-16 h-20')}</div>
+                      <div>
+                        <div class="font-black text-sm text-indigo-950">Paired Quavers = ½ + ½ = 1 Beat</div>
+                        <p class="text-xs text-slate-700 mt-1">Count paired quavers evenly as <strong>"1 &amp; 2 &amp; 3 &amp; 4 &amp;"</strong>—two quick, even taps inside one steady beat.</p>
+                      </div>
                     </div>
                   </div>
                 `
@@ -832,20 +845,15 @@
             ],
             testQuestions: [
               { q: 'What is the steady, regular heartbeat underlying a piece of music called?', options: ['Beat / Pulse', 'Timbre', 'Crescendo', 'Texture'], correct: 0 },
+              { q: 'What does BPM stand for when measuring the speed of the beat?', options: ['Beats Per Minute', 'Bars Per Measure', 'Bass Pitch Mode', 'Beat Pulse Meter'], correct: 0 },
               { q: 'How many beats does a Crotchet last?', options: ['1 beat', '2 beats', '3 beats', '4 beats'], correct: 0 },
-              { q: 'How many beats does a Minim last?', options: ['2 beats', '1 beat', '3 beats', '4 beats'], correct: 0 },
-              { q: 'How many beats does a Dotted Minim last?', options: ['3 beats', '2 beats', '4 beats', '1.5 beats'], correct: 0 },
-              { q: 'How many beats does a Semibreve last?', options: ['4 beats', '2 beats', '3 beats', '1 beat'], correct: 0 },
-              { q: 'How long does a single Quaver last?', options: ['Half a beat (1/2)', '1 beat', '2 beats', '4 beats'], correct: 0 },
-              { q: 'How many Quavers equal one Crotchet beat?', options: ['2 quavers', '3 quavers', '4 quavers', '1 quaver'], correct: 0 },
-              { q: 'What does a dot placed after a notehead do to its duration?', options: ['Adds half of the note’s original value', 'Doubles the note’s speed', 'Makes the note silent', 'Lowers the pitch by one step'], correct: 0 },
-              { q: 'Which note has a hollow oval notehead and NO stem?', options: ['Semibreve', 'Minim', 'Crotchet', 'Quaver'], correct: 0 },
-              { q: 'Which note has a hollow notehead WITH a stem?', options: ['Minim', 'Semibreve', 'Crotchet', 'Quaver'], correct: 0 },
-              { q: 'How do musicians count paired quavers in a 4/4 bar?', options: ['1 & 2 & 3 & 4 &', '1 - 2 - 3 - 4', '1, 2, 3', '1 e & a'], correct: 0 },
-              { q: 'What does BPM stand for in music?', options: ['Beats Per Minute', 'Bars Per Measure', 'Bass Pitch Mode', 'Beat Pulse Meter'], correct: 0 },
-              { q: 'What connects two or more quavers together at the top of their stems?', options: ['A beam', 'A slur', 'A hairpin', 'A ledger line'], correct: 0 },
-              { q: 'What does a Crotchet Rest tell the performer to do?', options: ['Stay silent for 1 beat', 'Play loudly for 1 beat', 'Hold a note for 4 beats', 'Speed up the tempo'], correct: 0 },
-              { q: 'How many crotchet beats fit inside one Semibreve?', options: ['4 crotchets', '2 crotchets', '3 crotchets', '8 crotchets'], correct: 0 }
+              { q: 'What does a Crotchet Rest tell the performer to do?', options: ['Hold silence for 1 full beat', 'Play loudly for 1 beat', 'Hold a note for 4 beats', 'Tap twice quickly'], correct: 0 },
+              { q: 'How long does a single Quaver last?', options: ['Half a beat (1/2 beat)', '1 full beat', '2 beats', '4 beats'], correct: 0 },
+              { q: 'How do musicians count paired quavers across a 4-beat bar?', options: ['1 & 2 & 3 & 4 &', '1 - 2 - 3 - 4', '1, 2, 3', '1 - 2'], correct: 0 },
+              { q: 'How many beats does a Minim (hollow notehead with a stem) last?', options: ['2 beats', '1 beat', '3 beats', '4 beats'], correct: 0 },
+              { q: 'How many beats does a Dotted Minim last?', options: ['3 beats (2 + 1)', '2 beats', '4 beats', '1.5 beats'], correct: 0 },
+              { q: 'Which note has an open hollow oval notehead with NO stem and lasts 4 beats?', options: ['Semibreve', 'Minim', 'Crotchet', 'Paired Quavers'], correct: 0 },
+              { q: 'What is the difference between the beat and rhythm?', options: ['The beat is the steady pulse, while rhythm is the pattern of long and short sounds over it', 'The beat is only played by drums, while rhythm is only sung', 'They are two words for dynamic volume', 'Rhythm never uses rests or quavers'], correct: 0 }
             ]
           }
         ]
@@ -938,21 +946,16 @@
               }
             ],
             testQuestions: [
-              { q: 'What determines whether a musical sound has a high or low pitch?', options: ['The frequency (speed) of sound-wave vibrations', 'How loudly the performer plays', 'The length of the rest', 'The number of instruments playing'], correct: 0 },
+              { q: 'What determines whether a musical sound has a high or low pitch?', options: ['The frequency (speed) of sound-wave vibrations', 'How loudly the performer plays', 'The length of a crotchet rest', 'The number of instruments playing'], correct: 0 },
               { q: 'What unit is used to measure sound-wave frequency?', options: ['Hertz (Hz)', 'Decibels (dB)', 'Beats Per Minute (BPM)', 'Metres (m)'], correct: 0 },
-              { q: 'What kind of sound wave produces a very HIGH pitch?', options: ['Fast, tightly packed vibrations', 'Slow, wide vibrations', 'Flat silent waves', 'Irregular drum noise'], correct: 0 },
-              { q: 'What is melodic movement between two adjacent notes (like C to D) called?', options: ['A step (conjunct motion)', 'A leap (disjunct motion)', 'A ostinato', 'A crescendo'], correct: 0 },
-              { q: 'What is melodic movement that skips over notes (like C to G) called?', options: ['A leap (disjunct motion)', 'A step', 'A unison', 'A drone'], correct: 0 },
-              { q: 'What term describes a melody moving upwards from lower to higher pitches?', options: ['Ascending', 'Descending', 'Static', 'Monophonic'], correct: 0 },
-              { q: 'What term describes a melody moving downwards from higher to lower pitches?', options: ['Descending', 'Ascending', 'Syncopated', 'Staccato'], correct: 0 },
-              { q: 'How many letter names are used in the musical alphabet before repeating?', options: ['7 (A through G)', '5 (A through E)', '10 (A through J)', '12 (A through L)'], correct: 0 },
-              { q: 'Which instrument produces the lowest pitch range?', options: ['Double Bass', 'Piccolo', 'Violin', 'Flute'], correct: 0 },
-              { q: 'What is the overall shape or outline of a melody called?', options: ['Melodic contour', 'Time signature', 'Tone colour', 'Dynamic hairpin'], correct: 0 },
-              { q: 'How many lines does a standard musical stave have?', options: ['5 lines', '4 lines', '6 lines', '3 lines'], correct: 0 },
-              { q: 'On a keyboard, moving from left to right changes the pitch in which direction?', options: ['Higher (ascending)', 'Lower (descending)', 'Softer', 'Faster'], correct: 0 },
-              { q: 'What is the interval distance between two notes with the same letter name (e.g., C4 to C5)?', options: ['An octave', 'A step', 'A triad', 'A semitone'], correct: 0 },
-              { q: 'Which musical term describes a melody that moves mostly by smooth steps?', options: ['Conjunct', 'Disjunct', 'Percussive', 'Pizzicato'], correct: 0 },
-              { q: 'If a string vibrates more slowly, what happens to its pitch?', options: ['The pitch becomes lower', 'The pitch becomes higher', 'The pitch stays identical', 'The rhythm speeds up'], correct: 0 }
+              { q: 'What kind of sound wave produces a HIGH pitch like a piccolo or violin?', options: ['Fast, tightly packed vibrations (~784 Hz)', 'Slow, wide vibrations (~130 Hz)', 'Flat silent waves', 'Irregular snare noise'], correct: 0 },
+              { q: 'What kind of sound wave produces a LOW pitch like a double bass or tuba?', options: ['Slow, wide sound waves (~130 Hz)', 'Fast, tightly packed vibrations', 'High bell chimes', 'Staccato rhythms'], correct: 0 },
+              { q: 'What is melodic movement between two adjacent notes (like C to D) called?', options: ['A step (conjunct motion)', 'A leap (disjunct motion)', 'An octave', 'A crescendo'], correct: 0 },
+              { q: 'What is melodic movement that jumps over notes (like C to G) called?', options: ['A leap (disjunct motion)', 'A step (conjunct motion)', 'A pulse', 'A rest'], correct: 0 },
+              { q: 'What term describes a melody moving upwards from lower to higher pitches?', options: ['Ascending', 'Descending', 'Thin texture', 'Decrescendo'], correct: 0 },
+              { q: 'What term describes a melody moving downwards from higher to lower pitches?', options: ['Descending', 'Ascending', 'Forte', 'Conjunct'], correct: 0 },
+              { q: 'What is the overall upward and downward shape of a melody called?', options: ['Melodic contour', 'Tone colour', 'Dynamic hairpin', 'Time signature'], correct: 0 },
+              { q: 'How many letter names (A through G) are used in the musical alphabet before repeating at the octave?', options: ['7 letter names', '5 letter names', '10 letter names', '12 letter names'], correct: 0 }
             ]
           }
         ]
@@ -1017,21 +1020,16 @@
               }
             ],
             testQuestions: [
-              { q: 'What does the dynamic marking "f" (Forte) mean?', options: ['Loud', 'Soft', 'Very soft', 'Gradually getting louder'], correct: 0 },
+              { q: 'What does "pp" (Pianissimo) instruct a musician to play?', options: ['Very soft', 'Very loud', 'Moderately loud', 'Gradually getting louder'], correct: 0 },
               { q: 'What does the dynamic marking "p" (Piano) mean?', options: ['Soft', 'Loud', 'Very loud', 'Fast'], correct: 0 },
-              { q: 'Which marking instructs a musician to play VERY loud?', options: ['ff (Fortissimo)', 'pp (Pianissimo)', 'mp (Mezzo Piano)', 'mf (Mezzo Forte)'], correct: 0 },
-              { q: 'Which marking instructs a musician to play VERY soft?', options: ['pp (Pianissimo)', 'ff (Fortissimo)', 'f (Forte)', 'mf (Mezzo Forte)'], correct: 0 },
-              { q: 'What does "mf" (Mezzo Forte) mean?', options: ['Moderately loud', 'Moderately soft', 'Very loud', 'Very soft'], correct: 0 },
-              { q: 'What does "mp" (Mezzo Piano) mean?', options: ['Moderately soft', 'Moderately loud', 'Extremely loud', 'Silent'], correct: 0 },
-              { q: 'What does the term "Crescendo" mean?', options: ['Gradually getting louder', 'Gradually getting softer', 'Suddenly very soft', 'Gradually slowing down'], correct: 0 },
-              { q: 'What does "Decrescendo" (or Diminuendo) mean?', options: ['Gradually getting softer', 'Gradually getting louder', 'Playing short and detached', 'Repeating from the start'], correct: 0 },
-              { q: 'Which dynamic order goes from SOFTEST to LOUDEST?', options: ['pp → p → mp → mf → f → ff', 'ff → f → mf → mp → p → pp', 'p → pp → f → ff → mp → mf', 'mf → mp → p → pp → f → ff'], correct: 0 },
-              { q: 'What language are traditional dynamic terms like Forte and Piano derived from?', options: ['Italian', 'German', 'French', 'Spanish'], correct: 0 },
-              { q: 'What does a hairpin symbol that opens wider from left to right (<) indicate?', options: ['Crescendo (get louder)', 'Decrescendo (get softer)', 'Staccato', 'Pause / Fermata'], correct: 0 },
-              { q: 'What does a hairpin symbol that closes to a point on the right (>) indicate?', options: ['Decrescendo (get softer)', 'Crescendo (get louder)', 'Accent the beat', 'Speed up'], correct: 0 },
-              { q: 'Which dynamic level is louder: "mp" or "mf"?', options: ['mf (Mezzo Forte)', 'mp (Mezzo Piano)', 'They are identical', 'Neither indicates volume'], correct: 0 },
-              { q: 'What does an accent mark (>) placed directly above or below a single note mean?', options: ['Play that specific note with extra force/emphasis', 'Hold the note for 4 beats', 'Skip the note', 'Play an octave higher'], correct: 0 },
-              { q: 'What does "staccato" (a dot above/below a notehead) tell the player to do?', options: ['Play the note short and detached', 'Play the note smoothly connected', 'Play as softly as possible', 'Gradually fade out'], correct: 0 }
+              { q: 'What does "mp" (Mezzo Piano) mean?', options: ['Moderately soft', 'Moderately loud', 'Very soft', 'Extremely loud'], correct: 0 },
+              { q: 'What does "mf" (Mezzo Forte) mean?', options: ['Moderately loud', 'Moderately soft', 'Very soft', 'Gradually slowing down'], correct: 0 },
+              { q: 'What does the dynamic marking "f" (Forte) mean?', options: ['Loud', 'Soft', 'Very soft', 'Silent'], correct: 0 },
+              { q: 'Which dynamic marking instructs a performer to play VERY loud?', options: ['ff (Fortissimo)', 'pp (Pianissimo)', 'mp (Mezzo Piano)', 'p (Piano)'], correct: 0 },
+              { q: 'What does the term "Crescendo" (cresc.) mean?', options: ['Gradually getting louder', 'Gradually getting softer', 'Suddenly very soft', 'Playing short and detached'], correct: 0 },
+              { q: 'What does "Decrescendo / Diminuendo" mean?', options: ['Gradually getting softer', 'Gradually getting louder', 'Repeating from the start', 'Holding a note for 4 beats'], correct: 0 },
+              { q: 'What does a hairpin symbol that opens wider from left to right indicate?', options: ['Crescendo (gradually getting louder)', 'Decrescendo (gradually getting softer)', 'Crotchet rest', 'Ascending leap'], correct: 0 },
+              { q: 'Which sequence lists dynamic markings in order from SOFTEST to LOUDEST?', options: ['pp → p → mp → mf → f → ff', 'ff → f → mf → mp → p → pp', 'p → pp → f → ff → mp → mf', 'mf → mp → p → pp → f → ff'], correct: 0 }
             ]
           }
         ]
@@ -1092,21 +1090,16 @@
               }
             ],
             testQuestions: [
-              { q: 'What does Tone Colour (Timbre) refer to in music?', options: ['The unique sound quality that distinguishes one instrument or voice from another', 'How fast the beat moves', 'How high or low a note is', 'The number of bars in a verse'], correct: 0 },
-              { q: 'How do musicians typically describe an instrument’s timbre?', options: ['By using descriptive adjectives (e.g. warm, brassy, wooden, shimmering)', 'By counting crotchets', 'By measuring decibels only', 'By reading time signatures'], correct: 0 },
-              { q: 'Which set of descriptive words best matches a Trumpet?', options: ['Brassy, bright, and metallic', 'Wooden, dry, and hollow', 'Deep, heavy thud', 'Shimmering and watery'], correct: 0 },
-              { q: 'Which instrument produces a "warm, singing, and rich" bowed string timbre?', options: ['Violin', 'Snare Drum', 'Xylophone', 'Cymbal'], correct: 0 },
-              { q: 'Which instrument produces a "short, crisp, crack-like" percussive sound?', options: ['Snare Drum', 'Harp', 'Double Bass', 'Flute'], correct: 0 },
-              { q: 'Which instrument is best described as having a "wooden, dry, and hollow" tone colour?', options: ['Xylophone', 'Trumpet', 'Tubular Bells', 'Violin'], correct: 0 },
-              { q: 'Which instrument creates a "shimmering, delicate, and flowing" plucked timbre?', options: ['Harp', 'Bass Drum', 'Trombone', 'Snare Drum'], correct: 0 },
-              { q: 'Which instrument family does the Trumpet belong to?', options: ['Brass', 'Woodwind', 'Strings', 'Percussion'], correct: 0 },
-              { q: 'Which instrument family do the Violin, Harp, and Double Bass belong to?', options: ['Strings', 'Brass', 'Woodwind', 'Electronic'], correct: 0 },
-              { q: 'Which instrument produces a "deep, heavy thud"?', options: ['Bass Drum', 'Piccolo', 'Triangle', 'Violin'], correct: 0 },
-              { q: 'Which instrument is known for a "resonant, ringing, and bright" metallic chime?', options: ['Tubular Bells', 'Double Bass', 'Snare Drum', 'Bassoon'], correct: 0 },
-              { q: 'Why does a Flute sound different from a Clarinet when playing the exact same pitch and volume?', options: ['They have different tone colours (timbres)', 'One is playing faster than the other', 'They use different time signatures', 'One is playing a rest'], correct: 0 },
-              { q: 'What playing technique on a Violin changes its timbre from smooth to short and plucked?', options: ['Pizzicato', 'Crescendo', 'Fortissimo', 'Ostinato'], correct: 0 },
-              { q: 'How does placing a mute into a Trumpet bell affect its timbre?', options: ['It makes the sound quieter, muffled, and more nasal/buzzy', 'It doubles the tempo', 'It turns it into a percussion instrument', 'It adds 4 beats to every note'], correct: 0 },
-              { q: 'Which instrument produces a "rumbling, dark, and woody" low string sound?', options: ['Double Bass', 'Flute', 'Glockenspiel', 'Snare Drum'], correct: 0 }
+              { q: 'What does Tone Colour (Timbre) refer to in music?', options: ['The unique sound quality that distinguishes one instrument from another', 'How fast the beat moves', 'How high or low a pitch is', 'The number of bars in a section'], correct: 0 },
+              { q: 'How do musicians describe an instrument’s timbre?', options: ['By using descriptive words (adjectives) such as warm, brassy, wooden, or shimmering', 'By counting crotchet beats', 'By measuring frequency in Hertz only', 'By reading dynamic hairpins'], correct: 0 },
+              { q: 'Which descriptive words best match the timbre of a Violin?', options: ['Warm, singing, and rich', 'Short, crisp, and crack-like', 'Deep, heavy thud', 'Wooden, dry, and hollow'], correct: 0 },
+              { q: 'Which instrument is described as having a "brassy, bright, and metallic" timbre?', options: ['Trumpet', 'Xylophone', 'Double Bass', 'Harp'], correct: 0 },
+              { q: 'Which instrument produces a "short, crisp, and crack-like" percussive sound?', options: ['Snare Drum', 'Violin', 'Harp', 'Tubular Bells'], correct: 0 },
+              { q: 'Which instrument produces a "deep, heavy thud"?', options: ['Bass Drum', 'Trumpet', 'Xylophone', 'Violin'], correct: 0 },
+              { q: 'Which instrument is described as "rumbling, dull, and woody"?', options: ['Double Bass', 'Tubular Bells', 'Harp', 'Snare Drum'], correct: 0 },
+              { q: 'Which instrument creates a "shimmering and delicate" plucked timbre?', options: ['Harp', 'Bass Drum', 'Trumpet', 'Snare Drum'], correct: 0 },
+              { q: 'Which instrument is best described as "wooden, dry, and hollow"?', options: ['Xylophone', 'Tubular Bells', 'Violin', 'Trumpet'], correct: 0 },
+              { q: 'Which instrument produces a "resonant, ringing, and bright" chime?', options: ['Tubular Bells', 'Double Bass', 'Snare Drum', 'Bass Drum'], correct: 0 }
             ]
           }
         ]
@@ -1161,21 +1154,16 @@
               }
             ],
             testQuestions: [
-              { q: 'What does Texture refer to in music?', options: ['The number of layers of sound heard together and how thick or thin the music feels', 'How fast or slow the beat is', 'Whether a note is a crotchet or a minim', 'The Italian word for loud'], correct: 0 },
-              { q: 'Which ensemble creates a THIN texture?', options: ['A solo flute playing alone', 'A 70-piece symphony orchestra', 'A rock band with two guitars, bass, drums, keyboards, and choir', 'A marching brass band'], correct: 0 },
-              { q: 'Which ensemble creates a THICK texture?', options: ['Full orchestra playing bass, chords, percussion, and melody simultaneously', 'One unaccompanied singer', 'A single solo piano note', 'Two handclaps'], correct: 0 },
-              { q: 'What happens to the texture when more instruments join in during a chorus?', options: ['The texture becomes thicker and denser', 'The texture becomes thinner', 'The pitch becomes lower', 'The time signature disappears'], correct: 0 },
-              { q: 'What happens to the texture when instruments drop out for a quiet breakdown?', options: ['The texture becomes thinner and more sparse', 'The texture becomes thicker', 'The tempo doubles', 'All notes become semibreves'], correct: 0 },
-              { q: 'Which role usually provides the lowest foundational layer in a thick musical texture?', options: ['The bass layer', 'The high sparkle chime', 'A solo piccolo', 'A snare rimshot'], correct: 0 },
-              { q: 'Which layer carries the main singable tune in an arrangement?', options: ['The lead melody layer', 'The bass drone', 'The hi-hat', 'The silence'], correct: 0 },
-              { q: 'Which layer fills out the middle frequencies with sustained chords?', options: ['The harmony pad / chord layer', 'A single snare hit', 'A metronome click', 'A rest'], correct: 0 },
-              { q: 'How many active layers usually define a "Thin & Sparse" texture?', options: ['1 to 2 layers', '5 to 8 layers', '10 or more layers', 'Zero layers'], correct: 0 },
-              { q: 'Why do composers vary texture between verses and choruses?', options: ['To build contrast, excitement, and structural shape', 'Because instruments break during verses', 'To avoid using dynamics', 'Because songs cannot have chords'], correct: 0 },
-              { q: 'A singer accompanied by only one acoustic guitar is an example of what kind of texture?', options: ['Thin / sparse texture', 'Dense orchestral texture', 'Silent rest', 'Percussion-only texture'], correct: 0 },
-              { q: 'Which adjective best describes a texture with 5 distinct instruments playing at once?', options: ['Thick and dense', 'Thin and empty', 'Solo', 'Monotone'], correct: 0 },
-              { q: 'If a piece begins with one bassline and gradually adds drums, chords, and melody every 4 bars, how is the texture changing?', options: ['Building from thin to thick', 'Thinning out from thick to thin', 'Staying completely unchanged', 'Getting softer'], correct: 0 },
-              { q: 'Which layer adds rhythmic drive and momentum using repeating subdivisions?', options: ['Arpeggio / rhythm motion layer', 'Long bass drone', 'Final cadence', 'Silence'], correct: 0 },
-              { q: 'In a band recording, muting the drums, bass, and keyboards so only the lead vocal remains creates what effect?', options: ['A sudden shift to a thin texture', 'A thicker texture', 'A higher pitch', 'A faster BPM'], correct: 0 }
+              { q: 'What does Texture refer to in music?', options: ['How many layers of sound are heard together and how thick or thin the sound feels', 'How fast or slow the tempo is', 'Whether a note lasts 1 beat or 4 beats', 'The Italian marking for very soft'], correct: 0 },
+              { q: 'How many active layers usually create a "Thin & Sparse" texture?', options: ['1 to 2 layers', '4 to 5+ layers', '10 or more layers', 'Zero layers'], correct: 0 },
+              { q: 'Which musical example best demonstrates a Thin & Sparse texture?', options: ['A solo singer accompanied by a single acoustic guitar', 'Bass, chords, arpeggios, lead melody, and chimes all playing together', 'A full marching brass and percussion band', 'A symphony orchestra playing fortissimo'], correct: 0 },
+              { q: 'How many active layers create a "Thick & Dense" texture in the Texture Sound Lab?', options: ['4 to 5 layers', '1 layer only', '0 layers', 'Half a layer'], correct: 0 },
+              { q: 'What happens to the musical texture when more instrument layers are switched ON?', options: ['The texture becomes thicker and denser', 'The texture becomes thinner and more sparse', 'The pitch drops by an octave', 'The notes turn into rests'], correct: 0 },
+              { q: 'What happens to the texture when layers drop out leaving only 1 part playing?', options: ['The texture becomes thin and sparse', 'The texture becomes thick and dense', 'The tempo doubles', 'All notes become semibreves'], correct: 0 },
+              { q: 'In the Texture Sound Lab, which layer provides the low sustained C2 rumble?', options: ['Deep Bass Drone', 'Sparkle Chime', 'Lead Melody', 'Arpeggio Motion'], correct: 0 },
+              { q: 'Which layer in the Texture Sound Lab fills out the middle with a lush C major chord?', options: ['Warm Harmony Pad', 'Deep Bass Drone', 'Sparkle Chime', 'Crotchet Rest'], correct: 0 },
+              { q: 'Which layer adds pulsing 8th-note rhythmic movement in the Texture Sound Lab?', options: ['Arpeggio Motion', 'Deep Bass Drone', 'Warm Harmony Pad', 'Semibreve Rest'], correct: 0 },
+              { q: 'Which layer provides the high shimmering bell overtones at the top of the texture?', options: ['Sparkle Chime', 'Deep Bass Drone', 'Warm Harmony Pad', 'Arpeggio Motion'], correct: 0 }
             ]
           }
         ]
@@ -1216,21 +1204,16 @@
               }
             ],
             testQuestions: [
-              { q: 'What does Structure (Form) refer to in music?', options: ['The overall plan and order of sections in a piece of music', 'How loud a trumpet plays', 'The speed of quavers', 'The thickness of the bassline'], correct: 0 },
-              { q: 'What is the section pattern for Binary Form?', options: ['A – B', 'A – B – A', 'A – B – A – C – A', 'A – A – A – A'], correct: 0 },
-              { q: 'What is the section pattern for Ternary Form?', options: ['A – B – A', 'A – B', 'A – B – C – D', 'B – A'], correct: 0 },
-              { q: 'What is the section pattern for Rondo Form?', options: ['A – B – A – C – A', 'A – B', 'A – A – B – B', 'A – B – B – A'], correct: 0 },
-              { q: 'In popular songs, which section contains the main catchy hook and stays the same each time it returns?', options: ['The Chorus', 'The Intro', 'The Bridge', 'The Outro'], correct: 0 },
-              { q: 'In popular songs, which section tells the story with different lyrics each time while using the same music?', options: ['The Verse', 'The Chorus', 'The Coda', 'The Hook'], correct: 0 },
-              { q: 'What is the opening section that sets the mood before the main melody enters called?', options: ['Introduction (Intro)', 'Outro / Coda', 'Bridge', 'Pre-chorus'], correct: 0 },
-              { q: 'What is a contrasting section near the end of a pop song that breaks up the Verse-Chorus pattern?', options: ['The Bridge (Middle 8)', 'The Intro', 'The Beat', 'The Ostinato'], correct: 0 },
-              { q: 'What Italian term refers to a concluding "tail" section added to finish a piece of music?', options: ['Coda', 'Forte', 'Piano', 'Allegro'], correct: 0 },
-              { q: 'Why do composers use letters like A, B, and C when analysing musical structure?', options: ['To show which sections repeat and which sections introduce new material', 'To name the treble clef notes', 'To indicate dynamic volume', 'To count beats per bar'], correct: 0 },
-              { q: 'If a piece has an opening melody (A), a contrasting middle section (B), and ends by repeating the opening melody (A), what form is it?', options: ['Ternary Form', 'Binary Form', 'Through-composed', 'Strophic'], correct: 0 },
-              { q: 'What is a short, repeating musical pattern (riff) used throughout a section called?', options: ['Ostinato / Riff', 'Crescendo', 'Fermata', 'Cadence'], correct: 0 },
-              { q: 'What musical punctuation mark (two dots before a double bar line) tells performers to repeat a section?', options: ['Repeat sign', 'Treble clef', 'Hairpin', 'Time signature'], correct: 0 },
-              { q: 'In a 12-Bar Blues structure, how many bars long is one full cycle of the chord progression?', options: ['12 bars', '8 bars', '16 bars', '4 bars'], correct: 0 },
-              { q: 'What is "Call and Response" structure?', options: ['One solo performer plays/sings a phrase and a group answers back', 'Every instrument plays completely different songs', 'Music with no steady beat', 'A song that never repeats any section'], correct: 0 }
+              { q: 'What does Structure (Form) refer to in music?', options: ['The overall architectural plan and order of sections in a piece of music', 'How loudly a trumpet plays', 'The speed of quaver subdivisions', 'The thickness of a bass drone'], correct: 0 },
+              { q: 'How do musicians label distinct musical sections when analysing structure?', options: ['Using capital letters such as A, B, and C', 'Using dynamic markings like pp and ff', 'Using frequency numbers in Hertz', 'Using drum names like kick and snare'], correct: 0 },
+              { q: 'What does the letter "A" represent in musical form?', options: ['The opening main section', 'The final silence', 'A crescendo hairpin', 'A crotchet rest'], correct: 0 },
+              { q: 'What does the letter "B" represent in musical form?', options: ['A new contrasting section', 'An exact repeat of the opening', 'The tempo in BPM', 'A wooden xylophone'], correct: 0 },
+              { q: 'What is the section pattern for Binary Form?', options: ['A – B', 'A – B – A', 'A – B – A – C – A', 'A – A – A'], correct: 0 },
+              { q: 'Which form consists of two contrasting sections (Section A followed by Section B)?', options: ['Binary Form', 'Ternary Form', 'Rondo Form', 'Unison Form'], correct: 0 },
+              { q: 'What is the section pattern for Ternary Form?', options: ['A – B – A', 'A – B', 'A – B – A – C – A', 'B – A'], correct: 0 },
+              { q: 'Which form uses a three-part sandwich structure where Section A returns after a contrasting Section B?', options: ['Ternary Form (A – B – A)', 'Binary Form (A – B)', 'Rondo Form (A – B – A – C – A)', 'Solo Form'], correct: 0 },
+              { q: 'What is the section pattern for Rondo Form?', options: ['A – B – A – C – A', 'A – B', 'A – B – A', 'A – B – C – D'], correct: 0 },
+              { q: 'In Rondo Form (A – B – A – C – A), which section keeps returning between contrasting episodes (B and C)?', options: ['The main theme (Section A)', 'Only Section C', 'Only the silence', 'The crescendo'], correct: 0 }
             ]
           }
         ]
@@ -1366,14 +1349,33 @@
 
           <div class="space-y-4">
             ${concept.levels.map(lvl => `
-              <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <span class="text-xs font-black uppercase text-indigo-600">${lvl.lessons.length} Interactive Lessons + 15-Question Test</span>
-                  <h2 class="text-xl font-black text-slate-800 mt-1">${lvl.title}</h2>
+              <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <span class="text-xs font-black uppercase text-indigo-600">${lvl.lessons.length} Interactive Lessons + 15-Question Test</span>
+                    <h2 class="text-xl font-black text-slate-800 mt-1">${lvl.title}</h2>
+                  </div>
+                  <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level} })" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl text-xs shadow shrink-0">
+                    Open Level ${lvl.level} &rarr;
+                  </button>
                 </div>
-                <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level} })" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl text-xs shadow shrink-0">
-                  Open Level ${lvl.level} &rarr;
-                </button>
+                <div class="pt-3 border-t border-slate-100">
+                  <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-2">Level ${lvl.level} Contents</div>
+                  <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    ${lvl.lessons.map(les => {
+                      const lKey = `${concept.id}_lvl${lvl.level}_les${les.lessonNum}`;
+                      const isDone = (window.state.completedLessons || []).includes(lKey);
+                      return `
+                        <li onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level}, lessonNum: ${les.lessonNum} })" class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-300 cursor-pointer transition-colors text-xs">
+                          <span class="font-bold text-slate-700 truncate">${les.title}</span>
+                          <span class="shrink-0 font-black ${isDone ? 'text-emerald-600' : 'text-indigo-500'}">
+                            ${isDone ? '<i class="fa-solid fa-circle-check"></i>' : '&rarr;'}
+                          </span>
+                        </li>
+                      `;
+                    }).join('')}
+                  </ul>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -1385,6 +1387,7 @@
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
       const completed = window.state.completedLessons || [];
+      const qCount = (level.testQuestions || []).length;
 
       container.innerHTML = `
         <div class="space-y-6">
@@ -1396,10 +1399,10 @@
             <div>
               <span class="text-xs font-black uppercase tracking-widest text-indigo-600">${concept.title}</span>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">${level.title}</h1>
-              <p class="text-xs text-slate-500 mt-1">Complete the interactive lessons and minigames below, then take the 15-question Final Level Test.</p>
+              <p class="text-xs text-slate-500 mt-1">Complete the interactive lessons and minigames below, then take the ${qCount}-question Final Level Test.</p>
             </div>
             <button onclick="app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs shadow-md shrink-0">
-              <i class="fa-solid fa-file-pen mr-1.5"></i> Take 15-Question Level Test
+              <i class="fa-solid fa-file-pen mr-1.5"></i> Take ${qCount}-Question Level Test
             </button>
           </div>
 
@@ -1476,7 +1479,7 @@
               </button>
             ` : `
               <button onclick="app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md">
-                Take Final 15-Question Test &rarr;
+                Take Final ${(level.testQuestions || []).length}-Question Test &rarr;
               </button>
             `}
           </div>
@@ -1874,28 +1877,107 @@
     // ==========================================
     // MINIGAME 4: LONG NOTE SUSTAIN SOUND MODULE
     // ==========================================
-    let longNoteState = { running: false, speedIdx: 0, speeds: [76, 92, 108, 124], notes: [], beatIdx: -4, holding: false, heldBeats: 0, intervalId: null, completed: false };
+    let longNoteState = {
+      running: false,
+      speedIdx: 0,
+      speeds: [76, 92, 108, 124],
+      notes: [],
+      beatIdx: -4,
+      holding: false,
+      holdStartTime: 0,
+      noteSpans: [],
+      noteHeldMs: [],
+      continuousAcrossBoundary: [],
+      failedNoteIndices: [],
+      feedbackMsg: '',
+      intervalId: null,
+      completed: false
+    };
 
     function stopLongNoteGameLoop() {
       if (longNoteState.intervalId) clearInterval(longNoteState.intervalId);
       longNoteState.intervalId = null;
       longNoteState.running = false;
       longNoteState.holding = false;
+      longNoteState.holdStartTime = 0;
     }
 
     function buildLongNotePhrase() {
-      const presets = [
-        [{ type: 'minim', beats: 2 }, { type: 'minim', beats: 2 }, { type: 'semibreve', beats: 4 }],
-        [{ type: 'dottedMinim', beats: 3 }, { type: 'crotchet', beats: 1 }, { type: 'minim', beats: 2 }, { type: 'minim', beats: 2 }],
-        [{ type: 'semibreve', beats: 4 }, { type: 'dottedMinim', beats: 3 }, { type: 'crotchet', beats: 1 }]
+      const options = [
+        { type: 'semibreve', beats: 4 },
+        { type: 'dottedMinim', beats: 3 },
+        { type: 'minim', beats: 2 },
+        { type: 'crotchet', beats: 1 }
       ];
-      return presets[Math.floor(Math.random() * presets.length)];
+      let phrase = [];
+      let remaining = 8;
+      
+      while (remaining > 0) {
+        const valid = options.filter(o => o.beats <= remaining);
+        const pick = valid[Math.floor(Math.random() * valid.length)];
+        phrase.push({ type: pick.type, beats: pick.beats });
+        remaining -= pick.beats;
+      }
+      
+      // Ensure at least one note is longer than 1 beat so it remains a sustain challenge
+      if (!phrase.some(n => n.beats > 1)) return buildLongNotePhrase();
+      return phrase;
+    }
+
+    function computeLongNoteSpans(notes) {
+      let cursor = 0;
+      return notes.map((n, idx) => {
+        const span = { idx, type: n.type, beats: n.beats, startBeat: cursor, endBeat: cursor + n.beats };
+        cursor += n.beats;
+        return span;
+      });
+    }
+
+    function recordLongNoteHoldSegment(endTimeMs) {
+      const st = longNoteState;
+      if (!st.holding || !st.holdStartTime) return;
+      const startMs = st.holdStartTime;
+      const resolvedEndMs = typeof endTimeMs === 'number' ? endTimeMs : performance.now();
+      st.holding = false;
+      st.holdStartTime = 0;
+      if (!st.running || !st.phraseStartTime) return;
+
+      const bpm = st.speeds[st.speedIdx];
+      const beatMs = 60000 / bpm;
+
+      st.noteSpans.forEach((span, idx) => {
+        const nStart = st.phraseStartTime + span.startBeat * beatMs;
+        const nEnd = st.phraseStartTime + span.endBeat * beatMs;
+        // Forgiving 260ms grace buffer before note starts and after note ends
+        const overlapStart = Math.max(startMs, nStart - 260);
+        const overlapEnd = Math.min(resolvedEndMs, nEnd + 260);
+        if (overlapEnd > overlapStart) {
+          st.noteHeldMs[idx] = (st.noteHeldMs[idx] || 0) + (overlapEnd - overlapStart);
+        }
+      });
     }
 
     function mountEmbeddedLongNoteGame(target) {
       if (!target) return;
       stopLongNoteGameLoop();
-      longNoteState = { running: false, speedIdx: 0, speeds: [76, 92, 108, 124], notes: buildLongNotePhrase(), beatIdx: -4, holding: false, heldBeats: 0, intervalId: null, completed: false };
+      const notes = buildLongNotePhrase();
+      longNoteState = {
+        running: false,
+        speedIdx: 0,
+        speeds: [76, 92, 108, 124],
+        notes,
+        beatIdx: -4,
+        holding: false,
+        holdStartTime: 0,
+        phraseStartTime: 0,
+        noteSpans: computeLongNoteSpans(notes),
+        noteHeldMs: notes.map(() => 0),
+        continuousAcrossBoundary: notes.map(() => false),
+        failedNoteIndices: [],
+        feedbackMsg: '',
+        intervalId: null,
+        completed: false
+      };
       renderLongNoteGameUI(target);
     }
 
@@ -1903,31 +1985,86 @@
       stopLongNoteGameLoop();
       const bpm = longNoteState.speeds[longNoteState.speedIdx];
       const ms = Math.round(60000 / bpm);
-      longNoteState.notes = buildLongNotePhrase();
+      
+      // Generate a new mixed phrase UNLESS they are retrying a failed attempt
+      const notes = (longNoteState.failedNoteIndices && longNoteState.failedNoteIndices.length > 0)
+        ? longNoteState.notes
+        : buildLongNotePhrase();
+        
+      longNoteState.notes = notes;
+      longNoteState.noteSpans = computeLongNoteSpans(notes);
+      longNoteState.noteHeldMs = notes.map(() => 0);
+      longNoteState.continuousAcrossBoundary = notes.map(() => false);
+      longNoteState.failedNoteIndices = [];
+      longNoteState.feedbackMsg = '';
       longNoteState.beatIdx = -5;
-      longNoteState.heldBeats = 0;
+      longNoteState.holding = false;
+      longNoteState.holdStartTime = 0;
+      longNoteState.phraseStartTime = 0;
       longNoteState.running = true;
 
       const step = () => {
         longNoteState.beatIdx++;
         const b = longNoteState.beatIdx;
-        if (b < 0) playTonePitch(784, 0.06, 0.22, 'sine');
-        else if (b < 8) {
+        const now = performance.now();
+
+        if (b < 0) {
+          playTonePitch(784, 0.06, 0.22, 'sine');
+        } else if (b < 8) {
+          if (b === 0) {
+            longNoteState.phraseStartTime = now;
+          }
           playTonePitch(523.25, 0.06, 0.18, 'sine');
+
+          // Check if a new note starts on beat b while Spacebar was held continuously since well before this beat
+          const startingNoteIdx = longNoteState.noteSpans.findIndex(s => s.startBeat === b);
+          if (startingNoteIdx > 0 && longNoteState.holding && longNoteState.holdStartTime > 0) {
+            // Only flag if they held straight across without releasing for at least 380ms prior to the new note
+            if (now - longNoteState.holdStartTime > 380) {
+              longNoteState.continuousAcrossBoundary[startingNoteIdx] = true;
+            }
+          }
+
           if (longNoteState.holding) {
-            longNoteState.heldBeats++;
             playTonePitch(329.63, (ms / 1000) * 0.95, 0.28, 'triangle');
           }
         } else {
+          if (longNoteState.holding) {
+            recordLongNoteHoldSegment(now);
+          }
           stopLongNoteGameLoop();
-          if (longNoteState.speedIdx < 3) {
-            longNoteState.speedIdx++;
-            startLongNoteSpeed();
-            return;
+
+          // Evaluate each note's sustained time with generous human tolerance
+          const failed = [];
+          longNoteState.noteSpans.forEach((span, idx) => {
+            const targetMs = span.beats * ms;
+            const heldMs = longNoteState.noteHeldMs[idx] || 0;
+            // Generous leniency: allow holding at least 55% of target duration (minus 220ms) and up to target + 1.35 beats
+            const minAllowed = Math.max(180, targetMs * 0.55 - 180);
+            const maxAllowed = targetMs + ms * 1.35;
+
+            if (longNoteState.continuousAcrossBoundary[idx] || heldMs < minAllowed || heldMs > maxAllowed) {
+              failed.push(idx);
+            }
+          });
+
+          longNoteState.failedNoteIndices = failed;
+
+          if (failed.length === 0) {
+            if (longNoteState.speedIdx < 3) {
+              longNoteState.speedIdx++;
+              longNoteState.feedbackMsg = `Great sustain! Advancing to Speed ${longNoteState.speedIdx + 1}...`;
+              renderLongNoteGameUI();
+              setTimeout(() => startLongNoteSpeed(), 700);
+              return;
+            } else {
+              longNoteState.completed = true;
+              addTokens(10);
+              showAppModal('Long Note Sustain Mastered!', 'You sustained Minims, Dotted Minims, and Semibreves cleanly across all 4 speeds (+10 Tokens)!', true);
+            }
           } else {
-            longNoteState.completed = true;
-            addTokens(10);
-            showAppModal('Long Note Sustain Mastered!', 'You sustained Minims, Dotted Minims, and Semibreves across all 4 speeds (+10 Tokens)!', true);
+            longNoteState.feedbackMsg = 'Check the red-bordered note(s): hold for the full beat count and release briefly before the next note starts!';
+            playTonePitch(165, 0.2, 0.25, 'sawtooth');
           }
         }
         renderLongNoteGameUI();
@@ -1936,11 +2073,36 @@
       longNoteState.intervalId = setInterval(step, ms);
     }
 
+    function beginLongNoteHold() {
+      if (!longNoteState.running) return;
+      if (!longNoteState.holding) {
+        longNoteState.holding = true;
+        longNoteState.holdStartTime = performance.now();
+        playTonePitch(329.63, 0.4, 0.3, 'triangle');
+        renderLongNoteGameUI();
+      }
+    }
+
+    function endLongNoteHold() {
+      if (longNoteState.holding) {
+        recordLongNoteHoldSegment(performance.now());
+        renderLongNoteGameUI();
+      }
+    }
+
     function renderLongNoteGameUI(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
       const st = longNoteState;
       const bpm = st.speeds[st.speedIdx];
+      const activeSpanIdx = st.running && st.beatIdx >= 0 && st.beatIdx < 8
+        ? st.noteSpans.findIndex(s => st.beatIdx >= s.startBeat && st.beatIdx < s.endBeat)
+        : -1;
+      const statusBanner = st.running && st.beatIdx < 0
+        ? `Count-In: ${5 + st.beatIdx}`
+        : st.running
+        ? `Beat ${st.beatIdx + 1} of 8`
+        : 'Ready';
 
       target.innerHTML = `
         <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
@@ -1948,20 +2110,56 @@
             <div>
               <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Long Note Sustain Synth Module</span>
               <h3 class="text-xl font-black">8-Beat Sustain &amp; Hold Challenge</h3>
-              <p class="text-xs text-slate-300 mt-1">Press and <strong>HOLD Spacebar</strong> (or hold the button below) for the exact beat duration of each Minim (2), Dotted Minim (3), or Semibreve (4)!</p>
+              <p class="text-xs text-slate-300 mt-1">
+                <strong>Instructions:</strong> After the 4-beat count-in, press and <strong>HOLD Spacebar</strong> for the exact beats of each note, then <strong>RELEASE Spacebar</strong> before pressing again for the next note!
+              </p>
             </div>
-            <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
-              Speed ${st.speedIdx + 1} / 4 (${bpm} BPM)
-            </span>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-amber-400/15 border border-amber-400/40 text-xs font-black text-amber-300">
+                ${statusBanner}
+              </span>
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+                Speed ${st.speedIdx + 1} / 4 (${bpm} BPM)
+              </span>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            ${st.notes.map(n => `
-              <div class="p-4 rounded-2xl bg-slate-800 border border-slate-700 text-center">
-                <div class="text-amber-300">${renderEngravedNoteDarkSVG(n.type, 'w-12 h-16')}</div>
-                <div class="font-black text-xs uppercase mt-1">${n.beats} Beats</div>
-              </div>
-            `).join('')}
+          ${st.feedbackMsg ? `
+            <div class="p-3.5 rounded-2xl ${st.failedNoteIndices.length > 0 ? 'bg-rose-950/70 border border-rose-500 text-rose-200' : 'bg-emerald-950/70 border border-emerald-500 text-emerald-200'} text-xs font-bold text-center">
+              ${st.feedbackMsg}
+            </div>
+          ` : ''}
+
+          <div class="grid grid-cols-1 sm:grid-cols-${st.notes.length} gap-3">
+            ${st.notes.map((n, idx) => {
+              const isCurrent = activeSpanIdx === idx;
+              const isFailed = st.failedNoteIndices.includes(idx);
+              const borderClass = isFailed
+                ? 'border-2 border-rose-500 bg-rose-950/40'
+                : isCurrent
+                ? 'border-2 border-amber-400 bg-indigo-950/80 scale-[1.02]'
+                : 'border border-slate-700 bg-slate-800';
+              const keycapClass = isCurrent && st.holding
+                ? 'bg-emerald-400 text-slate-950 border-emerald-300 translate-y-0.5'
+                : isCurrent
+                ? 'bg-amber-400 text-slate-950 border-amber-300'
+                : 'bg-slate-700 text-slate-300 border-slate-600';
+
+              return `
+                <div class="p-4 rounded-2xl ${borderClass} text-center flex flex-col justify-between transition-all">
+                  <div>
+                    <div class="text-amber-300">${renderEngravedNoteDarkSVG(n.type, 'w-12 h-16')}</div>
+                    <div class="font-black text-xs uppercase mt-1">${n.beats} ${n.beats === 1 ? 'Beat' : 'Beats'}</div>
+                  </div>
+                  <!-- Spacebar Keycap Image Below Each Note -->
+                  <div class="mt-3 pt-2 border-t border-slate-700/70">
+                    <div class="mx-auto w-full max-w-[140px] py-1.5 px-2 rounded-lg border-b-4 text-[10px] font-black uppercase tracking-widest transition-all ${keycapClass}">
+                      <i class="fa-solid fa-keyboard mr-1"></i> Spacebar
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
 
           ${st.completed ? `
@@ -1973,15 +2171,15 @@
             <div class="flex justify-center">
               ${!st.running ? `
                 <button type="button" onclick="startLongNoteSpeed()" class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
-                  Start Speed ${st.speedIdx + 1} (${bpm} BPM)
+                  ${st.failedNoteIndices.length > 0 ? `Retry Speed ${st.speedIdx + 1} (${bpm} BPM)` : `Start Speed ${st.speedIdx + 1} (${bpm} BPM)`}
                 </button>
               ` : `
                 <button type="button"
-                  onmousedown="longNoteState.holding = true; playTonePitch(329.63, 0.4, 0.3, 'triangle'); renderLongNoteGameUI();"
-                  onmouseup="longNoteState.holding = false; renderLongNoteGameUI();"
-                  onmouseleave="longNoteState.holding = false; renderLongNoteGameUI();"
-                  ontouchstart="event.preventDefault(); longNoteState.holding = true; playTonePitch(329.63, 0.4, 0.3, 'triangle'); renderLongNoteGameUI();"
-                  ontouchend="longNoteState.holding = false; renderLongNoteGameUI();"
+                  onmousedown="beginLongNoteHold()"
+                  onmouseup="endLongNoteHold()"
+                  onmouseleave="endLongNoteHold()"
+                  ontouchstart="event.preventDefault(); beginLongNoteHold();"
+                  ontouchend="endLongNoteHold()"
                   class="px-8 py-4 ${st.holding ? 'bg-emerald-500 text-slate-950 scale-95' : 'bg-indigo-600 text-white'} font-black rounded-2xl text-sm shadow-lg transition-all">
                   ${st.holding ? 'SUSTAINING NOTE...' : 'PRESS & HOLD (SPACEBAR)'}
                 </button>
@@ -1994,23 +2192,23 @@
 
     // Global Spacebar handler for rhythm games
     window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !e.repeat) {
-        if (beatTapState.running) { e.preventDefault(); handleBeatTapHit(); }
-        else if (crotchetGameState.running) { e.preventDefault(); handleCrotchetTap(); }
-        else if (quaverGameState.running) { e.preventDefault(); handleQuaverTap(); }
-        else if (longNoteState.running) {
+      if (e.code === 'Space') {
+        if (beatTapState.running || crotchetGameState.running || quaverGameState.running || longNoteState.running) {
           e.preventDefault();
-          longNoteState.holding = true;
-          playTonePitch(329.63, 0.4, 0.3, 'triangle');
-          renderLongNoteGameUI();
+        }
+        if (!e.repeat) {
+          if (beatTapState.running) handleBeatTapHit();
+          else if (crotchetGameState.running) handleCrotchetTap();
+          else if (quaverGameState.running) handleQuaverTap();
+          else if (longNoteState.running) beginLongNoteHold();
         }
       }
     });
 
     window.addEventListener('keyup', (e) => {
       if (e.code === 'Space' && longNoteState.running) {
-        longNoteState.holding = false;
-        renderLongNoteGameUI();
+        e.preventDefault();
+        endLongNoteHold();
       }
     });
 
@@ -2019,6 +2217,9 @@
     // ==========================================
     let drumLabState = {
       activeTab: 'sequencer',
+      sequencerPlaying: false,
+      sequencerStep: -1,
+      sequencerIntervalId: null,
       grid: {
         hihat: [1, 1, 1, 1, 1, 1, 1, 1],
         snare: [0, 0, 1, 0, 0, 0, 1, 0],
@@ -2038,14 +2239,59 @@
       dictationStatusText: 'Click "Hear Pattern (4-Beat Count-In)" to listen!'
     };
 
-    function playDrumGridSequence(gridObj) {
-      for (let step = 0; step < 8; step++) {
-        setTimeout(() => {
-          if (gridObj.hihat[step]) playDrumSound('hihat');
-          if (gridObj.snare[step]) playDrumSound('snare');
-          if (gridObj.kick[step]) playDrumSound('kick');
-        }, step * 260);
+    const drumSubdivisionLabels = ['1', '&', '2', '&', '3', '&', '4', '&'];
+
+    function stopDrumSequencerLoop() {
+      if (drumLabState.sequencerIntervalId) {
+        clearInterval(drumLabState.sequencerIntervalId);
+        drumLabState.sequencerIntervalId = null;
       }
+      drumLabState.sequencerPlaying = false;
+      drumLabState.sequencerStep = -1;
+    }
+
+    function toggleDrumSequencerLoop() {
+      if (drumLabState.sequencerPlaying) {
+        stopDrumSequencerLoop();
+        mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));
+        return;
+      }
+      drumLabState.sequencerPlaying = true;
+      drumLabState.sequencerStep = -1;
+
+      const advanceStep = () => {
+        if (!drumLabState.sequencerPlaying) return;
+        drumLabState.sequencerStep = (drumLabState.sequencerStep + 1) % 8;
+        const step = drumLabState.sequencerStep;
+        if (drumLabState.grid.hihat[step]) playDrumSound('hihat');
+        if (drumLabState.grid.snare[step]) playDrumSound('snare');
+        if (drumLabState.grid.kick[step]) playDrumSound('kick');
+
+        document.querySelectorAll('[data-seq-step]').forEach(btn => {
+          const btnStep = Number(btn.getAttribute('data-seq-step'));
+          if (btnStep === step) {
+            btn.classList.add('ring-2', 'ring-emerald-400', 'scale-105');
+          } else {
+            btn.classList.remove('ring-2', 'ring-emerald-400', 'scale-105');
+          }
+        });
+      };
+
+      advanceStep();
+      drumLabState.sequencerIntervalId = setInterval(advanceStep, 260);
+      mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));
+    }
+
+    function toggleDrumGridCell(inst, idx) {
+      drumLabState.grid[inst][idx] = drumLabState.grid[inst][idx] ? 0 : 1;
+      if (!drumLabState.sequencerPlaying && drumLabState.grid[inst][idx]) {
+        playDrumSound(inst);
+      }
+      mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));
+    }
+
+    function playDrumGridSequence(gridObj) {
+      toggleDrumSequencerLoop();
     }
 
     function generateSimpleRhythmDictation() {
@@ -2188,31 +2434,37 @@
 
       target.innerHTML = `
         <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-4">
+          <div class="flex flex-wrap items-center gap-3 border-b border-slate-800 pb-4">
             <button type="button" onclick="drumLabState.activeTab='sequencer'; mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));" class="px-4 py-2.5 rounded-xl text-xs font-black transition-all ${st.activeTab === 'sequencer' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800 text-white hover:bg-slate-700'}">
               <i class="fa-solid fa-drum mr-1.5"></i> 1. 8-Beat Drum Sequencer
             </button>
-            <button type="button" onclick="drumLabState.activeTab='dictation'; mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));" class="px-4 py-2.5 rounded-xl text-xs font-black transition-all ${st.activeTab === 'dictation' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800 text-white hover:bg-slate-700'}">
+            <button type="button" onclick="drumLabState.activeTab='dictation'; mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));" class="px-5 py-2.5 rounded-xl text-xs font-black transition-all border-2 ${st.activeTab === 'dictation' ? 'bg-amber-400 border-amber-200 text-slate-950 shadow-lg shadow-amber-400/30 scale-[1.02]' : 'bg-amber-500/20 border-amber-400 text-amber-300 hover:bg-amber-400 hover:text-slate-950 shadow-md shadow-amber-400/15'}">
               <i class="fa-solid fa-ear-listen mr-1.5"></i> 2. Dictation Activity (2 Tokens / Round)
             </button>
           </div>
 
           ${st.activeTab === 'sequencer' ? `
             <div class="space-y-4">
-              <div class="flex items-center justify-between">
-                <h3 class="text-lg font-black">8-Beat Drum Groove Sequencer</h3>
-                <button type="button" onclick="playDrumGridSequence(drumLabState.grid)" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
-                  <i class="fa-solid fa-play mr-1"></i> Play Groove
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-lg font-black">8-Beat Drum Groove Sequencer</h3>
+                  <p class="text-xs text-slate-400">Toggle beats while looping in real time across subdivisions <strong>1 &amp; 2 &amp; 3 &amp; 4 &amp;</strong>.</p>
+                </div>
+                <button type="button" onclick="toggleDrumSequencerLoop()" class="px-5 py-2.5 ${st.sequencerPlaying ? 'bg-rose-500 hover:bg-rose-400 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'} font-black rounded-xl text-xs shadow transition-all">
+                  <i class="fa-solid ${st.sequencerPlaying ? 'fa-stop' : 'fa-repeat'} mr-1.5"></i> ${st.sequencerPlaying ? 'Stop Loop' : 'Play Loop (Repeat)'}
                 </button>
               </div>
               ${['hihat', 'snare', 'kick'].map(inst => `
                 <div class="grid grid-cols-9 gap-1.5 items-center">
                   <div class="text-xs font-black uppercase text-slate-300">${inst}</div>
-                  ${st.grid[inst].map((val, idx) => `
-                    <button type="button" onclick="drumLabState.grid['${inst}'][${idx}] = drumLabState.grid['${inst}'][${idx}] ? 0 : 1; mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));" class="h-10 rounded-xl font-black text-xs border ${val ? 'bg-amber-400 border-amber-300 text-slate-950' : 'bg-slate-800 border-slate-700 text-slate-500'}">
-                      ${idx + 1}
-                    </button>
-                  `).join('')}
+                  ${st.grid[inst].map((val, idx) => {
+                    const isCurrentStep = st.sequencerPlaying && st.sequencerStep === idx;
+                    return `
+                      <button type="button" data-seq-step="${idx}" onclick="toggleDrumGridCell('${inst}', ${idx})" class="h-10 rounded-xl font-black text-xs border transition-transform ${val ? 'bg-amber-400 border-amber-300 text-slate-950' : 'bg-slate-800 border-slate-700 text-slate-400'} ${isCurrentStep ? 'ring-2 ring-emerald-400 scale-105' : ''}">
+                        ${drumSubdivisionLabels[idx]}
+                      </button>
+                    `;
+                  }).join('')}
                 </div>
               `).join('')}
             </div>
@@ -2714,8 +2966,551 @@
         </div>
       `;
     }
+
     // ==========================================
-    // MELODIC CONTOUR (STEP VS LEAP & DIRECTION) MINIGAME (10 ROUNDS)
+    // RESTORED PITCH LEVEL 1 GAMES (SOUND-WAVE MATCHER, MELODIC CONTOUR DETECTIVE & KEYBOARD)
+    // ==========================================
+    const pitchWaveCatalog = [
+      { id: 'low', label: 'Low Pitch (~130 Hz)', desc: 'Slow, wide waves', freq: 130.81, color: '#818cf8', path: 'M0 25 Q 25 4, 50 25 T 100 25 T 150 25 T 200 25' },
+      { id: 'med', label: 'Medium Pitch (~262 Hz)', desc: 'Moderate wave speed', freq: 261.63, color: '#34d399', path: 'M0 25 Q 12.5 4, 25 25 T 50 25 T 75 25 T 100 25 T 125 25 T 150 25 T 175 25 T 200 25' },
+      { id: 'high', label: 'High Pitch (~523 Hz)', desc: 'Fast, close waves', freq: 523.25, color: '#38bdf8', path: 'M0 25 Q 8.3 4, 16.6 25 T 33.3 25 T 50 25 T 66.6 25 T 83.3 25 T 100 25 T 116.6 25 T 133.3 25 T 150 25 T 166.6 25 T 183.3 25 T 200 25' },
+      { id: 'vhigh', label: 'Very High Pitch (~784 Hz)', desc: 'Ultra-fast, tightly packed waves', freq: 783.99, color: '#fbbf24', path: 'M0 25 Q 6.25 4, 12.5 25 T 25 25 T 37.5 25 T 50 25 T 62.5 25 T 75 25 T 87.5 25 T 100 25 T 112.5 25 T 125 25 T 137.5 25 T 150 25 T 162.5 25 T 175 25 T 187.5 25 T 200 25' }
+    ];
+
+    let pitchWaveState = { round: 1, totalRounds: 4, score: 0, target: null, choices: [], answered: false, lastCorrect: false, completed: false };
+
+    function setupPitchWaveRound() {
+      const pool = pitchWaveState.round <= 2 ? pitchWaveCatalog.slice(0, 3) : pitchWaveCatalog;
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      pitchWaveState.choices = shuffled;
+      pitchWaveState.target = shuffled[Math.floor(Math.random() * shuffled.length)];
+      pitchWaveState.answered = false;
+    }
+
+    function mountEmbeddedPitchWaveGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      pitchWaveState = { round: 1, totalRounds: 4, score: 0, target: null, choices: [], answered: false, lastCorrect: false, completed: false };
+      setupPitchWaveRound();
+      renderPitchWaveGameUI(target);
+    }
+
+    function selectPitchWaveChoice(waveId) {
+      if (pitchWaveState.answered || pitchWaveState.completed) return;
+      pitchWaveState.answered = true;
+      const isRight = pitchWaveState.target && pitchWaveState.target.id === waveId;
+      pitchWaveState.lastCorrect = isRight;
+      if (isRight) {
+        pitchWaveState.score++;
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderPitchWaveGameUI();
+    }
+
+    function nextPitchWaveRound() {
+      if (pitchWaveState.round < pitchWaveState.totalRounds) {
+        pitchWaveState.round++;
+        setupPitchWaveRound();
+        renderPitchWaveGameUI();
+      } else {
+        pitchWaveState.completed = true;
+        const reward = pitchWaveState.score >= 3 ? 10 : 5;
+        addTokens(reward);
+        renderPitchWaveGameUI();
+        showAppModal('Pitch & Sound-Wave Matcher Complete!', `You matched ${pitchWaveState.score}/${pitchWaveState.totalRounds} sound waves and earned +${reward} Tokens!`, pitchWaveState.score >= 2);
+      }
+    }
+
+    function renderPitchWaveGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = pitchWaveState;
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Pitch &amp; Frequency Challenge</span>
+              <h3 class="text-xl font-black">Pitch &amp; Sound-Wave Matcher</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the mystery pitch and click the matching sound-wave diagram!</p>
+            </div>
+            <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+              Round ${st.round} / ${st.totalRounds} &bull; Score: ${st.score}
+            </span>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Sound-Wave Matcher Complete (${st.score}/${st.totalRounds})!</h4>
+              <button type="button" onclick="mountEmbeddedPitchWaveGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : `
+            <div class="flex justify-center">
+              <button type="button" onclick="playTonePitch(${st.target.freq}, 0.65, 0.4, 'sine')" class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Pitch
+              </button>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? `✓ Correct! That was ${st.target.label}.` : `✗ Not quite — that was ${st.target.label}.`}</span>
+                <button type="button" onclick="nextPitchWaveRound()" class="px-4 py-2 bg-white text-slate-950 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${st.choices.map(w => `
+                <button type="button" onclick="selectPitchWaveChoice('${w.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-left transition-all ${
+                  st.answered && w.id === st.target.id ? 'border-emerald-400 bg-emerald-950/60' : 'border-slate-700 bg-slate-800 hover:border-amber-400'
+                }">
+                  <svg viewBox="0 0 200 50" class="w-full h-12 bg-slate-950 rounded-xl p-1 mb-2"><path d="${w.path}" fill="none" stroke="${w.color}" stroke-width="3"/></svg>
+                  <div class="font-black text-xs text-white">${w.label}</div>
+                  <div class="text-[11px] text-slate-400">${w.desc}</div>
+                </button>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // RESTORED MELODIC CONTOUR (STEP VS LEAP & DIRECTION) MINIGAME (10 ROUNDS, 1 TOKEN PER CORRECT ANSWER)
+    // ==========================================
+    const melodicContourIntervals = [
+      { id: 'asc_step', label: 'Ascending Step', movement: 'Step', direction: 'Ascending', freqs: [261.63, 293.66], yPositions: [48, 41] },
+      { id: 'desc_step', label: 'Descending Step', movement: 'Step', direction: 'Descending', freqs: [440.00, 392.00], yPositions: [27, 34] },
+      { id: 'asc_leap', label: 'Ascending Leap', movement: 'Leap', direction: 'Ascending', freqs: [261.63, 392.00], yPositions: [48, 27] },
+      { id: 'desc_leap', label: 'Descending Leap', movement: 'Leap', direction: 'Descending', freqs: [523.25, 329.63], yPositions: [20, 41] },
+      { id: 'asc_step_2', label: 'Ascending Step', movement: 'Step', direction: 'Ascending', freqs: [329.63, 349.23], yPositions: [41, 34] },
+      { id: 'desc_step_2', label: 'Descending Step', movement: 'Step', direction: 'Descending', freqs: [392.00, 349.23], yPositions: [27, 34] },
+      { id: 'asc_leap_2', label: 'Ascending Leap', movement: 'Leap', direction: 'Ascending', freqs: [293.66, 493.88], yPositions: [48, 20] },
+      { id: 'desc_leap_2', label: 'Descending Leap', movement: 'Leap', direction: 'Descending', freqs: [493.88, 293.66], yPositions: [20, 48] }
+    ];
+
+    let melodicContourState = {
+      round: 1,
+      totalRounds: 10,
+      score: 0,
+      current: melodicContourIntervals[0],
+      pickedMovement: null,
+      pickedDirection: null,
+      answered: false,
+      lastCorrect: false,
+      completed: false
+    };
+
+    function playMelodicInterval(freqs) {
+      if (!Array.isArray(freqs) || freqs.length < 2) return;
+      playTonePitch(freqs[0], 0.42, 0.38, 'triangle');
+      setTimeout(() => {
+        playTonePitch(freqs[1], 0.52, 0.38, 'triangle');
+      }, 480);
+    }
+
+    function pickNextMelodicContourChallenge() {
+      return melodicContourIntervals[Math.floor(Math.random() * melodicContourIntervals.length)];
+    }
+
+    function mountEmbeddedMelodicContourGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      melodicContourState = {
+        round: 1,
+        totalRounds: 10,
+        score: 0,
+        current: pickNextMelodicContourChallenge(),
+        pickedMovement: null,
+        pickedDirection: null,
+        answered: false,
+        lastCorrect: false,
+        completed: false
+      };
+      renderMelodicContourGameUI(target);
+    }
+
+    function checkMelodicContourGuess() {
+      const st = melodicContourState;
+      if (st.answered || st.completed || !st.pickedMovement || !st.pickedDirection) return;
+      st.answered = true;
+      const isRight = st.pickedMovement === st.current.movement && st.pickedDirection === st.current.direction;
+      st.lastCorrect = isRight;
+
+      if (isRight) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderMelodicContourGameUI();
+    }
+
+    function nextMelodicContourRound() {
+      const st = melodicContourState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        st.current = pickNextMelodicContourChallenge();
+        st.pickedMovement = null;
+        st.pickedDirection = null;
+        st.answered = false;
+        renderMelodicContourGameUI();
+      } else {
+        st.completed = true;
+        renderMelodicContourGameUI();
+        showAppModal(
+          'Melodic Contour Detective Complete!',
+          `You scored ${st.score} / ${st.totalRounds} and earned +${st.score} Tokens (1 Token per correct answer)!`,
+          st.score >= 5
+        );
+      }
+    }
+
+    function renderMelodicContourGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = melodicContourState;
+      const current = st.current;
+      const isEarOnly = st.round >= 6;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">Step vs. Leap &amp; Direction Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">
+                ${isEarOnly
+                  ? '<strong>Rounds 6–10 (Ear-Only Mode):</strong> Listen carefully to the two notes and identify both movement and direction!'
+                  : '<strong>Rounds 1–5 (Visual + Ear Mode):</strong> Listen to the two notes, look at the first note, and identify whether the second note moves by Step or Leap and Ascending or Descending!'}
+              </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+                Round ${st.round} / ${st.totalRounds}
+              </span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                Score: ${st.score} (+${st.score} Tokens)
+              </span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">10-Round Contour Challenge Complete!</h4>
+              <p class="text-xs text-slate-200">You answered <strong>${st.score} / ${st.totalRounds}</strong> correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedMelodicContourGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-5 py-2">
+              <div class="w-48 h-28 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center p-3">
+                ${isEarOnly && !st.answered ? `
+                  <div class="text-center">
+                    <i class="fa-solid fa-ear-listen text-2xl text-amber-400 mb-1"></i>
+                    <div class="text-[11px] font-black uppercase text-slate-400">Ear-Only Round</div>
+                  </div>
+                ` : `
+                  <svg viewBox="0 0 140 68" class="w-full h-full">
+                    <line x1="12" y1="20" x2="128" y2="20" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="12" y1="27" x2="128" y2="27" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="12" y1="34" x2="128" y2="34" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="12" y1="41" x2="128" y2="41" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="12" y1="48" x2="128" y2="48" stroke="#475569" stroke-width="1.5"/>
+                    <ellipse cx="44" cy="${current.yPositions[0]}" rx="8" ry="5.5" transform="rotate(-18 44 ${current.yPositions[0]})" fill="#38bdf8"/>
+                    ${!st.answered ? `
+                      <text x="96" y="${current.yPositions[0]}" fill="#fbbf24" font-size="18" font-weight="900" text-anchor="middle" dominant-baseline="central">?</text>
+                    ` : `
+                      <line x1="52" y1="${current.yPositions[0]}" x2="88" y2="${current.yPositions[1]}" stroke="#fbbf24" stroke-width="2" stroke-dasharray="3 3"/>
+                      <ellipse cx="96" cy="${current.yPositions[1]}" rx="8" ry="5.5" transform="rotate(-18 96 ${current.yPositions[1]})" fill="#fbbf24"/>
+                    `}
+                  </svg>
+                `}
+              </div>
+
+              <button type="button" onclick="playMelodicInterval([${current.freqs[0]}, ${current.freqs[1]}])" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Two Notes
+              </button>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">
+                  ${st.lastCorrect
+                    ? `✓ Spot on (+1 Token)! That interval was an <strong>${current.label}</strong>.`
+                    : `✗ Not quite — that interval was an <strong>${current.label}</strong>.`}
+                </span>
+                <button type="button" onclick="nextMelodicContourRound()" class="px-4 py-2 bg-white text-slate-950 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : `
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <div class="text-[11px] font-black uppercase text-slate-400">1. Step or Leap?</div>
+                  <div class="grid grid-cols-2 gap-2">
+                    ${['Step', 'Leap'].map(m => `
+                      <button type="button" onclick="melodicContourState.pickedMovement='${m}'; renderMelodicContourGameUI();" class="py-3 rounded-xl font-black text-xs border-2 ${st.pickedMovement === m ? 'border-amber-400 bg-indigo-900 text-white' : 'border-slate-700 bg-slate-800 text-slate-300'}">
+                        ${m}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <div class="text-[11px] font-black uppercase text-slate-400">2. Ascending or Descending?</div>
+                  <div class="grid grid-cols-2 gap-2">
+                    ${['Ascending', 'Descending'].map(d => `
+                      <button type="button" onclick="melodicContourState.pickedDirection='${d}'; renderMelodicContourGameUI();" class="py-3 rounded-xl font-black text-xs border-2 ${st.pickedDirection === d ? 'border-amber-400 bg-indigo-900 text-white' : 'border-slate-700 bg-slate-800 text-slate-300'}">
+                        ${d}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+              <div class="flex justify-center pt-1">
+                <button type="button" onclick="checkMelodicContourGuess()" ${!st.pickedMovement || !st.pickedDirection ? 'disabled' : ''} class="px-8 py-3.5 rounded-2xl font-black text-xs shadow-lg ${st.pickedMovement && st.pickedDirection ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}">
+                  Submit Answer (+1 Token)
+                </button>
+              </div>
+            `}
+          `}
+        </div>
+      `;
+    }
+
+    function mountEmbeddedPitchKeyboard(target) {
+      if (!target) return;
+      const keys = [
+        { note: 'C4', freq: 261.63 }, { note: 'D4', freq: 293.66 }, { note: 'E4', freq: 329.63 },
+        { note: 'F4', freq: 349.23 }, { note: 'G4', freq: 392.00 }, { note: 'A4', freq: 440.00 },
+        { note: 'B4', freq: 493.88 }, { note: 'C5', freq: 523.25 }
+      ];
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-4 border border-slate-800">
+          <div>
+            <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Interactive Pitch Lab</span>
+            <h3 class="text-xl font-black">C Major Octave Keyboard</h3>
+            <p class="text-xs text-slate-300 mt-1">Click or tap any key from C4 to C5 to hear how pitch ascends across the 7 musical letters.</p>
+          </div>
+          <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+            ${keys.map(k => `
+              <button type="button" onmousedown="playTonePitch(${k.freq}, 0.45, 0.35, 'triangle')" class="h-28 rounded-2xl bg-white hover:bg-amber-100 active:scale-95 text-slate-900 font-black text-sm flex flex-col justify-end items-center pb-3 shadow-md transition-all">
+                <span>${k.note}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // RESTORED DYNAMICS MEMORY MATCH & TIMBRE SOUNDBOARD
+    // ==========================================
+    const dynamicsMemoryPairs = [
+      { id: 'pp', front: 'pp', back: 'Pianissimo (Very Soft)' },
+      { id: 'p', front: 'p', back: 'Piano (Soft)' },
+      { id: 'mp', front: 'mp', back: 'Mezzo Piano (Moderately Soft)' },
+      { id: 'mf', front: 'mf', back: 'Mezzo Forte (Moderately Loud)' },
+      { id: 'f', front: 'f', back: 'Forte (Loud)' },
+      { id: 'ff', front: 'ff', back: 'Fortissimo (Very Loud)' },
+      { id: 'cresc', front: '< (Crescendo)', back: 'Gradually Getting Louder' },
+      { id: 'decresc', front: '> (Decrescendo)', back: 'Gradually Getting Softer' }
+    ];
+
+    let dynamicsMemoryState = { cards: [], flipped: [], matched: [], lock: false };
+
+    function mountEmbeddedDynamicsSimulator(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const deck = [];
+      dynamicsMemoryPairs.forEach(p => {
+        deck.push({ pairId: p.id, text: p.front, kind: 'symbol' });
+        deck.push({ pairId: p.id, text: p.back, kind: 'def' });
+      });
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      dynamicsMemoryState = { cards: deck, flipped: [], matched: [], lock: false };
+      renderDynamicsMemoryUI(target);
+    }
+
+    function flipDynamicsMemoryCard(idx) {
+      const st = dynamicsMemoryState;
+      if (st.lock || st.flipped.includes(idx) || st.matched.includes(st.cards[idx].pairId)) return;
+      st.flipped.push(idx);
+      renderDynamicsMemoryUI();
+
+      if (st.flipped.length === 2) {
+        st.lock = true;
+        const [a, b] = st.flipped;
+        if (st.cards[a].pairId === st.cards[b].pairId) {
+          st.matched.push(st.cards[a].pairId);
+          st.flipped = [];
+          st.lock = false;
+          playTonePitch(659.25, 0.15, 0.3, 'triangle');
+          renderDynamicsMemoryUI();
+          if (st.matched.length === dynamicsMemoryPairs.length) {
+            addTokens(10);
+            showAppModal('Dynamics Memory Match Complete!', 'You matched all 8 dynamic symbols and earned +10 Tokens! Reshuffling cards...', true);
+            setTimeout(() => mountEmbeddedDynamicsSimulator(), 600);
+          }
+        } else {
+          setTimeout(() => {
+            st.flipped = [];
+            st.lock = false;
+            renderDynamicsMemoryUI();
+          }, 800);
+        }
+      }
+    }
+
+    function renderDynamicsMemoryUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = dynamicsMemoryState;
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Memory Match Game (+10 Tokens)</span>
+              <h3 class="text-xl font-black">Dynamics Flip-Card Memory Match</h3>
+              <p class="text-xs text-slate-300 mt-1">Match all 8 dynamic symbols (pp, p, mp, mf, f, ff, Crescendo, Decrescendo) with their definitions.</p>
+            </div>
+            <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+              ${st.matched.length} / ${dynamicsMemoryPairs.length} Pairs
+            </span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            ${st.cards.map((c, idx) => {
+              const isRevealed = st.flipped.includes(idx) || st.matched.includes(c.pairId);
+              const isDone = st.matched.includes(c.pairId);
+              return `
+                <button type="button" onclick="flipDynamicsMemoryCard(${idx})" class="h-24 p-3 rounded-2xl border-2 font-black text-xs flex items-center justify-center text-center transition-all ${
+                  isDone ? 'border-emerald-500 bg-emerald-950/60 text-emerald-200' : isRevealed ? 'border-amber-400 bg-indigo-900 text-white' : 'border-slate-700 bg-slate-800 hover:border-indigo-400 text-slate-500'
+                }">
+                  ${isRevealed ? c.text : '<i class="fa-solid fa-music text-lg"></i>'}
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    const timbreInstruments = [
+      { id: 'violin', name: 'Violin', desc: 'Warm, singing & rich', play: () => playTonePitch(440, 0.7, 0.3, 'sawtooth') },
+      { id: 'trumpet', name: 'Trumpet', desc: 'Brassy, bright & metallic', play: () => playTonePitch(587.33, 0.55, 0.35, 'square') },
+      { id: 'snare', name: 'Snare Drum', desc: 'Short, crisp & crack-like', play: () => playDrumSound('snare') },
+      { id: 'bassdrum', name: 'Bass Drum', desc: 'Deep, heavy thud', play: () => playDrumSound('kick') },
+      { id: 'doublebass', name: 'Double Bass', desc: 'Rumbling, dull & woody', play: () => playTonePitch(73.42, 0.8, 0.45, 'triangle') },
+      { id: 'harp', name: 'Harp', desc: 'Shimmering & delicate', play: () => { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => setTimeout(() => playTonePitch(f, 0.45, 0.22, 'sine'), i * 90)); } },
+      { id: 'xylophone', name: 'Xylophone', desc: 'Wooden, dry & hollow', play: () => playTonePitch(880, 0.14, 0.35, 'triangle') },
+      { id: 'bells', name: 'Tubular Bells', desc: 'Resonant, ringing & bright', play: () => playTonePitch(1046.5, 1.1, 0.3, 'sine') }
+    ];
+
+    let timbreGameState = { round: 1, totalRounds: 6, score: 0, target: timbreInstruments[0], answered: false, lastCorrect: false, completed: false };
+
+    function mountEmbeddedTimbreSoundboard(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      timbreGameState = {
+        round: 1,
+        totalRounds: 6,
+        score: 0,
+        target: timbreInstruments[Math.floor(Math.random() * timbreInstruments.length)],
+        answered: false,
+        lastCorrect: false,
+        completed: false
+      };
+      renderTimbreSoundboardUI(target);
+    }
+
+    function guessTimbreInstrument(id) {
+      const st = timbreGameState;
+      if (st.answered || st.completed) return;
+      st.answered = true;
+      st.lastCorrect = st.target.id === id;
+      if (st.lastCorrect) {
+        st.score++;
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderTimbreSoundboardUI();
+    }
+
+    function nextTimbreRound() {
+      const st = timbreGameState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        st.target = timbreInstruments[Math.floor(Math.random() * timbreInstruments.length)];
+        st.answered = false;
+        renderTimbreSoundboardUI();
+      } else {
+        st.completed = true;
+        const reward = st.score >= 4 ? 10 : 5;
+        addTokens(reward);
+        renderTimbreSoundboardUI();
+        showAppModal('Timbre Soundboard Complete!', `You identified ${st.score}/${st.totalRounds} instruments and earned +${reward} Tokens!`, st.score >= 3);
+      }
+    }
+
+    function renderTimbreSoundboardUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = timbreGameState;
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Timbre Listening Challenge</span>
+              <h3 class="text-xl font-black">8-Instrument Timbre Soundboard</h3>
+              <p class="text-xs text-slate-300 mt-1">Play the mystery timbre clip and match it to the correct instrument pad!</p>
+            </div>
+            <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+              Round ${st.round} / ${st.totalRounds} &bull; Score: ${st.score}
+            </span>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Timbre Soundboard Complete (${st.score}/${st.totalRounds})!</h4>
+              <button type="button" onclick="mountEmbeddedTimbreSoundboard(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : `
+            <div class="flex justify-center">
+              <button type="button" onclick="timbreInstruments.find(i => i.id === '${st.target.id}').play()" class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Sound
+              </button>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? `✓ Correct! That was ${st.target.name} (${st.target.desc}).` : `✗ Not quite — that was ${st.target.name} (${st.target.desc}).`}</span>
+                <button type="button" onclick="nextTimbreRound()" class="px-4 py-2 bg-white text-slate-950 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Sound →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              ${timbreInstruments.map(inst => `
+                <button type="button" onclick="guessTimbreInstrument('${inst.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-left transition-all ${
+                  st.answered && inst.id === st.target.id ? 'border-emerald-400 bg-emerald-950/60' : 'border-slate-700 bg-slate-800 hover:border-amber-400'
+                }">
+                  <div class="font-black text-xs text-white">${inst.name}</div>
+                  <div class="text-[11px] text-slate-400 mt-0.5">${inst.desc}</div>
+                </button>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
     function submitLevelTest(conceptId, levelNum) {
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
@@ -2754,67 +3549,7 @@
     }
 
     // ==========================================
-    // CLASSROOM REWARDS SHOP VIEW
-    // ==========================================
-    function renderShopView(container) {
-      const owned = state.inventory || [];
-      const currentTokens = (state.stats && state.stats.tokens) || 0;
-
-      container.innerHTML = `
-        <div class="space-y-6">
-          <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-black uppercase tracking-widest text-amber-100">Token Exchange</span>
-              <h1 class="text-2xl sm:text-4xl font-black mt-1">Classroom Rewards Shop</h1>
-              <p class="text-xs sm:text-sm text-amber-50 mt-1">Redeem your hard-earned tokens for studio hardware, instruments, and trophies.</p>
-            </div>
-            <div class="bg-white/20 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/30 text-center shrink-0">
-              <div class="text-[11px] font-bold uppercase tracking-wider text-amber-100">Your Balance</div>
-              <div class="text-2xl font-black text-white flex items-center justify-center gap-1.5">
-                <i class="fa-solid fa-coins text-amber-200"></i> ${currentTokens}
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            ${shopCatalog.map(item => {
-              const isOwned = owned.includes(item.id);
-              return `
-                <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-                  <div>
-                    <div class="flex items-center justify-between mb-3">
-                      <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700">${item.category}</span>
-                      <span class="text-xs font-black text-amber-600 flex items-center gap-1">
-                        <i class="fa-solid fa-coins text-amber-400"></i> ${item.cost}
-                      </span>
-                    </div>
-                    <div class="w-12 h-12 rounded-2xl bg-slate-100 text-indigo-600 flex items-center justify-center text-xl mb-3">
-                      <i class="fa-solid ${item.icon}"></i>
-                    </div>
-                    <h3 class="font-black text-base text-slate-800">${item.name}</h3>
-                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">${item.desc}</p>
-                  </div>
-                  <div class="mt-5 pt-3 border-t border-slate-100">
-                    ${isOwned ? `
-                      <button disabled class="w-full py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-black rounded-xl text-xs">
-                        <i class="fa-solid fa-check mr-1"></i> Owned
-                      </button>
-                    ` : `
-                      <button onclick="buyShopItem('${item.id}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs shadow-sm transition-all">
-                        Redeem (${item.cost} Tokens)
-                      </button>
-                    `}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // 15-QUESTION FINAL LEVEL TEST RUNNER (SHUFFLED CHOICES)
+    // 10-QUESTION FINAL LEVEL TEST RUNNER (SHUFFLED CHOICES)
     // ==========================================
     let activeShuffledQuestions = [];
 
@@ -2844,8 +3579,8 @@
 
           <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg">
             <span class="text-xs font-black uppercase tracking-widest text-amber-400">${concept.title} • Final Assessment</span>
-            <h1 class="text-2xl sm:text-3xl font-black mt-1">${level.title} — 15-Question Test</h1>
-            <p class="text-xs text-slate-300 mt-1">Answer all 15 questions below and submit to record your mark and earn up to +25 Tokens.</p>
+            <h1 class="text-2xl sm:text-3xl font-black mt-1">${level.title} — ${activeShuffledQuestions.length}-Question Test</h1>
+            <p class="text-xs text-slate-300 mt-1">Answer all ${activeShuffledQuestions.length} questions below and submit to record your mark and earn up to +25 Tokens.</p>
           </div>
 
           <form onsubmit="event.preventDefault(); submitLevelTest('${concept.id}', ${level.level});" class="space-y-4">
@@ -2866,7 +3601,7 @@
             `).join('')}
 
             <button type="submit" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-sm shadow-lg transition-all">
-              Submit 15-Question Level Test &rarr;
+              Submit ${activeShuffledQuestions.length}-Question Level Test &rarr;
             </button>
           </form>
         </div>

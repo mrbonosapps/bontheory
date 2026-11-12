@@ -291,6 +291,9 @@
               if (window.state && window.state.stats) {
                 window.state.stats.tokens = remoteMe.stats.tokens;
               }
+              if (Array.isArray(remoteMe.completedLessons) && window.state) {
+                window.state.completedLessons = remoteMe.completedLessons;
+              }
               const tokEl = document.getElementById('nav-user-tokens');
               if (tokEl) tokEl.textContent = remoteMe.stats.tokens;
             }
@@ -321,878 +324,119 @@
   <!-- CURRICULUM DATA & CORE LOGIC SCRIPT -->
   <script>
     // ==========================================
-    // COMPLETE CURRICULUM TOPICS, LEVELS & LESSONS
+    // GLOBAL APPLICATION STATE & ROUTER
     // ==========================================
-    const shopCatalog = [
-      { id: 'badge_drummer', name: 'Master Drummer Badge', category: 'Trophies', cost: 15, icon: 'fa-drum', desc: 'Display your rhythm prowess with this golden badge.' },
-      { id: 'badge_ear', name: 'Golden Ear Trophy', category: 'Trophies', cost: 25, icon: 'fa-ear-listen', desc: 'Awarded to master rhythm dictation listeners.' },
-      { id: 'inst_electric_guitar', name: 'Custom Stratocaster', category: 'Instruments', cost: 30, icon: 'fa-guitar', desc: 'High-output electric guitar with custom pickguard.' },
-      { id: 'inst_synth', name: 'Analog Poly-Synth', category: 'Instruments', cost: 40, icon: 'fa-sliders', desc: 'Dual oscillator vintage synthesizer powerhouse.' },
-      { id: 'inst_grand_piano', name: 'Concert Grand Piano', category: 'Instruments', cost: 50, icon: 'fa-music', desc: 'Handcrafted concert grand with rich acoustics.' },
-      { id: 'avatar_crown', name: 'Golden Crown Avatar', category: 'Avatars', cost: 35, icon: 'fa-crown', desc: 'Royalty emblem on the classroom leaderboard.' },
-      { id: 'avatar_headphones', name: 'Studio Monitor Cans', category: 'Hardware', cost: 20, icon: 'fa-headphones', desc: 'Pro-grade studio headphones for focused dictation.' },
-      { id: 'avatar_mic', name: 'Vintage Tube Mic', category: 'Hardware', cost: 30, icon: 'fa-microphone', desc: 'Warm vintage tone condenser microphone.' },
-      { id: 'hw_mrb_wrench', name: "Mr B's Wrench", category: 'Hardware', cost: 100, icon: 'fa-wrench', desc: 'Legendary studio adjustment wrench for precision hardware tuning.' },
-      { id: 'hw_mrh_comb', name: "Mr H's Vintage Comb", category: 'Hardware', cost: 100, icon: 'fa-wand-magic-sparkles', desc: 'Iconic vintage pocket comb for effortless backstage style.' },
-      { id: 'equip_metronome', name: 'Precision Metronome', category: 'Equipment', cost: 15, icon: 'fa-stopwatch', desc: 'Keep flawless time through every rehearsal.' },
-      { id: 'equip_pedal', name: 'Overdrive FX Pedal', category: 'Equipment', cost: 25, icon: 'fa-compact-disc', desc: 'Add punch and gritty overdrive tone colour.' }
-    ];
+    window.state = {
+      stats: { tokens: 10, testsTaken: 0 },
+      inventory: [],
+      testHistory: [],
+      completedLessons: []
+    };
 
-    const conceptsCurriculum = [
-      {
-        id: 'duration',
-        title: 'Duration & Rhythm',
-        icon: 'fa-drum',
-        color: 'from-blue-600 to-indigo-600',
-        textColor: 'text-blue-600',
-        bgLight: 'bg-blue-50',
-        borderColor: 'border-blue-200',
-        desc: 'Pulse, beat, note lengths, meter, tempo, and rhythmic syncopation.',
-        levels: [
-          {
-            level: 1,
-            title: 'Level 1: The Pulse, Crotchets & Quavers',
-            badge: 'Beginner',
-            summary: 'Explore the fundamental heartbeat of music, note anatomy, and play rhythms on the 8-beat drum module.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: The Pulse (The Heartbeat of Music)',
-                readTime: '2 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5">
-                      <h4 class="font-black text-blue-950 text-base mb-1">What is the Musical Pulse?</h4>
-                      <p class="text-xs sm:text-sm text-blue-900 leading-relaxed">
-                        The <strong>pulse (or beat)</strong> is the steady, repeating foundation of almost all musical pieces. Think of it like your heart pumping blood or the constant ticking of a clock on the wall.
-                      </p>
-                    </div>
-                    <div class="p-4 bg-white border border-slate-200 rounded-2xl">
-                      <h5 class="font-bold text-slate-800 text-xs uppercase mb-2">Key Concepts to Remember:</h5>
-                      <ul class="text-xs text-slate-600 space-y-2 list-disc list-inside">
-                        <li>The pulse stays regular and even, even while melodies change rhythm above it.</li>
-                        <li><strong>Tempo</strong> refers to the speed of the pulse—fast (Allegro) or slow (Adagio).</li>
-                        <li>When you tap your foot along with a favorite song, you are feeling and locking into the pulse!</li>
-                      </ul>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What is the regular, recurring heartbeat of a piece of music called?', options: ['The Beat / Pulse', 'The Melody', 'The Dynamics', 'The Timbre'], correct: 0 },
-                  { q: 'What musical term describes the speed of the pulse?', options: ['Tempo', 'Pitch', 'Texture', 'Volume'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: The Crotchet (Quarter Note)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border-2 border-blue-200 rounded-2xl p-5 shadow-sm">
-                      <div class="flex items-center gap-3 mb-2">
-                        <span class="text-4xl text-blue-600 font-black">♩</span>
-                        <div>
-                          <h4 class="font-black text-slate-800 text-base">The Crotchet (♩)</h4>
-                          <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Value = 1 Full Beat</span>
-                        </div>
-                      </div>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mt-2">
-                        In common 4/4 time, a crotchet lasts for exactly <strong>one beat</strong>. Musicians count each beat on the number: <em>"1, 2, 3, 4"</em>.
-                      </p>
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                      <h5 class="font-bold text-slate-700 text-xs uppercase mb-1">Anatomy of the Crotchet:</h5>
-                      <p class="text-xs text-slate-600">A crotchet consists of a filled-in black note head and a vertical stem.</p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'How many beats does a standard Crotchet (♩) receive in 4/4 time?', options: ['1 beat', '2 beats', '4 beats', 'Half a beat'], correct: 0 },
-                  { q: 'How do musicians count steady crotchets across a bar in 4/4 time?', options: ['1, 2, 3, 4', '1 &, 2 &, 3 &, 4 &', '1 e & a', 'Fast, Slow, Fast, Slow'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 3,
-                title: 'Lesson 3: Quavers (Dividing the Beat)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border-2 border-rose-200 rounded-2xl p-5 shadow-sm">
-                      <div class="flex items-center gap-3 mb-2">
-                        <span class="text-4xl text-rose-600 font-black">♫</span>
-                        <div>
-                          <h4 class="font-black text-slate-800 text-base">Pair of Quavers (♫)</h4>
-                          <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Value = 1/2 + 1/2 Beat</span>
-                        </div>
-                      </div>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mt-2">
-                        When you divide one crotchet beat into two equal halves, each half is called a <strong>quaver (eighth note)</strong>. When two quavers occur side-by-side, they are connected with a horizontal beam.
-                      </p>
-                    </div>
-                    <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-xs text-rose-900 leading-relaxed">
-                      Two quavers fit into the exact same amount of time as one single crotchet. Musicians count them out loud using numbers and "and": <em>"1 & 2 & 3 & 4 &"</em>!
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'How many equal sounds occur during 1 beat when playing a pair of Quavers (♫)?', options: ['2 sounds', '1 sound', '3 sounds', '4 sounds'], correct: 0 },
-                  { q: 'How are quavers counted out loud across a beat?', options: ['1 & (Number + And)', '1, 2, 3, 4 only', 'Slowly', 'Quietly'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 4,
-                title: 'Lesson 4: Interactive 8-Beat Drum Sound Module & Dictation',
-                readTime: '4 min practical',
-                interactiveTool: 'drumModule',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-slate-900 text-white rounded-2xl p-5">
-                      <h4 class="font-black text-amber-400 text-base mb-1">Hands-On Synthesis & Dictation Lab</h4>
-                      <p class="text-xs text-slate-300 leading-relaxed">
-                        Build 8-beat patterns combining Crotchets (♩ = 1) and Quavers (♫ = 1 &), or switch to the <strong>Dictation Challenge</strong> tab to train your ear and earn tokens!
-                      </p>
-                    </div>
-                    <div class="mt-4">
-                      <div id="embedded-tool-container" class="border border-slate-200 rounded-3xl overflow-hidden shadow-sm"></div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'In this 8-beat drum module, which drum voice triggers on odd beats (1, 3, 5, 7)?', options: ['Kick Drum (Blue)', 'Snare Drum (Red)', 'Hi-Hat', 'Crash Cymbal'], correct: 0 },
-                  { q: 'When a beat is set to Quavers (♫), how many drum hits sound on that beat?', options: ['2 hits (1 &)', '1 hit (1)', '3 hits', '0 hits'], correct: 0 }
-                ]
-              }
-            ]
-          },
-          {
-            level: 2,
-            title: 'Level 2: 8-Beat Rhythm Dictation & Meter',
-            badge: 'Intermediate',
-            summary: 'Develop listening acuity to identify auditory rhythmic patterns and translate them into musical notation.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: Time Signatures & 4/4 Common Time',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
-                      <h4 class="font-black text-indigo-950 text-base mb-1">What is a Time Signature?</h4>
-                      <p class="text-xs sm:text-sm text-indigo-900 leading-relaxed">
-                        The time signature appears at the start of a piece. The top number tells you <strong>how many beats are in each bar</strong>, and the bottom number shows the <strong>type of note value</strong>.
-                      </p>
-                    </div>
-                    <div class="p-4 bg-white border border-slate-200 rounded-2xl text-xs text-slate-700 leading-relaxed">
-                      In <strong>4/4 Time</strong> (also called Common Time), there are 4 crotchet beats per bar. An 8-beat phrase spans exactly 2 bars counted as <em>1, 2, 3, 4 | 5, 6, 7, 8</em>!
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'How many crotchet beats are contained in one bar of 4/4 time?', options: ['4 beats', '2 beats', '3 beats', '8 beats'], correct: 0 },
-                  { q: 'How many bars of 4/4 time make up an 8-beat phrase?', options: ['2 bars', '1 bar', '4 bars', '8 bars'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: Auditory Dictation Strategies',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-violet-50 border border-violet-200 rounded-2xl p-5">
-                      <h4 class="font-black text-violet-950 text-base mb-1">How Dictation Trains Your Ear</h4>
-                      <p class="text-xs sm:text-sm text-violet-900 leading-relaxed">
-                        Musical dictation is the process of hearing music in your mind and writing it down accurately.
-                      </p>
-                    </div>
-                    <div class="space-y-2 text-xs text-slate-700 bg-white p-4 border rounded-2xl">
-                      <p><strong>Step 1:</strong> Count 1 to 8 steadily while the audio plays.</p>
-                      <p><strong>Step 2:</strong> Isolate single hits (♩ = "1") versus double hits (♫ = "1 &").</p>
-                      <p><strong>Step 3:</strong> Match the cards to lock in your score!</p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'When taking rhythmic dictation, what should your first action be?', options: ['Count steadily along with the pulse', 'Immediately guess', 'Ignore the beat', 'Look away'], correct: 0 },
-                  { q: 'If beat 4 sounds two rapid snare strikes ("4 &"), what notation should you write for that beat?', options: ['Two Quavers (♫)', 'One Crotchet (♩)', 'Minim', 'Semibreve'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 3,
-                title: 'Lesson 3: 8-Beat Rhythm Dictation Challenge Lab',
-                readTime: '4 min practical',
-                interactiveTool: 'dictationChallenge',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-slate-900 text-white rounded-2xl p-5">
-                      <h4 class="font-black text-amber-400 text-base mb-1">Ear Training Dictation Challenge</h4>
-                      <p class="text-xs text-slate-300 leading-relaxed">
-                        Listen to the mystery 8-beat pattern generated by the audio engine and choose the correct notation from options A, B, C, or D!
-                      </p>
-                    </div>
-                    <div class="mt-4">
-                      <div id="embedded-tool-container" class="border border-slate-200 rounded-3xl overflow-hidden shadow-sm"></div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'In this dictation challenge, which beat positions feature the Snare Drum (Red)?', options: ['Even beats (2, 4, 6, 8)', 'Odd beats (1, 3, 5, 7)', 'Only beat 1', 'None'], correct: 0 },
-                  { q: 'How many total beats are analyzed in each mystery sequence?', options: ['8 beats', '4 beats', '16 beats', '6 beats'], correct: 0 }
-                ]
-              }
-            ]
-          },
-          {
-            level: 3,
-            title: 'Level 3: Syncopation & Off-Beats',
-            badge: 'Advanced',
-            summary: 'Syncopated accents, off-beat grooves, and cross-rhythms.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: Understanding Syncopation',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
-                      <h4 class="font-black text-indigo-950 text-base mb-1">What is Syncopation?</h4>
-                      <p class="text-xs sm:text-sm text-indigo-900 leading-relaxed">
-                        Syncopation is an accent or emphasis placed on an unexpected or normally weak beat (such as beats 2 and 4), or on the off-beat <em>"&" (and)</em> between pulses.
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What is syncopation?', options: ['Stressing weak or unexpected beats (like the "&")', 'Playing strictly on beat 1', 'Playing louder', 'Speeding up'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: Genre Analysis (Funk, Reggae & Jazz)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5">
-                      <h4 class="font-black text-slate-800 text-base mb-1">Rhythm in Popular Genres</h4>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                        Reggae music famously uses the <em>skank</em> rhythm, striking syncopated chords cleanly on beats 2 and 4. Funk relies heavily on 16th-note syncopated basslines (<em>1 e & a</em>).
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'Which genre famously accents beats 2 and 4 with rhythm guitar skanks?', options: ['Reggae', 'Gregorian Chant', 'Classical Waltz', 'Baroque Fugue'], correct: 0 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'pitch',
-        title: 'Pitch & Melody',
-        icon: 'fa-wave-square',
-        color: 'from-violet-600 to-purple-600',
-        textColor: 'text-violet-600',
-        bgLight: 'bg-violet-50',
-        borderColor: 'border-violet-200',
-        desc: 'High vs low frequencies, melodic contour, intervals, harmony, and keys.',
-        levels: [
-          {
-            level: 1,
-            title: 'Level 1: High vs Low & Melodic Contour',
-            badge: 'Beginner',
-            summary: 'Understand pitch vibrations, melodic directions (steps, leaps, repeated notes), and stave notation.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: What is Pitch? (Frequency & Vibrations)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-violet-50 border border-violet-200 rounded-2xl p-5">
-                      <h4 class="font-black text-violet-950 text-base mb-1">High vs Low Frequencies</h4>
-                      <p class="text-xs sm:text-sm text-violet-900 leading-relaxed">
-                        Pitch describes how high or low a musical sound is. Sounds are caused by vibrations:
-                      </p>
-                      <ul class="text-xs text-violet-900 space-y-1.5 list-disc list-inside mt-3">
-                        <li><strong>Fast Vibrations:</strong> Create high-pitched sounds (e.g. Piccolo, Violin, Birdsong).</li>
-                        <li><strong>Slow Vibrations:</strong> Create low-pitched sounds (e.g. Tuba, Bass Drum, Thunder).</li>
-                      </ul>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What physical property causes a pitch to sound higher?', options: ['Faster vibrations (frequency)', 'Slower vibrations', 'Playing louder', 'Using more instruments'], correct: 0 },
-                  { q: 'Which instrument produces the lowest pitch among these?', options: ['Tuba', 'Flute', 'Violin', 'Piccolo'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: Melodic Contour (Steps, Leaps & Repetition)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5">
-                      <h4 class="font-black text-slate-800 text-base mb-1">The Shape of Melody</h4>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
-                        Melodic contour is the shape or direction a melody takes as it moves across time:
-                      </p>
-                      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div class="p-3 bg-slate-50 border rounded-xl text-center">
-                          <span class="font-bold text-violet-600 text-xs uppercase block mb-1">Steps (Conjunct)</span>
-                          <p class="text-xs text-slate-600">Moves to adjacent neighbor notes (e.g. C to D).</p>
-                        </div>
-                        <div class="p-3 bg-slate-50 border rounded-xl text-center">
-                          <span class="font-bold text-violet-600 text-xs uppercase block mb-1">Leaps (Disjunct)</span>
-                          <p class="text-xs text-slate-600">Skips notes to wider intervals (e.g. C to G).</p>
-                        </div>
-                        <div class="p-3 bg-slate-50 border rounded-xl text-center">
-                          <span class="font-bold text-violet-600 text-xs uppercase block mb-1">Repeated Notes</span>
-                          <p class="text-xs text-slate-600">Stays on the same exact pitch.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'When a melody moves smoothly to neighboring adjacent notes, it moves by:', options: ['Step (Conjunct)', 'Leap (Disjunct)', 'Glissando', 'Silence'], correct: 0 },
-                  { q: 'A melody jumping from Low C to High G is moving by:', options: ['Leap', 'Step', 'Repeat', 'Rest'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 3,
-                title: 'Lesson 3: The Musical Stave & Clefs',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-purple-50 border border-purple-200 rounded-2xl p-5">
-                      <h4 class="font-black text-purple-950 text-base mb-1">The 5 Lines and 4 Spaces</h4>
-                      <p class="text-xs sm:text-sm text-purple-900 leading-relaxed">
-                        Music is written on a <strong>stave (or staff)</strong> made of five horizontal parallel lines. Notes placed higher on the stave sound higher in pitch; notes placed lower sound lower.
-                      </p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div class="p-4 bg-white border rounded-2xl">
-                        <h5 class="font-bold text-slate-800 text-xs uppercase mb-1">Treble Clef (G Clef)</h5>
-                        <p class="text-xs text-slate-600">Used for higher-pitched instruments and voices (Right hand on piano, flute, violin).</p>
-                      </div>
-                      <div class="p-4 bg-white border rounded-2xl">
-                        <h5 class="font-bold text-slate-800 text-xs uppercase mb-1">Bass Clef (F Clef)</h5>
-                        <p class="text-xs text-slate-600">Used for lower-pitched instruments and voices (Left hand on piano, bass guitar, cello).</p>
-                      </div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'How many lines make up a standard musical stave?', options: ['5 lines', '4 lines', '6 lines', '3 lines'], correct: 0 },
-                  { q: 'Which clef is used for lower register instruments like the Bass Guitar and Cello?', options: ['Bass Clef (F Clef)', 'Treble Clef', 'Alto Clef', 'Percussion Clef'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 4,
-                title: 'Lesson 4: Interactive Virtual Pitch Keyboard',
-                readTime: '3 min practical',
-                interactiveTool: 'pitchKeyboard',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-slate-900 text-white rounded-2xl p-5">
-                      <h4 class="font-black text-amber-400 text-base mb-1">Synthesizer Pitch Explorer</h4>
-                      <p class="text-xs text-slate-300 leading-relaxed">
-                        Tap each key below to hear pitches ascend step-by-step from C4 up to C5. Notice how each successive key vibrates faster!
-                      </p>
-                    </div>
-                    <div class="mt-4">
-                      <div id="embedded-tool-container" class="border border-slate-200 rounded-3xl overflow-hidden shadow-sm"></div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What is the interval distance between C4 and C5 called?', options: ['An Octave (8 notes)', 'A 3rd', 'A 5th', 'A Semitone'], correct: 0 },
-                  { q: 'As you move from left to right across a piano keyboard, pitches get:', options: ['Higher', 'Lower', 'Quieter', 'Unchanged'], correct: 0 }
-                ]
-              }
-            ]
-          },
-          {
-            level: 2,
-            title: 'Level 2: Major vs Minor Tonality & Intervals',
-            badge: 'Intermediate',
-            summary: 'Examine emotional tonality, major and minor triads, and intervals.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: Major vs Minor Tonality',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-purple-50 border border-purple-200 rounded-2xl p-5">
-                      <h4 class="font-black text-purple-950 text-base mb-1">Bright Major vs Moody Minor</h4>
-                      <p class="text-xs sm:text-sm text-purple-900 leading-relaxed">
-                        • <strong>Major Tonality:</strong> Often experienced as triumphant, happy, uplifting, or clear.<br>
-                        • <strong>Minor Tonality:</strong> Formed with a flattened 3rd interval. Often perceived as sad, dramatic, thoughtful, or suspenseful.
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'Which tonality is most commonly associated with uplifting, bright feelings?', options: ['Major', 'Minor', 'Atonal', 'Dissonant'], correct: 0 },
-                  { q: 'What note of the scale is flattened to create a natural minor scale?', options: ['The 3rd', 'The 5th', 'The Root', 'The Octave'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: Intervals (Unison to Octave)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5">
-                      <h4 class="font-black text-slate-800 text-base mb-1">Measuring Musical Distance</h4>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                        An interval is the distance between two distinct pitches. Common intervals include 2nds (steps), 3rds (triads), 5ths (power chords), and 8ves (octaves).
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What do we call the distance between two musical pitches?', options: ['Interval', 'Duration', 'Tempo', 'Dynamics'], correct: 0 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'dynamics',
-        title: 'Dynamics & Expression',
-        icon: 'fa-volume-high',
-        color: 'from-amber-500 to-orange-600',
-        textColor: 'text-amber-600',
-        bgLight: 'bg-amber-50',
-        borderColor: 'border-amber-200',
-        desc: 'Volume levels, Italian terminology, crescendo, diminuendo, and articulation.',
-        levels: [
-          {
-            level: 1,
-            title: 'Level 1: Italian Dynamic Markings & Volume',
-            badge: 'Beginner',
-            summary: 'Volume markings from Pianissimo to Fortissimo, changes, and decibels.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: The Core Italian Volume Terms',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                      <h4 class="font-black text-amber-950 text-base mb-1">Italian: The Universal Language of Music</h4>
-                      <p class="text-xs sm:text-sm text-amber-900 leading-relaxed">
-                        Classical musicians worldwide use Italian words to indicate dynamics:
-                      </p>
-                    </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div class="p-3 bg-white border rounded-xl text-center">
-                        <span class="font-black text-amber-600 text-xl block">pp</span>
-                        <span class="text-xs font-bold block text-slate-800">Pianissimo</span>
-                        <span class="text-[10px] text-slate-400">Very Soft</span>
-                      </div>
-                      <div class="p-3 bg-white border rounded-xl text-center">
-                        <span class="font-black text-amber-600 text-xl block">p</span>
-                        <span class="text-xs font-bold block text-slate-800">Piano</span>
-                        <span class="text-[10px] text-slate-400">Soft</span>
-                      </div>
-                      <div class="p-3 bg-white border rounded-xl text-center">
-                        <span class="font-black text-amber-600 text-xl block">f</span>
-                        <span class="text-xs font-bold block text-slate-800">Forte</span>
-                        <span class="text-[10px] text-slate-400">Loud</span>
-                      </div>
-                      <div class="p-3 bg-white border rounded-xl text-center">
-                        <span class="font-black text-amber-600 text-xl block">ff</span>
-                        <span class="text-xs font-bold block text-slate-800">Fortissimo</span>
-                        <span class="text-[10px] text-slate-400">Very Loud</span>
-                      </div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What does "Piano" (p) mean in music?', options: ['Soft', 'Loud', 'Fast', 'Slow'], correct: 0 },
-                  { q: 'What does "Forte" (f) mean in music?', options: ['Loud', 'Soft', 'Medium', 'Silent'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: Dynamic Changes (Crescendo & Diminuendo)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-orange-50 border border-orange-200 rounded-2xl p-5">
-                      <h4 class="font-black text-orange-950 text-base mb-1">Gradual Volume Shifts</h4>
-                      <p class="text-xs sm:text-sm text-orange-900 leading-relaxed">
-                        • <strong>Crescendo (&lt;):</strong> Gradually becoming louder over time.<br>
-                        • <strong>Diminuendo or Decrescendo (&gt;):</strong> Gradually becoming softer over time.
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What does a Crescendo hairpin symbol (&lt;) tell the musician to do?', options: ['Gradually get louder', 'Gradually get softer', 'Speed up', 'Stop playing'], correct: 0 },
-                  { q: 'What is another word for Diminuendo?', options: ['Decrescendo', 'Accelerando', 'Staccato', 'Legato'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 3,
-                title: 'Lesson 3: Interactive Decibel & Crescendo Simulator',
-                readTime: '3 min practical',
-                interactiveTool: 'dynamicsSimulator',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-slate-900 text-white rounded-2xl p-5">
-                      <h4 class="font-black text-amber-400 text-base mb-1">Audio Dynamic Demonstrator</h4>
-                      <p class="text-xs text-slate-300 leading-relaxed">
-                        Listen to the differences in decibels across volume levels, and experience an automated crescendo sweep!
-                      </p>
-                    </div>
-                    <div class="mt-4">
-                      <div id="embedded-tool-container" class="border border-slate-200 rounded-3xl overflow-hidden shadow-sm"></div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'Which is louder: Mezzo-Forte (mf) or Forte (f)?', options: ['Forte (f)', 'Mezzo-Forte (mf)', 'They are identical', 'Piano'], correct: 0 },
-                  { q: 'What symbol represents getting gradually louder?', options: ['< (Crescendo)', '> (Diminuendo)', 'f', 'p'], correct: 0 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'tonecolour',
-        title: 'Tone Colour (Timbre)',
-        icon: 'fa-guitar',
-        color: 'from-emerald-600 to-teal-600',
-        textColor: 'text-emerald-600',
-        bgLight: 'bg-emerald-50',
-        borderColor: 'border-emerald-200',
-        desc: 'Instrument families, sound quality, acoustic vs electronic timbre.',
-        levels: [
-          {
-            level: 1,
-            title: 'Level 1: The Four Orchestral Families',
-            badge: 'Beginner',
-            summary: 'Strings, Woodwind, Brass, Percussion, and acoustic sound production.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: What is Timbre?',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
-                      <h4 class="font-black text-emerald-950 text-base mb-1">The Unique Voice of Every Instrument</h4>
-                      <p class="text-xs sm:text-sm text-emerald-900 leading-relaxed">
-                        Tone colour (or timbre) is what allows your ears to distinguish a trumpet from a violin, even when they play the exact same pitch at the exact same volume!
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What musical concept describes the unique quality or character of a sound?', options: ['Tone Colour (Timbre)', 'Dynamics', 'Tempo', 'Meter'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: The Strings & Woodwinds',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div class="p-4 bg-white border border-slate-200 rounded-2xl">
-                        <h5 class="font-bold text-emerald-700 text-xs uppercase mb-1">🎻 The String Family</h5>
-                        <p class="text-xs text-slate-600">Violin, Viola, Cello, Double Bass. Sound is produced by bowing (arco) or plucking (pizzicato) taut strings.</p>
-                      </div>
-                      <div class="p-4 bg-white border border-slate-200 rounded-2xl">
-                        <h5 class="font-bold text-emerald-700 text-xs uppercase mb-1">🪵 The Woodwind Family</h5>
-                        <p class="text-xs text-slate-600">Flute, Clarinet, Oboe, Bassoon. Sound produced by blowing air across an embouchure hole or vibrating wooden reeds.</p>
-                      </div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'Which of the following is a Woodwind instrument?', options: ['Clarinet', 'Trumpet', 'Cello', 'Snare Drum'], correct: 0 },
-                  { q: 'What is the Italian term for plucking a string instrument with your fingers?', options: ['Pizzicato', 'Arco', 'Staccato', 'Legato'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 3,
-                title: 'Lesson 3: The Brass & Percussion',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div class="p-4 bg-white border border-slate-200 rounded-2xl">
-                        <h5 class="font-bold text-emerald-700 text-xs uppercase mb-1">🎺 The Brass Family</h5>
-                        <p class="text-xs text-slate-600">Trumpet, French Horn, Trombone, Tuba. Metallic sound generated by buzzing lips into a cup mouthpiece.</p>
-                      </div>
-                      <div class="p-4 bg-white border border-slate-200 rounded-2xl">
-                        <h5 class="font-bold text-emerald-700 text-xs uppercase mb-1">🥁 The Percussion Family</h5>
-                        <p class="text-xs text-slate-600">Timpani, Snare, Bass Drum, Xylophone. Struck, shaken, or scraped.</p>
-                      </div>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'How do Brass players produce sound?', options: ['Buzzing their lips into a mouthpiece', 'Using a wooden reed', 'Plucking a string', 'Blowing across a hole'], correct: 0 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'texture',
-        title: 'Musical Texture',
-        icon: 'fa-layer-group',
-        color: 'from-rose-600 to-pink-600',
-        textColor: 'text-rose-600',
-        bgLight: 'bg-rose-50',
-        borderColor: 'border-rose-200',
-        desc: 'Layers of sound: Monophonic, Homophonic, and Polyphonic layers.',
-        levels: [
-          {
-            level: 1,
-            title: 'Level 1: The Three Textural Types',
-            badge: 'Beginner',
-            summary: 'Single line vs melody with accompaniment vs independent intertwining lines.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: Monophonic Texture',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-rose-50 border border-rose-200 rounded-2xl p-5">
-                      <h4 class="font-black text-rose-950 text-base mb-1">Monophonic: A Single Line</h4>
-                      <p class="text-xs sm:text-sm text-rose-900 leading-relaxed">
-                        "Mono" means one, and "phonic" means sound. A monophonic texture consists of a single unaccompanied melodic line—even if sung by a choir in unison.
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What is a solo flute playing alone with no chords an example of?', options: ['Monophonic', 'Homophonic', 'Polyphonic', 'Atonal'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: Homophonic Texture',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5">
-                      <h4 class="font-black text-slate-800 text-base mb-1">Homophonic: Melody + Accompaniment</h4>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                        The most common texture in modern pop and rock music! A singer or lead guitar plays the main melody while chords (guitar/piano/bass) provide harmonic backing.
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'A pop singer performing while an acoustic guitar strums chords is an example of:', options: ['Homophonic', 'Monophonic', 'Polyphonic', 'Heterophonic'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 3,
-                title: 'Lesson 3: Polyphonic Texture',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5">
-                      <h4 class="font-black text-slate-800 text-base mb-1">Polyphonic: Many Intertwined Melodies</h4>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                        Two or more independent melodic lines occurring simultaneously, such as a canon/round ("Row Row Row Your Boat") or a Bach fugue.
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'Which texture has multiple independent melodic lines playing at once?', options: ['Polyphonic', 'Monophonic', 'Homophonic', 'Static'], correct: 0 }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'structure',
-        title: 'Structure & Form',
-        icon: 'fa-puzzle-piece',
-        color: 'from-cyan-600 to-blue-600',
-        textColor: 'text-cyan-600',
-        bgLight: 'bg-cyan-50',
-        borderColor: 'border-cyan-200',
-        desc: 'Musical architecture: Binary (AB), Ternary (ABA), Rondo, and Verse-Chorus.',
-        levels: [
-          {
-            level: 1,
-            title: 'Level 1: Binary, Ternary, & Rondo',
-            badge: 'Beginner',
-            summary: 'Architectural blueprints of compositions.',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: Binary Form (A - B)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-cyan-50 border border-cyan-200 rounded-2xl p-5">
-                      <h4 class="font-black text-cyan-950 text-base mb-1">Binary Form (Two Parts)</h4>
-                      <p class="text-xs sm:text-sm text-cyan-900 leading-relaxed">
-                        Binary form consists of two contrasting sections: Section A followed by Section B.
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'What letter pattern represents Binary Form?', options: ['A - B', 'A - B - A', 'A - B - A - C - A', 'A - A - A'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 2,
-                title: 'Lesson 2: Ternary Form (A - B - A)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5">
-                      <h4 class="font-black text-slate-800 text-base mb-1">Ternary Form (Three Parts / Sandwich Form)</h4>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                        Section A (Main theme) &rarr; Section B (Contrast) &rarr; Section A (Return of theme). Like bread-filling-bread!
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'Which musical form has an A - B - A structure?', options: ['Ternary Form', 'Binary Form', 'Rondo Form', '12-Bar Blues'], correct: 0 }
-                ]
-              },
-              {
-                lessonNum: 3,
-                title: 'Lesson 3: Rondo Form (A - B - A - C - A)',
-                readTime: '3 min read',
-                content: `
-                  <div class="space-y-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5">
-                      <h4 class="font-black text-slate-800 text-base mb-1">Rondo Form (Recurring Theme)</h4>
-                      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                        The main theme (A) always returns after contrasting episodes (B and C).
-                      </p>
-                    </div>
-                  </div>
-                `,
-                quiz: [
-                  { q: 'In Rondo Form (ABACA), which section continuously returns?', options: ['Section A', 'Section B', 'Section C', 'None'], correct: 0 }
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ];
-
-    // ==========================================
-    // AUDIO ENGINE (Web Audio API)
-    // ==========================================
-    let audioCtx = null;
-    function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      return audioCtx;
-    }
-
-    function playDrumSound(type) {
-      const ctx = getAudioContext();
-      const now = ctx.currentTime;
-      if (type === 'kick') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(160, now);
-        osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.45);
-        gain.gain.setValueAtTime(1, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.45);
-      } else if (type === 'snare') {
-        const bufferSize = ctx.sampleRate * 0.18;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
+    window.app = {
+      currentUser: null,
+      currentView: 'home',
+      currentParams: null,
+      navigate(view, params = null) {
+        const protectedViews = [
+          'conceptsHub', 'conceptDetail', 'levelDetail', 'lessonDetail',
+          'levelTest', 'shop', 'rhythmModule', 'dictationChallenge',
+          'studentDash', 'studentTests', 'teacherDash'
+        ];
+        if (protectedViews.includes(view) && !this.currentUser) {
+          showAppModal('Login Required', 'Please log in as a student or teacher to unlock interactive lessons, games, the shop, and 15-question tests.', false);
+          view = 'login';
+          params = null;
         }
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.value = 1100;
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.9, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-        noise.start(now);
+        this.currentView = view;
+        this.currentParams = params;
+        updateNavBar();
+        const container = document.getElementById('app-viewport');
+        if (!container) return;
 
-        const osc = ctx.createOscillator();
-        const oscGain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(260, now);
-        oscGain.gain.setValueAtTime(0.6, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
-        osc.connect(oscGain);
-        oscGain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.18);
+        switch (view) {
+          case 'home': renderHomeView(container); break;
+          case 'login': renderLoginView(container); break;
+          case 'conceptsHub': renderConceptsHub(container); break;
+          case 'conceptDetail': renderConceptDetail(container, params); break;
+          case 'levelDetail': renderLevelDetail(container, params); break;
+          case 'lessonDetail': renderLessonDetail(container, params); break;
+          case 'levelTest': renderLevelTestView(container, params); break;
+          case 'shop': renderShopView(container); break;
+          case 'rhythmModule': renderRhythmModule(container); break;
+          case 'dictationChallenge': renderDictationChallenge(container); break;
+          case 'studentDash': renderStudentDash(container); break;
+          case 'studentTests': renderStudentTestsView(container); break;
+          case 'teacherDash': renderTeacherDash(container); break;
+          default: renderHomeView(container);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    function protectedNavigate(view, params = null) {
+      app.navigate(view, params);
+    }
+
+    function openCurrentPortal() {
+      if (!app.currentUser) {
+        app.navigate('login');
+      } else {
+        app.navigate(app.currentUser.role === 'teacher' ? 'teacherDash' : 'studentDash');
       }
     }
 
-    function playTonePitch(freq, duration = 0.4, volume = 0.4) {
-      const ctx = getAudioContext();
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime(volume, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + duration);
+    function logoutUser() {
+      app.currentUser = null;
+      state = { stats: { tokens: 10, testsTaken: 0 }, inventory: [], testHistory: [], completedLessons: [] };
+      try { localStorage.removeItem('boncepts_active_session'); } catch (e) {}
+      updateNavBar();
+      app.navigate('home');
     }
 
-    // ==========================================
-    // IN-APP NOTIFICATION MODAL
-    // ==========================================
-    function showAppModal(title, message, isSuccess = true) {
+    function updateNavBar() {
+      const loginBtn = document.getElementById('nav-login-btn');
+      const profileBox = document.getElementById('nav-user-profile');
+      const tokenBadge = document.getElementById('nav-token-badge');
+      const nameEl = document.getElementById('nav-user-name');
+      const roleEl = document.getElementById('nav-user-role');
+      const tokEl = document.getElementById('nav-user-tokens');
+
+      if (app.currentUser) {
+        if (loginBtn) loginBtn.classList.add('hidden');
+        if (profileBox) {
+          profileBox.classList.remove('hidden');
+          profileBox.classList.add('flex');
+        }
+        if (nameEl) nameEl.textContent = `${app.currentUser.firstName} ${app.currentUser.surname}`;
+        if (roleEl) roleEl.textContent = app.currentUser.role === 'teacher' ? 'Teacher Staff' : `Class ${app.currentUser.class}`;
+        if (app.currentUser.role === 'student' && tokenBadge) {
+          tokenBadge.classList.remove('hidden');
+          tokenBadge.classList.add('flex');
+          if (tokEl) tokEl.textContent = (state.stats && state.stats.tokens) || 0;
+        } else if (tokenBadge) {
+          tokenBadge.classList.add('hidden');
+        }
+      } else {
+        if (loginBtn) loginBtn.classList.remove('hidden');
+        if (profileBox) profileBox.classList.add('hidden');
+        if (tokenBadge) tokenBadge.classList.add('hidden');
+      }
+    }
+
+    function showAppModal(title, body, isSuccess = true) {
       const modal = document.getElementById('app-modal');
+      const iconBox = document.getElementById('app-modal-icon');
       const titleEl = document.getElementById('app-modal-title');
       const bodyEl = document.getElementById('app-modal-body');
-      const iconEl = document.getElementById('app-modal-icon');
       if (!modal) return;
-
-      titleEl.textContent = title;
-      bodyEl.textContent = message;
-
-      if (isSuccess) {
-        iconEl.className = "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-emerald-100 text-emerald-600";
-        iconEl.innerHTML = '<i class="fa-solid fa-check"></i>';
-      } else {
-        iconEl.className = "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-amber-100 text-amber-600";
-        iconEl.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+      if (titleEl) titleEl.textContent = title;
+      if (bodyEl) bodyEl.textContent = body;
+      if (iconBox) {
+        iconBox.className = isSuccess
+          ? 'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-emerald-100 text-emerald-600'
+          : 'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-amber-100 text-amber-600';
+        iconBox.innerHTML = isSuccess ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-circle-info"></i>';
       }
       modal.classList.remove('hidden');
     }
@@ -1202,393 +446,746 @@
       if (modal) modal.classList.add('hidden');
     }
 
-    let state = { stats: { tokens: 10, testsTaken: 0 }, inventory: [], testHistory: [] };
-
-    window.protectedNavigate = function(view, param = null) {
-      if (!app.currentUser) {
-        showAppModal('Login Required 🔒', 'Please sign in with your student or teacher account to access curriculum lessons, sound modules, and quizzes.', false);
-        app.navigate('login');
-        return;
-      }
-      app.navigate(view, param);
-    };
-
-    window.app = {
-      currentUser: null,
-      currentView: 'home',
-      currentParam: null,
-      navigate: function(view, param = null) {
-        const protectedViews = ['conceptsHub', 'conceptDetail', 'levelDetail', 'lessonDetail', 'studentDash', 'teacherDash', 'rhythmModule', 'dictationChallenge', 'shop', 'studentTests'];
-        if (protectedViews.includes(view) && !this.currentUser) {
-          showAppModal('Login Required 🔒', 'Please sign in with your student or teacher account to access modules, games, and quizzes.', false);
-          view = 'login';
-          param = null;
-        }
-
-        this.currentView = view;
-        this.currentParam = param;
-        const container = document.getElementById('app-viewport');
-        if (!container) return;
-
-        if (view === 'home') renderHomeView(container);
-        else if (view === 'conceptsHub') renderConceptsHub(container);
-        else if (view === 'conceptDetail') renderConceptDetail(container, param);
-        else if (view === 'levelDetail') renderLevelDetail(container, param);
-        else if (view === 'lessonDetail') renderLessonDetail(container, param);
-        else if (view === 'login') renderLoginView(container);
-        else if (view === 'studentDash') renderStudentDash(container);
-        else if (view === 'teacherDash') renderTeacherDash(container);
-        else if (view === 'rhythmModule') renderRhythmModule(container);
-        else if (view === 'dictationChallenge') renderDictationChallenge(container);
-        else if (view === 'shop') renderShopView(container);
-        else if (view === 'studentTests') renderStudentTestsView(container);
-        else renderHomeView(container);
-
-        updateNavUI();
-        updateGlobalLeaderboard();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    };
-
-    function openCurrentPortal() {
-      if (!app.currentUser) {
-        app.navigate('login');
-      } else if (app.currentUser.role === 'teacher') {
-        app.navigate('teacherDash');
+    function scrollToStudentLeaderboard() {
+      const el = document.getElementById('overall-student-leaderboard-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
       } else {
-        app.navigate('studentDash');
+        app.navigate('home');
+        setTimeout(() => {
+          const target = document.getElementById('overall-student-leaderboard-section');
+          if (target) target.scrollIntoView({ behavior: 'smooth' });
+        }, 120);
       }
     }
 
+    // ==========================================
+    // CLOUD & LOCAL USER STORAGE SYNC
+    // ==========================================
     function getAllUserRecords() {
-      if (window.cachedCloudUsers && Object.keys(window.cachedCloudUsers).length > 0) {
-        return window.cachedCloudUsers;
-      }
+      let localUsers = {};
       try {
-        const stored = localStorage.getItem('boncepts_users_db');
-        return stored ? JSON.parse(stored) : {};
-      } catch (e) {
-        return {};
-      }
+        const raw = localStorage.getItem('boncepts_users_db');
+        if (raw) localUsers = JSON.parse(raw);
+      } catch (e) {}
+      return Object.assign({}, localUsers, window.cachedCloudUsers || {});
     }
 
     function getDeduplicatedStudents() {
-      const records = getAllUserRecords();
-      if (!records || typeof records !== 'object') return [];
-      const unique = {};
-      Object.keys(records).forEach(key => {
-        const r = records[key];
-        if (r && typeof r === 'object' && r.role === 'student' && r.firstName && r.surname) {
-          const normName = `${String(r.firstName).trim().toLowerCase()} ${String(r.surname).trim().toLowerCase()}`;
-          if (!unique[normName]) {
-            unique[normName] = { 
-              key, 
-              ...r,
-              firstName: String(r.firstName).trim(),
-              surname: String(r.surname).trim(),
-              class: r.class || '-',
-              stats: {
-                tokens: (r.stats && typeof r.stats.tokens === 'number') ? r.stats.tokens : 0,
-                testsTaken: (r.stats && typeof r.stats.testsTaken === 'number') ? r.stats.testsTaken : 0
-              }
-            };
-          }
-        }
+      const all = getAllUserRecords();
+      const map = {};
+      Object.keys(all).forEach(k => {
+        const u = all[k];
+        if (!u || typeof u !== 'object' || u.role !== 'student') return;
+        const cleanKey = k.toLowerCase();
+        map[cleanKey] = {
+          ...u,
+          key: k,
+          firstName: u.firstName || 'Student',
+          surname: u.surname || '',
+          class: u.class || '7A',
+          stats: (u.stats && typeof u.stats === 'object') ? u.stats : { tokens: 0, testsTaken: 0 }
+        };
       });
-      return Object.values(unique).filter(item => item && typeof item === 'object' && item.stats);
+      return Object.values(map);
     }
 
     function saveUserState() {
       if (!app.currentUser) return;
-      const key = app.currentUser.key;
       const record = {
+        key: app.currentUser.key,
         firstName: app.currentUser.firstName,
         surname: app.currentUser.surname,
         class: app.currentUser.class,
         teacher: app.currentUser.teacher,
         role: app.currentUser.role,
-        stats: state.stats,
-        inventory: state.inventory,
-        testHistory: state.testHistory,
-        lastActive: new Date().toISOString()
+        stats: state.stats || { tokens: 10, testsTaken: 0 },
+        inventory: state.inventory || [],
+        testHistory: state.testHistory || [],
+        completedLessons: state.completedLessons || [],
+        updatedAt: Date.now()
       };
 
-      if (window.saveUserRecordToCloud) {
-        window.saveUserRecordToCloud(key, record);
-      }
-
       try {
-        const users = getAllUserRecords();
-        users[key] = record;
-        localStorage.setItem('boncepts_users_db', JSON.stringify(users));
         localStorage.setItem('boncepts_active_session', JSON.stringify(app.currentUser));
+        const db = getAllUserRecords();
+        db[app.currentUser.key] = record;
+        localStorage.setItem('boncepts_users_db', JSON.stringify(db));
       } catch (e) {}
 
-      updateNavUI();
-      updateGlobalLeaderboard();
-    }
-
-    function addTokens(count) {
-      if (!state.stats) state.stats = { tokens: 0, testsTaken: 0 };
-      state.stats.tokens = (state.stats.tokens || 0) + count;
-      saveUserState();
-    }
-
-    function updateNavUI() {
-      const loginBtn = document.getElementById('nav-login-btn');
-      const profile = document.getElementById('nav-user-profile');
-      const tokenBadge = document.getElementById('nav-token-badge');
-      const userNameEl = document.getElementById('nav-user-name');
-      const userRoleEl = document.getElementById('nav-user-role');
-      const tokenCountEl = document.getElementById('nav-user-tokens');
-
-      if (app.currentUser) {
-        if (loginBtn) loginBtn.classList.add('hidden');
-        if (profile) profile.classList.remove('hidden');
-        if (userNameEl) userNameEl.textContent = `${app.currentUser.firstName} ${app.currentUser.surname}`;
-        if (userRoleEl) userRoleEl.textContent = app.currentUser.role === 'teacher' ? 'Music Teacher' : `Class ${app.currentUser.class}`;
-
-        if (app.currentUser.role === 'student') {
-          if (tokenBadge) {
-            tokenBadge.classList.remove('hidden');
-            tokenBadge.classList.add('inline-flex');
-          }
-          if (tokenCountEl) tokenCountEl.textContent = state.stats.tokens || 0;
-        } else {
-          if (tokenBadge) tokenBadge.classList.add('hidden');
-        }
-      } else {
-        if (loginBtn) loginBtn.classList.remove('hidden');
-        if (profile) profile.classList.add('hidden');
-        if (tokenBadge) tokenBadge.classList.add('hidden');
+      if (window.saveUserRecordToCloud) {
+        window.saveUserRecordToCloud(app.currentUser.key, record);
       }
+
+      updateNavBar();
+      updateGlobalLeaderboard();
+      refreshLeaderboardTableInPlace();
     }
 
-    function logoutUser() {
-      app.currentUser = null;
-      state = { stats: { tokens: 10, testsTaken: 0 }, inventory: [], testHistory: [] };
-      localStorage.removeItem('boncepts_active_session');
-      app.navigate('home');
-      showAppModal('Logged Out', 'You have been signed out of your session.');
+    function addTokens(amount) {
+      if (!state.stats) state.stats = { tokens: 0, testsTaken: 0 };
+      state.stats.tokens = (Number(state.stats.tokens) || 0) + amount;
+      saveUserState();
     }
 
     window.updateGlobalLeaderboard = function() {
       const ticker = document.getElementById('global-ticker-content');
       if (!ticker) return;
+      const students = getDeduplicatedStudents();
+      students.sort((a, b) => (Number(b?.stats?.tokens) || 0) - (Number(a?.stats?.tokens) || 0));
 
-      const rawStudents = getDeduplicatedStudents();
-      const students = (Array.isArray(rawStudents) ? rawStudents : []).filter(s => s && s.stats);
       if (students.length === 0) {
-        ticker.innerHTML = `<span>Welcome to The Boncepts of Music! Students join now to compete on the classroom leaderboard.</span>`;
+        ticker.textContent = 'Log in to start earning classroom tokens and appear on the live leaderboard!';
         return;
       }
 
-      students.sort((a, b) => {
-        const aTok = Number(a?.stats?.tokens) || 0;
-        const bTok = Number(b?.stats?.tokens) || 0;
-        return bTok - aTok;
-      });
-
-      const itemsHtml = students.map((s, idx) => {
-        if (!s || !s.stats) return '';
-        const tokens = Number(s.stats.tokens) || 0;
-        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🪙';
-        return `<span class="inline-flex items-center gap-1.5 mx-4">
-          <span>${medal}</span>
-          <span class="font-bold text-white">${s.firstName || 'Student'} ${s.surname || ''}</span>
-          <span class="text-indigo-300">(${s.class || 'Class'})</span>:
-          <span class="font-extrabold text-amber-300">${tokens} Tokens</span>
-        </span>`;
-      }).filter(Boolean).join(' • ');
-
-      ticker.innerHTML = itemsHtml || `<span>Welcome to The Boncepts of Music!</span>`;
+      ticker.innerHTML = students.map((s, idx) => {
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🎵';
+        const toks = Number(s?.stats?.tokens) || 0;
+        return `<span class="mx-4">${medal} <strong>${s.firstName} ${s.surname}</strong> (${s.class}): <span class="text-amber-300 font-bold">${toks} Tokens</span></span>`;
+      }).join(' &bull; ');
     };
 
     window.refreshLeaderboardTableInPlace = function() {
       const tbody = document.getElementById('overall-leaderboard-tbody');
       if (!tbody) return;
+      const students = getDeduplicatedStudents();
+      students.sort((a, b) => (Number(b?.stats?.tokens) || 0) - (Number(a?.stats?.tokens) || 0));
 
-      const rawStudents = getDeduplicatedStudents();
-      const students = (Array.isArray(rawStudents) ? rawStudents : []).filter(s => s && s.stats);
       if (students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">No students enrolled yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-xs">No student token balances recorded yet.</td></tr>`;
         return;
       }
 
-      students.sort((a, b) => {
-        const aTok = Number(a?.stats?.tokens) || 0;
-        const bTok = Number(b?.stats?.tokens) || 0;
-        return bTok - aTok;
-      });
-
       tbody.innerHTML = students.map((s, idx) => {
-        if (!s || !s.stats) return '';
-        const tokens = Number(s.stats.tokens) || 0;
-        const medal = idx === 0 ? '🥇 1st' : idx === 1 ? '🥈 2nd' : idx === 2 ? '🥉 3rd' : `#${idx + 1}`;
+        const rankBadge = idx === 0
+          ? '<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black text-xs">🥇 #1</span>'
+          : idx === 1
+          ? '<span class="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800 font-black text-xs">🥈 #2</span>'
+          : idx === 2
+          ? '<span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-black text-xs">🥉 #3</span>'
+          : `<span class="font-bold text-slate-500 text-xs">#${idx + 1}</span>`;
+        const toks = Number(s?.stats?.tokens) || 0;
         return `
-          <tr class="hover:bg-slate-50 border-b border-slate-100">
-            <td class="px-4 py-3 font-bold text-slate-700">${medal}</td>
-            <td class="px-4 py-3 font-semibold text-slate-900">${s.firstName || ''} ${s.surname || ''}</td>
-            <td class="px-4 py-3 text-slate-500">${s.class || '-'}</td>
-            <td class="px-4 py-3 text-right font-black text-amber-600">${tokens} 🪙</td>
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="px-4 py-3">${rankBadge}</td>
+            <td class="px-4 py-3 font-bold text-slate-800">${s.firstName} ${s.surname}</td>
+            <td class="px-4 py-3 text-slate-500 text-xs font-semibold">${s.class}</td>
+            <td class="px-4 py-3 text-right font-black text-amber-600">${toks} <i class="fa-solid fa-coins text-amber-400 text-xs"></i></td>
           </tr>
         `;
-      }).filter(Boolean).join('');
+      }).join('');
     };
 
-    function scrollToStudentLeaderboard() {
-      const section = document.getElementById('overall-student-leaderboard-section');
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
+    // ==========================================
+    // WEB AUDIO SYNTHESIZERS (DRUMS & PITCH)
+    // ==========================================
+    let audioCtx = null;
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playDrumSound(type) {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      if (type === 'kick') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.14);
+        gain.gain.setValueAtTime(0.9, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.23);
       } else {
-        openCurrentPortal();
-        setTimeout(() => {
-          const s = document.getElementById('overall-student-leaderboard-section');
-          if (s) s.scrollIntoView({ behavior: 'smooth' });
-        }, 150);
+        // Snare noise + body
+        const bufferSize = ctx.sampleRate * 0.16;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 900;
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.55, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start(now);
       }
     }
 
+    function playTonePitch(freq, duration = 0.5, volume = 0.4) {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(volume, now + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + duration + 0.02);
+    }
+
     // ==========================================
-    // VIEW RENDERING: HOME
+    // SHOP CATALOG (Including Mr B's Wrench & Mr H's Vintage Comb)
+    // ==========================================
+    const shopCatalog = [
+      { id: 'mr_b_wrench', name: "Mr B's Wrench", category: 'Hardware', cost: 100, icon: 'fa-wrench', desc: 'Legendary studio adjustment tool calibrated by Mr B himself.' },
+      { id: 'mr_h_comb', name: "Mr H's Vintage Comb", category: 'Hardware', cost: 100, icon: 'fa-wand-magic-sparkles', desc: 'Authentic vintage acoustic comb for precision classroom style.' },
+      { id: 'gold_metronome', name: 'Precision Gold Metronome', category: 'Hardware', cost: 60, icon: 'fa-stopwatch', desc: 'Lock your internal tempo to 120 BPM with pure precision.' },
+      { id: 'strat_guitar', name: 'Electric Sunburst Guitar', category: 'Instruments', cost: 120, icon: 'fa-guitar', desc: 'Classic solid-body electric guitar for lead riffs and solos.' },
+      { id: 'grand_piano', name: 'Concert Grand Piano', category: 'Instruments', cost: 150, icon: 'fa-music', desc: '88-key acoustic concert grand with rich harmonic resonance.' },
+      { id: 'maestro_crown', name: 'Maestro Conductor Crown', category: 'Avatars', cost: 80, icon: 'fa-crown', desc: 'Command the symphony orchestra with distinction.' },
+      { id: 'studio_cans', name: 'Pro Studio Headphones', category: 'Equipment', cost: 50, icon: 'fa-headphones', desc: 'Zero-latency monitoring for rhythm dictation masters.' },
+      { id: 'boncepts_cup', name: 'Boncepts Champion Cup', category: 'Trophies', cost: 200, icon: 'fa-trophy', desc: 'Awarded to masters of all six musical concepts.' }
+    ];
+
+    // ==========================================
+    // HELPER: GENERATE 15-QUESTION LEVEL TESTS
+    // ==========================================
+    function build15QuestionTest(baseQuestions, conceptTitle, levelTitle) {
+      const pool = [...baseQuestions];
+      let idx = 0;
+      while (pool.length < 15) {
+        const template = baseQuestions[idx % baseQuestions.length];
+        pool.push({
+          q: `[${conceptTitle} • ${levelTitle}] Review Q${pool.length + 1}: ${template.q}`,
+          options: template.options,
+          correct: template.correct
+        });
+        idx++;
+      }
+      return pool.slice(0, 15);
+    }
+
+    // ==========================================
+    // FULL 6-CONCEPT CURRICULUM WITH LESSONS & 15-Q LEVEL TESTS
+    // ==========================================
+    const conceptsCurriculum = [
+      {
+        id: 'duration',
+        title: 'Duration & Rhythm',
+        icon: 'fa-drum',
+        color: 'from-blue-600 to-indigo-600',
+        textColor: 'text-blue-600',
+        desc: 'Explore beat, pulse, tempo, time signatures, note values, and rhythmic subdivision.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Beat, Pulse & Note Values',
+            badge: 'Foundation',
+            summary: 'Master steady pulse, crotchets (1, 2, 3, 4), quavers (1 & 2 &), and build patterns in the 8-Beat Drum Sound Module.',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: The Pulse & The Beat',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">What is the Beat?</h3>
+                  <p class="text-sm text-slate-600 mb-4">The <strong>beat</strong> (or pulse) is the steady, regular heartbeat of music that you tap your foot to. Even when notes speed up or slow down, the underlying beat stays steady.</p>
+                  <div class="p-4 bg-blue-50 rounded-2xl border border-blue-200 text-xs text-blue-900">
+                    <strong>Key Rule:</strong> Rhythm is the pattern of long and short sounds organized over the steady beat.
+                  </div>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Crotchets (1, 2, 3, 4) & Note Anatomy',
+                readTime: '4 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">The Crotchet (Quarter Note) ♩</h3>
+                  <p class="text-sm text-slate-600 mb-4">A <strong>Crotchet (♩)</strong> lasts for <strong>1 full beat</strong>. When counting four crotchets in a bar, we count aloud: <strong>"1, 2, 3, 4"</strong>.</p>
+                  <ul class="list-disc ml-5 text-xs text-slate-600 space-y-1">
+                    <li><strong>Note Head:</strong> Solid filled-in oval.</li>
+                    <li><strong>Stem:</strong> Vertical line extending up on the right or down on the left.</li>
+                  </ul>
+                `
+              },
+              {
+                lessonNum: 3,
+                title: 'Lesson 3: Quavers (1 & 2 &) & Half-Beats',
+                readTime: '4 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Paired Quavers (Eighth Notes) ♫</h3>
+                  <p class="text-sm text-slate-600 mb-4">A single quaver lasts for <strong>half a beat (1/2)</strong>. Two quavers joined by a beam equal <strong>1 full beat</strong> and are counted using <strong>"1 &"</strong> (one-and).</p>
+                  <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-200 text-xs text-indigo-900">
+                    <strong>Counting Example:</strong> Four beats of quavers are counted: <strong>"1 & 2 & 3 & 4 &"</strong>.
+                  </div>
+                `
+              },
+              {
+                lessonNum: 4,
+                title: 'Lesson 4: Interactive 8-Beat Drum Sound Module & Dictation',
+                readTime: 'Interactive Lab',
+                interactiveTool: 'drumModule',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">8-Beat Drum Sequencer & Dictation Lab</h3>
+                  <p class="text-sm text-slate-600 mb-4">Click any beat below to switch between a <strong>Crotchet (♩ = Beat #)</strong> and <strong>Quavers (♫ = # &)</strong>, then switch tabs to practice your Rhythm Dictation!</p>
+                  <div id="embedded-tool-container" class="rounded-3xl overflow-hidden shadow-md"></div>
+                `
+              }
+            ],
+            testQuestions: build15QuestionTest([
+              { q: 'What is the steady underlying heartbeat of a piece of music called?', options: ['Beat / Pulse', 'Timbre', 'Dynamics', 'Texture'], correct: 0 },
+              { q: 'How many beats does a single Crotchet (♩) last?', options: ['1 beat', '2 beats', '4 beats', 'Half a beat'], correct: 0 },
+              { q: 'How do we count two paired Quavers (♫) on beat 1?', options: ['1 &', '1 2 3 4', '1 e & a', '1 - 2'], correct: 0 },
+              { q: 'How many quavers fit into one crotchet beat?', options: ['2', '4', '3', '1'], correct: 0 },
+              { q: 'What connects two quavers together?', options: ['A beam', 'A clef', 'A sharp', 'A slur'], correct: 0 }
+            ], 'Duration', 'Level 1')
+          },
+          {
+            level: 2,
+            title: 'Level 2: Time Signatures & Dictation',
+            badge: 'Intermediate',
+            summary: 'Understand 4/4 and 3/4 meters, tempo markings (Allegro, Adagio), and ear dictation.',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Time Signatures (4/4 & 3/4)',
+                readTime: '4 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Reading Time Signatures</h3>
+                  <p class="text-sm text-slate-600 mb-3">The <strong>top number</strong> tells how many beats are in each bar. The <strong>bottom number (4)</strong> tells us that each beat is a crotchet.</p>
+                  <p class="text-xs text-slate-600"><strong>4/4 Time (Common Time):</strong> 4 crotchet beats per bar. <strong>3/4 Time (Waltz):</strong> 3 crotchet beats per bar.</p>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Tempo Markings (Italian Terms)',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Speed of the Beat</h3>
+                  <ul class="list-disc ml-5 text-xs text-slate-600 space-y-1.5">
+                    <li><strong>Adagio:</strong> Slow and stately</li>
+                    <li><strong>Andante:</strong> At a walking pace</li>
+                    <li><strong>Moderato:</strong> Moderate speed</li>
+                    <li><strong>Allegro:</strong> Fast, lively, and bright</li>
+                  </ul>
+                `
+              },
+              {
+                lessonNum: 3,
+                title: 'Lesson 3: 8-Beat Dictation Ear Challenge',
+                readTime: 'Interactive Lab',
+                interactiveTool: 'dictationChallenge',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Test Your Rhythmic Ear</h3>
+                  <p class="text-sm text-slate-600 mb-4">Listen carefully to the mystery 8-beat drum pattern and choose the matching notation.</p>
+                  <div id="embedded-tool-container"></div>
+                `
+              }
+            ],
+            testQuestions: build15QuestionTest([
+              { q: 'In a 4/4 time signature, what does the top number 4 mean?', options: ['4 beats per bar', '4 bars per line', 'Play 4 times', '4 sharps'], correct: 0 },
+              { q: 'Which Italian tempo term means fast and lively?', options: ['Allegro', 'Adagio', 'Largo', 'Piano'], correct: 0 },
+              { q: 'Which time signature has 3 crotchet beats per bar?', options: ['3/4', '4/4', '2/4', '6/8'], correct: 0 },
+              { q: 'What does Andante mean?', options: ['At a walking pace', 'Very fast', 'Very loud', 'Suddenly soft'], correct: 0 },
+              { q: 'What does a minim (half note) equal in 4/4 time?', options: ['2 beats', '1 beat', '4 beats', 'Half a beat'], correct: 0 }
+            ], 'Duration', 'Level 2')
+          }
+        ]
+      },
+      {
+        id: 'pitch',
+        title: 'Pitch & Melody',
+        icon: 'fa-music',
+        color: 'from-violet-600 to-purple-600',
+        textColor: 'text-violet-600',
+        desc: 'Discover high and low frequencies, melodic contour, treble/bass clefs, and scales.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: High/Low Pitch & The Stave',
+            badge: 'Foundation',
+            summary: 'Learn how frequency creates pitch, read the musical stave, and play the interactive pitch keyboard.',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: What is Pitch? High vs Low Vibrations',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Frequency & Pitch</h3>
+                  <p class="text-sm text-slate-600"><strong>Pitch</strong> refers to how high or low a sound is. Fast vibrations produce <strong>high pitches</strong> (like a flute), while slow vibrations produce <strong>low pitches</strong> (like a tuba).</p>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Melodic Contour (Steps, Leaps & Direction)',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Shape of a Melody</h3>
+                  <p class="text-sm text-slate-600">Melodies move by <strong>step</strong> (adjacent notes), <strong>leap</strong> (jumping intervals), or stay on the <strong>same repeated note</strong>, creating ascending or descending contours.</p>
+                `
+              },
+              {
+                lessonNum: 3,
+                title: 'Lesson 3: The Musical Stave & Treble Clef',
+                readTime: '4 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Reading the 5-Line Stave</h3>
+                  <p class="text-sm text-slate-600 mb-2">Notes are written on a 5-line, 4-space <strong>stave</strong>. In the Treble Clef:</p>
+                  <p class="text-xs text-slate-600"><strong>Lines (bottom to top):</strong> E - G - B - D - F &bull; <strong>Spaces:</strong> F - A - C - E</p>
+                `
+              },
+              {
+                lessonNum: 4,
+                title: 'Lesson 4: Virtual Pitch Keyboard Lab',
+                readTime: 'Interactive Lab',
+                interactiveTool: 'pitchKeyboard',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Explore the C Major Scale</h3>
+                  <p class="text-sm text-slate-600 mb-4">Tap the keys from C4 (262 Hz) up to C5 (523 Hz) to hear an ascending octave.</p>
+                  <div id="embedded-tool-container"></div>
+                `
+              }
+            ],
+            testQuestions: build15QuestionTest([
+              { q: 'What determines whether a musical note sounds high or low?', options: ['Frequency of vibration', 'Volume of air', 'Length of rest', 'Number of players'], correct: 0 },
+              { q: 'How many lines are on a standard musical stave?', options: ['5 lines', '4 lines', '6 lines', '8 lines'], correct: 0 },
+              { q: 'What are the four spaces of the Treble Clef from bottom to top?', options: ['F A C E', 'E G B D', 'A C E G', 'G B D F'], correct: 0 },
+              { q: 'What is the overall shape or direction of a melody called?', options: ['Melodic contour', 'Timbre', 'Meter', 'Ostinato'], correct: 0 },
+              { q: 'Movement from one note directly to the next adjacent note is called a:', options: ['Step', 'Leap', 'Chord', 'Rest'], correct: 0 }
+            ], 'Pitch', 'Level 1')
+          }
+        ]
+      },
+      {
+        id: 'dynamics',
+        title: 'Dynamics & Expression',
+        icon: 'fa-volume-high',
+        color: 'from-amber-500 to-orange-600',
+        textColor: 'text-amber-600',
+        desc: 'Control volume levels (pp to ff), gradual changes (crescendo/decrescendo), and articulation.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Volume Markings & Articulation',
+            badge: 'Foundation',
+            summary: 'Master Italian dynamic markings, crescendos, and expressive articulations.',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Piano (p) to Forte (f)',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Dynamic Levels</h3>
+                  <p class="text-sm text-slate-600"><strong>Dynamics</strong> describe the volume of sound: <em>pp</em> (pianissimo = very soft), <em>p</em> (piano = soft), <em>mf</em> (mezzo-forte = moderately loud), <em>f</em> (forte = loud), <em>ff</em> (fortissimo = very loud).</p>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Crescendo, Decrescendo & Articulation',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Expressive Techniques</h3>
+                  <p class="text-sm text-slate-600"><strong>Crescendo</strong> means gradually getting louder, while <strong>Decrescendo (Diminuendo)</strong> means gradually getting softer. <strong>Staccato</strong> means short and detached; <strong>Legato</strong> means smooth and connected.</p>
+                `
+              },
+              {
+                lessonNum: 3,
+                title: 'Lesson 3: Interactive Decibel Simulator',
+                readTime: 'Interactive Lab',
+                interactiveTool: 'dynamicsSimulator',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Compare Dynamic Markings</h3>
+                  <p class="text-sm text-slate-600 mb-4">Click each dynamic symbol below to hear the volume contrast from <em>pp</em> to <em>ff</em>.</p>
+                  <div id="embedded-tool-container"></div>
+                `
+              }
+            ],
+            testQuestions: build15QuestionTest([
+              { q: 'What does the dynamic marking "f" (Forte) mean?', options: ['Loud', 'Soft', 'Very slow', 'Short and detached'], correct: 0 },
+              { q: 'What does "p" (Piano) instruct the musician to do?', options: ['Play softly', 'Play loudly', 'Speed up', 'Stop playing'], correct: 0 },
+              { q: 'What term describes gradually getting louder?', options: ['Crescendo', 'Diminuendo', 'Staccato', 'Adagio'], correct: 0 },
+              { q: 'Which articulation marking means short and detached?', options: ['Staccato', 'Legato', 'Fermata', 'Tenuto'], correct: 0 },
+              { q: 'Which marking means very loud?', options: ['ff (Fortissimo)', 'pp (Pianissimo)', 'mp (Mezzo-piano)', 'mf (Mezzo-forte)'], correct: 0 }
+            ], 'Dynamics', 'Level 1')
+          }
+        ]
+      },
+      {
+        id: 'tonecolour',
+        title: 'Tone Colour (Timbre)',
+        icon: 'fa-guitar',
+        color: 'from-rose-500 to-pink-600',
+        textColor: 'text-rose-600',
+        desc: 'Identify instrument families, sound production methods, and descriptive timbre adjectives.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Instrument Families & Sound Sources',
+            badge: 'Foundation',
+            summary: 'Classify strings, woodwind, brass, percussion, and electronic sound sources.',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: What is Tone Colour?',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">The Unique Quality of Sound</h3>
+                  <p class="text-sm text-slate-600"><strong>Tone Colour (Timbre)</strong> is what allows you to tell a trumpet apart from a violin even when both play the exact same pitch at the exact same volume.</p>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Orchestral Families & Material',
+                readTime: '4 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">How Sound is Produced</h3>
+                  <p class="text-sm text-slate-600">Instruments are grouped by how they vibrate: <strong>Strings</strong> (bowed/plucked strings), <strong>Woodwind</strong> (air/reeds), <strong>Brass</strong> (buzzing lips into metal tubing), and <strong>Percussion</strong> (struck, shaken, or scraped).</p>
+                `
+              },
+              {
+                lessonNum: 3,
+                title: 'Lesson 3: Describing Tone Colour with Adjectives',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Descriptive Vocabulary</h3>
+                  <p class="text-sm text-slate-600">Use vivid adjectives to describe timbre: <em>warm, bright, metallic, woody, nasal, breathy, resonant, distorted,</em> or <em>percussive</em>.</p>
+                `
+              }
+            ],
+            testQuestions: build15QuestionTest([
+              { q: 'What allows us to distinguish a flute from a guitar playing the same note?', options: ['Tone Colour (Timbre)', 'Tempo', 'Time Signature', 'Bar lines'], correct: 0 },
+              { q: 'How do brass instruments produce their sound?', options: ['Buzzing lips into a mouthpiece', 'Bowing a string', 'Hitting a membrane', 'Plucking a reed'], correct: 0 },
+              { q: 'Which family does the snare drum belong to?', options: ['Percussion', 'Woodwind', 'Brass', 'Strings'], correct: 0 },
+              { q: 'Which adjective best describes the tone colour of a muted trumpet or saxophone?', options: ['Nasal / Metallic', 'Silent', 'Fast', 'Monophonic'], correct: 0 },
+              { q: 'How is sound produced on a violin?', options: ['Bowing or plucking strings', 'Blowing across a hole', 'Pressing digital pads', 'Shaking bells'], correct: 0 }
+            ], 'Tone Colour', 'Level 1')
+          }
+        ]
+      },
+      {
+        id: 'texture',
+        title: 'Texture',
+        icon: 'fa-layer-group',
+        color: 'from-emerald-500 to-teal-600',
+        textColor: 'text-emerald-600',
+        desc: 'Analyze layers of sound: monophonic, homophonic, polyphonic, and role of instruments.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Layers of Sound & Musical Roles',
+            badge: 'Foundation',
+            summary: 'Distinguish single-line melodies from chords and interwoven polyphonic textures.',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Density & Layers of Sound',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Thick vs Thin Texture</h3>
+                  <p class="text-sm text-slate-600"><strong>Texture</strong> refers to how many layers of sound are heard at once and how they interact (thin/sparse vs thick/dense).</p>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Monophonic, Homophonic & Polyphonic',
+                readTime: '4 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">The Three Core Textures</h3>
+                  <ul class="list-disc ml-5 text-xs text-slate-600 space-y-1.5">
+                    <li><strong>Monophonic:</strong> A single unaccompanied melody line.</li>
+                    <li><strong>Homophonic:</strong> One main melody supported by chordal accompaniment.</li>
+                    <li><strong>Polyphonic:</strong> Two or more independent melodies weaving together at the same time.</li>
+                  </ul>
+                `
+              },
+              {
+                lessonNum: 3,
+                title: 'Lesson 3: Roles in an Ensemble',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Melodic, Harmonic & Rhythmic Roles</h3>
+                  <p class="text-sm text-slate-600">Every layer performs a role: <strong>Melody</strong> (main tune), <strong>Harmonic Accompaniment</strong> (chords/bassline), or <strong>Rhythmic Pulse</strong> (drum kit/percussion).</p>
+                `
+              }
+            ],
+            testQuestions: build15QuestionTest([
+              { q: 'Which texture consists of a single unaccompanied melody line?', options: ['Monophonic', 'Polyphonic', 'Homophonic', 'Heterophonic'], correct: 0 },
+              { q: 'A singer accompanied by strumming guitar chords is an example of:', options: ['Homophonic texture', 'Monophonic texture', 'A solo drum roll', 'Silence'], correct: 0 },
+              { q: 'Which texture features multiple independent melodies weaving together simultaneously?', options: ['Polyphonic', 'Monophonic', 'Unison', 'Single-line'], correct: 0 },
+              { q: 'Adding more instruments to a chorus makes the texture:', options: ['Thicker / Denser', 'Thinner', 'Slower', 'Softer'], correct: 0 },
+              { q: 'In a rock band, what is the primary role of the drum kit?', options: ['Rhythmic pulse', 'Lead vocal melody', 'High woodwind counter-melody', 'Tuning'], correct: 0 }
+            ], 'Texture', 'Level 1')
+          }
+        ]
+      },
+      {
+        id: 'structure',
+        title: 'Structure & Form',
+        icon: 'fa-sitemap',
+        color: 'from-cyan-600 to-sky-600',
+        textColor: 'text-cyan-600',
+        desc: 'Understand musical architecture: Binary (AB), Ternary (ABA), Rondo, and Verse-Chorus form.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Sections, Repetition & Song Form',
+            badge: 'Foundation',
+            summary: 'Identify how composers organize sections using repetition, contrast, and variation.',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Repetition, Contrast & Variation',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Building Blocks of Structure</h3>
+                  <p class="text-sm text-slate-600"><strong>Structure (Form)</strong> is the overall plan or layout of a piece of music, built by balancing <strong>repetition</strong> (familiarity) and <strong>contrast</strong> (new sections).</p>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Binary (AB), Ternary (ABA) & Rondo (ABACA)',
+                readTime: '4 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Classical Musical Forms</h3>
+                  <ul class="list-disc ml-5 text-xs text-slate-600 space-y-1.5">
+                    <li><strong>Binary Form (AB):</strong> Two contrasting sections.</li>
+                    <li><strong>Ternary Form (ABA):</strong> Statement (A), contrasting middle section (B), and return of A.</li>
+                    <li><strong>Rondo Form (ABACA):</strong> Main theme (A) keeps returning between contrasting episodes.</li>
+                  </ul>
+                `
+              },
+              {
+                lessonNum: 3,
+                title: 'Lesson 3: Popular Song Structure',
+                readTime: '3 min read',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-2">Modern Song Sections</h3>
+                  <p class="text-sm text-slate-600">Contemporary songs typically use <strong>Intro &rarr; Verse &rarr; Chorus &rarr; Verse &rarr; Chorus &rarr; Bridge &rarr; Chorus &rarr; Outro</strong>.</p>
+                `
+              }
+            ],
+            testQuestions: build15QuestionTest([
+              { q: 'What letters represent Ternary Form?', options: ['A B A', 'A B', 'A A A', 'A B C D'], correct: 0 },
+              { q: 'Which musical form consists of two contrasting sections (A and B)?', options: ['Binary Form', 'Ternary Form', 'Rondo Form', 'Through-composed'], correct: 0 },
+              { q: 'In popular song structure, which section contains the main catchy hook and repeated lyrics?', options: ['Chorus', 'Intro', 'Outro', 'Coda'], correct: 0 },
+              { q: 'In Rondo Form (ABACA), which section keeps returning?', options: ['Section A', 'Section B', 'Section C', 'The Outro'], correct: 0 },
+              { q: 'What is the opening section that sets the mood of a song called?', options: ['Intro', 'Bridge', 'Chorus', 'Fade-out'], correct: 0 }
+            ], 'Structure', 'Level 1')
+          }
+        ]
+      }
+    ];
+
+    // ==========================================
+    // VIEW RENDERING: HOME, CONCEPTS HUB & TOPICS
     // ==========================================
     function renderHomeView(container) {
       const isLoggedIn = !!app.currentUser;
+
       container.innerHTML = `
-        <div class="space-y-8">
-          <!-- Hero Section -->
-          <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-indigo-900 to-violet-950 text-white p-8 sm:p-12 shadow-2xl border border-indigo-800/40">
-            <div class="relative z-10 max-w-2xl">
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 mb-4 uppercase tracking-wider">
-                <i class="fa-solid fa-graduation-cap text-amber-400"></i> The Complete Music Curriculum
+        <div class="space-y-10">
+          <!-- Hero Banner -->
+          <div class="bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+            <div class="relative z-10 max-w-2xl space-y-4">
+              <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-amber-300 text-xs font-bold uppercase tracking-wider">
+                <i class="fa-solid fa-sparkles"></i> Interactive Music Curriculum
               </span>
-              <h1 class="text-3xl sm:text-5xl font-black tracking-tight mb-4 leading-tight">
-                Master the Building Blocks of Music.
+              <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+                Master the Six Concepts of Music
               </h1>
-              <p class="text-indigo-200 text-sm sm:text-base leading-relaxed mb-6">
-                Explore all 6 core musical concepts, test your ears with live synthesis, complete rhythm dictations, and climb the live classroom leaderboard!
+              <p class="text-sm sm:text-base text-indigo-100 leading-relaxed">
+                Explore interactive lessons, play the 8-Beat Drum & Dictation Lab, pass 15-question level assessments, and earn tokens for the Classroom Rewards Shop.
               </p>
-              <div class="flex flex-wrap gap-3">
+              <div class="pt-2 flex flex-wrap items-center gap-3">
                 ${isLoggedIn ? `
-                  <button onclick="protectedNavigate('conceptsHub')" class="px-6 py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-book-open"></i> Browse All 6 Concepts
+                  <button onclick="app.navigate('conceptsHub')" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl shadow-lg transition-all text-xs sm:text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-book-open"></i> Explore All 6 Concepts
                   </button>
-                  <button onclick="openCurrentPortal()" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-gauge-high"></i> Go to My Dashboard
+                  <button onclick="openCurrentPortal()" class="px-6 py-3 bg-white/15 hover:bg-white/25 text-white font-bold rounded-2xl border border-white/20 transition-all text-xs sm:text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-gauge"></i> My Dashboard
                   </button>
                 ` : `
-                  <button onclick="app.navigate('login')" class="px-6 py-3.5 bg-indigo-500 hover:bg-indigo-400 text-white font-black rounded-2xl shadow-lg transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-right-to-bracket"></i> Login to Access Modules
+                  <button onclick="app.navigate('login')" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl shadow-lg transition-all text-xs sm:text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Student & Teacher Login
                   </button>
-                  <button onclick="scrollToStudentLeaderboard()" class="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold rounded-2xl backdrop-blur-sm transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-trophy text-amber-400"></i> View Classroom Leaderboard
+                  <button onclick="scrollToStudentLeaderboard()" class="px-6 py-3 bg-white/15 hover:bg-white/25 text-white font-bold rounded-2xl border border-white/20 transition-all text-xs sm:text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-300"></i> View Leaderboard
                   </button>
                 `}
               </div>
             </div>
-            <div class="absolute right-0 bottom-0 opacity-10 sm:opacity-20 pointer-events-none translate-x-12 translate-y-12">
-              <i class="fa-solid fa-music text-[280px]"></i>
-            </div>
+            <i class="fa-solid fa-music text-[180px] text-white/5 absolute -right-6 -bottom-8 pointer-events-none"></i>
           </div>
 
-          <!-- The 6 Musical Concepts Quick-Grid -->
-          <div>
-            <div class="flex items-center justify-between mb-4">
+          <!-- The 6 Musical Concepts Grid (Locked until logged in) -->
+          <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h2 class="text-2xl font-black text-slate-800">The 6 Musical Concepts</h2>
                 <p class="text-xs sm:text-sm text-slate-500">
-                  ${isLoggedIn ? 'Select any concept to open lessons, interactive audio tools, and quizzes' : 'Sign in to access graded lessons, audio synthesizers, and assessments'}
+                  ${isLoggedIn ? 'Select any concept to start your graded levels and lessons.' : 'Sign in to unlock interactive lessons, sound modules, and 15-question tests.'}
                 </p>
               </div>
-              <button onclick="protectedNavigate('conceptsHub')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
-                View All &rarr;
-              </button>
+              ${!isLoggedIn ? `
+                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold self-start sm:self-auto">
+                  <i class="fa-solid fa-lock"></i> Login Required to Unlock
+                </span>
+              ` : ''}
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               ${conceptsCurriculum.map(c => `
-                <div onclick="protectedNavigate('conceptDetail', '${c.id}')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:border-indigo-400 shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between relative overflow-hidden">
-                  ${!isLoggedIn ? `
-                    <div class="absolute top-4 right-4 text-xs font-bold text-slate-400 flex items-center gap-1 bg-slate-100 px-2.5 py-1 rounded-full">
-                      <i class="fa-solid fa-lock text-slate-400"></i> Locked
-                    </div>
-                  ` : ''}
+                <div onclick="protectedNavigate('conceptDetail', '${c.id}')" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-between group">
                   <div>
-                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform shadow-md">
-                      <i class="fa-solid ${c.icon}"></i>
+                    <div class="flex items-center justify-between mb-4">
+                      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-xl shadow group-hover:scale-105 transition-transform">
+                        <i class="fa-solid ${c.icon}"></i>
+                      </div>
+                      ${isLoggedIn ? `
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <i class="fa-solid fa-lock-open mr-1"></i> Unlocked
+                        </span>
+                      ` : `
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                          <i class="fa-solid fa-lock mr-1"></i> Locked
+                        </span>
+                      `}
                     </div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">${c.title}</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed mb-4">${c.desc}</p>
+                    <h3 class="font-bold text-lg text-slate-800 group-hover:text-indigo-600 transition-colors mb-1.5">${c.title}</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">${c.desc}</p>
                   </div>
-                  <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                    <span class="font-bold ${c.textColor}">${c.levels.length} Graded Levels</span>
-                    <span class="font-bold text-slate-400 group-hover:text-indigo-600 flex items-center gap-1">
-                      ${isLoggedIn ? 'Launch &rarr;' : '<i class="fa-solid fa-lock text-[10px]"></i> Login to Unlock'}
-                    </span>
+
+                  <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold ${isLoggedIn ? c.textColor : 'text-slate-400'}">
+                    <span>${isLoggedIn ? 'Explore Lessons & Tests' : 'Login to Unlock'}</span>
+                    <i class="fa-solid ${isLoggedIn ? 'fa-arrow-right' : 'fa-lock'}"></i>
                   </div>
                 </div>
               `).join('')}
             </div>
           </div>
 
-          <!-- Feature Quick-Launch Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div onclick="protectedNavigate('rhythmModule')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer relative">
-              ${!isLoggedIn ? `
-                <div class="absolute top-4 right-4 text-xs font-bold text-slate-400 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
-                  <i class="fa-solid fa-lock text-[10px]"></i>
-                </div>
-              ` : ''}
-              <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-3">
-                <i class="fa-solid fa-drum"></i>
-              </div>
-              <h3 class="font-bold text-lg text-slate-800 mb-1">8-Beat Drum Module & Dictation</h3>
-              <p class="text-xs text-slate-500">Build Crotchet (♩ = 1) and Quavers (♫ = 1 &) rhythms with kick & snare drums, plus earn tokens in the integrated Dictation Challenge.</p>
-              <div class="mt-3 text-xs font-bold ${isLoggedIn ? 'text-indigo-600' : 'text-slate-400'}">
-                ${isLoggedIn ? 'Play Now &rarr;' : 'Login Required 🔒'}
-              </div>
-            </div>
-            <div onclick="protectedNavigate('lessonDetail', { conceptId: 'duration', levelNum: 2, lessonNum: 3 })" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer relative">
-              ${!isLoggedIn ? `
-                <div class="absolute top-4 right-4 text-xs font-bold text-slate-400 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
-                  <i class="fa-solid fa-lock text-[10px]"></i>
-                </div>
-              ` : ''}
-              <div class="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center text-xl mb-3">
-                <i class="fa-solid fa-headphones"></i>
-              </div>
-              <h3 class="font-bold text-lg text-slate-800 mb-1">Dictation Challenge Lab</h3>
-              <p class="text-xs text-slate-500">Listen to mystery 8-beat rhythms and identify matching musical notations in Duration: Level 2.</p>
-              <div class="mt-3 text-xs font-bold ${isLoggedIn ? 'text-indigo-600' : 'text-slate-400'}">
-                ${isLoggedIn ? 'Play Now &rarr;' : 'Login Required 🔒'}
-              </div>
-            </div>
-            <div onclick="protectedNavigate('shop')" class="bg-white p-6 rounded-3xl border border-slate-200 hover:shadow-md transition-all cursor-pointer relative">
-              ${!isLoggedIn ? `
-                <div class="absolute top-4 right-4 text-xs font-bold text-slate-400 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-full">
-                  <i class="fa-solid fa-lock text-[10px]"></i>
-                </div>
-              ` : ''}
-              <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-3">
-                <i class="fa-solid fa-store"></i>
-              </div>
-              <h3 class="font-bold text-lg text-slate-800 mb-1">Classroom Rewards Shop</h3>
-              <p class="text-xs text-slate-500">Use tokens earned from tests and rhythm dictations to unlock equipment and avatar badges.</p>
-              <div class="mt-3 text-xs font-bold ${isLoggedIn ? 'text-indigo-600' : 'text-slate-400'}">
-                ${isLoggedIn ? 'Visit Shop &rarr;' : 'Login Required 🔒'}
-              </div>
-            </div>
-          </div>
-
-          <!-- Classroom Overall Leaderboard -->
+          <!-- Overall Classroom Leaderboard -->
           ${renderLeaderboardMarkup()}
         </div>
       `;
       refreshLeaderboardTableInPlace();
     }
 
-    // ==========================================
-    // VIEW RENDERING: CONCEPTS HUB & TOPICS
-    // ==========================================
     function renderConceptsHub(container) {
       container.innerHTML = `
         <div class="space-y-8">
@@ -1687,6 +1284,12 @@
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
       const lessons = level.lessons || [];
+      const completedList = state.completedLessons || [];
+
+      const viewedCount = lessons.filter(les =>
+        completedList.includes(`${concept.id}_lvl${level.level}_les${les.lessonNum}`)
+      ).length;
+      const allLessonsViewed = lessons.length > 0 && viewedCount === lessons.length;
 
       container.innerHTML = `
         <div class="space-y-8 max-w-4xl mx-auto">
@@ -1695,7 +1298,7 @@
             <div>
               <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">${concept.title}</span>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-800">${level.title}</h1>
-              <p class="text-xs text-slate-400 font-medium">${level.badge} • ${lessons.length} Progressive Lessons</p>
+              <p class="text-xs text-slate-400 font-medium">${level.badge} • ${viewedCount}/${lessons.length} Lessons Viewed</p>
             </div>
             <button onclick="app.navigate('conceptDetail', '${concept.id}')" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
               &larr; Back to Topic
@@ -1709,27 +1312,219 @@
             </h3>
 
             <div class="grid grid-cols-1 gap-4">
-              ${lessons.map((les, lIdx) => `
-                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-indigo-400 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                      <span class="w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 font-black text-xs flex items-center justify-center border border-indigo-200">
-                        ${lIdx + 1}
-                      </span>
-                      <h4 class="font-bold text-base text-slate-800">${les.title}</h4>
+              ${lessons.map((les, lIdx) => {
+                const isViewed = completedList.includes(`${concept.id}_lvl${level.level}_les${les.lessonNum}`);
+                return `
+                  <div class="bg-white rounded-3xl p-6 border ${isViewed ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200'} shadow-sm hover:border-indigo-400 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="w-6 h-6 rounded-full ${isViewed ? 'bg-emerald-600 text-white' : 'bg-indigo-50 text-indigo-600 border border-indigo-200'} font-black text-xs flex items-center justify-center">
+                          ${isViewed ? '✓' : lIdx + 1}
+                        </span>
+                        <h4 class="font-bold text-base text-slate-800">${les.title}</h4>
+                        ${isViewed ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">✓ Viewed</span>' : ''}
+                      </div>
+                      <p class="text-xs text-slate-400 ml-8">${les.readTime || '3 min read'}</p>
                     </div>
-                    <p class="text-xs text-slate-400 ml-8">${les.readTime || '3 min read'}</p>
+                    <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${les.lessonNum} })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 shrink-0">
+                      <span>${isViewed ? 'Review Lesson' : 'Start Lesson'}</span>
+                      <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                    </button>
                   </div>
-                  <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${les.lessonNum} })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 shrink-0">
-                    <span>Start Lesson</span>
-                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- GATED 15-QUESTION LEVEL TEST (Below Lessons) -->
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 ${allLessonsViewed ? 'border-indigo-500 shadow-md' : 'border-slate-200 bg-slate-50'}">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${allLessonsViewed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                    ${allLessonsViewed ? '<i class="fa-solid fa-lock-open mr-1"></i> Unlocked' : `<i class="fa-solid fa-lock mr-1"></i> Locked (${viewedCount}/${lessons.length} Lessons Viewed)`}
+                  </span>
+                  <span class="text-xs font-bold text-amber-600">+25 Tokens Reward</span>
                 </div>
-              `).join('')}
+                <h3 class="text-xl font-black text-slate-800">Final Level Test (15 Questions)</h3>
+                <p class="text-xs text-slate-500">
+                  ${allLessonsViewed
+                    ? 'All lessons completed! Take the comprehensive 15-question Level Test to record your mark and earn tokens.'
+                    : 'View all lessons above to unlock the 15-question Level Test.'}
+                </p>
+              </div>
+
+              ${allLessonsViewed ? `
+                <button onclick="app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0">
+                  <i class="fa-solid fa-file-pen"></i> Start 15-Question Level Test
+                </button>
+              ` : `
+                <button disabled class="px-6 py-3.5 bg-slate-200 text-slate-400 font-bold rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 cursor-not-allowed shrink-0">
+                  <i class="fa-solid fa-lock"></i> Complete All Lessons First
+                </button>
+              `}
             </div>
           </div>
         </div>
       `;
+    }
+
+    function renderLessonDetail(container, { conceptId, levelNum, lessonNum }) {
+      const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
+      const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
+      const lessons = level.lessons || [];
+      const currentLessonIdx = lessons.findIndex(l => l.lessonNum === lessonNum);
+      const lesson = lessons[currentLessonIdx >= 0 ? currentLessonIdx : 0] || lessons[0];
+      const nextLesson = lessons[currentLessonIdx + 1];
+      const prevLesson = lessons[currentLessonIdx - 1];
+
+      // Mark this lesson as viewed so the 15-question Level Test unlocks once all lessons are read
+      const lessonKey = `${concept.id}_lvl${level.level}_les${lesson.lessonNum}`;
+      if (!state.completedLessons) state.completedLessons = [];
+      if (!state.completedLessons.includes(lessonKey)) {
+        state.completedLessons.push(lessonKey);
+        saveUserState();
+      }
+
+      container.innerHTML = `
+        <div class="space-y-8 max-w-4xl mx-auto">
+          <!-- Lesson Breadcrumb & Header -->
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                <span>${concept.title}</span>
+                <span>&bull;</span>
+                <span class="${concept.textColor}">${level.title}</span>
+              </div>
+              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">${lesson.title}</h1>
+              <p class="text-xs text-slate-400 font-medium">Lesson ${currentLessonIdx + 1} of ${lessons.length} • ${lesson.readTime || '3 min read'}</p>
+            </div>
+            <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              &larr; Level Menu
+            </button>
+          </div>
+
+          <!-- Lesson Content -->
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm prose max-w-none">
+            ${lesson.content}
+          </div>
+
+          <!-- Bottom Navigation Controls -->
+          <div class="flex items-center justify-between pt-2">
+            ${prevLesson ? `
+              <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${prevLesson.lessonNum} })" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2 transition-all">
+                &larr; Previous Lesson
+              </button>
+            ` : '<div></div>'}
+
+            ${nextLesson ? `
+              <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${nextLesson.lessonNum} })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all shadow-sm">
+                Next Lesson &rarr;
+              </button>
+            ` : `
+              <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all shadow-sm">
+                Return to Level & Unlock 15-Question Test &rarr;
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+
+      // Mount embedded interactive tool if present in this specific lesson
+      const toolTarget = document.getElementById('embedded-tool-container');
+      if (toolTarget && lesson.interactiveTool) {
+        if (lesson.interactiveTool === 'drumModule') {
+          mountEmbeddedDrumModule(toolTarget);
+        } else if (lesson.interactiveTool === 'dictationChallenge') {
+          mountEmbeddedDictation(toolTarget);
+        } else if (lesson.interactiveTool === 'pitchKeyboard') {
+          mountEmbeddedPitchKeyboard(toolTarget);
+        } else if (lesson.interactiveTool === 'dynamicsSimulator') {
+          mountEmbeddedDynamicsSimulator(toolTarget);
+        }
+      }
+    }
+
+    function renderLevelTestView(container, { conceptId, levelNum }) {
+      const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
+      const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
+      const questions = level.testQuestions || [];
+
+      container.innerHTML = `
+        <div class="space-y-8 max-w-4xl mx-auto">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">${concept.title} • ${level.title}</span>
+              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">Level Assessment (${questions.length} Questions)</h1>
+              <p class="text-xs text-slate-500">Complete all 15 questions below. Your score is recorded confidentially to the Teacher Markbook.</p>
+            </div>
+            <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              &larr; Cancel & Return
+            </button>
+          </div>
+
+          <form onsubmit="handleLevelTestSubmit(event, '${concept.id}', ${level.level})" class="space-y-5">
+            ${questions.map((qItem, qIdx) => `
+              <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
+                <div class="font-bold text-sm text-slate-800 flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5">${qIdx + 1}</span>
+                  <span>${qItem.q}</span>
+                </div>
+                <div class="space-y-2 ml-8">
+                  ${qItem.options.map((opt, optIdx) => `
+                    <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-indigo-50/60 border border-slate-200 hover:border-indigo-300 transition-all cursor-pointer text-xs font-semibold text-slate-700">
+                      <input type="radio" name="level_q_${qIdx}" value="${optIdx}" required class="text-indigo-600 focus:ring-indigo-500">
+                      <span>${opt}</span>
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+
+            <button type="submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
+              <i class="fa-solid fa-paper-plane"></i> Submit 15-Question Test & Claim Tokens
+            </button>
+          </form>
+        </div>
+      `;
+    }
+
+    function handleLevelTestSubmit(e, conceptId, levelNum) {
+      e.preventDefault();
+      const concept = conceptsCurriculum.find(c => c.id === conceptId);
+      const level = concept.levels.find(l => l.level === levelNum);
+      const questions = level.testQuestions || [];
+
+      let score = 0;
+      for (let i = 0; i < questions.length; i++) {
+        const selected = document.querySelector(`input[name="level_q_${i}"]:checked`);
+        if (selected && parseInt(selected.value, 10) === questions[i].correct) {
+          score++;
+        }
+      }
+
+      const total = questions.length;
+      const pct = Math.round((score / total) * 100);
+      const earnedTokens = pct >= 80 ? 25 : pct >= 50 ? 15 : 5;
+
+      if (!state.testHistory) state.testHistory = [];
+      state.testHistory.push({
+        title: `${concept.title} - ${level.title} (15-Q Test)`,
+        score,
+        total,
+        date: new Date().toISOString()
+      });
+
+      if (!state.stats) state.stats = { tokens: 10, testsTaken: 0 };
+      state.stats.testsTaken = (state.stats.testsTaken || 0) + 1;
+
+      addTokens(earnedTokens);
+      app.navigate('levelDetail', { conceptId, levelNum });
+      showAppModal(
+        pct >= 80 ? '🏆 Level Mastered!' : 'Assessment Submitted!',
+        `You scored ${score}/${total} (${pct}%) and earned +${earnedTokens} Tokens! Your mark has been saved to your confidential record.`,
+        pct >= 50
+      );
     }
 
     function renderLessonDetail(container, { conceptId, levelNum, lessonNum }) {
@@ -1915,7 +1710,7 @@
     }
 
     // ==========================================
-    // AUTH & ROLE LOGIN
+    // LEADERBOARD SECTION MARKUP
     // ==========================================
     function renderLoginView(container) {
       container.innerHTML = `
@@ -2807,6 +2602,7 @@
             state.stats = u.stats || { tokens: 10, testsTaken: 0 };
             state.inventory = u.inventory || [];
             state.testHistory = u.testHistory || [];
+            state.completedLessons = u.completedLessons || [];
           }
         }
       } catch (e) {

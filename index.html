@@ -83,6 +83,13 @@
         <button onclick="protectedNavigate('shop')" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
           <i class="fa-solid fa-store"></i> Shop
         </button>
+        
+        <!-- BonaCHORD Link Wrapper (Hidden until logged in) -->
+        <div id="nav-bonachord-link" class="hidden">
+          <a href="https://sites.google.com/erc.nsw.edu.au/bonachord/home" target="_blank" class="hidden md:inline-flex items-center gap-1.5 text-xs sm:text-sm font-black text-violet-600 hover:text-violet-700 transition-colors">
+            <i class="fa-solid fa-compact-disc"></i> BonaCHORD
+          </a>
+        </div>
 
         <!-- Student Token Pill -->
         <div id="nav-token-badge" class="hidden items-center gap-1.5 bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1.5 rounded-full font-bold text-xs sm:text-sm shadow-sm">
@@ -340,6 +347,7 @@
       const tokenVal = document.getElementById('nav-user-tokens');
       const nameEl = document.getElementById('nav-user-name');
       const roleEl = document.getElementById('nav-user-role');
+      const bonachordLink = document.getElementById('nav-bonachord-link');
 
       if (window.app && window.app.currentUser) {
         if (loginBtn) loginBtn.classList.add('hidden');
@@ -347,6 +355,7 @@
           profileBox.classList.remove('hidden');
           profileBox.classList.add('flex');
         }
+        if (bonachordLink) bonachordLink.classList.remove('hidden');
         if (nameEl) nameEl.textContent = `${window.app.currentUser.firstName} ${window.app.currentUser.surname}`;
         if (roleEl) {
           roleEl.textContent = window.app.currentUser.role === 'teacher'
@@ -366,6 +375,7 @@
         if (loginBtn) loginBtn.classList.remove('hidden');
         if (profileBox) profileBox.classList.add('hidden');
         if (tokenBadge) tokenBadge.classList.add('hidden');
+        if (bonachordLink) bonachordLink.classList.add('hidden');
       }
     }
 
@@ -1246,10 +1256,16 @@
                   <button onclick="app.navigate('conceptsHub')" class="px-6 py-3.5 bg-white/15 hover:bg-white/25 text-white border border-white/25 font-black rounded-2xl text-sm transition-all">
                     <i class="fa-solid fa-book-open mr-1.5"></i> Study Concepts
                   </button>
+                  <a href="https://sites.google.com/erc.nsw.edu.au/bonachord/home" target="_blank" class="px-6 py-3.5 bg-violet-600/50 hover:bg-violet-500/60 text-white border border-violet-400/50 font-black rounded-2xl text-sm transition-all flex items-center">
+                    <i class="fa-solid fa-compact-disc mr-1.5"></i> BonaCHORD
+                  </a>
                 ` : `
                   <button onclick="app.navigate('login')" class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all">
                     <i class="fa-solid fa-right-to-bracket mr-1.5"></i> Student &amp; Teacher Login
                   </button>
+                  <a href="https://sites.google.com/erc.nsw.edu.au/bonachord/home" target="_blank" class="px-7 py-3.5 bg-white/15 hover:bg-white/25 text-white border border-white/25 font-black rounded-2xl text-sm transition-all flex items-center">
+                    <i class="fa-solid fa-compact-disc mr-1.5"></i> BonaCHORD
+                  </a>
                 `}
               </div>
             </div>

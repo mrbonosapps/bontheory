@@ -702,12 +702,14 @@
                 lessonNum: 1,
                 title: 'Lesson 1: The Pulse & The Beat',
                 readTime: '3 min read',
+                interactiveTool: 'beatTapGame',
                 content: `
                   <h3 class="text-lg font-black text-slate-800 mb-2">What is the Beat?</h3>
                   <p class="text-sm text-slate-600 mb-4">The <strong>beat</strong> (or pulse) is the steady, regular heartbeat of music that you tap your foot to. Even when notes speed up or slow down, the underlying beat stays steady.</p>
-                  <div class="p-4 bg-blue-50 rounded-2xl border border-blue-200 text-xs text-blue-900">
+                  <div class="p-4 bg-blue-50 rounded-2xl border border-blue-200 text-xs text-blue-900 mb-6">
                     <strong>Key Rule:</strong> Rhythm is the pattern of long and short sounds organized over the steady beat.
                   </div>
+                  <div id="embedded-tool-container" class="rounded-3xl overflow-hidden shadow-md"></div>
                 `
               },
               {
@@ -715,24 +717,44 @@
                 title: 'Lesson 2: Crotchets (1, 2, 3, 4) & Note Anatomy',
                 readTime: '4 min read',
                 content: `
-                  <h3 class="text-lg font-black text-slate-800 mb-2">The Crotchet (Quarter Note) ♩</h3>
-                  <p class="text-sm text-slate-600 mb-4">A <strong>Crotchet (♩)</strong> lasts for <strong>1 full beat</strong>. When counting four crotchets in a bar, we count aloud: <strong>"1, 2, 3, 4"</strong>.</p>
-                  <ul class="list-disc ml-5 text-xs text-slate-600 space-y-1">
-                    <li><strong>Note Head:</strong> Solid filled-in oval.</li>
-                    <li><strong>Stem:</strong> Vertical line extending up on the right or down on the left.</li>
-                  </ul>
-                `
+                  <h3 class="text-lg font-black text-slate-800 mb-3">The Crotchet (Quarter Note)</h3>
+                  <div class="flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-200 mb-5">
+                    <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-white border-2 border-indigo-200 shadow-sm flex flex-col items-center justify-center shrink-0">
+                      <span class="text-7xl sm:text-8xl font-black text-indigo-700 leading-none select-none">♩</span>
+                      <span class="text-[11px] font-black uppercase tracking-widest text-indigo-500 mt-2">1 Beat</span>
+                    </div>
+                    <div class="space-y-2 text-center sm:text-left">
+                      <p class="text-sm text-slate-700 leading-relaxed">A <strong>Crotchet (♩)</strong> lasts for <strong>1 full beat</strong>. When counting four crotchets in a bar, we count aloud: <strong>"1, 2, 3, 4"</strong>.</p>
+                      <ul class="list-disc ml-5 text-xs text-slate-600 space-y-1 text-left">
+                        <li><strong>Note Head:</strong> Solid filled-in oval.</li>
+                        <li><strong>Stem:</strong> Vertical line extending up on the right or down on the left.</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div id="embedded-tool-container" class="rounded-3xl overflow-hidden shadow-md"></div>
+                `,
+                interactiveTool: 'crotchetGame'
               },
               {
                 lessonNum: 3,
                 title: 'Lesson 3: Quavers (1 & 2 &) & Half-Beats',
                 readTime: '4 min read',
+                interactiveTool: 'quaverGame',
                 content: `
-                  <h3 class="text-lg font-black text-slate-800 mb-2">Paired Quavers (Eighth Notes) ♫</h3>
-                  <p class="text-sm text-slate-600 mb-4">A single quaver lasts for <strong>half a beat (1/2)</strong>. Two quavers joined by a beam equal <strong>1 full beat</strong> and are counted using <strong>"1 &"</strong> (one-and).</p>
-                  <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-200 text-xs text-indigo-900">
-                    <strong>Counting Example:</strong> Four beats of quavers are counted: <strong>"1 & 2 & 3 & 4 &"</strong>.
+                  <h3 class="text-lg font-black text-slate-800 mb-3">Paired Quavers (Eighth Notes)</h3>
+                  <div class="flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-200 mb-5">
+                    <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-white border-2 border-blue-200 shadow-sm flex flex-col items-center justify-center shrink-0">
+                      <span class="text-7xl sm:text-8xl font-black text-blue-700 leading-none select-none">♫</span>
+                      <span class="text-[11px] font-black uppercase tracking-widest text-blue-500 mt-2">½ + ½ = 1 Beat</span>
+                    </div>
+                    <div class="space-y-3 text-center sm:text-left">
+                      <p class="text-sm text-slate-700 leading-relaxed">A single quaver lasts for <strong>half a beat (1/2)</strong>. Two quavers joined by a beam equal <strong>1 full beat</strong> and are counted using <strong>"1 &"</strong> (one-and).</p>
+                      <div class="p-3.5 bg-indigo-50 rounded-2xl border border-indigo-200 text-xs text-indigo-900">
+                        <strong>Counting Example:</strong> Four beats of quavers are counted: <strong>"1 & 2 & 3 & 4 &"</strong>.
+                      </div>
+                    </div>
                   </div>
+                  <div id="embedded-tool-container" class="rounded-3xl overflow-hidden shadow-md"></div>
                 `
               },
               {
@@ -1188,43 +1210,36 @@
 
     function renderConceptsHub(container) {
       container.innerHTML = `
-        <div class="space-y-8">
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Syllabus Overview</span>
+              <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Interactive Syllabus</span>
               <h1 class="text-3xl font-black text-slate-800">The 6 Musical Concepts</h1>
-              <p class="text-xs sm:text-sm text-slate-500">Study each topic through progressive levels, listening guides, and quizzes.</p>
+              <p class="text-xs sm:text-sm text-slate-500">Choose any concept below to access graded levels, interactive lessons, games, and 15-question tests.</p>
             </div>
-            <button onclick="app.navigate('home')" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
-              &larr; Back to Home
+            <button onclick="openCurrentPortal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl self-start">
+              &larr; Back to Portal
             </button>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             ${conceptsCurriculum.map(c => `
-              <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between">
-                <div class="p-6">
-                  <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-xl mb-4 shadow">
-                    <i class="fa-solid ${c.icon}"></i>
+              <div onclick="app.navigate('conceptDetail', '${c.id}')" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-between group">
+                <div>
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-xl shadow group-hover:scale-105 transition-transform">
+                      <i class="fa-solid ${c.icon}"></i>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                      ${c.levels.length} ${c.levels.length === 1 ? 'Level' : 'Levels'}
+                    </span>
                   </div>
-                  <h3 class="font-bold text-xl text-slate-800 mb-2">${c.title}</h3>
-                  <p class="text-xs text-slate-500 leading-relaxed mb-4">${c.desc}</p>
-
-                  <div class="space-y-2 mt-4 pt-4 border-t border-slate-100">
-                    <span class="text-[11px] font-bold uppercase text-slate-400 block tracking-wider">Available Levels:</span>
-                    ${c.levels.map(l => `
-                      <button onclick="app.navigate('levelDetail', { conceptId: '${c.id}', levelNum: ${l.level} })" class="w-full text-left px-3 py-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-100 hover:border-indigo-200 transition-all text-xs font-semibold text-slate-700 flex items-center justify-between">
-                        <span>${l.title}</span>
-                        <span class="text-[10px] font-bold text-indigo-600">${l.badge}</span>
-                      </button>
-                    `).join('')}
-                  </div>
+                  <h3 class="font-bold text-lg text-slate-800 group-hover:text-indigo-600 transition-colors mb-1.5">${c.title}</h3>
+                  <p class="text-xs text-slate-500 leading-relaxed">${c.desc}</p>
                 </div>
-
-                <div class="p-4 bg-slate-50 border-t border-slate-100">
-                  <button onclick="app.navigate('conceptDetail', '${c.id}')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all text-center">
-                    Explore Topic Curriculum &rarr;
-                  </button>
+                <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold ${c.textColor}">
+                  <span>Open Levels & Lessons</span>
+                  <i class="fa-solid fa-arrow-right"></i>
                 </div>
               </div>
             `).join('')}
@@ -1235,43 +1250,37 @@
 
     function renderConceptDetail(container, conceptId) {
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
-
       container.innerHTML = `
-        <div class="space-y-8">
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-              <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr ${concept.color} text-white flex items-center justify-center text-2xl shadow-lg shrink-0">
-                <i class="fa-solid ${concept.icon}"></i>
-              </div>
-              <div>
-                <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">Concept Deep Dive</span>
-                <h1 class="text-2xl sm:text-3xl font-black text-slate-800">${concept.title}</h1>
-                <p class="text-xs sm:text-sm text-slate-500">${concept.desc}</p>
-              </div>
+        <div class="space-y-6">
+          <div class="bg-gradient-to-r ${concept.color} rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <button onclick="app.navigate('conceptsHub')" class="inline-flex items-center gap-1.5 text-xs font-bold text-white/80 hover:text-white mb-2">
+                <i class="fa-solid fa-arrow-left"></i> All 6 Concepts
+              </button>
+              <h1 class="text-2xl sm:text-4xl font-black flex items-center gap-3">
+                <i class="fa-solid ${concept.icon}"></i> ${concept.title}
+              </h1>
+              <p class="text-xs sm:text-sm text-white/90 max-w-2xl">${concept.desc}</p>
             </div>
-            <button onclick="app.navigate('conceptsHub')" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
-              &larr; All Concepts
-            </button>
           </div>
 
           <div class="space-y-4">
-            <h3 class="font-bold text-lg text-slate-800">Select a Graded Level:</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              ${concept.levels.map(l => `
-                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <h2 class="text-xl font-black text-slate-800">Graded Levels</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              ${concept.levels.map(lvl => `
+                <div onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level} })" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex flex-col justify-between group">
                   <div>
                     <div class="flex items-center justify-between mb-3">
-                      <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        ${l.badge}
-                      </span>
-                      <span class="text-xs text-slate-400 font-medium">${l.lessons ? l.lessons.length + ' Lessons' : ''}</span>
+                      <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-700">${lvl.badge}</span>
+                      <span class="text-xs font-bold text-slate-400">${lvl.lessons.length} Lessons + 15-Q Test</span>
                     </div>
-                    <h4 class="font-bold text-lg text-slate-800 mb-2">${l.title}</h4>
-                    <p class="text-xs text-slate-500 leading-relaxed mb-4">${l.summary}</p>
+                    <h3 class="text-lg font-black text-slate-800 group-hover:text-indigo-600 transition-colors mb-2">${lvl.title}</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">${lvl.summary}</p>
                   </div>
-                  <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${l.level} })" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-play text-[10px]"></i> Launch Level & Lessons
-                  </button>
+                  <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold ${concept.textColor}">
+                    <span>Start Lessons</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </div>
                 </div>
               `).join('')}
             </div>
@@ -1283,102 +1292,78 @@
     function renderLevelDetail(container, { conceptId, levelNum }) {
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
-      const lessons = level.lessons || [];
-      const completedList = state.completedLessons || [];
-
-      const viewedCount = lessons.filter(les =>
-        completedList.includes(`${concept.id}_lvl${level.level}_les${les.lessonNum}`)
-      ).length;
-      const allLessonsViewed = lessons.length > 0 && viewedCount === lessons.length;
+      const completed = state.completedLessons || [];
 
       container.innerHTML = `
-        <div class="space-y-8 max-w-4xl mx-auto">
-          <!-- Header -->
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">${concept.title}</span>
-              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">${level.title}</h1>
-              <p class="text-xs text-slate-400 font-medium">${level.badge} • ${viewedCount}/${lessons.length} Lessons Viewed</p>
-            </div>
-            <button onclick="app.navigate('conceptDetail', '${concept.id}')" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
-              &larr; Back to Topic
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+            <button onclick="app.navigate('conceptDetail', '${concept.id}')" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 mb-3">
+              <i class="fa-solid fa-arrow-left"></i> Back to ${concept.title}
             </button>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">${concept.title} • ${level.badge}</span>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">${level.title}</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">${level.summary}</p>
+              </div>
+            </div>
           </div>
 
           <!-- Lessons List -->
-          <div class="space-y-4">
-            <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-              <i class="fa-solid fa-list-check text-indigo-600"></i> Course Lessons in this Level:
-            </h3>
-
-            <div class="grid grid-cols-1 gap-4">
-              ${lessons.map((les, lIdx) => {
-                const isViewed = completedList.includes(`${concept.id}_lvl${level.level}_les${les.lessonNum}`);
-                return `
-                  <div class="bg-white rounded-3xl p-6 border ${isViewed ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200'} shadow-sm hover:border-indigo-400 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="space-y-1">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <span class="w-6 h-6 rounded-full ${isViewed ? 'bg-emerald-600 text-white' : 'bg-indigo-50 text-indigo-600 border border-indigo-200'} font-black text-xs flex items-center justify-center">
-                          ${isViewed ? '✓' : lIdx + 1}
-                        </span>
-                        <h4 class="font-bold text-base text-slate-800">${les.title}</h4>
-                        ${isViewed ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">✓ Viewed</span>' : ''}
-                      </div>
-                      <p class="text-xs text-slate-400 ml-8">${les.readTime || '3 min read'}</p>
+          <div class="space-y-3">
+            <h2 class="text-lg font-black text-slate-800 px-1">Level Lessons</h2>
+            ${level.lessons.map(les => {
+              const lessonKey = `${concept.id}_lvl${level.level}_les${les.lessonNum}`;
+              const isViewed = completed.includes(lessonKey);
+              return `
+                <div onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${les.lessonNum} })" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer flex items-center justify-between gap-4 group">
+                  <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-2xl ${isViewed ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-50 text-indigo-600'} font-black flex items-center justify-center text-sm shrink-0">
+                      ${isViewed ? '<i class="fa-solid fa-check"></i>' : les.lessonNum}
                     </div>
-                    <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${les.lessonNum} })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center justify-center gap-2 shrink-0">
-                      <span>${isViewed ? 'Review Lesson' : 'Start Lesson'}</span>
-                      <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                    </button>
+                    <div>
+                      <h3 class="font-bold text-sm sm:text-base text-slate-800 group-hover:text-indigo-600 transition-colors">${les.title}</h3>
+                      <span class="text-[11px] font-semibold text-slate-400">${les.readTime}</span>
+                    </div>
                   </div>
-                `;
-              }).join('')}
-            </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    ${isViewed ? '<span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">✓ Viewed</span>' : ''}
+                    <span class="w-8 h-8 rounded-xl bg-slate-50 group-hover:bg-indigo-600 text-slate-500 group-hover:text-white flex items-center justify-center transition-colors">
+                      <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
 
-          <!-- GATED 15-QUESTION LEVEL TEST (Below Lessons) -->
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border-2 ${allLessonsViewed ? 'border-indigo-500 shadow-md' : 'border-slate-200 bg-slate-50'}">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div class="space-y-1">
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${allLessonsViewed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                    ${allLessonsViewed ? '<i class="fa-solid fa-lock-open mr-1"></i> Unlocked' : `<i class="fa-solid fa-lock mr-1"></i> Locked (${viewedCount}/${lessons.length} Lessons Viewed)`}
-                  </span>
-                  <span class="text-xs font-bold text-amber-600">+25 Tokens Reward</span>
-                </div>
-                <h3 class="text-xl font-black text-slate-800">Final Level Test (15 Questions)</h3>
-                <p class="text-xs text-slate-500">
-                  ${allLessonsViewed
-                    ? 'All lessons completed! Take the comprehensive 15-question Level Test to record your mark and earn tokens.'
-                    : 'View all lessons above to unlock the 15-question Level Test.'}
-                </p>
-              </div>
-
-              ${allLessonsViewed ? `
-                <button onclick="app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shrink-0">
-                  <i class="fa-solid fa-file-pen"></i> Start 15-Question Level Test
-                </button>
-              ` : `
-                <button disabled class="px-6 py-3.5 bg-slate-200 text-slate-400 font-bold rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 cursor-not-allowed shrink-0">
-                  <i class="fa-solid fa-lock"></i> Complete All Lessons First
-                </button>
-              `}
+          <!-- Unlocked 15-Question Final Level Test -->
+          <div class="bg-gradient-to-r from-indigo-900 to-violet-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-amber-300">
+                <i class="fa-solid fa-award"></i> Level Assessment
+              </span>
+              <h3 class="text-xl font-black">Final Level Test (${(level.testQuestions || []).length} Questions)</h3>
+              <p class="text-xs text-indigo-100">Complete the 15-question assessment to earn up to +25 Tokens and record your mark.</p>
             </div>
+            <button onclick="app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl shadow-md transition-all text-xs sm:text-sm shrink-0 flex items-center gap-2">
+              <i class="fa-solid fa-pen-to-square"></i> Start 15-Question Test
+            </button>
           </div>
         </div>
       `;
     }
 
     function renderLessonDetail(container, { conceptId, levelNum, lessonNum }) {
+      stopBeatTapLoop();
+      stopCrotchetGameLoop();
+      stopQuaverGameLoop();
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
-      const lessons = level.lessons || [];
-      const currentLessonIdx = lessons.findIndex(l => l.lessonNum === lessonNum);
-      const lesson = lessons[currentLessonIdx >= 0 ? currentLessonIdx : 0] || lessons[0];
-      const nextLesson = lessons[currentLessonIdx + 1];
-      const prevLesson = lessons[currentLessonIdx - 1];
+      const lessonIdx = level.lessons.findIndex(l => l.lessonNum === lessonNum);
+      const lesson = level.lessons[lessonIdx >= 0 ? lessonIdx : 0];
 
-      // Mark this lesson as viewed so the 15-question Level Test unlocks once all lessons are read
+      // Mark lesson as viewed in state & sync to cloud
       const lessonKey = `${concept.id}_lvl${level.level}_les${lesson.lessonNum}`;
       if (!state.completedLessons) state.completedLessons = [];
       if (!state.completedLessons.includes(lessonKey)) {
@@ -1386,1013 +1371,810 @@
         saveUserState();
       }
 
-      container.innerHTML = `
-        <div class="space-y-8 max-w-4xl mx-auto">
-          <!-- Lesson Breadcrumb & Header -->
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
-                <span>${concept.title}</span>
-                <span>&bull;</span>
-                <span class="${concept.textColor}">${level.title}</span>
-              </div>
-              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">${lesson.title}</h1>
-              <p class="text-xs text-slate-400 font-medium">Lesson ${currentLessonIdx + 1} of ${lessons.length} • ${lesson.readTime || '3 min read'}</p>
-            </div>
-            <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
-              &larr; Level Menu
-            </button>
-          </div>
-
-          <!-- Lesson Content -->
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm prose max-w-none">
-            ${lesson.content}
-          </div>
-
-          <!-- Bottom Navigation Controls -->
-          <div class="flex items-center justify-between pt-2">
-            ${prevLesson ? `
-              <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${prevLesson.lessonNum} })" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2 transition-all">
-                &larr; Previous Lesson
-              </button>
-            ` : '<div></div>'}
-
-            ${nextLesson ? `
-              <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${nextLesson.lessonNum} })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all shadow-sm">
-                Next Lesson &rarr;
-              </button>
-            ` : `
-              <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all shadow-sm">
-                Return to Level & Unlock 15-Question Test &rarr;
-              </button>
-            `}
-          </div>
-        </div>
-      `;
-
-      // Mount embedded interactive tool if present in this specific lesson
-      const toolTarget = document.getElementById('embedded-tool-container');
-      if (toolTarget && lesson.interactiveTool) {
-        if (lesson.interactiveTool === 'drumModule') {
-          mountEmbeddedDrumModule(toolTarget);
-        } else if (lesson.interactiveTool === 'dictationChallenge') {
-          mountEmbeddedDictation(toolTarget);
-        } else if (lesson.interactiveTool === 'pitchKeyboard') {
-          mountEmbeddedPitchKeyboard(toolTarget);
-        } else if (lesson.interactiveTool === 'dynamicsSimulator') {
-          mountEmbeddedDynamicsSimulator(toolTarget);
-        }
-      }
-    }
-
-    function renderLevelTestView(container, { conceptId, levelNum }) {
-      const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
-      const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
-      const questions = level.testQuestions || [];
+      const prevLesson = lessonIdx > 0 ? level.lessons[lessonIdx - 1] : null;
+      const nextLesson = lessonIdx < level.lessons.length - 1 ? level.lessons[lessonIdx + 1] : null;
 
       container.innerHTML = `
-        <div class="space-y-8 max-w-4xl mx-auto">
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">${concept.title} • ${level.title}</span>
-              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">Level Assessment (${questions.length} Questions)</h1>
-              <p class="text-xs text-slate-500">Complete all 15 questions below. Your score is recorded confidentially to the Teacher Markbook.</p>
-            </div>
-            <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
-              &larr; Cancel & Return
-            </button>
-          </div>
-
-          <form onsubmit="handleLevelTestSubmit(event, '${concept.id}', ${level.level})" class="space-y-5">
-            ${questions.map((qItem, qIdx) => `
-              <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-3">
-                <div class="font-bold text-sm text-slate-800 flex items-start gap-2.5">
-                  <span class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs shrink-0 mt-0.5">${qIdx + 1}</span>
-                  <span>${qItem.q}</span>
-                </div>
-                <div class="space-y-2 ml-8">
-                  ${qItem.options.map((opt, optIdx) => `
-                    <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-indigo-50/60 border border-slate-200 hover:border-indigo-300 transition-all cursor-pointer text-xs font-semibold text-slate-700">
-                      <input type="radio" name="level_q_${qIdx}" value="${optIdx}" required class="text-indigo-600 focus:ring-indigo-500">
-                      <span>${opt}</span>
-                    </label>
-                  `).join('')}
-                </div>
-              </div>
-            `).join('')}
-
-            <button type="submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg transition-all text-sm flex items-center justify-center gap-2">
-              <i class="fa-solid fa-paper-plane"></i> Submit 15-Question Test & Claim Tokens
-            </button>
-          </form>
-        </div>
-      `;
-    }
-
-    function handleLevelTestSubmit(e, conceptId, levelNum) {
-      e.preventDefault();
-      const concept = conceptsCurriculum.find(c => c.id === conceptId);
-      const level = concept.levels.find(l => l.level === levelNum);
-      const questions = level.testQuestions || [];
-
-      let score = 0;
-      for (let i = 0; i < questions.length; i++) {
-        const selected = document.querySelector(`input[name="level_q_${i}"]:checked`);
-        if (selected && parseInt(selected.value, 10) === questions[i].correct) {
-          score++;
-        }
-      }
-
-      const total = questions.length;
-      const pct = Math.round((score / total) * 100);
-      const earnedTokens = pct >= 80 ? 25 : pct >= 50 ? 15 : 5;
-
-      if (!state.testHistory) state.testHistory = [];
-      state.testHistory.push({
-        title: `${concept.title} - ${level.title} (15-Q Test)`,
-        score,
-        total,
-        date: new Date().toISOString()
-      });
-
-      if (!state.stats) state.stats = { tokens: 10, testsTaken: 0 };
-      state.stats.testsTaken = (state.stats.testsTaken || 0) + 1;
-
-      addTokens(earnedTokens);
-      app.navigate('levelDetail', { conceptId, levelNum });
-      showAppModal(
-        pct >= 80 ? '🏆 Level Mastered!' : 'Assessment Submitted!',
-        `You scored ${score}/${total} (${pct}%) and earned +${earnedTokens} Tokens! Your mark has been saved to your confidential record.`,
-        pct >= 50
-      );
-    }
-
-    function renderLessonDetail(container, { conceptId, levelNum, lessonNum }) {
-      const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
-      const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
-      const lessons = level.lessons || [];
-      const currentLessonIdx = lessons.findIndex(l => l.lessonNum === lessonNum);
-      const lesson = lessons[currentLessonIdx >= 0 ? currentLessonIdx : 0] || lessons[0];
-      const nextLesson = lessons[currentLessonIdx + 1];
-      const prevLesson = lessons[currentLessonIdx - 1];
-
-      container.innerHTML = `
-        <div class="space-y-8 max-w-4xl mx-auto">
-          <!-- Lesson Breadcrumb & Header -->
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
-                <span>${concept.title}</span>
-                <span>&bull;</span>
-                <span class="${concept.textColor}">${level.title}</span>
-              </div>
-              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">${lesson.title}</h1>
-              <p class="text-xs text-slate-400 font-medium">Lesson ${currentLessonIdx + 1} of ${lessons.length} • ${lesson.readTime || '3 min read'}</p>
-            </div>
-            <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">
-              &larr; Level Menu
-            </button>
-          </div>
-
-          <!-- Lesson Content -->
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm prose max-w-none">
-            ${lesson.content}
-          </div>
-
-          <!-- Interactive Lesson Quiz -->
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
-            <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-              <div>
-                <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
-                  <i class="fa-solid fa-circle-question text-indigo-600"></i> Lesson Assessment
-                </h3>
-                <p class="text-xs text-slate-500">Answer correctly to earn tokens and test your knowledge!</p>
-              </div>
-              <span class="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs font-bold">
-                +10 Tokens Reward
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+              <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600">
+                <i class="fa-solid fa-arrow-left"></i> Back to ${level.title}
+              </button>
+              <span class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black">
+                Lesson ${lesson.lessonNum} of ${level.lessons.length}
               </span>
             </div>
 
-            <form id="level-quiz-form" onsubmit="handleLessonQuizSubmit(event, '${concept.id}', ${level.level}, ${lesson.lessonNum})" class="space-y-6">
-              ${(lesson.quiz || []).map((qItem, qIdx) => `
-                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
-                  <div class="font-bold text-sm text-slate-800 flex items-start gap-2">
-                    <span class="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] shrink-0 mt-0.5">${qIdx + 1}</span>
-                    <span>${qItem.q}</span>
-                  </div>
-                  <div class="space-y-2 ml-7">
-                    ${qItem.options.map((opt, optIdx) => `
-                      <label class="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-300 transition-all cursor-pointer text-xs font-semibold text-slate-700">
-                        <input type="radio" name="quiz_q_${qIdx}" value="${optIdx}" required class="text-indigo-600 focus:ring-indigo-500">
-                        <span>${opt}</span>
-                      </label>
-                    `).join('')}
-                  </div>
-                </div>
-              `).join('')}
-
-              <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-md transition-all text-sm flex items-center justify-center gap-2">
-                <i class="fa-solid fa-paper-plane"></i> Submit Assessment & Claim Tokens
-              </button>
-            </form>
-          </div>
-
-          <!-- Bottom Navigation Controls -->
-          <div class="flex items-center justify-between pt-2">
-            ${prevLesson ? `
-              <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${prevLesson.lessonNum} })" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2 transition-all">
-                &larr; Previous Lesson
-              </button>
-            ` : '<div></div>'}
-
-            ${nextLesson ? `
-              <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${nextLesson.lessonNum} })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all shadow-sm">
-                Next Lesson &rarr;
-              </button>
-            ` : `
-              <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all shadow-sm">
-                Finish Level &rarr;
-              </button>
-            `}
-          </div>
-        </div>
-      `;
-
-      // Mount embedded interactive tool if present in this specific lesson
-      const toolTarget = document.getElementById('embedded-tool-container');
-      if (toolTarget && lesson.interactiveTool) {
-        if (lesson.interactiveTool === 'drumModule') {
-          mountEmbeddedDrumModule(toolTarget);
-        } else if (lesson.interactiveTool === 'dictationChallenge') {
-          mountEmbeddedDictation(toolTarget);
-        } else if (lesson.interactiveTool === 'pitchKeyboard') {
-          mountEmbeddedPitchKeyboard(toolTarget);
-        } else if (lesson.interactiveTool === 'dynamicsSimulator') {
-          mountEmbeddedDynamicsSimulator(toolTarget);
-        }
-      }
-    }
-
-    function handleLessonQuizSubmit(e, conceptId, levelNum, lessonNum) {
-      e.preventDefault();
-      const concept = conceptsCurriculum.find(c => c.id === conceptId);
-      const level = concept.levels.find(l => l.level === levelNum);
-      const lesson = (level.lessons || []).find(l => l.lessonNum === lessonNum);
-      const quiz = lesson.quiz || [];
-
-      let score = 0;
-      for (let i = 0; i < quiz.length; i++) {
-        const selected = document.querySelector(`input[name="quiz_q_${i}"]:checked`);
-        if (selected && parseInt(selected.value, 10) === quiz[i].correct) {
-          score++;
-        }
-      }
-
-      const total = quiz.length;
-      const passed = score === total;
-
-      if (!state.testHistory) state.testHistory = [];
-      state.testHistory.push({
-        title: `${concept.title} - ${lesson.title}`,
-        score,
-        total,
-        date: new Date().toISOString()
-      });
-
-      if (!state.stats) state.stats = { tokens: 10, testsTaken: 0 };
-      state.stats.testsTaken = (state.stats.testsTaken || 0) + 1;
-
-      if (passed) {
-        addTokens(10);
-        showAppModal('🎉 Outstanding Result!', `Perfect score: ${score}/${total}! You mastered this lesson and earned +10 Tokens!`, true);
-      } else {
-        addTokens(3);
-        showAppModal('Keep Practicing!', `You scored ${score}/${total}. Review the concepts and try again! Earned +3 effort tokens.`, false);
-      }
-
-      saveUserState();
-    }
-
-    // ==========================================
-    // LEADERBOARD SECTION MARKUP
-    // ==========================================
-    function renderLeaderboardMarkup() {
-      return `
-        <div id="overall-student-leaderboard-section" class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
-          <div class="flex items-center justify-between mb-6">
             <div>
-              <h2 class="text-xl sm:text-2xl font-black text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-trophy text-amber-500"></i> Overall Classroom Leaderboard
-              </h2>
-              <p class="text-xs sm:text-sm text-slate-500">Live token rankings synchronized across all classroom devices</p>
-            </div>
-            <button onclick="window.refreshLeaderboardTableInPlace()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all">
-              <i class="fa-solid fa-rotate"></i> Refresh
-            </button>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-              <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-bold tracking-wider">
-                <tr>
-                  <th class="px-4 py-3 rounded-l-xl">Rank</th>
-                  <th class="px-4 py-3">Student Name</th>
-                  <th class="px-4 py-3">Class</th>
-                  <th class="px-4 py-3 text-right rounded-r-xl">Tokens Held</th>
-                </tr>
-              </thead>
-              <tbody id="overall-leaderboard-tbody" class="divide-y divide-slate-100">
-                <!-- Injected dynamically -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // LEADERBOARD SECTION MARKUP
-    // ==========================================
-    function renderLoginView(container) {
-      container.innerHTML = `
-        <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-6 sm:p-8">
-          <div class="text-center mb-6">
-            <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3 shadow-inner">
-              <i class="fa-solid fa-music"></i>
-            </div>
-            <h2 class="text-2xl font-black text-slate-800">Classroom Portal</h2>
-            <p class="text-xs text-slate-500 mt-1">Sign in with your student or teacher account</p>
-          </div>
-
-          <div class="flex bg-slate-100 p-1 rounded-2xl mb-5">
-            <button id="role-btn-student" onclick="setLoginRole('student')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow text-indigo-600 transition-all">
-              Student
-            </button>
-            <button id="role-btn-teacher" onclick="setLoginRole('teacher')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition-all">
-              Teacher
-            </button>
-          </div>
-
-          <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
-            <input type="hidden" id="login-role" value="student">
-
-            <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">First Name</label>
-              <input type="text" id="login-firstname" required placeholder="e.g. Alex" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <span class="text-xs font-bold uppercase tracking-widest ${concept.textColor}">${concept.title} • ${level.badge}</span>
+              <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">${lesson.title}</h1>
             </div>
 
-            <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Surname</label>
-              <input type="text" id="login-surname" required placeholder="e.g. Smith" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <div class="prose max-w-none">
+              ${lesson.content}
             </div>
 
-            <div id="login-student-fields" class="space-y-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Class Group</label>
-                <select id="login-class" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                  <option value="7A">7A</option><option value="7B">7B</option><option value="7C">7C</option><option value="7D">7D</option>
-                  <option value="7E">7E</option><option value="7F">7F</option><option value="7G">7G</option><option value="7H">7H</option>
-                  <option value="7I">7I</option><option value="7J">7J</option>
-                  <option value="8A">8A</option><option value="8B">8B</option><option value="8C">8C</option><option value="8D">8D</option>
-                  <option value="8E">8E</option><option value="8F">8F</option><option value="8G">8G</option><option value="8H">8H</option>
-                  <option value="8I">8I</option><option value="8J">8J</option>
-                  <option value="Yr 9">Yr 9</option><option value="Yr 10">Yr 10</option>
-                  <option value="Yr 11">Yr 11</option><option value="Yr 12">Yr 12</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Music Teacher</label>
-                <select id="login-teacher" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-                  <option value="Mr B">Mr B</option>
-                  <option value="Mr H">Mr H</option>
-                  <option value="Mr T">Mr T</option>
-                </select>
-              </div>
-            </div>
-
-            <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all text-sm flex items-center justify-center gap-2">
-              <i class="fa-solid fa-right-to-bracket"></i> Continue to App
-            </button>
-          </form>
-        </div>
-      `;
-    }
-
-    function setLoginRole(role) {
-      document.getElementById('login-role').value = role;
-      const sBtn = document.getElementById('role-btn-student');
-      const tBtn = document.getElementById('role-btn-teacher');
-      const sFields = document.getElementById('login-student-fields');
-
-      if (role === 'student') {
-        sBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow text-indigo-600 transition-all";
-        tBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition-all";
-        sFields.classList.remove('hidden');
-      } else {
-        tBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl bg-white shadow text-indigo-600 transition-all";
-        sBtn.className = "flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 transition-all";
-        sFields.classList.add('hidden');
-      }
-    }
-
-    function handleLogin(e) {
-      e.preventDefault();
-      const role = document.getElementById('login-role').value;
-      const firstName = document.getElementById('login-firstname').value.trim();
-      const surname = document.getElementById('login-surname').value.trim();
-      const studentClass = role === 'student' ? document.getElementById('login-class').value : 'Staff';
-      const teacher = role === 'student' ? document.getElementById('login-teacher').value.trim() : 'Self';
-
-      if (!firstName || !surname) return;
-
-      const userKey = `${role}_${firstName.toLowerCase()}_${surname.toLowerCase()}`;
-      const allUsers = getAllUserRecords();
-      let existing = allUsers[userKey];
-
-      if (existing) {
-        state.stats = existing.stats || { tokens: 10, testsTaken: 0 };
-        state.inventory = existing.inventory || [];
-        state.testHistory = existing.testHistory || [];
-      } else {
-        state.stats = { tokens: 10, testsTaken: 0 };
-        state.inventory = [];
-        state.testHistory = [];
-      }
-
-      app.currentUser = {
-        key: userKey,
-        firstName,
-        surname,
-        class: studentClass,
-        teacher,
-        role
-      };
-
-      saveUserState();
-
-      if (role === 'teacher') {
-        app.navigate('teacherDash');
-      } else {
-        app.navigate('studentDash');
-      }
-      showAppModal('Welcome', `Signed in as ${firstName} ${surname}`);
-    }
-
-    // ==========================================
-    // STUDENT PORTAL
-    // ==========================================
-    function renderStudentDash(container) {
-      container.innerHTML = `
-        <div class="space-y-8">
-          <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-bold text-indigo-600 uppercase tracking-widest">Student Portal</span>
-              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">Hello, ${app.currentUser.firstName}!</h1>
-              <p class="text-xs sm:text-sm text-slate-500">Class: ${app.currentUser.class} • Teacher: ${app.currentUser.teacher}</p>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="bg-amber-50 border border-amber-200 px-4 py-2 rounded-2xl text-center">
-                <div class="text-xs font-bold text-amber-800 uppercase">Tokens</div>
-                <div class="text-2xl font-black text-amber-600">${state.stats.tokens || 0}</div>
-              </div>
-              <button onclick="app.navigate('studentTests')" class="px-4 py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-2xl text-xs flex items-center gap-2 transition-all">
-                <i class="fa-solid fa-clock-rotate-left"></i> My Test History
-              </button>
-            </div>
-          </div>
-
-          <!-- Quick Navigation to Concepts -->
-          <div>
-            <h3 class="font-bold text-lg text-slate-800 mb-3">Jump into Curriculum Concepts</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              ${conceptsCurriculum.map(c => `
-                <button onclick="app.navigate('conceptDetail', '${c.id}')" class="p-3 bg-white hover:bg-indigo-50/50 rounded-2xl border border-slate-200 hover:border-indigo-300 transition-all text-center">
-                  <div class="w-8 h-8 rounded-xl bg-gradient-to-tr ${c.color} text-white flex items-center justify-center text-sm mx-auto mb-1.5">
-                    <i class="fa-solid ${c.icon}"></i>
-                  </div>
-                  <span class="font-bold text-[11px] text-slate-700 block truncate">${c.title}</span>
+            <!-- Sequential Lesson Navigation -->
+            <div class="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              ${prevLesson ? `
+                <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${prevLesson.lessonNum} })" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">
+                  &larr; Previous: ${prevLesson.title}
                 </button>
-              `).join('')}
+              ` : '<div></div>'}
+
+              ${nextLesson ? `
+                <button onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${nextLesson.lessonNum} })" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm">
+                  Next Lesson: ${nextLesson.title} &rarr;
+                </button>
+              ` : `
+                <button onclick="app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow-sm flex items-center gap-1.5">
+                  <i class="fa-solid fa-pen-to-square"></i> Take 15-Question Final Level Test &rarr;
+                </button>
+              `}
             </div>
           </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div onclick="app.navigate('rhythmModule')" class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white p-6 rounded-3xl shadow-md cursor-pointer hover:shadow-lg transition-all">
-              <i class="fa-solid fa-drum text-3xl mb-3"></i>
-              <h3 class="text-xl font-bold">8-Beat Drum Module & Dictation</h3>
-              <p class="text-xs text-indigo-100 mt-1">Build Crotchet (1) and Quaver (1 &) rhythms and practice dictation ear challenges.</p>
-            </div>
-            <div onclick="app.navigate('dictationChallenge')" class="bg-gradient-to-br from-violet-500 to-purple-700 text-white p-6 rounded-3xl shadow-md cursor-pointer hover:shadow-lg transition-all">
-              <i class="fa-solid fa-headphones text-3xl mb-3"></i>
-              <h3 class="text-xl font-bold">Dictation Challenge</h3>
-              <p class="text-xs text-violet-100 mt-1">Earn 5 tokens per correct answer and climb the ranks!</p>
-            </div>
-          </div>
-
-          ${renderLeaderboardMarkup()}
         </div>
       `;
-      refreshLeaderboardTableInPlace();
+
+      // Mount interactive audio labs / games if present on this lesson
+      const toolTarget = document.getElementById('embedded-tool-container');
+      if (toolTarget && lesson.interactiveTool) {
+        if (lesson.interactiveTool === 'beatTapGame') mountEmbeddedBeatTapGame(toolTarget);
+        if (lesson.interactiveTool === 'crotchetGame') mountEmbeddedCrotchetGame(toolTarget);
+        if (lesson.interactiveTool === 'quaverGame') mountEmbeddedQuaverGame(toolTarget);
+        if (lesson.interactiveTool === 'drumModule') mountEmbeddedDrumModule(toolTarget);
+        if (lesson.interactiveTool === 'dictationChallenge') mountEmbeddedDictation(toolTarget);
+        if (lesson.interactiveTool === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolTarget);
+        if (lesson.interactiveTool === 'dynamicsSimulator') mountEmbeddedDynamicsSimulator(toolTarget);
+      }
     }
 
     // ==========================================
-    // TEACHER MARKBOOK DASHBOARD
+    // STEADY BEAT SPACEBAR TAPPER MINIGAME (4 SPEEDS)
     // ==========================================
-    function renderTeacherDash(container) {
-      const students = getDeduplicatedStudents();
-      students.sort((a, b) => a.surname.localeCompare(b.surname));
-
-      container.innerHTML = `
-        <div class="space-y-8">
-          <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-bold text-emerald-600 uppercase tracking-widest">Teacher Markbook</span>
-              <h1 class="text-2xl sm:text-3xl font-black text-slate-800">Classroom Control Center</h1>
-              <p class="text-xs sm:text-sm text-slate-500">Live multi-device student tracking, test records, and assessment management</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="px-3.5 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl">
-                ${students.length} Enrolled Students
-              </span>
-            </div>
-          </div>
-
-          <!-- Markbook Table -->
-          <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200">
-            <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
-              <i class="fa-solid fa-users text-indigo-600"></i> Student Roster & Assessment Results
-            </h3>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-sm">
-                <thead class="bg-slate-50 text-slate-600 text-xs uppercase font-bold tracking-wider">
-                  <tr>
-                    <th class="px-4 py-3 rounded-l-xl">Student</th>
-                    <th class="px-4 py-3">Class</th>
-                    <th class="px-4 py-3">Teacher</th>
-                    <th class="px-4 py-3">Tokens</th>
-                    <th class="px-4 py-3">Completed Tests</th>
-                    <th class="px-4 py-3 text-right rounded-r-xl">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                  ${students.length === 0 ? `
-                    <tr><td colspan="6" class="p-6 text-center text-slate-400">No students registered yet.</td></tr>
-                  ` : students.map(s => `
-                    <tr class="hover:bg-slate-50">
-                      <td class="px-4 py-3 font-bold text-slate-900">${s.firstName} ${s.surname}</td>
-                      <td class="px-4 py-3 text-slate-600">${s.class}</td>
-                      <td class="px-4 py-3 text-slate-600">${s.teacher || '-'}</td>
-                      <td class="px-4 py-3 font-black text-amber-600">${(s.stats && s.stats.tokens) || 0}</td>
-                      <td class="px-4 py-3 text-slate-500">
-                        ${(s.testHistory && s.testHistory.length > 0) ? `
-                          <span class="font-semibold text-slate-800">${s.testHistory.length} test(s)</span>
-                          <span class="text-[10px] text-indigo-600 block">Latest: ${s.testHistory[s.testHistory.length - 1].score}/${s.testHistory[s.testHistory.length - 1].total}</span>
-                        ` : '<span class="text-slate-400">0</span>'}
-                      </td>
-                      <td class="px-4 py-3 text-right space-x-1">
-                        <button onclick="openEditStudentModal('${s.key}')" class="px-3 py-1 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg">
-                          <i class="fa-solid fa-pen-to-square"></i> Edit
-                        </button>
-                        <button onclick="openDeleteStudentModal('${s.key}', '${s.firstName} ${s.surname}')" class="px-3 py-1 text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg">
-                          <i class="fa-solid fa-trash"></i> Delete
-                        </button>
-                      </td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          ${renderLeaderboardMarkup()}
-        </div>
-      `;
-      refreshLeaderboardTableInPlace();
-    }
-
-    // Modal Operations
-    window.openEditStudentModal = function(key) {
-      const records = getAllUserRecords();
-      const s = records[key];
-      if (!s) return;
-      document.getElementById('edit-student-key').value = key;
-      document.getElementById('edit-student-firstname').value = s.firstName || '';
-      document.getElementById('edit-student-surname').value = s.surname || '';
-      document.getElementById('edit-student-class').value = s.class || '7A';
-      const teacherSelect = document.getElementById('edit-student-teacher');
-      teacherSelect.value = ['Mr B', 'Mr H', 'Mr T'].includes(s.teacher) ? s.teacher : 'Mr B';
-      document.getElementById('edit-student-tokens').value = (s.stats && s.stats.tokens) || 0;
-      document.getElementById('edit-student-modal').classList.remove('hidden');
-    };
-
-    window.closeEditStudentModal = function() {
-      document.getElementById('edit-student-modal').classList.add('hidden');
-    };
-
-    window.saveEditedStudent = function() {
-      const key = document.getElementById('edit-student-key').value;
-      const records = getAllUserRecords();
-      const s = records[key];
-      if (!s) return;
-
-      s.firstName = document.getElementById('edit-student-firstname').value.trim();
-      s.surname = document.getElementById('edit-student-surname').value.trim();
-      s.class = document.getElementById('edit-student-class').value;
-      s.teacher = document.getElementById('edit-student-teacher').value.trim();
-      if (!s.stats) s.stats = {};
-      s.stats.tokens = parseInt(document.getElementById('edit-student-tokens').value, 10) || 0;
-
-      if (window.saveUserRecordToCloud) {
-        window.saveUserRecordToCloud(key, s);
-      }
-      try {
-        records[key] = s;
-        localStorage.setItem('boncepts_users_db', JSON.stringify(records));
-      } catch (e) {}
-
-      closeEditStudentModal();
-      app.navigate(app.currentView);
-      showAppModal('Student Profile Updated', `${s.firstName} ${s.surname} was successfully updated.`);
-    };
-
-    window.openDeleteStudentModal = function(key, name) {
-      document.getElementById('delete-student-key').value = key;
-      document.getElementById('delete-student-name').textContent = name;
-      document.getElementById('delete-student-modal').classList.remove('hidden');
-    };
-
-    window.closeDeleteStudentModal = function() {
-      document.getElementById('delete-student-modal').classList.add('hidden');
-    };
-
-    window.confirmDeleteStudent = function() {
-      const key = document.getElementById('delete-student-key').value;
-      if (window.deleteUserRecordFromCloud) {
-        window.deleteUserRecordFromCloud(key);
-      }
-      try {
-        const records = getAllUserRecords();
-        delete records[key];
-        localStorage.setItem('boncepts_users_db', JSON.stringify(records));
-      } catch (e) {}
-
-      closeDeleteStudentModal();
-      app.navigate(app.currentView);
-      showAppModal('Record Deleted', 'Student was removed from classroom rosters and leaderboards.');
-    };
-
-    // ==========================================
-    // 8-BEAT DRUM SOUND MODULE + INTEGRATED DICTATION
-    // ==========================================
-    let drumPattern = [
-      { beat: 1, type: 'crotchet' },
-      { beat: 2, type: 'crotchet' },
-      { beat: 3, type: 'quavers'  },
-      { beat: 4, type: 'crotchet' },
-      { beat: 5, type: 'quavers'  },
-      { beat: 6, type: 'quavers'  },
-      { beat: 7, type: 'crotchet' },
-      { beat: 8, type: 'quavers'  }
+    const beatTapSpeeds = [
+      { name: 'Speed 1: Andante (80 BPM)', bpm: 80 },
+      { name: 'Speed 2: Moderato (105 BPM)', bpm: 105 },
+      { name: 'Speed 3: Allegro (130 BPM)', bpm: 130 },
+      { name: 'Speed 4: Presto (155 BPM)', bpm: 155 }
     ];
 
-    let drumModuleTab = 'sequencer'; // 'sequencer' | 'dictation'
-    let isPlayingPattern = false;
+    let beatGame = {
+      active: false,
+      completed: false,
+      speedIdx: 0,
+      streak: 0,
+      targetStreak: 8,
+      lastBeatTime: 0,
+      beatIntervalMs: 750,
+      timerId: null,
+      beatCount: 0,
+      tappedThisBeat: false
+    };
 
-    function switchDrumModuleTab(tab) {
-      drumModuleTab = tab;
-      const standaloneContainer = document.getElementById('app-viewport');
-      const embeddedContainer = document.getElementById('embedded-tool-container');
-      if (embeddedContainer) {
-        mountEmbeddedDrumModule(embeddedContainer);
-      } else if (app.currentView === 'rhythmModule' && standaloneContainer) {
-        renderRhythmModule(standaloneContainer);
+    function stopBeatTapLoop() {
+      if (beatGame.timerId) {
+        clearInterval(beatGame.timerId);
+        beatGame.timerId = null;
       }
+      beatGame.active = false;
     }
 
-    function renderDrumSequencerMarkup() {
-      return `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-xl space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-            <div>
-              <h3 class="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                <i class="fa-solid fa-drum text-amber-400"></i> 8-Beat Drum Sequencer
-              </h3>
-              <p class="text-xs text-slate-400 mt-0.5">
-                Tap beats to toggle <strong>Crotchet (♩ = Beat #)</strong> and <strong>Quavers (♫ = # &)</strong>. Odd = <span class="text-blue-400 font-bold">KICK</span>, Even = <span class="text-rose-400 font-bold">SNARE</span>.
-              </p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button id="play-pattern-btn" onclick="playCurrentPattern()" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl shadow-md transition-all flex items-center gap-2 text-xs">
-                <i class="fa-solid fa-play"></i> Play Pattern
-              </button>
-              <button onclick="randomizePattern()" title="Randomize Pattern" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all text-xs font-bold flex items-center gap-1.5">
-                <i class="fa-solid fa-shuffle"></i> Randomize
-              </button>
-            </div>
-          </div>
-
-          <div class="overflow-x-auto pb-2">
-            <div class="grid grid-cols-8 gap-2 sm:gap-3 min-w-[620px]">
-              ${drumPattern.map((p, idx) => {
-                const isKick = idx % 2 === 0;
-                const isCrotchet = p.type === 'crotchet';
-                const beatNum = idx + 1;
-                const countLabel = isCrotchet ? `${beatNum}` : `${beatNum} &`;
-                const colorClass = isKick
-                  ? 'border-blue-500/60 bg-blue-950/50 text-blue-400 hover:bg-blue-900/50'
-                  : 'border-rose-500/60 bg-rose-950/50 text-rose-400 hover:bg-rose-900/50';
-                return `
-                  <button id="drum-beat-card-${idx}" onclick="togglePatternBeat(${idx})" class="flex flex-col items-center justify-between p-3 rounded-2xl border-2 transition-all cursor-pointer h-40 ${colorClass}">
-                    <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">
-                      ${isKick ? 'KICK' : 'SNARE'}
-                    </span>
-                    <span class="text-3xl sm:text-4xl font-black py-1 text-white">
-                      ${isCrotchet ? '♩' : '♫'}
-                    </span>
-                    <div class="text-center">
-                      <span class="text-xs font-black block text-amber-300">${countLabel}</span>
-                      <span class="text-[10px] font-bold block text-slate-300">${isCrotchet ? 'Crotchet' : 'Quavers'}</span>
-                    </div>
-                  </button>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderIntegratedDictationMarkup() {
-      if (!currentMysteryPattern || currentMysteryPattern.length !== 8) {
-        generateMysteryPattern();
-      }
-      return `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-xl space-y-6 text-white">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-            <div>
-              <h3 class="text-lg sm:text-xl font-black text-amber-400 flex items-center gap-2">
-                <i class="fa-solid fa-headphones"></i> 8-Beat Rhythm Dictation Activity
-              </h3>
-              <p class="text-xs text-slate-300 mt-0.5">
-                Listen to the mystery 8-beat drum pattern and select the matching notation below (+5 Tokens per match!).
-              </p>
-            </div>
-            <div class="flex items-center gap-3 bg-slate-800 px-4 py-2 rounded-2xl border border-slate-700 shrink-0">
-              <span class="text-xs font-bold text-slate-300">Streak: <span class="text-amber-400 font-black text-base">${streakCount}</span></span>
-              <span class="text-xs font-bold text-slate-300">Best: <span class="text-emerald-400 font-black text-base">${bestStreak}</span></span>
-            </div>
-          </div>
-
-          <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-6 text-center">
-            <button id="hear-mystery-btn" onclick="playMysteryAudio()" class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl shadow-lg transition-all text-sm sm:text-base flex items-center gap-2.5 mx-auto">
-              <i class="fa-solid fa-volume-high"></i> Hear Mystery Rhythm
-            </button>
-            <p id="dictation-status-msg" class="text-xs text-slate-400 font-semibold mt-3">
-              Tap the button above to listen to the 8-beat pattern.
-            </p>
-          </div>
-
-          <div class="space-y-3 overflow-x-auto pb-1">
-            <div class="min-w-[580px] space-y-2.5">
-              ${mysteryOptions.map((opt, optIdx) => {
-                const letter = String.fromCharCode(65 + optIdx);
-                return `
-                  <button onclick="handleOptionSelect(${optIdx})" class="w-full bg-slate-800 hover:bg-slate-700/90 p-3.5 rounded-2xl border-2 border-slate-700 hover:border-amber-400 transition-all flex items-center gap-3.5 text-left group">
-                    <div class="w-9 h-9 rounded-xl bg-slate-700 group-hover:bg-amber-400 group-hover:text-slate-950 flex items-center justify-center font-black text-white transition-colors shrink-0">
-                      ${letter}
-                    </div>
-                    <div class="flex-1 grid grid-cols-8 gap-1.5">
-                      ${opt.map((beatType, bIdx) => {
-                        const isKick = bIdx % 2 === 0;
-                        const isCrotchet = beatType === 1;
-                        const beatNum = bIdx + 1;
-                        const countLabel = isCrotchet ? `${beatNum}` : `${beatNum} &`;
-                        const cardStyle = isKick
-                          ? 'bg-blue-950/70 border-blue-500/40 text-blue-300'
-                          : 'bg-rose-950/70 border-rose-500/40 text-rose-300';
-                        return `
-                          <div class="flex flex-col items-center justify-center py-2 px-1 rounded-xl border ${cardStyle}">
-                            <span class="text-xl font-black leading-none text-white mb-1">
-                              ${isCrotchet ? '♩' : '♫'}
-                            </span>
-                            <span class="text-[10px] font-bold text-amber-300">${countLabel}</span>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  </button>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function mountEmbeddedDrumModule(target) {
+    function mountEmbeddedBeatTapGame(target) {
       if (!target) return;
+      stopBeatTapLoop();
+      beatGame.speedIdx = 0;
+      beatGame.streak = 0;
+      beatGame.completed = false;
+      renderBeatTapGameUI(target);
+    }
+
+    function renderBeatTapGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const spd = beatTapSpeeds[beatGame.speedIdx] || beatTapSpeeds[0];
+
       target.innerHTML = `
-        <div class="bg-slate-950 p-4 sm:p-6 space-y-4">
-          <div class="flex flex-wrap items-center gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
-            <button onclick="switchDrumModuleTab('sequencer')" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${drumModuleTab === 'sequencer' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}">
-              <i class="fa-solid fa-sliders"></i> 1. Beat Sequencer Sandbox
-            </button>
-            <button onclick="switchDrumModuleTab('dictation')" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${drumModuleTab === 'dictation' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'}">
-              <i class="fa-solid fa-headphones"></i> 2. Dictation Activity (+5 Tokens)
-            </button>
-          </div>
-          ${drumModuleTab === 'sequencer' ? renderDrumSequencerMarkup() : renderIntegratedDictationMarkup()}
-        </div>
-      `;
-    }
-
-    function renderRhythmModule(container) {
-      container.innerHTML = `
-        <div class="space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Interactive Rhythm Lab</span>
-              <h1 class="text-3xl font-black text-slate-800">8-Beat Drum Sound Module & Dictation</h1>
-              <p class="text-xs sm:text-sm text-slate-500">
-                Compose 8-beat patterns with Crotchets (♩ = 1) and Quavers (♫ = 1 &), or practice your ear in the Dictation Challenge!
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Pulse & Tempo Challenge</span>
+              <h3 class="text-xl font-black text-white">Steady Beat Spacebar Tapper</h3>
+              <p class="text-xs text-slate-300 mt-1">
+                Press <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> (or tap the pad) in time with the beat. Hit <strong>8 beats in a row</strong> to advance through all <strong>4 speeds</strong>!
               </p>
             </div>
-            <button onclick="openCurrentPortal()" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 self-start sm:self-auto">
-              &larr; Back to Dashboard
-            </button>
-          </div>
-
-          <div id="embedded-tool-container" class="rounded-3xl overflow-hidden shadow-lg border border-slate-200"></div>
-        </div>
-      `;
-      mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));
-    }
-
-    async function playCurrentPattern() {
-      if (isPlayingPattern) return;
-      isPlayingPattern = true;
-      const playBtn = document.getElementById('play-pattern-btn');
-      if (playBtn) {
-        playBtn.disabled = true;
-        playBtn.innerHTML = `<i class="fa-solid fa-volume-high animate-pulse"></i> Playing...`;
-      }
-
-      for (let i = 0; i < drumPattern.length; i++) {
-        const card = document.getElementById(`drum-beat-card-${i}`);
-        if (card) card.classList.add('beat-active');
-
-        const isKick = i % 2 === 0;
-        const soundType = isKick ? 'kick' : 'snare';
-
-        if (drumPattern[i].type === 'crotchet') {
-          playDrumSound(soundType);
-        } else {
-          playDrumSound(soundType);
-          setTimeout(() => playDrumSound(soundType), 230);
-        }
-
-        await new Promise(r => setTimeout(r, 460));
-        if (card) card.classList.remove('beat-active');
-      }
-
-      isPlayingPattern = false;
-      if (playBtn) {
-        playBtn.disabled = false;
-        playBtn.innerHTML = `<i class="fa-solid fa-play"></i> Play Pattern`;
-      }
-    }
-
-    function togglePatternBeat(idx) {
-      drumPattern[idx].type = drumPattern[idx].type === 'crotchet' ? 'quavers' : 'crotchet';
-      const isKick = idx % 2 === 0;
-      playDrumSound(isKick ? 'kick' : 'snare');
-      const container = document.getElementById('embedded-tool-container');
-      if (container) mountEmbeddedDrumModule(container);
-    }
-
-    function randomizePattern() {
-      drumPattern.forEach(p => {
-        p.type = Math.random() > 0.5 ? 'crotchet' : 'quavers';
-      });
-      const container = document.getElementById('embedded-tool-container');
-      if (container) mountEmbeddedDrumModule(container);
-    }
-
-    // ==========================================
-    // RHYTHM DICTATION CHALLENGE
-    // ==========================================
-    let currentMysteryPattern = [];
-    let mysteryOptions = [];
-    let streakCount = 0;
-    let bestStreak = 0;
-
-    function mountEmbeddedDictation(target) {
-      if (!target) return;
-      if (!currentMysteryPattern || currentMysteryPattern.length !== 8) {
-        generateMysteryPattern();
-      }
-      target.innerHTML = renderIntegratedDictationMarkup();
-    }
-
-    function renderDictationChallenge(container) {
-      generateMysteryPattern();
-
-      container.innerHTML = `
-        <div class="space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 class="text-3xl font-black text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-headphones text-amber-500"></i> Rhythm Dictation Challenge
-              </h1>
-              <p class="text-xs sm:text-sm text-slate-500">
-                Listen to the mystery 8-beat rhythm and select the matching notation!
-              </p>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${beatTapSpeeds.map((s, idx) => `
+                <span class="px-2.5 py-1 rounded-lg text-xs font-black ${
+                  beatGame.completed || idx < beatGame.speedIdx
+                    ? 'bg-emerald-500 text-slate-950'
+                    : idx === beatGame.speedIdx
+                    ? 'bg-amber-400 text-slate-950'
+                    : 'bg-slate-800 text-slate-500'
+                }">Speed ${idx + 1}</span>
+              `).join('')}
             </div>
-            <button onclick="openCurrentPortal()" class="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 self-start sm:self-auto">
-              &larr; Back to Dashboard
-            </button>
           </div>
-          <div id="embedded-tool-container"></div>
+
+          ${beatGame.completed ? `
+            <div class="bg-emerald-950/60 border-2 border-emerald-500/60 rounded-2xl p-6 text-center space-y-3">
+              <div class="w-14 h-14 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-2xl mx-auto shadow-lg">
+                <i class="fa-solid fa-trophy"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">All 4 Speeds Completed!</h4>
+              <p class="text-xs text-slate-200">Steady pulse locked in! You earned <strong>+10 Tokens</strong>.</p>
+              <button onclick="mountEmbeddedBeatTapGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
+                Play Again
+              </button>
+            </div>
+          ` : `
+            <div class="text-center space-y-4">
+              <div class="flex items-center justify-between text-xs font-bold px-2">
+                <span class="text-amber-300">${spd.name}</span>
+                <span id="beat-streak-label" class="text-emerald-400">In-Time Streak: ${beatGame.streak} / ${beatGame.targetStreak}</span>
+              </div>
+
+              <div id="beat-pulse-orb" class="w-28 h-28 mx-auto rounded-full bg-slate-800 border-4 border-indigo-500 flex flex-col items-center justify-center transition-all duration-100 shadow-lg">
+                <span id="beat-number-display" class="text-3xl font-black text-white">1</span>
+                <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">PULSE</span>
+              </div>
+
+              <div id="beat-feedback-msg" class="text-xs font-bold text-slate-300 h-5">
+                ${beatGame.active ? 'Tap SPACEBAR on every beat!' : 'Press Start Beat to begin'}
+              </div>
+
+              <div class="flex items-center justify-center gap-3">
+                ${!beatGame.active ? `
+                  <button onclick="startBeatTapSpeed()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow-lg">
+                    <i class="fa-solid fa-play mr-1"></i> Start Beat (${spd.bpm} BPM)
+                  </button>
+                ` : `
+                  <button onmousedown="registerBeatTap()" ontouchstart="event.preventDefault(); registerBeatTap();" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
+                    TAP BEAT (or Press SPACEBAR)
+                  </button>
+                  <button onclick="stopBeatTapLoop(); renderBeatTapGameUI();" class="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
+                    Stop
+                  </button>
+                `}
+              </div>
+            </div>
+          `}
         </div>
       `;
-      mountEmbeddedDictation(document.getElementById('embedded-tool-container'));
     }
 
-    function generateMysteryPattern() {
-      currentMysteryPattern = [];
-      for (let i = 0; i < 8; i++) {
-        currentMysteryPattern.push(Math.random() > 0.5 ? 1 : 2);
-      }
+    function startBeatTapSpeed() {
+      stopBeatTapLoop();
+      const spd = beatTapSpeeds[beatGame.speedIdx] || beatTapSpeeds[0];
+      beatGame.beatIntervalMs = Math.round(60000 / spd.bpm);
+      beatGame.streak = 0;
+      beatGame.beatCount = 0;
+      beatGame.active = true;
+      renderBeatTapGameUI();
 
-      mysteryOptions = [currentMysteryPattern];
-      while (mysteryOptions.length < 4) {
-        const distractor = [];
-        for (let i = 0; i < 8; i++) {
-          distractor.push(Math.random() > 0.5 ? 1 : 2);
+      const pulseTick = () => {
+        if (!document.getElementById('beat-pulse-orb')) {
+          stopBeatTapLoop();
+          return;
         }
-        const matchesExisting = mysteryOptions.some(opt => 
-          opt.every((val, idx) => val === distractor[idx])
-        );
-        if (!matchesExisting) {
-          mysteryOptions.push(distractor);
+        if (beatGame.beatCount > 1 && !beatGame.tappedThisBeat) {
+          beatGame.streak = 0;
+          const streakEl = document.getElementById('beat-streak-label');
+          if (streakEl) streakEl.textContent = `In-Time Streak: 0 / ${beatGame.targetStreak}`;
         }
-      }
-      mysteryOptions.sort(() => Math.random() - 0.5);
+        beatGame.beatCount++;
+        beatGame.tappedThisBeat = false;
+        beatGame.lastBeatTime = performance.now();
+
+        const isDownbeat = ((beatGame.beatCount - 1) % 4) === 0;
+        playTonePitch(isDownbeat ? 660 : 440, 0.08, 0.35);
+
+        const orb = document.getElementById('beat-pulse-orb');
+        const numEl = document.getElementById('beat-number-display');
+        if (numEl) numEl.textContent = ((beatGame.beatCount - 1) % 4) + 1;
+        if (orb) {
+          orb.classList.add('scale-110', 'border-amber-400', 'bg-indigo-900');
+          setTimeout(() => {
+            if (orb) orb.classList.remove('scale-110', 'border-amber-400', 'bg-indigo-900');
+          }, 120);
+        }
+      };
+
+      pulseTick();
+      beatGame.timerId = setInterval(pulseTick, beatGame.beatIntervalMs);
     }
 
-    async function playMysteryAudio() {
-      const btn = document.getElementById('hear-mystery-btn');
-      const msg = document.getElementById('dictation-status-msg');
-      if (btn) btn.disabled = true;
-      if (msg) msg.textContent = "Playing mystery pattern... Count 1 to 8!";
+    function registerBeatTap() {
+      if (!beatGame.active || beatGame.completed) return;
+      const now = performance.now();
+      const diffSinceLast = now - beatGame.lastBeatTime;
+      const diffToNext = beatGame.beatIntervalMs - diffSinceLast;
+      const closestDiff = Math.min(diffSinceLast, Math.abs(diffToNext));
+      const tolerance = beatGame.beatIntervalMs * 0.35;
 
-      for (let i = 0; i < currentMysteryPattern.length; i++) {
-        const beatType = currentMysteryPattern[i];
-        const isKick = i % 2 === 0;
-        const soundType = isKick ? 'kick' : 'snare';
+      const fb = document.getElementById('beat-feedback-msg');
+      const streakEl = document.getElementById('beat-streak-label');
 
-        if (beatType === 1) {
-          playDrumSound(soundType);
-        } else {
-          playDrumSound(soundType);
-          setTimeout(() => playDrumSound(soundType), 240);
+      if (closestDiff <= tolerance && !beatGame.tappedThisBeat) {
+        beatGame.tappedThisBeat = true;
+        beatGame.streak++;
+        playDrumSound('snare');
+        if (fb) fb.innerHTML = `<span class="text-emerald-400">✓ On Beat! (${beatGame.streak}/${beatGame.targetStreak})</span>`;
+        if (streakEl) streakEl.textContent = `In-Time Streak: ${beatGame.streak} / ${beatGame.targetStreak}`;
+
+        if (beatGame.streak >= beatGame.targetStreak) {
+          stopBeatTapLoop();
+          if (beatGame.speedIdx < beatTapSpeeds.length - 1) {
+            beatGame.speedIdx++;
+            beatGame.streak = 0;
+            renderBeatTapGameUI();
+            showAppModal('Speed Cleared!', `Great timing! Advancing to ${beatTapSpeeds[beatGame.speedIdx].name}.`, true);
+          } else {
+            beatGame.completed = true;
+            addTokens(10);
+            renderBeatTapGameUI();
+            showAppModal('🏆 Steady Beat Master!', 'You completed all 4 speeds in time and earned +10 Tokens!', true);
+          }
         }
-        await new Promise(r => setTimeout(r, 480));
-      }
-
-      if (btn) btn.disabled = false;
-      if (msg) msg.textContent = "Finished! Select pattern A, B, C, or D.";
-    }
-
-    function handleOptionSelect(chosenIdx) {
-      const selected = mysteryOptions[chosenIdx];
-      const isCorrect = selected.every((val, idx) => val === currentMysteryPattern[idx]);
-
-      if (isCorrect) {
-        streakCount++;
-        if (streakCount > bestStreak) bestStreak = streakCount;
-        addTokens(5);
-        generateMysteryPattern();
-        showAppModal('🎉 Correct Rhythm!', 'Fantastic ear! You identified the mystery pattern and earned +5 Tokens.', true);
       } else {
-        streakCount = 0;
-        showAppModal('❌ Not Quite', 'That was not the matching pattern. Listen carefully to the bass (Kick) and snare beats and try again!', false);
-      }
-
-      const container = document.getElementById('embedded-tool-container');
-      if (container) {
-        if (drumModuleTab === 'dictation' && app.currentView === 'rhythmModule') {
-          mountEmbeddedDrumModule(container);
-        } else if (app.currentView === 'lessonDetail' && drumModuleTab === 'dictation') {
-          mountEmbeddedDrumModule(container);
-        } else {
-          mountEmbeddedDictation(container);
-        }
+        beatGame.streak = 0;
+        if (streakEl) streakEl.textContent = `In-Time Streak: 0 / ${beatGame.targetStreak}`;
+        if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Off Beat — listen to the pulse and try again!</span>`;
       }
     }
 
     // ==========================================
-    // EMBEDDED PITCH & DYNAMICS LABS
+    // CROTCHET RHYTHM SIGHT-READER MINIGAME (4 SPEEDS)
+    // ==========================================
+    const crotchetSpeeds = [
+      { name: 'Speed 1: Andante (80 BPM)', bpm: 80 },
+      { name: 'Speed 2: Moderato (105 BPM)', bpm: 105 },
+      { name: 'Speed 3: Allegro (130 BPM)', bpm: 130 },
+      { name: 'Speed 4: Presto (155 BPM)', bpm: 155 }
+    ];
+
+    let crotchetGame = {
+      active: false,
+      completed: false,
+      speedIdx: 0,
+      pattern: [true, false, true, true, false, true, false, true],
+      currentStep: -1, // -4..-1 = count-in, 0..7 = beats 1..8
+      timerId: null,
+      beatIntervalMs: 750,
+      lastBeatTime: 0,
+      hitThisBeat: false,
+      mistakes: 0
+    };
+
+    function stopCrotchetGameLoop() {
+      if (crotchetGame.timerId) {
+        clearInterval(crotchetGame.timerId);
+        crotchetGame.timerId = null;
+      }
+      crotchetGame.active = false;
+      crotchetGame.currentStep = -1;
+    }
+
+    function generateCrotchetPattern() {
+      const pat = Array.from({ length: 8 }, () => Math.random() > 0.4);
+      if (!pat.includes(true)) pat[0] = true;
+      if (!pat.includes(false)) pat[1] = false;
+      crotchetGame.pattern = pat;
+    }
+
+    function mountEmbeddedCrotchetGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      stopCrotchetGameLoop();
+      crotchetGame.speedIdx = 0;
+      crotchetGame.completed = false;
+      generateCrotchetPattern();
+      renderCrotchetGameUI(target);
+    }
+
+    function renderCrotchetGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const spd = crotchetSpeeds[crotchetGame.speedIdx] || crotchetSpeeds[0];
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Rhythm Reading Minigame</span>
+              <h3 class="text-xl font-black text-white">8-Beat Crotchet Sight-Reader</h3>
+              <p class="text-xs text-slate-300 mt-1">
+                Press <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> (or tap the button) <strong>ONLY on beats with a Crotchet (♩)</strong>. Skip the rests (𝄽)! Complete all <strong>4 speeds</strong> to earn +10 Tokens.
+              </p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${crotchetSpeeds.map((s, idx) => `
+                <span class="px-2.5 py-1 rounded-lg text-xs font-black ${
+                  crotchetGame.completed || idx < crotchetGame.speedIdx
+                    ? 'bg-emerald-500 text-slate-950'
+                    : idx === crotchetGame.speedIdx
+                    ? 'bg-amber-400 text-slate-950'
+                    : 'bg-slate-800 text-slate-500'
+                }">Speed ${idx + 1}</span>
+              `).join('')}
+            </div>
+          </div>
+
+          ${crotchetGame.completed ? `
+            <div class="bg-emerald-950/60 border-2 border-emerald-500/60 rounded-2xl p-6 text-center space-y-3">
+              <div class="w-14 h-14 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-2xl mx-auto shadow-lg">
+                <i class="fa-solid fa-trophy"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">All 4 Crotchet Speeds Mastered!</h4>
+              <p class="text-xs text-slate-200">Sharp sight-reading! You earned <strong>+10 Tokens</strong>.</p>
+              <button onclick="mountEmbeddedCrotchetGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
+                Play Again
+              </button>
+            </div>
+          ` : `
+            <div class="space-y-4">
+              <div class="flex items-center justify-between text-xs font-bold px-1">
+                <span class="text-amber-300">${spd.name}</span>
+                <span id="crotchet-status-badge" class="text-slate-300">Ready</span>
+              </div>
+
+              <!-- 8-Beat Grid -->
+              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                ${crotchetGame.pattern.map((hasNote, idx) => `
+                  <div id="crotchet-cell-${idx}" class="p-3 rounded-2xl border-2 ${hasNote ? 'bg-indigo-950/80 border-indigo-500' : 'bg-slate-800/60 border-slate-700'} flex flex-col items-center justify-between h-24 transition-all">
+                    <span class="text-xs font-black text-slate-400">Beat ${idx + 1}</span>
+                    <span class="text-3xl font-black ${hasNote ? 'text-amber-300' : 'text-slate-600'} leading-none">${hasNote ? '♩' : '𝄽'}</span>
+                    <span class="text-[10px] font-bold uppercase ${hasNote ? 'text-indigo-300' : 'text-slate-500'}">${hasNote ? 'PLAY' : 'REST'}</span>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div id="crotchet-feedback-msg" class="text-center font-black text-slate-300 min-h-[2.75rem] flex items-center justify-center">
+                ${crotchetGame.active ? '<span class="text-2xl sm:text-3xl text-amber-300 tracking-wide">Count-in: 1</span>' : '<span class="text-sm sm:text-base">Press Start Pattern to begin</span>'}
+              </div>
+
+              <div class="flex items-center justify-center gap-3">
+                ${!crotchetGame.active ? `
+                  <button onclick="startCrotchetSpeed()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow-lg">
+                    <i class="fa-solid fa-play mr-1"></i> Start Pattern (${spd.bpm} BPM)
+                  </button>
+                ` : `
+                  <button onmousedown="registerCrotchetTap()" ontouchstart="event.preventDefault(); registerCrotchetTap();" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
+                    HIT CROTCHET (or SPACEBAR)
+                  </button>
+                  <button onclick="stopCrotchetGameLoop(); renderCrotchetGameUI();" class="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
+                    Stop
+                  </button>
+                `}
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function startCrotchetSpeed() {
+      stopCrotchetGameLoop();
+      const spd = crotchetSpeeds[crotchetGame.speedIdx] || crotchetSpeeds[0];
+      crotchetGame.beatIntervalMs = Math.round(60000 / spd.bpm);
+      crotchetGame.currentStep = -5; // Starts at -5 so first tick increments to -4 (Count-in: 1, 2, 3, 4)
+      crotchetGame.mistakes = 0;
+      crotchetGame.active = true;
+      renderCrotchetGameUI();
+
+      const stepTick = () => {
+        if (!document.getElementById('crotchet-feedback-msg')) {
+          stopCrotchetGameLoop();
+          return;
+        }
+
+        // Check if previous beat required a note and was missed
+        if (crotchetGame.currentStep >= 0 && crotchetGame.currentStep < 8) {
+          const prevIdx = crotchetGame.currentStep;
+          if (crotchetGame.pattern[prevIdx] && !crotchetGame.hitThisBeat) {
+            crotchetGame.mistakes++;
+            const prevCell = document.getElementById(`crotchet-cell-${prevIdx}`);
+            if (prevCell) prevCell.classList.add('border-rose-500', 'bg-rose-950/70');
+          }
+        }
+
+        crotchetGame.currentStep++;
+        crotchetGame.hitThisBeat = false;
+        crotchetGame.lastBeatTime = performance.now();
+
+        const fb = document.getElementById('crotchet-feedback-msg');
+        const badge = document.getElementById('crotchet-status-badge');
+
+        if (crotchetGame.currentStep < 0) {
+          const countNum = crotchetGame.currentStep + 5; // 1, 2, 3, 4
+          playTonePitch(countNum === 1 ? 660 : 520, 0.08, 0.3);
+          if (fb) fb.innerHTML = `<span class="text-2xl sm:text-3xl font-black text-amber-300 tracking-wide">Count-in: ${countNum}</span>`;
+          if (badge) badge.textContent = `Count-in: ${countNum} / 4`;
+          return;
+        }
+
+        if (crotchetGame.currentStep < 8) {
+          const idx = crotchetGame.currentStep;
+          playTonePitch(idx === 0 || idx === 4 ? 587 : 440, 0.05, 0.18);
+          if (badge) badge.textContent = `Beat ${idx + 1} / 8`;
+          if (fb) fb.innerHTML = crotchetGame.pattern[idx]
+            ? `<span class="text-lg sm:text-xl font-black text-amber-300">Beat ${idx + 1}: PLAY CROTCHET (♩)!</span>`
+            : `<span class="text-lg sm:text-xl font-bold text-slate-400">Beat ${idx + 1}: REST (Hold!)</span>`;
+
+          for (let i = 0; i < 8; i++) {
+            const c = document.getElementById(`crotchet-cell-${i}`);
+            if (c) c.classList.toggle('beat-active', i === idx);
+          }
+        } else {
+          // End of 8-beat bar
+          const passed = crotchetGame.mistakes === 0;
+          stopCrotchetGameLoop();
+
+          if (passed) {
+            if (crotchetGame.speedIdx < crotchetSpeeds.length - 1) {
+              crotchetGame.speedIdx++;
+              generateCrotchetPattern();
+              renderCrotchetGameUI();
+              showAppModal('Pattern Cleared!', `Zero mistakes! Advancing to ${crotchetSpeeds[crotchetGame.speedIdx].name}.`, true);
+            } else {
+              crotchetGame.completed = true;
+              addTokens(10);
+              renderCrotchetGameUI();
+              showAppModal('🏆 Crotchet Sight-Reader Master!', 'You mastered all 4 speeds with zero mistakes and earned +10 Tokens!', true);
+            }
+          } else {
+            generateCrotchetPattern();
+            renderCrotchetGameUI();
+            showAppModal('Try Again!', `You had ${crotchetGame.mistakes} missed note(s) or extra tap(s). Try the new 8-beat pattern!`, false);
+          }
+        }
+      };
+
+      stepTick();
+      crotchetGame.timerId = setInterval(stepTick, crotchetGame.beatIntervalMs);
+    }
+
+    function registerCrotchetTap() {
+      if (!crotchetGame.active || crotchetGame.completed) return;
+      const fb = document.getElementById('crotchet-feedback-msg');
+
+      // Determine nearest beat index (handles slight early tap just before beat lands)
+      let targetIdx = crotchetGame.currentStep;
+      const elapsed = performance.now() - crotchetGame.lastBeatTime;
+      if (elapsed > crotchetGame.beatIntervalMs * 0.65 && targetIdx < 7) {
+        targetIdx++;
+      }
+
+      if (targetIdx < 0 || targetIdx >= 8) return;
+
+      const cell = document.getElementById(`crotchet-cell-${targetIdx}`);
+      if (crotchetGame.pattern[targetIdx]) {
+        if (!crotchetGame.hitThisBeat) {
+          crotchetGame.hitThisBeat = true;
+          playDrumSound('snare');
+          if (cell) cell.classList.add('border-emerald-400', 'bg-emerald-950/70');
+          if (fb) fb.innerHTML = `<span class="text-emerald-400">✓ Clean hit on Beat ${targetIdx + 1}!</span>`;
+        }
+      } else {
+        crotchetGame.mistakes++;
+        playTonePitch(160, 0.15, 0.4);
+        if (cell) cell.classList.add('border-rose-500', 'bg-rose-950/70');
+        if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Oops! Beat ${targetIdx + 1} was a REST!</span>`;
+      }
+    }
+
+    // ==========================================
+    // QUAVER & CROTCHET COMBO SIGHT-READER MINIGAME (4 SPEEDS)
+    // ==========================================
+    const quaverSpeeds = [
+      { name: 'Speed 1: Adagio (72 BPM)', bpm: 72 },
+      { name: 'Speed 2: Andante (88 BPM)', bpm: 88 },
+      { name: 'Speed 3: Moderato (104 BPM)', bpm: 104 },
+      { name: 'Speed 4: Allegro (120 BPM)', bpm: 120 }
+    ];
+
+    let quaverGame = {
+      active: false,
+      completed: false,
+      speedIdx: 0,
+      // Each beat is 'crotchet' (1 tap), 'quavers' (2 taps: beat & offbeat), or 'rest' (0 taps)
+      pattern: ['crotchet', 'quavers', 'crotchet', 'rest', 'quavers', 'crotchet', 'quavers', 'crotchet'],
+      currentStep: -4, // -4..-1 count-in, 0..7 beats
+      timerId: null,
+      beatIntervalMs: 833,
+      lastBeatTime: 0,
+      hitsThisBeat: 0,
+      mistakes: 0
+    };
+
+    function stopQuaverGameLoop() {
+      if (quaverGame.timerId) {
+        clearInterval(quaverGame.timerId);
+        quaverGame.timerId = null;
+      }
+      quaverGame.active = false;
+      quaverGame.currentStep = -4;
+    }
+
+    function generateQuaverComboPattern() {
+      const types = ['crotchet', 'quavers', 'rest'];
+      const pat = Array.from({ length: 8 }, (_, idx) => {
+        if (idx === 0) return Math.random() > 0.5 ? 'crotchet' : 'quavers';
+        const r = Math.random();
+        if (r < 0.42) return 'quavers';
+        if (r < 0.80) return 'crotchet';
+        return 'rest';
+      });
+      if (!pat.includes('quavers')) pat[1] = 'quavers';
+      if (!pat.includes('crotchet')) pat[0] = 'crotchet';
+      quaverGame.pattern = pat;
+    }
+
+    function mountEmbeddedQuaverGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      stopQuaverGameLoop();
+      quaverGame.speedIdx = 0;
+      quaverGame.completed = false;
+      generateQuaverComboPattern();
+      renderQuaverGameUI(target);
+    }
+
+    function renderQuaverGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const spd = quaverSpeeds[quaverGame.speedIdx] || quaverSpeeds[0];
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Quaver & Crotchet Combo Minigame</span>
+              <h3 class="text-xl font-black text-white">8-Beat Quaver & Crotchet Sight-Reader</h3>
+              <p class="text-xs text-slate-300 mt-1">
+                Tap <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> (or the tap pad): <strong>1 tap</strong> for Crotchets (♩), <strong>2 quick taps ("1 &")</strong> for Paired Quavers (♫), and <strong>0 taps</strong> on Rests (𝄽)! Master all <strong>4 speeds</strong> to earn +10 Tokens.
+              </p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${quaverSpeeds.map((s, idx) => `
+                <span class="px-2.5 py-1 rounded-lg text-xs font-black ${
+                  quaverGame.completed || idx < quaverGame.speedIdx
+                    ? 'bg-emerald-500 text-slate-950'
+                    : idx === quaverGame.speedIdx
+                    ? 'bg-amber-400 text-slate-950'
+                    : 'bg-slate-800 text-slate-500'
+                }">Speed ${idx + 1}</span>
+              `).join('')}
+            </div>
+          </div>
+
+          ${quaverGame.completed ? `
+            <div class="bg-emerald-950/60 border-2 border-emerald-500/60 rounded-2xl p-6 text-center space-y-3">
+              <div class="w-14 h-14 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-2xl mx-auto shadow-lg">
+                <i class="fa-solid fa-trophy"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">All 4 Quaver & Crotchet Speeds Mastered!</h4>
+              <p class="text-xs text-slate-200">Awesome rhythmic subdivision! You earned <strong>+10 Tokens</strong>.</p>
+              <button onclick="mountEmbeddedQuaverGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
+                Play Again
+              </button>
+            </div>
+          ` : `
+            <div class="space-y-4">
+              <div class="flex items-center justify-between text-xs font-bold px-1">
+                <span class="text-amber-300">${spd.name}</span>
+                <span id="quaver-status-badge" class="text-slate-300">Ready</span>
+              </div>
+
+              <!-- 8-Beat Combo Grid -->
+              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                ${quaverGame.pattern.map((type, idx) => {
+                  const isQuaver = type === 'quavers';
+                  const isCrotchet = type === 'crotchet';
+                  const cardStyle = isQuaver
+                    ? 'bg-blue-950/80 border-blue-400'
+                    : isCrotchet
+                    ? 'bg-indigo-950/80 border-indigo-500'
+                    : 'bg-slate-800/60 border-slate-700';
+                  const symbol = isQuaver ? '♫' : isCrotchet ? '♩' : '𝄽';
+                  const countLabel = isQuaver ? `${idx + 1} &` : isCrotchet ? `${idx + 1}` : 'REST';
+                  return `
+                    <div id="quaver-cell-${idx}" class="p-3 rounded-2xl border-2 ${cardStyle} flex flex-col items-center justify-between h-24 transition-all">
+                      <span class="text-xs font-black text-slate-400">Beat ${idx + 1}</span>
+                      <span class="text-3xl font-black ${isQuaver ? 'text-sky-300' : isCrotchet ? 'text-amber-300' : 'text-slate-600'} leading-none">${symbol}</span>
+                      <span class="text-[10px] font-black uppercase ${isQuaver ? 'text-sky-300' : isCrotchet ? 'text-indigo-300' : 'text-slate-500'}">${countLabel}</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div id="quaver-feedback-msg" class="text-center text-xs font-bold text-slate-300 h-5">
+                ${quaverGame.active ? 'Count in: 1, 2, 3, 4...' : 'Press Start Combo Pattern to begin'}
+              </div>
+
+              <div class="flex items-center justify-center gap-3">
+                ${!quaverGame.active ? `
+                  <button onclick="startQuaverSpeed()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow-lg">
+                    <i class="fa-solid fa-play mr-1"></i> Start Combo Pattern (${spd.bpm} BPM)
+                  </button>
+                ` : `
+                  <button onmousedown="registerQuaverTap()" ontouchstart="event.preventDefault(); registerQuaverTap();" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
+                    TAP RHYTHM (or SPACEBAR)
+                  </button>
+                  <button onclick="stopQuaverGameLoop(); renderQuaverGameUI();" class="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
+                    Stop
+                  </button>
+                `}
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function startQuaverSpeed() {
+      stopQuaverGameLoop();
+      const spd = quaverSpeeds[quaverGame.speedIdx] || quaverSpeeds[0];
+      quaverGame.beatIntervalMs = Math.round(60000 / spd.bpm);
+      quaverGame.currentStep = -4;
+      quaverGame.mistakes = 0;
+      quaverGame.active = true;
+      renderQuaverGameUI();
+
+      const stepTick = () => {
+        if (!document.getElementById('quaver-feedback-msg')) {
+          stopQuaverGameLoop();
+          return;
+        }
+
+        // Validate the beat that just finished (0..7)
+        if (quaverGame.currentStep >= 0 && quaverGame.currentStep < 8) {
+          const prevIdx = quaverGame.currentStep;
+          const prevType = quaverGame.pattern[prevIdx];
+          const expectedHits = prevType === 'quavers' ? 2 : prevType === 'crotchet' ? 1 : 0;
+          const prevCell = document.getElementById(`quaver-cell-${prevIdx}`);
+
+          if (quaverGame.hitsThisBeat !== expectedHits) {
+            quaverGame.mistakes++;
+            if (prevCell) prevCell.classList.add('border-rose-500', 'bg-rose-950/70');
+          } else if (expectedHits > 0) {
+            if (prevCell) prevCell.classList.add('border-emerald-400', 'bg-emerald-950/70');
+          }
+        }
+
+        quaverGame.currentStep++;
+        quaverGame.hitsThisBeat = 0;
+        quaverGame.lastBeatTime = performance.now();
+
+        const fb = document.getElementById('quaver-feedback-msg');
+        const badge = document.getElementById('quaver-status-badge');
+
+        if (quaverGame.currentStep < 0) {
+          const countNum = quaverGame.currentStep + 5;
+          playTonePitch(countNum === 1 ? 660 : 520, 0.06, 0.25);
+          if (fb) fb.innerHTML = `<span class="text-amber-300">Get Ready... Count-in: ${countNum}</span>`;
+          if (badge) badge.textContent = `Count-in: ${countNum}`;
+          return;
+        }
+
+        if (quaverGame.currentStep < 8) {
+          const idx = quaverGame.currentStep;
+          const bType = quaverGame.pattern[idx];
+          playTonePitch(idx === 0 || idx === 4 ? 587 : 440, 0.05, 0.18);
+          if (badge) badge.textContent = `Beat ${idx + 1} / 8`;
+
+          if (fb) {
+            if (bType === 'quavers') {
+              fb.innerHTML = `<span class="text-sky-300">Beat ${idx + 1}: QUAVERS (♫) — Tap twice ("${idx + 1} &")!</span>`;
+            } else if (bType === 'crotchet') {
+              fb.innerHTML = `<span class="text-amber-300">Beat ${idx + 1}: CROTCHET (♩) — Tap once ("${idx + 1}")!</span>`;
+            } else {
+              fb.innerHTML = `<span class="text-slate-400">Beat ${idx + 1}: REST (𝄽) — Hold!</span>`;
+            }
+          }
+
+          for (let i = 0; i < 8; i++) {
+            const c = document.getElementById(`quaver-cell-${i}`);
+            if (c) c.classList.toggle('beat-active', i === idx);
+          }
+        } else {
+          // End of 8-beat combo bar
+          const passed = quaverGame.mistakes === 0;
+          stopQuaverGameLoop();
+
+          if (passed) {
+            if (quaverGame.speedIdx < quaverSpeeds.length - 1) {
+              quaverGame.speedIdx++;
+              generateQuaverComboPattern();
+              renderQuaverGameUI();
+              showAppModal('Combo Cleared!', `Spot-on quavers and crotchets! Advancing to ${quaverSpeeds[quaverGame.speedIdx].name}.`, true);
+            } else {
+              quaverGame.completed = true;
+              addTokens(10);
+              renderQuaverGameUI();
+              showAppModal('🏆 Quaver & Crotchet Master!', 'You mastered all 4 speeds of quaver/crotchet combinations and earned +10 Tokens!', true);
+            }
+          } else {
+            generateQuaverComboPattern();
+            renderQuaverGameUI();
+            showAppModal('Try Again!', `You had ${quaverGame.mistakes} beat(s) with incorrect taps. Remember: ♩ = 1 tap, ♫ = 2 quick taps ("1 &"), 𝄽 = 0 taps!`, false);
+          }
+        }
+      };
+
+      stepTick();
+      quaverGame.timerId = setInterval(stepTick, quaverGame.beatIntervalMs);
+    }
+
+    function registerQuaverTap() {
+      if (!quaverGame.active || quaverGame.completed) return;
+      const fb = document.getElementById('quaver-feedback-msg');
+
+      let targetIdx = quaverGame.currentStep;
+      const elapsed = performance.now() - quaverGame.lastBeatTime;
+      // Only snap to next beat if we're at the very end (>85% of beat) and current beat isn't waiting for its 2nd quaver
+      const currentType = targetIdx >= 0 && targetIdx < 8 ? quaverGame.pattern[targetIdx] : null;
+      const needsSecondQuaver = currentType === 'quavers' && quaverGame.hitsThisBeat === 1;
+      if (!needsSecondQuaver && elapsed > quaverGame.beatIntervalMs * 0.85 && targetIdx < 7) {
+        targetIdx++;
+      }
+
+      if (targetIdx < 0 || targetIdx >= 8) return;
+
+      const bType = quaverGame.pattern[targetIdx];
+      const cell = document.getElementById(`quaver-cell-${targetIdx}`);
+
+      if (bType === 'rest') {
+        quaverGame.mistakes++;
+        playTonePitch(160, 0.15, 0.4);
+        if (cell) cell.classList.add('border-rose-500', 'bg-rose-950/70');
+        if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Oops! Beat ${targetIdx + 1} was a REST!</span>`;
+      } else if (bType === 'crotchet') {
+        quaverGame.hitsThisBeat++;
+        if (quaverGame.hitsThisBeat === 1) {
+          playDrumSound('kick');
+          if (cell) cell.classList.add('border-emerald-400', 'bg-emerald-950/70');
+          if (fb) fb.innerHTML = `<span class="text-emerald-400">✓ Clean Crotchet on Beat ${targetIdx + 1}!</span>`;
+        } else {
+          quaverGame.mistakes++;
+          playTonePitch(160, 0.15, 0.4);
+          if (cell) cell.classList.remove('border-emerald-400', 'bg-emerald-950/70');
+          if (cell) cell.classList.add('border-rose-500', 'bg-rose-950/70');
+          if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Too many taps! Crotchet (♩) is only 1 tap!</span>`;
+        }
+      } else if (bType === 'quavers') {
+        quaverGame.hitsThisBeat++;
+        if (quaverGame.hitsThisBeat <= 2) {
+          playDrumSound('snare');
+          const subLabel = quaverGame.hitsThisBeat === 1 ? `${targetIdx + 1}` : `${targetIdx + 1} &`;
+          if (quaverGame.hitsThisBeat === 2 && cell) {
+            cell.classList.add('border-emerald-400', 'bg-emerald-950/70');
+          }
+          if (fb) fb.innerHTML = `<span class="text-sky-300">✓ Quaver hit "${subLabel}" (${quaverGame.hitsThisBeat}/2)</span>`;
+        } else {
+          quaverGame.mistakes++;
+          playTonePitch(160, 0.15, 0.4);
+          if (cell) cell.classList.remove('border-emerald-400', 'bg-emerald-950/70');
+          if (cell) cell.classList.add('border-rose-500', 'bg-rose-950/70');
+          if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Too many taps on Beat ${targetIdx + 1}!</span>`;
+        }
+      }
+    }
+
+    // Unified Spacebar Listener for Active Rhythm Minigames
+    window.addEventListener('keydown', function(e) {
+      if (e.code === 'Space' && (beatGame.active || crotchetGame.active || quaverGame.active)) {
+        e.preventDefault();
+        if (beatGame.active) registerBeatTap();
+        if (crotchetGame.active) registerCrotchetTap();
+        if (quaverGame.active) registerQuaverTap();
+      }
+    });
+
+    // ==========================================
+    // VIRTUAL PITCH KEYBOARD & DYNAMICS SIMULATOR
     // ==========================================
     function mountEmbeddedPitchKeyboard(target) {
       if (!target) return;
@@ -2407,12 +2189,12 @@
         { name: 'C5', freq: 523.25 }
       ];
       target.innerHTML = `
-        <div class="bg-slate-900 p-6 rounded-3xl">
-          <div class="grid grid-cols-8 gap-2">
+        <div class="bg-slate-900 p-6 rounded-3xl space-y-3">
+          <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
             ${notes.map(n => `
-              <button onclick="playTonePitch(${n.freq}, 0.5, 0.45)" class="bg-white hover:bg-indigo-50 active:bg-indigo-200 text-slate-900 font-black rounded-2xl h-32 flex flex-col items-center justify-end pb-3 shadow transition-all">
-                <span class="text-sm">${n.name}</span>
-                <span class="text-[9px] text-slate-400 font-normal">${Math.round(n.freq)}Hz</span>
+              <button onclick="playTonePitch(${n.freq}, 0.55, 0.45)" class="h-28 bg-white hover:bg-indigo-50 active:bg-amber-200 text-slate-900 rounded-2xl border-2 border-slate-300 shadow flex flex-col items-center justify-end pb-3 transition-all">
+                <span class="font-black text-sm">${n.name}</span>
+                <span class="text-[10px] text-slate-400 font-bold">${Math.round(n.freq)} Hz</span>
               </button>
             `).join('')}
           </div>
@@ -2423,19 +2205,21 @@
     function mountEmbeddedDynamicsSimulator(target) {
       if (!target) return;
       const levels = [
-        { mark: 'pp', label: 'Pianissimo', vol: 0.05 },
-        { mark: 'p', label: 'Piano', vol: 0.15 },
-        { mark: 'mf', label: 'Mezzo-Forte', vol: 0.35 },
-        { mark: 'f', label: 'Forte', vol: 0.65 },
-        { mark: 'ff', label: 'Fortissimo', vol: 0.95 }
+        { mark: 'pp', name: 'Pianissimo', desc: 'Very Soft', vol: 0.08 },
+        { mark: 'p', name: 'Piano', desc: 'Soft', vol: 0.18 },
+        { mark: 'mp', name: 'Mezzo-Piano', desc: 'Moderately Soft', vol: 0.32 },
+        { mark: 'mf', name: 'Mezzo-Forte', desc: 'Moderately Loud', vol: 0.50 },
+        { mark: 'f', name: 'Forte', desc: 'Loud', vol: 0.72 },
+        { mark: 'ff', name: 'Fortissimo', desc: 'Very Loud', vol: 0.95 }
       ];
       target.innerHTML = `
-        <div class="bg-slate-900 p-6 rounded-3xl space-y-4">
-          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-            ${levels.map(l => `
-              <button onclick="playTonePitch(440, 0.6, ${l.vol})" class="p-3 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-white rounded-2xl border border-slate-700 transition-all text-center">
-                <span class="text-xl font-black block">${l.mark}</span>
-                <span class="text-[10px] font-bold opacity-80">${l.label}</span>
+        <div class="bg-slate-900 p-6 rounded-3xl space-y-3">
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
+            ${levels.map(d => `
+              <button onclick="playTonePitch(392, 0.6, ${d.vol})" class="p-4 rounded-2xl bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-white border border-slate-700 transition-all text-center">
+                <div class="text-2xl font-serif italic font-black">${d.mark}</div>
+                <div class="text-[11px] font-bold mt-1">${d.name}</div>
+                <div class="text-[10px] opacity-75">${d.desc}</div>
               </button>
             `).join('')}
           </div>
@@ -2444,71 +2228,361 @@
     }
 
     // ==========================================
-    // REWARDS SHOP
+    // 8-BEAT DRUM SOUND MODULE & DICTATION LAB
     // ==========================================
-    let currentShopCategory = 'All';
+    let drumSequencerState = {
+      tab: 'sandbox',
+      bpm: 110,
+      isPlaying: false,
+      pattern: ['crotchet', 'quavers', 'crotchet', 'quavers', 'crotchet', 'crotchet', 'quavers', 'crotchet'],
+      dictationTarget: [],
+      dictationChoices: [],
+      dictationStreak: 0
+    };
 
+    function mountEmbeddedDrumModule(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      if (drumSequencerState.dictationTarget.length === 0) {
+        generateNewDictationRound();
+      }
+      renderDrumLabUI(target);
+    }
+
+    function mountEmbeddedDictation(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      drumSequencerState.tab = 'dictation';
+      if (drumSequencerState.dictationTarget.length === 0) {
+        generateNewDictationRound();
+      }
+      renderDrumLabUI(target);
+    }
+
+    function switchDrumLabTab(tab) {
+      drumSequencerState.tab = tab;
+      if (tab === 'dictation' && drumSequencerState.dictationTarget.length === 0) {
+        generateNewDictationRound();
+      }
+      renderDrumLabUI();
+    }
+
+    function togglePatternBeat(idx) {
+      drumSequencerState.pattern[idx] = drumSequencerState.pattern[idx] === 'crotchet' ? 'quavers' : 'crotchet';
+      playDrumSound(idx % 2 === 0 ? 'kick' : 'snare');
+      renderDrumLabUI();
+    }
+
+    function randomizeDrumPattern() {
+      drumSequencerState.pattern = Array.from({ length: 8 }, () => (Math.random() > 0.45 ? 'crotchet' : 'quavers'));
+      renderDrumLabUI();
+    }
+
+    function playPatternArray(pat, highlightIds = true) {
+      if (drumSequencerState.isPlaying) return;
+      drumSequencerState.isPlaying = true;
+      const stepMs = Math.round(60000 / drumSequencerState.bpm);
+
+      pat.forEach((type, idx) => {
+        setTimeout(() => {
+          const drumType = idx % 2 === 0 ? 'kick' : 'snare';
+          if (highlightIds) {
+            for (let i = 0; i < 8; i++) {
+              const el = document.getElementById(`drum-beat-card-${i}`);
+              if (el) el.classList.toggle('beat-active', i === idx);
+            }
+          }
+          playDrumSound(drumType);
+          if (type === 'quavers') {
+            setTimeout(() => playDrumSound(drumType), Math.round(stepMs / 2));
+          }
+          if (idx === pat.length - 1) {
+            setTimeout(() => {
+              drumSequencerState.isPlaying = false;
+              if (highlightIds) {
+                for (let i = 0; i < 8; i++) {
+                  const el = document.getElementById(`drum-beat-card-${i}`);
+                  if (el) el.classList.remove('beat-active');
+                }
+              }
+            }, stepMs);
+          }
+        }, idx * stepMs);
+      });
+    }
+
+    function playCurrentPattern() {
+      playPatternArray(drumSequencerState.pattern, true);
+    }
+
+    function generateNewDictationRound() {
+      const makePat = () => Array.from({ length: 8 }, () => (Math.random() > 0.45 ? 'crotchet' : 'quavers'));
+      const correctPat = makePat();
+      const choices = [correctPat];
+      while (choices.length < 3) {
+        const candidate = makePat();
+        if (!choices.some(c => c.join(',') === candidate.join(','))) {
+          choices.push(candidate);
+        }
+      }
+      choices.sort(() => Math.random() - 0.5);
+      drumSequencerState.dictationTarget = correctPat;
+      drumSequencerState.dictationChoices = choices;
+    }
+
+    function checkDictationChoice(choiceIdx) {
+      const chosen = drumSequencerState.dictationChoices[choiceIdx];
+      const isCorrect = chosen && chosen.join(',') === drumSequencerState.dictationTarget.join(',');
+      if (isCorrect) {
+        drumSequencerState.dictationStreak++;
+        addTokens(5);
+        showAppModal('🎉 Correct Dictation!', `Spot on! You matched the 8-beat rhythm and earned +5 Tokens (Streak: ${drumSequencerState.dictationStreak}).`, true);
+        generateNewDictationRound();
+        renderDrumLabUI();
+      } else {
+        drumSequencerState.dictationStreak = 0;
+        showAppModal('Not Quite!', 'Listen again to the mystery beat pattern and compare the crotchets (♩) and quavers (♫).', false);
+        renderDrumLabUI();
+      }
+    }
+
+    function renderDrumLabUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border border-slate-800">
+          <!-- Mode Tabs -->
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-2">
+              <button onclick="switchDrumLabTab('sandbox')" class="px-4 py-2 rounded-xl text-xs font-black transition-all ${drumSequencerState.tab === 'sandbox' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800 text-white hover:bg-slate-700'}">
+                <i class="fa-solid fa-drum mr-1"></i> 1. 8-Beat Drum Sequencer
+              </button>
+              <button onclick="switchDrumLabTab('dictation')" class="px-4 py-2 rounded-xl text-xs font-black transition-all ${drumSequencerState.tab === 'dictation' ? 'bg-amber-400 text-slate-950 shadow' : 'bg-slate-800 text-white hover:bg-slate-700'}">
+                <i class="fa-solid fa-ear-listen mr-1"></i> 2. Dictation Activity (+5 Tokens)
+              </button>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-400">
+              <span>Tempo: ${drumSequencerState.bpm} BPM</span>
+              <input type="range" min="70" max="150" value="${drumSequencerState.bpm}" onchange="drumSequencerState.bpm = Number(this.value); renderDrumLabUI();" class="w-24 accent-amber-400">
+            </div>
+          </div>
+
+          ${drumSequencerState.tab === 'sandbox' ? `
+            <div class="space-y-5">
+              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
+                ${drumSequencerState.pattern.map((type, idx) => {
+                  const isKick = idx % 2 === 0;
+                  const countText = type === 'crotchet' ? `${idx + 1}` : `${idx + 1} &`;
+                  return `
+                    <button id="drum-beat-card-${idx}" onclick="togglePatternBeat(${idx})" class="note-btn p-3 rounded-2xl border-2 ${isKick ? 'bg-blue-600/90 border-blue-400' : 'bg-rose-600/90 border-rose-400'} flex flex-col items-center justify-between h-28 shadow-md">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-white/80">${isKick ? 'KICK' : 'SNARE'}</span>
+                      <span class="text-4xl font-black text-white leading-none">${type === 'crotchet' ? '♩' : '♫'}</span>
+                      <span class="text-xs font-black bg-black/25 px-2 py-0.5 rounded-md text-amber-200">${countText}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="flex flex-wrap items-center justify-center gap-3">
+                <button onclick="playCurrentPattern()" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg flex items-center gap-2">
+                  <i class="fa-solid fa-play"></i> Play 8-Beat Pattern
+                </button>
+                <button onclick="randomizeDrumPattern()" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl text-xs border border-slate-700">
+                  <i class="fa-solid fa-shuffle mr-1"></i> Randomize Beats
+                </button>
+              </div>
+            </div>
+          ` : `
+            <div class="space-y-5">
+              <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-800/80 p-4 rounded-2xl border border-slate-700">
+                <div>
+                  <h4 class="font-black text-sm text-amber-300">Listen & Match the 8-Beat Pattern</h4>
+                  <p class="text-xs text-slate-300">Click <strong>Hear Mystery Rhythm</strong>, then select the matching notation sequence below.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs font-bold text-emerald-400">Streak: ${drumSequencerState.dictationStreak}</span>
+                  <button onclick="playPatternArray(drumSequencerState.dictationTarget, false)" class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow">
+                    <i class="fa-solid fa-volume-high mr-1"></i> Hear Mystery Rhythm
+                  </button>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                ${drumSequencerState.dictationChoices.map((choice, cIdx) => `
+                  <button onclick="checkDictationChoice(${cIdx})" class="w-full p-4 rounded-2xl bg-slate-800 hover:bg-indigo-900/70 border border-slate-700 hover:border-amber-400 transition-all text-left flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <span class="text-xs font-black uppercase tracking-wider text-amber-300 shrink-0">Option ${String.fromCharCode(65 + cIdx)}</span>
+                    <div class="grid grid-cols-8 gap-1.5 w-full">
+                      ${choice.map((t, bIdx) => `
+                        <div class="p-2 rounded-xl ${bIdx % 2 === 0 ? 'bg-blue-950/90 border border-blue-700' : 'bg-rose-950/90 border border-rose-700'} text-center">
+                          <div class="text-xl font-black text-white leading-none">${t === 'crotchet' ? '♩' : '♫'}</div>
+                          <div class="text-[9px] font-bold text-slate-300 mt-1">${bIdx + 1}</div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderRhythmModule(container) {
+      container.innerHTML = `
+        <div class="max-w-4xl mx-auto space-y-6">
+          <button onclick="app.navigate('conceptsHub')" class="text-xs font-bold text-slate-500 hover:text-indigo-600">&larr; Back to Concepts</button>
+          <div id="embedded-tool-container"></div>
+        </div>
+      `;
+      mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));
+    }
+
+    function renderDictationChallenge(container) {
+      container.innerHTML = `
+        <div class="max-w-4xl mx-auto space-y-6">
+          <button onclick="app.navigate('conceptsHub')" class="text-xs font-bold text-slate-500 hover:text-indigo-600">&larr; Back to Concepts</button>
+          <div id="embedded-tool-container"></div>
+        </div>
+      `;
+      mountEmbeddedDictation(document.getElementById('embedded-tool-container'));
+    }
+
+    // ==========================================
+    // 15-QUESTION FINAL LEVEL TEST VIEW & GRADING
+    // ==========================================
+    function renderLevelTestView(container, { conceptId, levelNum }) {
+      const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
+      const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
+      const questions = level.testQuestions || [];
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-6">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-black uppercase tracking-widest text-indigo-600">${concept.title} • ${level.title}</span>
+                <h1 class="text-2xl font-black text-slate-800 mt-1">Final Level Assessment (${questions.length} Questions)</h1>
+                <p class="text-xs text-slate-500 mt-1">Answer all 15 questions below. Your score is recorded confidentially for you and your music teacher.</p>
+              </div>
+              <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold">
+                Cancel
+              </button>
+            </div>
+
+            <form id="level-test-form" onsubmit="event.preventDefault(); submitLevelTest('${concept.id}', ${level.level});" class="space-y-6">
+              ${questions.map((item, qIdx) => `
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <p class="font-bold text-sm text-slate-800">
+                    <span class="text-indigo-600 font-black mr-1.5">Q${qIdx + 1}.</span> ${item.q}
+                  </p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    ${item.options.map((opt, oIdx) => `
+                      <label class="flex items-center gap-2.5 p-3 rounded-xl bg-white border border-slate-200 hover:border-indigo-400 cursor-pointer text-xs font-semibold text-slate-700">
+                        <input type="radio" name="q_${qIdx}" value="${oIdx}" required class="accent-indigo-600">
+                        <span>${opt}</span>
+                      </label>
+                    `).join('')}
+                  </div>
+                </div>
+              `).join('')}
+
+              <button type="submit" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-lg text-sm transition-all">
+                Submit 15-Question Test & Claim Tokens
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    function submitLevelTest(conceptId, levelNum) {
+      const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
+      const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
+      const questions = level.testQuestions || [];
+      let score = 0;
+
+      questions.forEach((q, idx) => {
+        const selected = document.querySelector(`input[name="q_${idx}"]:checked`);
+        if (selected && Number(selected.value) === q.correct) {
+          score++;
+        }
+      });
+
+      const pct = Math.round((score / questions.length) * 100);
+      const earnedTokens = pct >= 80 ? 25 : pct >= 50 ? 15 : 5;
+
+      if (!state.testHistory) state.testHistory = [];
+      state.testHistory.unshift({
+        concept: concept.title,
+        level: level.title,
+        score: score,
+        total: questions.length,
+        percentage: pct,
+        date: new Date().toLocaleDateString()
+      });
+      if (!state.stats) state.stats = { tokens: 0, testsTaken: 0 };
+      state.stats.testsTaken = (state.stats.testsTaken || 0) + 1;
+      addTokens(earnedTokens);
+
+      showAppModal(
+        `Test Complete: ${score}/${questions.length} (${pct}%)`,
+        `Your mark has been confidentially recorded in your Student Markbook, and you earned +${earnedTokens} Tokens!`,
+        pct >= 50
+      );
+      app.navigate('studentDash');
+    }
+
+    // ==========================================
+    // CLASSROOM REWARDS SHOP VIEW
+    // ==========================================
     function renderShopView(container) {
-      const categories = ['All', 'Hardware', 'Instruments', 'Avatars', 'Equipment', 'Trophies'];
-      const filtered = currentShopCategory === 'All' 
-        ? shopCatalog 
-        : shopCatalog.filter(i => i.category === currentShopCategory);
+      const owned = state.inventory || [];
+      const currentTokens = (state.stats && state.stats.tokens) || 0;
 
       container.innerHTML = `
         <div class="space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span class="text-xs font-bold text-amber-600 uppercase tracking-widest">Classroom Economy</span>
-              <h1 class="text-3xl font-black text-slate-800">Classroom Rewards Shop</h1>
-              <p class="text-xs sm:text-sm text-slate-500">Spend tokens earned from quizzes and rhythm dictations on badges and gear.</p>
+              <span class="text-xs font-black uppercase tracking-widest text-amber-100">Token Exchange</span>
+              <h1 class="text-2xl sm:text-4xl font-black mt-1">Classroom Rewards Shop</h1>
+              <p class="text-xs sm:text-sm text-amber-50 mt-1">Redeem your hard-earned tokens for studio hardware, instruments, and trophies.</p>
             </div>
-            <div class="bg-amber-50 border border-amber-200 px-5 py-2.5 rounded-2xl flex items-center gap-3">
-              <i class="fa-solid fa-coins text-amber-500 text-xl animate-pulse"></i>
-              <div>
-                <span class="text-[10px] font-bold text-amber-800 uppercase block">Available Balance</span>
-                <span class="text-xl font-black text-amber-600">${state.stats.tokens || 0} Tokens</span>
+            <div class="bg-white/20 backdrop-blur-sm px-5 py-3 rounded-2xl border border-white/30 text-center shrink-0">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-amber-100">Your Balance</div>
+              <div class="text-2xl font-black text-white flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-coins text-amber-200"></i> ${currentTokens}
               </div>
             </div>
           </div>
 
-          <!-- Category Filter Pills -->
-          <div class="flex flex-wrap gap-2">
-            ${categories.map(cat => `
-              <button onclick="filterShopCategory('${cat}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${currentShopCategory === cat ? 'bg-indigo-600 text-white shadow' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}">
-                ${cat}
-              </button>
-            `).join('')}
-          </div>
-
-          <!-- Shop Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            ${filtered.map(item => {
-              const owned = (state.inventory || []).includes(item.id);
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            ${shopCatalog.map(item => {
+              const isOwned = owned.includes(item.id);
               return `
-                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
                   <div>
-                    <div class="flex items-center justify-between mb-4">
-                      <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl shadow-inner">
-                        <i class="fa-solid ${item.icon}"></i>
-                      </div>
-                      <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 uppercase tracking-wider">
-                        ${item.category}
+                    <div class="flex items-center justify-between mb-3">
+                      <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-700">${item.category}</span>
+                      <span class="text-xs font-black text-amber-600 flex items-center gap-1">
+                        <i class="fa-solid fa-coins text-amber-400"></i> ${item.cost}
                       </span>
                     </div>
-                    <h3 class="font-bold text-lg text-slate-800">${item.name}</h3>
-                    <p class="text-xs text-slate-500 leading-relaxed mt-1 mb-4">${item.desc}</p>
+                    <div class="w-12 h-12 rounded-2xl bg-slate-100 text-indigo-600 flex items-center justify-center text-xl mb-3">
+                      <i class="fa-solid ${item.icon}"></i>
+                    </div>
+                    <h3 class="font-black text-base text-slate-800">${item.name}</h3>
+                    <p class="text-xs text-slate-500 mt-1 leading-relaxed">${item.desc}</p>
                   </div>
-                  <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                    <span class="font-black text-amber-600 text-base flex items-center gap-1.5">
-                      <i class="fa-solid fa-coins text-amber-500"></i> ${item.cost}
-                    </span>
-                    ${owned ? `
-                      <span class="px-3 py-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 font-bold text-xs rounded-xl flex items-center gap-1">
-                        <i class="fa-solid fa-check"></i> Owned
-                      </span>
+                  <div class="mt-5 pt-3 border-t border-slate-100">
+                    ${isOwned ? `
+                      <button disabled class="w-full py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-black rounded-xl text-xs">
+                        <i class="fa-solid fa-check mr-1"></i> Owned
+                      </button>
                     ` : `
-                      <button onclick="buyShopItem('${item.id}', ${item.cost})" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm">
-                        Unlock Item
+                      <button onclick="buyShopItem('${item.id}')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs shadow-sm transition-all">
+                        Redeem (${item.cost} Tokens)
                       </button>
                     `}
                   </div>
@@ -2520,97 +2594,570 @@
       `;
     }
 
-    function filterShopCategory(cat) {
-      currentShopCategory = cat;
-      renderShopView(document.getElementById('app-viewport'));
-    }
-
-    function buyShopItem(itemId, cost) {
-      if ((state.stats.tokens || 0) < cost) {
-        showAppModal('Insufficient Tokens', 'You need more tokens to unlock this item. Complete challenges or level quizzes to earn more!', false);
-        return;
-      }
-      state.stats.tokens -= cost;
+    function buyShopItem(itemId) {
+      const item = shopCatalog.find(i => i.id === itemId);
+      if (!item) return;
       if (!state.inventory) state.inventory = [];
-      state.inventory.push(itemId);
-      saveUserState();
-      renderShopView(document.getElementById('app-viewport'));
-      showAppModal('Reward Unlocked! 🎁', 'Item has been added to your inventory.', true);
-    }
+      if (state.inventory.includes(item.id)) return;
 
-    // ==========================================
-    // CONFIDENTIAL STUDENT TESTS VIEW
-    // ==========================================
-    function renderStudentTestsView(container) {
-      if (!app.currentUser || app.currentUser.role !== 'student') {
-        app.navigate('home');
+      const bal = (state.stats && state.stats.tokens) || 0;
+      if (bal < item.cost) {
+        showAppModal('Not Enough Tokens', `You need ${item.cost} tokens for ${item.name}, and you currently have ${bal}. Complete lessons and tests to earn more!`, false);
         return;
       }
 
-      const tests = state.testHistory || [];
+      state.stats.tokens = bal - item.cost;
+      state.inventory.push(item.id);
+      saveUserState();
+      showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
+      renderShopView(document.getElementById('app-viewport'));
+    }
 
+    // ==========================================
+    // LOGIN, STUDENT DASHBOARD & TEACHER MARKBOOK
+    // ==========================================
+    function renderLoginView(container) {
       container.innerHTML = `
-        <div class="space-y-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <h1 class="text-3xl font-black text-slate-800">My Assessment Results</h1>
-              <p class="text-xs sm:text-sm text-slate-500">Confidential mark record visible only to you and your teacher</p>
+        <div class="max-w-lg mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-lg space-y-6">
+          <div class="text-center space-y-1">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl mx-auto mb-2 shadow">
+              <i class="fa-solid fa-music"></i>
             </div>
-            <button onclick="app.navigate('studentDash')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl">
-              &larr; Back to Dashboard
-            </button>
+            <h1 class="text-2xl font-black text-slate-800">Classroom Login</h1>
+            <p class="text-xs text-slate-500">Sign in to access lessons, rhythm games, shop rewards, and assessments.</p>
           </div>
 
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
-            ${tests.length === 0 ? `
-              <div class="text-center py-8 text-slate-400">
-                <i class="fa-solid fa-clipboard-check text-4xl mb-2 text-slate-300"></i>
-                <p class="text-sm">No completed tests recorded yet. Start exploring the concepts to take your first quiz!</p>
+          <form onsubmit="event.preventDefault(); handleUserLogin();" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Portal Role</label>
+              <select id="login-role" onchange="toggleTeacherPasscodeField()" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                <option value="student">Student</option>
+                <option value="teacher">Music Teacher</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">First Name</label>
+                <input type="text" id="login-firstname" required placeholder="e.g. Alex" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
               </div>
-            ` : `
-              <div class="divide-y divide-slate-100">
-                ${tests.map(t => `
-                  <div class="py-3 flex items-center justify-between">
-                    <div>
-                      <div class="font-bold text-slate-800 text-sm">${t.title || 'Music Theory Quiz'}</div>
-                      <div class="text-[10px] text-slate-400">${new Date(t.date).toLocaleDateString()}</div>
-                    </div>
-                    <div class="text-right">
-                      <span class="font-black text-indigo-600 text-base">${t.score} / ${t.total}</span>
-                      <span class="text-xs text-slate-400 block">${Math.round((t.score / t.total) * 100)}%</span>
-                    </div>
-                  </div>
-                `).join('')}
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Surname</label>
+                <input type="text" id="login-surname" required placeholder="e.g. Taylor" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
               </div>
-            `}
-          </div>
+            </div>
+
+            <div id="student-fields-group" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Class</label>
+                <select id="login-class" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                  <option value="7A">7A</option><option value="7B">7B</option><option value="7C">7C</option><option value="7D">7D</option>
+                  <option value="7E">7E</option><option value="7F">7F</option><option value="7G">7G</option><option value="7H">7H</option>
+                  <option value="7I">7I</option><option value="7J">7J</option>
+                  <option value="8A">8A</option><option value="8B">8B</option><option value="8C">8C</option><option value="8D">8D</option>
+                  <option value="8E">8E</option><option value="8F">8F</option><option value="8G">8G</option><option value="8H">8H</option>
+                  <option value="8I">8I</option><option value="8J">8J</option>
+                  <option value="Yr 9">Yr 9</option><option value="Yr 10">Yr 10</option>
+                  <option value="Yr 11">Yr 11</option><option value="Yr 12">Yr 12</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Music Teacher</label>
+                <select id="login-teacher" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                  <option value="Mr B">Mr B</option>
+                  <option value="Mr H">Mr H</option>
+                  <option value="Mr T">Mr T</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="teacher-passcode-group" class="hidden">
+              <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Staff Access Code</label>
+              <input type="password" id="login-passcode" placeholder="Enter staff code (music123)" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-md text-sm transition-all">
+              Enter Classroom Portal &rarr;
+            </button>
+          </form>
         </div>
       `;
     }
 
+    function toggleTeacherPasscodeField() {
+      const role = document.getElementById('login-role').value;
+      const stuGroup = document.getElementById('student-fields-group');
+      const passGroup = document.getElementById('teacher-passcode-group');
+      if (role === 'teacher') {
+        if (stuGroup) stuGroup.classList.add('hidden');
+        if (passGroup) passGroup.classList.remove('hidden');
+      } else {
+        if (stuGroup) stuGroup.classList.remove('hidden');
+        if (passGroup) passGroup.classList.add('hidden');
+      }
+    }
+
+    function handleUserLogin() {
+      const role = document.getElementById('login-role').value;
+      const firstName = document.getElementById('login-firstname').value.trim();
+      const surname = document.getElementById('login-surname').value.trim();
+      if (!firstName || !surname) return;
+
+      if (role === 'teacher') {
+        const code = (document.getElementById('login-passcode').value || '').trim();
+        if (code !== 'music123' && code !== 'boncepts') {
+          showAppModal('Invalid Staff Code', 'Please enter the teacher staff access code (music123).', false);
+          return;
+        }
+        const key = `teacher_${firstName.toLowerCase()}_${surname.toLowerCase()}`.replace(/\s+/g, '_');
+        app.currentUser = { key, firstName, surname, role: 'teacher', class: 'Staff', teacher: `${firstName} ${surname}` };
+        saveUserState();
+        app.navigate('teacherDash');
+        return;
+      }
+
+      const studentClass = document.getElementById('login-class').value;
+      const teacher = document.getElementById('login-teacher').value;
+      const key = `student_${firstName.toLowerCase()}_${surname.toLowerCase()}`.replace(/\s+/g, '_');
+
+      const existingUsers = getAllUserRecords();
+      const existing = existingUsers[key];
+
+      app.currentUser = {
+        key,
+        firstName,
+        surname,
+        class: studentClass,
+        teacher,
+        role: 'student'
+      };
+
+      if (existing) {
+        state = {
+          stats: existing.stats || { tokens: 10, testsTaken: 0 },
+          inventory: existing.inventory || [],
+          testHistory: existing.testHistory || [],
+          completedLessons: existing.completedLessons || []
+        };
+      } else {
+        state = {
+          stats: { tokens: 10, testsTaken: 0 },
+          inventory: [],
+          testHistory: [],
+          completedLessons: []
+        };
+      }
+
+      saveUserState();
+      app.navigate('studentDash');
+    }
+
+    function renderStudentDash(container) {
+      const u = app.currentUser;
+      const toks = (state.stats && state.stats.tokens) || 0;
+      const history = state.testHistory || [];
+      const ownedItems = (state.inventory || []).map(id => shopCatalog.find(i => i.id === id)).filter(Boolean);
+
+      container.innerHTML = `
+        <div class="space-y-8">
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Student Portal • Class ${u.class} (${u.teacher})</span>
+              <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">Welcome back, ${u.firstName}!</h1>
+              <p class="text-xs text-slate-500 mt-1">Your assessment marks are private between you and ${u.teacher}.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <button onclick="app.navigate('conceptsHub')" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl text-xs shadow">
+                <i class="fa-solid fa-book-open mr-1"></i> Study Concepts
+              </button>
+              <button onclick="app.navigate('shop')" class="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow">
+                <i class="fa-solid fa-store mr-1"></i> Rewards Shop (${toks})
+              </button>
+            </div>
+          </div>
+
+          <!-- Private Assessment Marks & Owned Items -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-lock text-indigo-600"></i> My Confidential Assessment Marks
+              </h2>
+              ${history.length === 0 ? `
+                <p class="text-xs text-slate-400 py-4">No 15-question level tests completed yet. Open any Concept Level to take its Final Level Test!</p>
+              ` : `
+                <div class="divide-y divide-slate-100">
+                  ${history.map(h => `
+                    <div class="py-3 flex items-center justify-between text-xs">
+                      <div>
+                        <div class="font-bold text-slate-800">${h.concept} — ${h.level}</div>
+                        <div class="text-[11px] text-slate-400">${h.date}</div>
+                      </div>
+                      <span class="px-3 py-1 rounded-full font-black ${h.percentage >= 50 ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}">
+                        ${h.score}/${h.total} (${h.percentage}%)
+                      </span>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-bag-shopping text-amber-500"></i> My Redeemed Gear (${ownedItems.length})
+              </h2>
+              ${ownedItems.length === 0 ? `
+                <p class="text-xs text-slate-400 py-4">Your locker is empty. Visit the Rewards Shop to spend your ${toks} tokens!</p>
+              ` : `
+                <div class="grid grid-cols-2 gap-3">
+                  ${ownedItems.map(it => `
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                        <i class="fa-solid ${it.icon}"></i>
+                      </div>
+                      <div>
+                        <div class="font-bold text-xs text-slate-800">${it.name}</div>
+                        <div class="text-[10px] text-slate-400">${it.category}</div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+            </div>
+          </div>
+
+          ${renderLeaderboardMarkup()}
+        </div>
+      `;
+      refreshLeaderboardTableInPlace();
+    }
+
+    function renderStudentTestsView(container) {
+      renderStudentDash(container);
+    }
+
+    let teacherFilters = {
+      classFilter: 'ALL',
+      teacherFilter: 'ALL'
+    };
+
+    function renderTeacherDash(container) {
+      let students = getDeduplicatedStudents();
+      students.sort((a, b) => (a.class || '').localeCompare(b.class || '') || (a.surname || '').localeCompare(b.surname || ''));
+
+      const filteredStudents = students.filter(s => {
+        const matchClass = teacherFilters.classFilter === 'ALL' || s.class === teacherFilters.classFilter;
+        const matchTeacher = teacherFilters.teacherFilter === 'ALL' || (s.teacher || 'Mr B') === teacherFilters.teacherFilter;
+        return matchClass && matchTeacher;
+      });
+
+      const classOptions = ['ALL', '7A', '7B', '7C', '7D', '7E', '7F', '7G', '7H', '7I', '7J', '8A', '8B', '8C', '8D', '8E', '8F', '8G', '8H', '8I', '8J', 'Yr 9', 'Yr 10', 'Yr 11', 'Yr 12'];
+
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-black uppercase tracking-widest text-amber-400">Staff Markbook & Roster</span>
+              <h1 class="text-2xl sm:text-3xl font-black mt-1">Teacher Assessment & Progress Markbook</h1>
+              <p class="text-xs text-slate-300 mt-1">Track module completion checklists, confidential 15-question test scores, and student token balances.</p>
+            </div>
+            <button onclick="app.navigate('conceptsHub')" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow shrink-0">
+              Preview Student Lessons
+            </button>
+          </div>
+
+          <!-- Filter Bar -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-black uppercase text-slate-500">Class:</label>
+                <select onchange="teacherFilters.classFilter = this.value; renderTeacherDash(document.getElementById('app-viewport'));" class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                  ${classOptions.map(c => `<option value="${c}" ${teacherFilters.classFilter === c ? 'selected' : ''}>${c === 'ALL' ? 'All Classes' : c}</option>`).join('')}
+                </select>
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-black uppercase text-slate-500">Teacher:</label>
+                <select onchange="teacherFilters.teacherFilter = this.value; renderTeacherDash(document.getElementById('app-viewport'));" class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="ALL" ${teacherFilters.teacherFilter === 'ALL' ? 'selected' : ''}>All Teachers</option>
+                  <option value="Mr B" ${teacherFilters.teacherFilter === 'Mr B' ? 'selected' : ''}>Mr B</option>
+                  <option value="Mr H" ${teacherFilters.teacherFilter === 'Mr H' ? 'selected' : ''}>Mr H</option>
+                  <option value="Mr T" ${teacherFilters.teacherFilter === 'Mr T' ? 'selected' : ''}>Mr T</option>
+                </select>
+              </div>
+            </div>
+            <span class="text-xs font-bold text-slate-500">Showing ${filteredStudents.length} of ${students.length} students</span>
+          </div>
+
+          <!-- Student Progress & Markbook Cards -->
+          ${filteredStudents.length === 0 ? `
+            <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center text-xs text-slate-400">
+              No student records match the selected filters.
+            </div>
+          ` : `
+            <div class="space-y-4">
+              ${filteredStudents.map(s => {
+                const completedLessons = Array.isArray(s.completedLessons) ? s.completedLessons : [];
+                const testHistory = Array.isArray(s.testHistory) ? s.testHistory : [];
+                const tokens = (s.stats && s.stats.tokens) || 0;
+
+                return `
+                  <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                    <!-- Student Header Row -->
+                    <div class="p-5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white font-black flex items-center justify-center text-sm shadow-sm">
+                          ${(s.firstName || 'S')[0]}${(s.surname || '')[0] || ''}
+                        </div>
+                        <div>
+                          <h3 class="font-black text-base text-slate-800">${s.firstName} ${s.surname}</h3>
+                          <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-semibold">
+                            <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-bold">Class ${s.class}</span>
+                            <span>&bull; Teacher: <strong>${s.teacher || 'Mr B'}</strong></span>
+                            <span>&bull; <span class="text-amber-600 font-black"><i class="fa-solid fa-coins text-amber-400"></i> ${tokens} Tokens</span></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button onclick="openEditStudentModal('${s.key}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-colors">
+                          <i class="fa-solid fa-pen mr-1"></i> Edit
+                        </button>
+                        <button onclick="openDeleteStudentModal('${s.key}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition-colors">
+                          <i class="fa-solid fa-trash mr-1"></i> Delete
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Two-Column Body: Module Checklist & Test Results -->
+                    <div class="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      <!-- Left: 6-Concept Module Completion Checklist (7 cols) -->
+                      <div class="lg:col-span-7 space-y-3">
+                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <i class="fa-solid fa-list-check text-indigo-600"></i> Module & Lesson Completion Checklist
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          ${conceptsCurriculum.map(concept => {
+                            let totalLessonsInConcept = 0;
+                            let viewedCount = 0;
+                            concept.levels.forEach(lvl => {
+                              lvl.lessons.forEach(les => {
+                                totalLessonsInConcept++;
+                                const lKey = `${concept.id}_lvl${lvl.level}_les${les.lessonNum}`;
+                                if (completedLessons.includes(lKey)) viewedCount++;
+                              });
+                            });
+                            const isModuleComplete = totalLessonsInConcept > 0 && viewedCount >= totalLessonsInConcept;
+                            const isStarted = viewedCount > 0 && !isModuleComplete;
+
+                            return `
+                              <div class="p-3 rounded-2xl border ${isModuleComplete ? 'bg-emerald-50/70 border-emerald-200' : isStarted ? 'bg-amber-50/60 border-amber-200' : 'bg-slate-50 border-slate-200'} flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                  <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0 ${
+                                    isModuleComplete
+                                      ? 'bg-emerald-500 text-white'
+                                      : isStarted
+                                      ? 'bg-amber-400 text-slate-950'
+                                      : 'bg-white border border-slate-300 text-slate-300'
+                                  }">
+                                    <i class="fa-solid ${isModuleComplete ? 'fa-check' : isStarted ? 'fa-spinner' : 'fa-minus'}"></i>
+                                  </span>
+                                  <div class="truncate">
+                                    <div class="text-xs font-bold text-slate-800 truncate">${concept.title}</div>
+                                    <div class="text-[10px] font-semibold ${isModuleComplete ? 'text-emerald-700' : isStarted ? 'text-amber-700' : 'text-slate-400'}">
+                                      ${viewedCount} / ${totalLessonsInConcept} Lessons Viewed
+                                    </div>
+                                  </div>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
+                                  isModuleComplete
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : isStarted
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-slate-200/70 text-slate-500'
+                                }">
+                                  ${isModuleComplete ? 'Done' : isStarted ? 'In Progress' : 'Not Started'}
+                                </span>
+                              </div>
+                            `;
+                          }).join('')}
+                        </div>
+                      </div>
+
+                      <!-- Right: Confidential 15-Question Test Results (5 cols) -->
+                      <div class="lg:col-span-5 space-y-3">
+                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                          <i class="fa-solid fa-file-circle-check text-emerald-600"></i> 15-Question Level Test Results (${testHistory.length})
+                        </h4>
+                        ${testHistory.length === 0 ? `
+                          <div class="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-xs text-slate-400 text-center">
+                            No level tests submitted yet.
+                          </div>
+                        ` : `
+                          <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                            ${testHistory.map(t => `
+                              <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs">
+                                <div>
+                                  <div class="font-bold text-slate-800">${t.concept}</div>
+                                  <div class="text-[10px] text-slate-500">${t.level} &bull; ${t.date}</div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-xl font-black shrink-0 ${
+                                  t.percentage >= 80
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : t.percentage >= 50
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-rose-100 text-rose-800'
+                                }">
+                                  ${t.score}/${t.total} (${t.percentage}%)
+                                </span>
+                              </div>
+                            `).join('')}
+                          </div>
+                        `}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function openEditStudentModal(key) {
+      const all = getAllUserRecords();
+      const s = all[key];
+      if (!s) return;
+      document.getElementById('edit-student-key').value = key;
+      document.getElementById('edit-student-firstname').value = s.firstName || '';
+      document.getElementById('edit-student-surname').value = s.surname || '';
+      document.getElementById('edit-student-class').value = s.class || '7A';
+      document.getElementById('edit-student-teacher').value = s.teacher || 'Mr B';
+      document.getElementById('edit-student-tokens').value = (s.stats && s.stats.tokens) || 0;
+      document.getElementById('edit-student-modal').classList.remove('hidden');
+    }
+
+    function closeEditStudentModal() {
+      document.getElementById('edit-student-modal').classList.add('hidden');
+    }
+
+    function saveEditedStudent() {
+      const key = document.getElementById('edit-student-key').value;
+      const all = getAllUserRecords();
+      const existing = all[key];
+      if (!existing) return;
+
+      existing.firstName = document.getElementById('edit-student-firstname').value.trim() || existing.firstName;
+      existing.surname = document.getElementById('edit-student-surname').value.trim() || existing.surname;
+      existing.class = document.getElementById('edit-student-class').value;
+      existing.teacher = document.getElementById('edit-student-teacher').value;
+      if (!existing.stats) existing.stats = { tokens: 0, testsTaken: 0 };
+      existing.stats.tokens = Number(document.getElementById('edit-student-tokens').value) || 0;
+
+      try {
+        all[key] = existing;
+        localStorage.setItem('boncepts_users_db', JSON.stringify(all));
+      } catch (e) {}
+
+      if (window.saveUserRecordToCloud) {
+        window.saveUserRecordToCloud(key, existing);
+      }
+
+      closeEditStudentModal();
+      updateGlobalLeaderboard();
+      renderTeacherDash(document.getElementById('app-viewport'));
+    }
+
+    function openDeleteStudentModal(key) {
+      const all = getAllUserRecords();
+      const s = all[key];
+      if (!s) return;
+      document.getElementById('delete-student-key').value = key;
+      document.getElementById('delete-student-name').textContent = `${s.firstName} ${s.surname}`;
+      document.getElementById('delete-student-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteStudentModal() {
+      document.getElementById('delete-student-modal').classList.add('hidden');
+    }
+
+    function confirmDeleteStudent() {
+      const key = document.getElementById('delete-student-key').value;
+      if (!key) return;
+      try {
+        const all = getAllUserRecords();
+        delete all[key];
+        localStorage.setItem('boncepts_users_db', JSON.stringify(all));
+      } catch (e) {}
+
+      if (window.cachedCloudUsers) delete window.cachedCloudUsers[key];
+      if (window.deleteUserRecordFromCloud) window.deleteUserRecordFromCloud(key);
+
+      closeDeleteStudentModal();
+      updateGlobalLeaderboard();
+      renderTeacherDash(document.getElementById('app-viewport'));
+    }
+
     // ==========================================
-    // APPLICATION STARTUP BOOTSTRAP
+    // OVERALL STUDENT LEADERBOARD MARKUP
+    // ==========================================
+    function renderLeaderboardMarkup() {
+      return `
+        <section id="overall-student-leaderboard-section" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-500"></i> Overall Classroom Token Leaderboard
+              </h2>
+              <p class="text-xs text-slate-500">Live token standings synced across all logged-in devices.</p>
+            </div>
+            <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold self-start sm:self-auto">
+              Live Sync Active
+            </span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th class="px-4 py-3">Rank</th>
+                  <th class="px-4 py-3">Student</th>
+                  <th class="px-4 py-3">Class</th>
+                  <th class="px-4 py-3 text-right">Tokens</th>
+                </tr>
+              </thead>
+              <tbody id="overall-leaderboard-tbody" class="divide-y divide-slate-100 text-sm">
+                <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-xs">Loading live classroom standings...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    // ==========================================
+    // APPLICATION BOOTSTRAP ON WINDOW LOAD
     // ==========================================
     window.onload = function() {
       try {
         const savedSession = localStorage.getItem('boncepts_active_session');
         if (savedSession) {
-          app.currentUser = JSON.parse(savedSession);
-          const users = getAllUserRecords();
-          if (users[app.currentUser.key]) {
-            const u = users[app.currentUser.key];
-            state.stats = u.stats || { tokens: 10, testsTaken: 0 };
-            state.inventory = u.inventory || [];
-            state.testHistory = u.testHistory || [];
-            state.completedLessons = u.completedLessons || [];
+          const parsed = JSON.parse(savedSession);
+          if (parsed && parsed.key) {
+            app.currentUser = parsed;
+            const db = getAllUserRecords();
+            if (db[parsed.key]) {
+              state = {
+                stats: db[parsed.key].stats || { tokens: 10, testsTaken: 0 },
+                inventory: db[parsed.key].inventory || [],
+                testHistory: db[parsed.key].testHistory || [],
+                completedLessons: db[parsed.key].completedLessons || []
+              };
+            }
           }
         }
-      } catch (e) {
-        console.warn("Session restore:", e.message);
-      }
+      } catch (e) {}
 
-      app.navigate(app.currentUser ? (app.currentUser.role === 'teacher' ? 'teacherDash' : 'studentDash') : 'home');
+      updateNavBar();
       updateGlobalLeaderboard();
+      app.navigate('home');
     };
   </script>
 </body>

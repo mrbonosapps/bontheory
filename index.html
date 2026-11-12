@@ -3938,12 +3938,22 @@
 
     let teacherFilters = {
       classFilter: 'ALL',
-      teacherFilter: 'ALL'
+      teacherFilter: 'ALL',
+      sortBy: 'class'
     };
 
     function renderTeacherDash(container) {
       let students = getDeduplicatedStudents();
-      students.sort((a, b) => (a.class || '').localeCompare(b.class || '') || (a.surname || '').localeCompare(b.surname || ''));
+      students.sort((a, b) => {
+        if (teacherFilters.sortBy === 'tokens') {
+          return ((b.stats && b.stats.tokens) || 0) - ((a.stats && a.stats.tokens) || 0);
+        } else if (teacherFilters.sortBy === 'date') {
+          const dA = a.testHistory && a.testHistory.length > 0 ? new Date(a.testHistory[0].date).getTime() || 0 : 0;
+          const dB = b.testHistory && b.testHistory.length > 0 ? new Date(b.testHistory[0].date).getTime() || 0 : 0;
+          return dB - dA;
+        }
+        return (a.class || '').localeCompare(b.class || '') || (a.surname || '').localeCompare(b.surname || '');
+      });
 
       const filteredStudents = students.filter(s => {
         const matchClass = teacherFilters.classFilter === 'ALL' || s.class === teacherFilters.classFilter;
@@ -3982,6 +3992,14 @@
                   <option value="Mr B" ${teacherFilters.teacherFilter === 'Mr B' ? 'selected' : ''}>Mr B</option>
                   <option value="Mr H" ${teacherFilters.teacherFilter === 'Mr H' ? 'selected' : ''}>Mr H</option>
                   <option value="Mr T" ${teacherFilters.teacherFilter === 'Mr T' ? 'selected' : ''}>Mr T</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-black uppercase text-slate-500">Sort By:</label>
+                <select onchange="teacherFilters.sortBy = this.value; renderTeacherDash(document.getElementById('app-viewport'));" class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="class" ${teacherFilters.sortBy === 'class' ? 'selected' : ''}>Class (A-Z)</option>
+                  <option value="tokens" ${teacherFilters.sortBy === 'tokens' ? 'selected' : ''}>Tokens Ranking (High-Low)</option>
+                  <option value="date" ${teacherFilters.sortBy === 'date' ? 'selected' : ''}>Latest Test Date</option>
                 </select>
               </div>
             </div>

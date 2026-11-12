@@ -3624,6 +3624,61 @@
       `;
     }
 
+    function renderShopView(container) {
+      const toks = (window.state.stats && window.state.stats.tokens) || 0;
+      const inv = window.state.inventory || [];
+      
+      container.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <span class="text-xs font-black uppercase tracking-widest text-amber-400">Classroom Rewards</span>
+              <h1 class="text-2xl sm:text-3xl font-black mt-1">Music Gear Shop</h1>
+              <p class="text-xs text-slate-300 mt-1">Spend your hard-earned tokens on exclusive virtual gear and legendary relics.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 shrink-0">
+              <span class="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-black text-sm shadow-md">
+                <i class="fa-solid fa-coins mr-1.5"></i> ${toks} Tokens
+              </span>
+              <button onclick="openCurrentPortal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-sm shadow-md transition-colors">
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            ${shopCatalog.map(item => {
+              const isOwned = inv.includes(item.id);
+              const canAfford = toks >= item.cost;
+              return `
+                <div class="bg-white rounded-3xl p-5 border ${isOwned ? 'border-emerald-400 bg-emerald-50/20' : 'border-slate-200'} flex flex-col justify-between h-full shadow-sm hover:shadow-md transition-shadow">
+                  <div>
+                    <div class="w-14 h-14 rounded-2xl ${isOwned ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'} flex items-center justify-center text-2xl mb-4">
+                      <i class="fa-solid ${item.icon}"></i>
+                    </div>
+                    <div class="text-[10px] font-black uppercase tracking-widest ${isOwned ? 'text-emerald-500' : 'text-slate-400'} mb-1.5">${item.category}</div>
+                    <h3 class="font-black text-slate-800 leading-tight mb-2">${item.name}</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">${item.desc}</p>
+                  </div>
+                  <div class="mt-5 pt-4 border-t border-slate-100">
+                    ${isOwned ? `
+                      <button disabled class="w-full py-3 rounded-xl bg-emerald-100 text-emerald-700 font-black text-xs cursor-not-allowed">
+                        <i class="fa-solid fa-check mr-1"></i> Owned In Locker
+                      </button>
+                    ` : `
+                      <button onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''} class="w-full py-3 rounded-xl font-black text-xs transition-colors ${canAfford ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}">
+                        ${canAfford ? `<i class="fa-solid fa-cart-shopping mr-1.5"></i> Unlock for ${item.cost} Tokens` : `<i class="fa-solid fa-lock mr-1.5"></i> Need ${item.cost} Tokens`}
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     function buyShopItem(itemId) {
       const item = shopCatalog.find(i => i.id === itemId);
       if (!item) return;

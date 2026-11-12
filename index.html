@@ -324,7 +324,7 @@
   <!-- CURRICULUM DATA & CORE LOGIC SCRIPT -->
   <script>
     // ==========================================
-    // GLOBAL APPLICATION STATE & ROUTER
+    // GLOBAL STATE, NAVIGATION & AUDIO ENGINE
     // ==========================================
     window.state = {
       stats: { tokens: 10, testsTaken: 0 },
@@ -336,114 +336,130 @@
     window.app = {
       currentUser: null,
       currentView: 'home',
-      currentParams: null,
       navigate(view, params = null) {
-        const protectedViews = [
-          'conceptsHub', 'conceptDetail', 'levelDetail', 'lessonDetail',
-          'levelTest', 'shop', 'rhythmModule', 'dictationChallenge',
-          'studentDash', 'studentTests', 'teacherDash'
-        ];
-        if (protectedViews.includes(view) && !this.currentUser) {
-          showAppModal('Login Required', 'Please log in as a student or teacher to unlock interactive lessons, games, the shop, and 15-question tests.', false);
-          view = 'login';
-          params = null;
-        }
         this.currentView = view;
-        this.currentParams = params;
+        const viewport = document.getElementById('app-viewport');
+        if (!viewport) return;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         updateNavBar();
-        const container = document.getElementById('app-viewport');
-        if (!container) return;
 
         switch (view) {
-          case 'home': renderHomeView(container); break;
-          case 'login': renderLoginView(container); break;
-          case 'conceptsHub': renderConceptsHub(container); break;
-          case 'conceptDetail': renderConceptDetail(container, params); break;
-          case 'levelDetail': renderLevelDetail(container, params); break;
-          case 'lessonDetail': renderLessonDetail(container, params); break;
-          case 'levelTest': renderLevelTestView(container, params); break;
-          case 'shop': renderShopView(container); break;
-          case 'rhythmModule': renderRhythmModule(container); break;
-          case 'dictationChallenge': renderDictationChallenge(container); break;
-          case 'studentDash': renderStudentDash(container); break;
-          case 'studentTests': renderStudentTestsView(container); break;
-          case 'teacherDash': renderTeacherDash(container); break;
-          default: renderHomeView(container);
+          case 'home':
+            renderHomeView(viewport);
+            break;
+          case 'login':
+            renderLoginView(viewport);
+            break;
+          case 'studentDash':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderStudentDash(viewport);
+            break;
+          case 'teacherDash':
+            if (!this.currentUser || this.currentUser.role !== 'teacher') return renderLoginView(viewport);
+            renderTeacherDash(viewport);
+            break;
+          case 'conceptsHub':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderConceptsHub(viewport);
+            break;
+          case 'conceptDetail':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderConceptDetail(viewport, params);
+            break;
+          case 'levelDetail':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderLevelDetail(viewport, params);
+            break;
+          case 'lessonDetail':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderLessonDetail(viewport, params);
+            break;
+          case 'levelTest':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderLevelTestView(viewport, params);
+            break;
+          case 'shop':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderShopView(viewport);
+            break;
+          case 'rhythmModule':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderRhythmModule(viewport);
+            break;
+          case 'dictationChallenge':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderDictationChallenge(viewport);
+            break;
+          default:
+            renderHomeView(viewport);
         }
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     };
 
+    function updateNavBar() {
+      const loginBtn = document.getElementById('nav-login-btn');
+      const userProfile = document.getElementById('nav-user-profile');
+      const tokenBadge = document.getElementById('nav-token-badge');
+      const userNameEl = document.getElementById('nav-user-name');
+      const userRoleEl = document.getElementById('nav-user-role');
+      const userTokensEl = document.getElementById('nav-user-tokens');
+
+      if (app.currentUser) {
+        if (loginBtn) loginBtn.classList.add('hidden');
+        if (userProfile) {
+          userProfile.classList.remove('hidden');
+          userProfile.classList.add('flex');
+        }
+        if (userNameEl) userNameEl.textContent = `${app.currentUser.firstName} ${app.currentUser.surname}`;
+        if (userRoleEl) {
+          userRoleEl.textContent = app.currentUser.role === 'teacher'
+            ? 'Music Staff'
+            : `Class ${app.currentUser.class} • ${app.currentUser.teacher || 'Mr B'}`;
+        }
+        if (tokenBadge) {
+          if (app.currentUser.role === 'student') {
+            tokenBadge.classList.remove('hidden');
+            tokenBadge.classList.add('flex');
+            if (userTokensEl) userTokensEl.textContent = (state.stats && state.stats.tokens) || 0;
+          } else {
+            tokenBadge.classList.add('hidden');
+          }
+        }
+      } else {
+        if (loginBtn) loginBtn.classList.remove('hidden');
+        if (userProfile) {
+          userProfile.classList.add('hidden');
+          userProfile.classList.remove('flex');
+        }
+        if (tokenBadge) {
+          tokenBadge.classList.add('hidden');
+          tokenBadge.classList.remove('flex');
+        }
+      }
+    }
+
     function protectedNavigate(view, params = null) {
+      if (!app.currentUser) {
+        showAppModal('Login Required', 'Please log in with your Student or Teacher account before accessing lessons, games, or the shop.', false);
+        app.navigate('login');
+        return;
+      }
       app.navigate(view, params);
     }
 
     function openCurrentPortal() {
       if (!app.currentUser) {
         app.navigate('login');
-      } else {
-        app.navigate(app.currentUser.role === 'teacher' ? 'teacherDash' : 'studentDash');
+        return;
       }
+      app.navigate(app.currentUser.role === 'teacher' ? 'teacherDash' : 'studentDash');
     }
 
     function logoutUser() {
       app.currentUser = null;
-      state = { stats: { tokens: 10, testsTaken: 0 }, inventory: [], testHistory: [], completedLessons: [] };
       try { localStorage.removeItem('boncepts_active_session'); } catch (e) {}
       updateNavBar();
       app.navigate('home');
-    }
-
-    function updateNavBar() {
-      const loginBtn = document.getElementById('nav-login-btn');
-      const profileBox = document.getElementById('nav-user-profile');
-      const tokenBadge = document.getElementById('nav-token-badge');
-      const nameEl = document.getElementById('nav-user-name');
-      const roleEl = document.getElementById('nav-user-role');
-      const tokEl = document.getElementById('nav-user-tokens');
-
-      if (app.currentUser) {
-        if (loginBtn) loginBtn.classList.add('hidden');
-        if (profileBox) {
-          profileBox.classList.remove('hidden');
-          profileBox.classList.add('flex');
-        }
-        if (nameEl) nameEl.textContent = `${app.currentUser.firstName} ${app.currentUser.surname}`;
-        if (roleEl) roleEl.textContent = app.currentUser.role === 'teacher' ? 'Teacher Staff' : `Class ${app.currentUser.class}`;
-        if (app.currentUser.role === 'student' && tokenBadge) {
-          tokenBadge.classList.remove('hidden');
-          tokenBadge.classList.add('flex');
-          if (tokEl) tokEl.textContent = (state.stats && state.stats.tokens) || 0;
-        } else if (tokenBadge) {
-          tokenBadge.classList.add('hidden');
-        }
-      } else {
-        if (loginBtn) loginBtn.classList.remove('hidden');
-        if (profileBox) profileBox.classList.add('hidden');
-        if (tokenBadge) tokenBadge.classList.add('hidden');
-      }
-    }
-
-    function showAppModal(title, body, isSuccess = true) {
-      const modal = document.getElementById('app-modal');
-      const iconBox = document.getElementById('app-modal-icon');
-      const titleEl = document.getElementById('app-modal-title');
-      const bodyEl = document.getElementById('app-modal-body');
-      if (!modal) return;
-      if (titleEl) titleEl.textContent = title;
-      if (bodyEl) bodyEl.textContent = body;
-      if (iconBox) {
-        iconBox.className = isSuccess
-          ? 'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-emerald-100 text-emerald-600'
-          : 'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-amber-100 text-amber-600';
-        iconBox.innerHTML = isSuccess ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-circle-info"></i>';
-      }
-      modal.classList.remove('hidden');
-    }
-
-    function closeAppModal() {
-      const modal = document.getElementById('app-modal');
-      if (modal) modal.classList.add('hidden');
     }
 
     function scrollToStudentLeaderboard() {
@@ -459,90 +475,141 @@
       }
     }
 
+    function showAppModal(title, body, isSuccess = true) {
+      const modal = document.getElementById('app-modal');
+      const icon = document.getElementById('app-modal-icon');
+      const titleEl = document.getElementById('app-modal-title');
+      const bodyEl = document.getElementById('app-modal-body');
+      if (!modal) return;
+      if (titleEl) titleEl.textContent = title;
+      if (bodyEl) bodyEl.textContent = body;
+      if (icon) {
+        icon.className = isSuccess
+          ? 'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-emerald-100 text-emerald-600'
+          : 'w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-xl bg-amber-100 text-amber-600';
+        icon.innerHTML = isSuccess ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-circle-info"></i>';
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeAppModal() {
+      const modal = document.getElementById('app-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderEngravedNoteDarkSVG(type, color = '#ffffff', sizeClass = 'w-11 h-12') {
+      if (type === 'crotchet') {
+        return `<svg viewBox="0 0 80 88" class="${sizeClass} select-none" aria-hidden="true">
+          <ellipse cx="34" cy="66" rx="14.5" ry="10" transform="rotate(-24 34 66)" fill="${color}" />
+          <line x1="47.2" y1="63" x2="47.2" y2="12" stroke="${color}" stroke-width="4.2" stroke-linecap="round" />
+        </svg>`;
+      }
+      if (type === 'quavers') {
+        return `<svg viewBox="0 0 96 88" class="${sizeClass} select-none" aria-hidden="true">
+          <ellipse cx="26" cy="66" rx="13.5" ry="9.5" transform="rotate(-24 26 66)" fill="${color}" />
+          <line x1="38.2" y1="63" x2="38.2" y2="16" stroke="${color}" stroke-width="4" stroke-linecap="round" />
+          <ellipse cx="66" cy="66" rx="13.5" ry="9.5" transform="rotate(-24 66 66)" fill="${color}" />
+          <line x1="78.2" y1="63" x2="78.2" y2="16" stroke="${color}" stroke-width="4" stroke-linecap="round" />
+          <rect x="36.2" y="12" width="44" height="8.5" rx="1.5" fill="${color}" />
+        </svg>`;
+      }
+      if (type === 'minim') {
+        return `<svg viewBox="0 0 80 88" class="${sizeClass} select-none" aria-hidden="true">
+          <ellipse cx="34" cy="66" rx="14.5" ry="10" transform="rotate(-24 34 66)" fill="none" stroke="${color}" stroke-width="4.2" />
+          <line x1="47.2" y1="63" x2="47.2" y2="12" stroke="${color}" stroke-width="4.2" stroke-linecap="round" />
+        </svg>`;
+      }
+      if (type === 'dottedMinim') {
+        return `<svg viewBox="0 0 90 88" class="${sizeClass} select-none" aria-hidden="true">
+          <ellipse cx="32" cy="66" rx="14.5" ry="10" transform="rotate(-24 32 66)" fill="none" stroke="${color}" stroke-width="4.2" />
+          <line x1="45.2" y1="63" x2="45.2" y2="12" stroke="${color}" stroke-width="4.2" stroke-linecap="round" />
+          <circle cx="59" cy="66" r="4.5" fill="${color}" />
+        </svg>`;
+      }
+      if (type === 'semibreve') {
+        return `<svg viewBox="0 0 80 80" class="${sizeClass} select-none" aria-hidden="true">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M40 33C51.5 33 61 39.2 61 47C61 54.8 51.5 61 40 61C28.5 61 19 54.8 19 47C19 39.2 28.5 33 40 33ZM35.8 36.4C30.6 38.7 28.5 45.3 31.2 51.1C33.9 56.9 40.3 59.7 45.5 57.4C50.7 55.1 52.8 48.5 50.1 42.7C47.4 36.9 41.0 34.1 35.8 36.4Z" fill="${color}" />
+        </svg>`;
+      }
+      return '';
+    }
+
     // ==========================================
-    // CLOUD & LOCAL USER STORAGE SYNC
+    // USER PERSISTENCE & LEADERBOARD SYNC
     // ==========================================
     function getAllUserRecords() {
-      let localUsers = {};
+      let localDb = {};
       try {
         const raw = localStorage.getItem('boncepts_users_db');
-        if (raw) localUsers = JSON.parse(raw);
+        if (raw) localDb = JSON.parse(raw) || {};
       } catch (e) {}
-      return Object.assign({}, localUsers, window.cachedCloudUsers || {});
+      const cloudDb = window.cachedCloudUsers || {};
+      return { ...localDb, ...cloudDb };
     }
 
     function getDeduplicatedStudents() {
-      const all = getAllUserRecords();
-      const map = {};
-      Object.keys(all).forEach(k => {
-        const u = all[k];
-        if (!u || typeof u !== 'object' || u.role !== 'student') return;
-        const cleanKey = k.toLowerCase();
-        map[cleanKey] = {
-          ...u,
-          key: k,
-          firstName: u.firstName || 'Student',
-          surname: u.surname || '',
-          class: u.class || '7A',
-          stats: (u.stats && typeof u.stats === 'object') ? u.stats : { tokens: 0, testsTaken: 0 }
-        };
+      const records = getAllUserRecords();
+      const list = [];
+      Object.keys(records).forEach(k => {
+        const r = records[k];
+        if (!r || typeof r !== 'object') return;
+        if (r.role === 'teacher') return;
+        list.push({
+          ...r,
+          key: r.key || k,
+          stats: (r.stats && typeof r.stats === 'object') ? r.stats : { tokens: 0, testsTaken: 0 }
+        });
       });
-      return Object.values(map);
+      return list;
     }
 
     function saveUserState() {
       if (!app.currentUser) return;
-      const record = {
-        key: app.currentUser.key,
-        firstName: app.currentUser.firstName,
-        surname: app.currentUser.surname,
-        class: app.currentUser.class,
-        teacher: app.currentUser.teacher,
-        role: app.currentUser.role,
-        stats: state.stats || { tokens: 10, testsTaken: 0 },
-        inventory: state.inventory || [],
-        testHistory: state.testHistory || [],
-        completedLessons: state.completedLessons || [],
-        updatedAt: Date.now()
-      };
-
       try {
         localStorage.setItem('boncepts_active_session', JSON.stringify(app.currentUser));
-        const db = getAllUserRecords();
-        db[app.currentUser.key] = record;
-        localStorage.setItem('boncepts_users_db', JSON.stringify(db));
       } catch (e) {}
 
-      if (window.saveUserRecordToCloud) {
-        window.saveUserRecordToCloud(app.currentUser.key, record);
+      if (app.currentUser.role === 'student') {
+        const record = {
+          ...app.currentUser,
+          stats: state.stats || { tokens: 10, testsTaken: 0 },
+          inventory: state.inventory || [],
+          testHistory: state.testHistory || [],
+          completedLessons: state.completedLessons || []
+        };
+        try {
+          const all = getAllUserRecords();
+          all[app.currentUser.key] = record;
+          localStorage.setItem('boncepts_users_db', JSON.stringify(all));
+        } catch (e) {}
+        if (window.saveUserRecordToCloud) {
+          window.saveUserRecordToCloud(app.currentUser.key, record);
+        }
       }
-
       updateNavBar();
       updateGlobalLeaderboard();
-      refreshLeaderboardTableInPlace();
     }
 
     function addTokens(amount) {
       if (!state.stats) state.stats = { tokens: 0, testsTaken: 0 };
-      state.stats.tokens = (Number(state.stats.tokens) || 0) + amount;
+      state.stats.tokens = (Number(state.stats.tokens) || 0) + Number(amount);
       saveUserState();
     }
 
     window.updateGlobalLeaderboard = function() {
-      const ticker = document.getElementById('global-ticker-content');
-      if (!ticker) return;
+      const tickerEl = document.getElementById('global-ticker-content');
+      if (!tickerEl) return;
       const students = getDeduplicatedStudents();
       students.sort((a, b) => (Number(b?.stats?.tokens) || 0) - (Number(a?.stats?.tokens) || 0));
 
       if (students.length === 0) {
-        ticker.textContent = 'Log in to start earning classroom tokens and appear on the live leaderboard!';
+        tickerEl.textContent = 'Log in as a student to appear on the Live Classroom Token Wallet & Leaderboard!';
         return;
       }
 
-      ticker.innerHTML = students.map((s, idx) => {
-        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '🎵';
+      tickerEl.innerHTML = students.map((s, idx) => {
         const toks = Number(s?.stats?.tokens) || 0;
-        return `<span class="mx-4">${medal} <strong>${s.firstName} ${s.surname}</strong> (${s.class}): <span class="text-amber-300 font-bold">${toks} Tokens</span></span>`;
+        return `<span class="mx-4"><strong class="text-amber-300">#${idx + 1} ${s.firstName || 'Student'} ${s.surname || ''}</strong> (${s.class || ''}): <span class="text-emerald-300 font-bold">${toks} Tokens</span></span>`;
       }).join(' &bull; ');
     };
 
@@ -553,44 +620,40 @@
       students.sort((a, b) => (Number(b?.stats?.tokens) || 0) - (Number(a?.stats?.tokens) || 0));
 
       if (students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-xs">No student token balances recorded yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-xs">No student balances recorded yet. Log in to claim your starter tokens!</td></tr>`;
         return;
       }
 
       tbody.innerHTML = students.map((s, idx) => {
-        const rankBadge = idx === 0
-          ? '<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-black text-xs">🥇 #1</span>'
-          : idx === 1
-          ? '<span class="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-800 font-black text-xs">🥈 #2</span>'
-          : idx === 2
-          ? '<span class="px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 font-black text-xs">🥉 #3</span>'
-          : `<span class="font-bold text-slate-500 text-xs">#${idx + 1}</span>`;
         const toks = Number(s?.stats?.tokens) || 0;
+        const badge = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
         return `
           <tr class="hover:bg-slate-50 transition-colors">
-            <td class="px-4 py-3">${rankBadge}</td>
-            <td class="px-4 py-3 font-bold text-slate-800">${s.firstName} ${s.surname}</td>
-            <td class="px-4 py-3 text-slate-500 text-xs font-semibold">${s.class}</td>
-            <td class="px-4 py-3 text-right font-black text-amber-600">${toks} <i class="fa-solid fa-coins text-amber-400 text-xs"></i></td>
+            <td class="px-4 py-3 font-black text-slate-700">${badge}</td>
+            <td class="px-4 py-3 font-bold text-slate-800">${s.firstName || 'Student'} ${s.surname || ''}</td>
+            <td class="px-4 py-3 text-xs font-semibold text-slate-500">${s.class || '-'}</td>
+            <td class="px-4 py-3 text-right font-black text-amber-600"><i class="fa-solid fa-coins text-amber-400 mr-1"></i>${toks}</td>
           </tr>
         `;
       }).join('');
     };
 
     // ==========================================
-    // WEB AUDIO SYNTHESIZERS (DRUMS & PITCH)
+    // WEB AUDIO SYNTHESIZERS (DRUMS & PITCHES)
     // ==========================================
-    let audioCtx = null;
+    let sharedAudioCtx = null;
     function getAudioCtx() {
-      if (!audioCtx) {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (Ctx) audioCtx = new Ctx();
+      if (!sharedAudioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) sharedAudioCtx = new AudioCtx();
       }
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      return audioCtx;
+      if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume();
+      }
+      return sharedAudioCtx;
     }
 
-    function playDrumSound(type) {
+    function playDrumSound(type = 'kick') {
       const ctx = getAudioCtx();
       if (!ctx) return;
       const now = ctx.currentTime;
@@ -599,48 +662,38 @@
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(40, now + 0.14);
-        gain.gain.setValueAtTime(0.9, now);
+        osc.frequency.setValueAtTime(145, now);
+        osc.frequency.exponentialRampToValueAtTime(42, now + 0.16);
+        gain.gain.setValueAtTime(0.85, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now);
         osc.stop(now + 0.23);
       } else {
-        // Snare noise + body
-        const bufferSize = ctx.sampleRate * 0.16;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'highpass';
-        filter.frequency.value = 900;
-
+        const osc = ctx.createOscillator();
         const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(95, now + 0.12);
         gain.gain.setValueAtTime(0.55, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
-
-        noise.connect(filter);
-        filter.connect(gain);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
         gain.connect(ctx.destination);
-        noise.start(now);
+        osc.start(now);
+        osc.stop(now + 0.16);
       }
     }
 
-    function playTonePitch(freq, duration = 0.5, volume = 0.4) {
+    function playTonePitch(freq = 440, duration = 0.4, volume = 0.4) {
       const ctx = getAudioCtx();
       if (!ctx) return;
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'triangle';
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now);
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.linearRampToValueAtTime(volume, now + 0.03);
+      gain.gain.setValueAtTime(volume, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -652,14 +705,14 @@
     // SHOP CATALOG (Including Mr B's Wrench & Mr H's Vintage Comb)
     // ==========================================
     const shopCatalog = [
-      { id: 'mr_b_wrench', name: "Mr B's Wrench", category: 'Hardware', cost: 100, icon: 'fa-wrench', desc: 'Legendary studio adjustment tool calibrated by Mr B himself.' },
-      { id: 'mr_h_comb', name: "Mr H's Vintage Comb", category: 'Hardware', cost: 100, icon: 'fa-wand-magic-sparkles', desc: 'Authentic vintage acoustic comb for precision classroom style.' },
-      { id: 'gold_metronome', name: 'Precision Gold Metronome', category: 'Hardware', cost: 60, icon: 'fa-stopwatch', desc: 'Lock your internal tempo to 120 BPM with pure precision.' },
-      { id: 'strat_guitar', name: 'Electric Sunburst Guitar', category: 'Instruments', cost: 120, icon: 'fa-guitar', desc: 'Classic solid-body electric guitar for lead riffs and solos.' },
-      { id: 'grand_piano', name: 'Concert Grand Piano', category: 'Instruments', cost: 150, icon: 'fa-music', desc: '88-key acoustic concert grand with rich harmonic resonance.' },
-      { id: 'maestro_crown', name: 'Maestro Conductor Crown', category: 'Avatars', cost: 80, icon: 'fa-crown', desc: 'Command the symphony orchestra with distinction.' },
-      { id: 'studio_cans', name: 'Pro Studio Headphones', category: 'Equipment', cost: 50, icon: 'fa-headphones', desc: 'Zero-latency monitoring for rhythm dictation masters.' },
-      { id: 'boncepts_cup', name: 'Boncepts Champion Cup', category: 'Trophies', cost: 200, icon: 'fa-trophy', desc: 'Awarded to masters of all six musical concepts.' }
+      { id: 'mr_b_wrench', name: "Mr B's Wrench", category: 'Hardware', cost: 150, icon: 'fa-wrench', desc: 'Legendary studio adjustment tool calibrated by Mr B himself.' },
+      { id: 'mr_h_comb', name: "Mr H's Vintage Comb", category: 'Hardware', cost: 150, icon: 'fa-wand-magic-sparkles', desc: 'Authentic vintage acoustic comb for precision classroom style.' },
+      { id: 'gold_metronome', name: 'Precision Gold Metronome', category: 'Hardware', cost: 120, icon: 'fa-stopwatch', desc: 'Lock your internal tempo to 120 BPM with pure precision.' },
+      { id: 'strat_guitar', name: 'Electric Sunburst Guitar', category: 'Instruments', cost: 240, icon: 'fa-guitar', desc: 'Classic solid-body electric guitar for lead riffs and solos.' },
+      { id: 'grand_piano', name: 'Concert Grand Piano', category: 'Instruments', cost: 300, icon: 'fa-music', desc: '88-key acoustic concert grand with rich harmonic resonance.' },
+      { id: 'maestro_crown', name: 'Maestro Conductor Crown', category: 'Avatars', cost: 160, icon: 'fa-crown', desc: 'Command the symphony orchestra with distinction.' },
+      { id: 'studio_cans', name: 'Pro Studio Headphones', category: 'Equipment', cost: 100, icon: 'fa-headphones', desc: 'Zero-latency monitoring for rhythm dictation masters.' },
+      { id: 'boncepts_cup', name: 'Boncepts Champion Cup', category: 'Trophies', cost: 400, icon: 'fa-trophy', desc: 'Awarded to masters of all six musical concepts.' }
     ];
 
     // ==========================================
@@ -719,15 +772,18 @@
                 content: `
                   <h3 class="text-lg font-black text-slate-800 mb-3">The Crotchet (Quarter Note)</h3>
                   <div class="flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-200 mb-5">
-                    <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-white border-2 border-indigo-200 shadow-sm flex flex-col items-center justify-center shrink-0">
-                      <span class="text-7xl sm:text-8xl font-black text-indigo-700 leading-none select-none">♩</span>
-                      <span class="text-[11px] font-black uppercase tracking-widest text-indigo-500 mt-2">1 Beat</span>
+                    <div class="w-36 h-40 sm:w-44 sm:h-44 rounded-3xl bg-white border-2 border-indigo-200 shadow-sm flex flex-col items-center justify-center shrink-0 p-3">
+                      <svg viewBox="0 0 80 88" class="w-24 h-24 select-none" aria-label="Crotchet">
+                        <ellipse cx="34" cy="66" rx="14.5" ry="10" transform="rotate(-24 34 66)" fill="#1e293b" />
+                        <line x1="47.2" y1="63" x2="47.2" y2="12" stroke="#1e293b" stroke-width="4" stroke-linecap="round" />
+                      </svg>
+                      <span class="text-[11px] font-black uppercase tracking-widest text-indigo-600 mt-1">1 Beat</span>
                     </div>
                     <div class="space-y-2 text-center sm:text-left">
-                      <p class="text-sm text-slate-700 leading-relaxed">A <strong>Crotchet (♩)</strong> lasts for <strong>1 full beat</strong>. When counting four crotchets in a bar, we count aloud: <strong>"1, 2, 3, 4"</strong>.</p>
+                      <p class="text-sm text-slate-700 leading-relaxed">A <strong>Crotchet</strong> lasts for <strong>1 full beat</strong>. When counting four crotchets in a bar, we count aloud: <strong>"1, 2, 3, 4"</strong>.</p>
                       <ul class="list-disc ml-5 text-xs text-slate-600 space-y-1 text-left">
-                        <li><strong>Note Head:</strong> Solid filled-in oval.</li>
-                        <li><strong>Stem:</strong> Vertical line extending up on the right or down on the left.</li>
+                        <li><strong>Note Head:</strong> Solid filled-in tilted oval.</li>
+                        <li><strong>Stem:</strong> Crisp vertical line extending upward on the right side of the note head.</li>
                       </ul>
                     </div>
                   </div>
@@ -743,12 +799,18 @@
                 content: `
                   <h3 class="text-lg font-black text-slate-800 mb-3">Paired Quavers (Eighth Notes)</h3>
                   <div class="flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-200 mb-5">
-                    <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-white border-2 border-blue-200 shadow-sm flex flex-col items-center justify-center shrink-0">
-                      <span class="text-7xl sm:text-8xl font-black text-blue-700 leading-none select-none">♫</span>
-                      <span class="text-[11px] font-black uppercase tracking-widest text-blue-500 mt-2">½ + ½ = 1 Beat</span>
+                    <div class="w-36 h-40 sm:w-44 sm:h-44 rounded-3xl bg-white border-2 border-blue-200 shadow-sm flex flex-col items-center justify-center shrink-0 p-3">
+                      <svg viewBox="0 0 96 88" class="w-28 h-24 select-none" aria-label="Paired Quavers">
+                        <ellipse cx="26" cy="66" rx="13.5" ry="9.5" transform="rotate(-24 26 66)" fill="#1e293b" />
+                        <line x1="38.2" y1="63" x2="38.2" y2="16" stroke="#1e293b" stroke-width="4" stroke-linecap="round" />
+                        <ellipse cx="66" cy="66" rx="13.5" ry="9.5" transform="rotate(-24 66 66)" fill="#1e293b" />
+                        <line x1="78.2" y1="63" x2="78.2" y2="16" stroke="#1e293b" stroke-width="4" stroke-linecap="round" />
+                        <rect x="36.2" y="12" width="44" height="8.5" rx="1.5" fill="#1e293b" />
+                      </svg>
+                      <span class="text-[11px] font-black uppercase tracking-widest text-blue-600 mt-1">½ + ½ = 1 Beat</span>
                     </div>
                     <div class="space-y-3 text-center sm:text-left">
-                      <p class="text-sm text-slate-700 leading-relaxed">A single quaver lasts for <strong>half a beat (1/2)</strong>. Two quavers joined by a beam equal <strong>1 full beat</strong> and are counted using <strong>"1 &"</strong> (one-and).</p>
+                      <p class="text-sm text-slate-700 leading-relaxed">A single quaver lasts for <strong>half a beat (1/2)</strong>. Two quavers joined by a horizontal beam equal <strong>1 full beat</strong> and are counted using <strong>"1 &"</strong> (one-and).</p>
                       <div class="p-3.5 bg-indigo-50 rounded-2xl border border-indigo-200 text-xs text-indigo-900">
                         <strong>Counting Example:</strong> Four beats of quavers are counted: <strong>"1 & 2 & 3 & 4 &"</strong>.
                       </div>
@@ -764,7 +826,60 @@
                 interactiveTool: 'drumModule',
                 content: `
                   <h3 class="text-lg font-black text-slate-800 mb-2">8-Beat Drum Sequencer & Dictation Lab</h3>
-                  <p class="text-sm text-slate-600 mb-4">Click any beat below to switch between a <strong>Crotchet (♩ = Beat #)</strong> and <strong>Quavers (♫ = # &)</strong>, then switch tabs to practice your Rhythm Dictation!</p>
+                  <p class="text-sm text-slate-600 mb-4">Click any beat below to switch between a <strong>Crotchet (Beat #)</strong> and <strong>Paired Quavers (# &)</strong>, then switch tabs to practice your Rhythm Dictation!</p>
+                  <div id="embedded-tool-container" class="rounded-3xl overflow-hidden shadow-md"></div>
+                `
+              },
+              {
+                lessonNum: 5,
+                title: 'Lesson 5: Longer Note Values (Minims, Dotted Minims & Semibreves)',
+                readTime: '5 min read',
+                interactiveTool: 'longNoteGame',
+                content: `
+                  <h3 class="text-lg font-black text-slate-800 mb-3">Sustained & Longer Note Values</h3>
+                  <p class="text-sm text-slate-600 mb-5">Not all musical notes last for just one beat! Longer note values are held continuously across multiple beats without re-striking the note.</p>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                    <!-- Semibreve -->
+                    <div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+                      <div class="w-36 h-36 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center mb-3 p-3">
+                        <svg viewBox="0 0 80 80" class="w-24 h-20 select-none" aria-label="Semibreve">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M40 33C51.5 33 61 39.2 61 47C61 54.8 51.5 61 40 61C28.5 61 19 54.8 19 47C19 39.2 28.5 33 40 33ZM35.8 36.4C30.6 38.7 28.5 45.3 31.2 51.1C33.9 56.9 40.3 59.7 45.5 57.4C50.7 55.1 52.8 48.5 50.1 42.7C47.4 36.9 41.0 34.1 35.8 36.4Z" fill="#0f172a" />
+                        </svg>
+                        <span class="text-[11px] font-black uppercase tracking-widest text-amber-600 mt-1">4 Beats</span>
+                      </div>
+                      <h4 class="font-black text-base text-slate-800">Semibreve</h4>
+                      <p class="text-xs text-slate-600 mt-1">Hollow wide oval note head with <strong>no stem</strong>. Held continuously for <strong>4 full beats</strong> (Count: <strong>"1 - 2 - 3 - 4"</strong>).</p>
+                    </div>
+
+                    <!-- Minim -->
+                    <div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+                      <div class="w-36 h-36 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center mb-3 p-3">
+                        <svg viewBox="0 0 80 88" class="w-24 h-24 select-none" aria-label="Minim">
+                          <ellipse cx="34" cy="66" rx="14.5" ry="10" transform="rotate(-24 34 66)" fill="none" stroke="#0f172a" stroke-width="4.2" />
+                          <line x1="47.2" y1="63" x2="47.2" y2="12" stroke="#0f172a" stroke-width="4" stroke-linecap="round" />
+                        </svg>
+                        <span class="text-[11px] font-black uppercase tracking-widest text-indigo-600 mt-1">2 Beats</span>
+                      </div>
+                      <h4 class="font-black text-base text-slate-800">Minim</h4>
+                      <p class="text-xs text-slate-600 mt-1">Open hollow tilted note head with a vertical stem. Held for <strong>2 full beats</strong> (Count: <strong>"1 - 2"</strong>).</p>
+                    </div>
+
+                    <!-- Dotted Minim -->
+                    <div class="p-5 bg-white rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+                      <div class="w-36 h-36 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center mb-3 p-3">
+                        <svg viewBox="0 0 90 88" class="w-24 h-24 select-none" aria-label="Dotted Minim">
+                          <ellipse cx="32" cy="66" rx="14.5" ry="10" transform="rotate(-24 32 66)" fill="none" stroke="#0f172a" stroke-width="4.2" />
+                          <line x1="45.2" y1="63" x2="45.2" y2="12" stroke="#0f172a" stroke-width="4" stroke-linecap="round" />
+                          <circle cx="59" cy="66" r="4.2" fill="#0f172a" />
+                        </svg>
+                        <span class="text-[11px] font-black uppercase tracking-widest text-violet-600 mt-1">3 Beats</span>
+                      </div>
+                      <h4 class="font-black text-base text-slate-800">Dotted Minim</h4>
+                      <p class="text-xs text-slate-600 mt-1">A dot adds half the note's value (2 + 1). Held continuously for <strong>3 full beats</strong> (Count: <strong>"1 - 2 - 3"</strong>).</p>
+                    </div>
+                  </div>
+
                   <div id="embedded-tool-container" class="rounded-3xl overflow-hidden shadow-md"></div>
                 `
               }
@@ -773,8 +888,9 @@
               { q: 'What is the steady underlying heartbeat of a piece of music called?', options: ['Beat / Pulse', 'Timbre', 'Dynamics', 'Texture'], correct: 0 },
               { q: 'How many beats does a single Crotchet (♩) last?', options: ['1 beat', '2 beats', '4 beats', 'Half a beat'], correct: 0 },
               { q: 'How do we count two paired Quavers (♫) on beat 1?', options: ['1 &', '1 2 3 4', '1 e & a', '1 - 2'], correct: 0 },
-              { q: 'How many quavers fit into one crotchet beat?', options: ['2', '4', '3', '1'], correct: 0 },
-              { q: 'What connects two quavers together?', options: ['A beam', 'A clef', 'A sharp', 'A slur'], correct: 0 }
+              { q: 'How many beats does a Minim (𝅗𝅥) last?', options: ['2 beats', '3 beats', '4 beats', '1 beat'], correct: 0 },
+              { q: 'How many beats does a Dotted Minim (𝅗𝅥.) last?', options: ['3 beats', '2 beats', '4 beats', '6 beats'], correct: 0 },
+              { q: 'How many beats does a Semibreve (𝅝) last?', options: ['4 beats', '2 beats', '3 beats', '1 beat'], correct: 0 }
             ], 'Duration', 'Level 1')
           },
           {
@@ -1358,6 +1474,7 @@
       stopBeatTapLoop();
       stopCrotchetGameLoop();
       stopQuaverGameLoop();
+      stopLongNoteGameLoop();
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
       const lessonIdx = level.lessons.findIndex(l => l.lessonNum === lessonNum);
@@ -1423,6 +1540,7 @@
         if (lesson.interactiveTool === 'beatTapGame') mountEmbeddedBeatTapGame(toolTarget);
         if (lesson.interactiveTool === 'crotchetGame') mountEmbeddedCrotchetGame(toolTarget);
         if (lesson.interactiveTool === 'quaverGame') mountEmbeddedQuaverGame(toolTarget);
+        if (lesson.interactiveTool === 'longNoteGame') mountEmbeddedLongNoteGame(toolTarget);
         if (lesson.interactiveTool === 'drumModule') mountEmbeddedDrumModule(toolTarget);
         if (lesson.interactiveTool === 'dictationChallenge') mountEmbeddedDictation(toolTarget);
         if (lesson.interactiveTool === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolTarget);
@@ -1431,7 +1549,7 @@
     }
 
     // ==========================================
-    // STEADY BEAT SPACEBAR TAPPER MINIGAME (4 SPEEDS)
+    // MINIGAME 1: STEADY BEAT SPACEBAR TAPPER (4 SPEEDS)
     // ==========================================
     const beatTapSpeeds = [
       { name: 'Speed 1: Andante (80 BPM)', bpm: 80 },
@@ -1445,11 +1563,9 @@
       completed: false,
       speedIdx: 0,
       streak: 0,
-      targetStreak: 8,
+      timerId: null,
       lastBeatTime: 0,
       beatIntervalMs: 750,
-      timerId: null,
-      beatCount: 0,
       tappedThisBeat: false
     };
 
@@ -1462,6 +1578,7 @@
     }
 
     function mountEmbeddedBeatTapGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
       stopBeatTapLoop();
       beatGame.speedIdx = 0;
@@ -1479,11 +1596,9 @@
         <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Pulse & Tempo Challenge</span>
-              <h3 class="text-xl font-black text-white">Steady Beat Spacebar Tapper</h3>
-              <p class="text-xs text-slate-300 mt-1">
-                Press <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> (or tap the pad) in time with the beat. Hit <strong>8 beats in a row</strong> to advance through all <strong>4 speeds</strong>!
-              </p>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Interactive Pulse Minigame</span>
+              <h3 class="text-xl font-black text-white">Steady Beat Spacebar Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">Press <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> (or tap the pad) in time with the pulse. Hit <strong>8 beats in a row</strong> to advance through all 4 speeds!</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               ${beatTapSpeeds.map((s, idx) => `
@@ -1503,38 +1618,44 @@
               <div class="w-14 h-14 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-2xl mx-auto shadow-lg">
                 <i class="fa-solid fa-trophy"></i>
               </div>
-              <h4 class="text-2xl font-black text-emerald-300">All 4 Speeds Completed!</h4>
-              <p class="text-xs text-slate-200">Steady pulse locked in! You earned <strong>+10 Tokens</strong>.</p>
+              <h4 class="text-2xl font-black text-emerald-300">All 4 Speeds Mastered!</h4>
+              <p class="text-xs text-slate-200">Incredible rhythmic accuracy! You earned <strong>+10 Tokens</strong>.</p>
               <button onclick="mountEmbeddedBeatTapGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
                 Play Again
               </button>
             </div>
           ` : `
-            <div class="text-center space-y-4">
-              <div class="flex items-center justify-between text-xs font-bold px-2">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between text-xs font-bold px-1">
                 <span class="text-amber-300">${spd.name}</span>
-                <span id="beat-streak-label" class="text-emerald-400">In-Time Streak: ${beatGame.streak} / ${beatGame.targetStreak}</span>
+                <span class="text-emerald-400">In-Time Streak: <span id="beat-streak-count">${beatGame.streak}</span> / 8</span>
               </div>
 
-              <div id="beat-pulse-orb" class="w-28 h-28 mx-auto rounded-full bg-slate-800 border-4 border-indigo-500 flex flex-col items-center justify-center transition-all duration-100 shadow-lg">
-                <span id="beat-number-display" class="text-3xl font-black text-white">1</span>
-                <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">PULSE</span>
+              <div class="grid grid-cols-8 gap-2">
+                ${Array.from({ length: 8 }, (_, i) => `
+                  <div id="beat-pip-${i}" class="h-4 rounded-full ${i < beatGame.streak ? 'bg-emerald-400 shadow' : 'bg-slate-800 border border-slate-700'} transition-all"></div>
+                `).join('')}
               </div>
 
-              <div id="beat-feedback-msg" class="text-xs font-bold text-slate-300 h-5">
-                ${beatGame.active ? 'Tap SPACEBAR on every beat!' : 'Press Start Beat to begin'}
+              <div class="flex flex-col items-center justify-center py-4 space-y-3">
+                <div id="beat-visual-orb" class="w-24 h-24 rounded-full bg-slate-800 border-4 border-indigo-500 flex items-center justify-center text-3xl font-black text-white transition-transform duration-75 shadow-lg">
+                  <i class="fa-solid fa-heart-pulse text-indigo-400"></i>
+                </div>
+                <div id="beat-feedback-msg" class="text-sm font-black text-slate-300 h-6">
+                  ${beatGame.active ? 'Tap SPACEBAR on every beat!' : 'Press Start Pulse to begin'}
+                </div>
               </div>
 
               <div class="flex items-center justify-center gap-3">
                 ${!beatGame.active ? `
                   <button onclick="startBeatTapSpeed()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow-lg">
-                    <i class="fa-solid fa-play mr-1"></i> Start Beat (${spd.bpm} BPM)
+                    <i class="fa-solid fa-play mr-1"></i> Start Pulse (${spd.bpm} BPM)
                   </button>
                 ` : `
-                  <button onmousedown="registerBeatTap()" ontouchstart="event.preventDefault(); registerBeatTap();" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
+                  <button onmousedown="registerBeatTap()" ontouchstart="event.preventDefault(); registerBeatTap();" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg select-none">
                     TAP BEAT (or Press SPACEBAR)
                   </button>
-                  <button onclick="stopBeatTapLoop(); renderBeatTapGameUI();" class="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
+                  <button onclick="stopBeatTapLoop(); renderBeatTapGameUI();" class="px-4 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
                     Stop
                   </button>
                 `}
@@ -1550,34 +1671,28 @@
       const spd = beatTapSpeeds[beatGame.speedIdx] || beatTapSpeeds[0];
       beatGame.beatIntervalMs = Math.round(60000 / spd.bpm);
       beatGame.streak = 0;
-      beatGame.beatCount = 0;
       beatGame.active = true;
+      beatGame.tappedThisBeat = false;
       renderBeatTapGameUI();
 
       const pulseTick = () => {
-        if (!document.getElementById('beat-pulse-orb')) {
+        if (!document.getElementById('beat-visual-orb')) {
           stopBeatTapLoop();
           return;
         }
-        if (beatGame.beatCount > 1 && !beatGame.tappedThisBeat) {
+        if (beatGame.lastBeatTime > 0 && !beatGame.tappedThisBeat && beatGame.streak > 0) {
           beatGame.streak = 0;
-          const streakEl = document.getElementById('beat-streak-label');
-          if (streakEl) streakEl.textContent = `In-Time Streak: 0 / ${beatGame.targetStreak}`;
+          updateBeatPipsUI('Missed a beat! Keep tapping steady.', 'text-rose-400');
         }
-        beatGame.beatCount++;
-        beatGame.tappedThisBeat = false;
         beatGame.lastBeatTime = performance.now();
+        beatGame.tappedThisBeat = false;
 
-        const isDownbeat = ((beatGame.beatCount - 1) % 4) === 0;
-        playTonePitch(isDownbeat ? 660 : 440, 0.08, 0.35);
-
-        const orb = document.getElementById('beat-pulse-orb');
-        const numEl = document.getElementById('beat-number-display');
-        if (numEl) numEl.textContent = ((beatGame.beatCount - 1) % 4) + 1;
+        playTonePitch(523.25, 0.08, 0.35);
+        const orb = document.getElementById('beat-visual-orb');
         if (orb) {
-          orb.classList.add('scale-110', 'border-amber-400', 'bg-indigo-900');
+          orb.classList.add('scale-110', 'bg-amber-400', 'border-amber-300');
           setTimeout(() => {
-            if (orb) orb.classList.remove('scale-110', 'border-amber-400', 'bg-indigo-900');
+            if (orb) orb.classList.remove('scale-110', 'bg-amber-400', 'border-amber-300');
           }, 120);
         }
       };
@@ -1586,47 +1701,58 @@
       beatGame.timerId = setInterval(pulseTick, beatGame.beatIntervalMs);
     }
 
+    function updateBeatPipsUI(msg, colorClass) {
+      const countEl = document.getElementById('beat-streak-count');
+      const msgEl = document.getElementById('beat-feedback-msg');
+      if (countEl) countEl.textContent = beatGame.streak;
+      if (msgEl && msg) {
+        msgEl.textContent = msg;
+        msgEl.className = `text-sm font-black h-6 ${colorClass || 'text-slate-300'}`;
+      }
+      for (let i = 0; i < 8; i++) {
+        const pip = document.getElementById(`beat-pip-${i}`);
+        if (pip) {
+          pip.className = `h-4 rounded-full transition-all ${i < beatGame.streak ? 'bg-emerald-400 shadow' : 'bg-slate-800 border border-slate-700'}`;
+        }
+      }
+    }
+
     function registerBeatTap() {
       if (!beatGame.active || beatGame.completed) return;
       const now = performance.now();
-      const diffSinceLast = now - beatGame.lastBeatTime;
-      const diffToNext = beatGame.beatIntervalMs - diffSinceLast;
-      const closestDiff = Math.min(diffSinceLast, Math.abs(diffToNext));
-      const tolerance = beatGame.beatIntervalMs * 0.35;
+      const diffFromLast = Math.abs(now - beatGame.lastBeatTime);
+      const diffToNext = Math.abs(beatGame.beatIntervalMs - diffFromLast);
+      const errorMs = Math.min(diffFromLast, diffToNext);
+      const tolerance = Math.max(175, beatGame.beatIntervalMs * 0.34);
 
-      const fb = document.getElementById('beat-feedback-msg');
-      const streakEl = document.getElementById('beat-streak-label');
-
-      if (closestDiff <= tolerance && !beatGame.tappedThisBeat) {
+      if (errorMs <= tolerance && !beatGame.tappedThisBeat) {
         beatGame.tappedThisBeat = true;
         beatGame.streak++;
         playDrumSound('snare');
-        if (fb) fb.innerHTML = `<span class="text-emerald-400">✓ On Beat! (${beatGame.streak}/${beatGame.targetStreak})</span>`;
-        if (streakEl) streakEl.textContent = `In-Time Streak: ${beatGame.streak} / ${beatGame.targetStreak}`;
+        updateBeatPipsUI('In Time! Keep going...', 'text-emerald-400');
 
-        if (beatGame.streak >= beatGame.targetStreak) {
+        if (beatGame.streak >= 8) {
           stopBeatTapLoop();
           if (beatGame.speedIdx < beatTapSpeeds.length - 1) {
             beatGame.speedIdx++;
             beatGame.streak = 0;
             renderBeatTapGameUI();
-            showAppModal('Speed Cleared!', `Great timing! Advancing to ${beatTapSpeeds[beatGame.speedIdx].name}.`, true);
+            showAppModal('Speed Cleared!', `Awesome steady beat! Advancing to ${beatTapSpeeds[beatGame.speedIdx].name}.`, true);
           } else {
             beatGame.completed = true;
             addTokens(10);
             renderBeatTapGameUI();
-            showAppModal('🏆 Steady Beat Master!', 'You completed all 4 speeds in time and earned +10 Tokens!', true);
+            showAppModal('🏆 Steady Beat Master!', 'You completed all 4 tempo speeds in time and earned +10 Tokens!', true);
           }
         }
       } else {
         beatGame.streak = 0;
-        if (streakEl) streakEl.textContent = `In-Time Streak: 0 / ${beatGame.targetStreak}`;
-        if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Off Beat — listen to the pulse and try again!</span>`;
+        updateBeatPipsUI('Off Beat! Listen to the pulse and try again.', 'text-rose-400');
       }
     }
 
     // ==========================================
-    // CROTCHET RHYTHM SIGHT-READER MINIGAME (4 SPEEDS)
+    // MINIGAME 2: 8-BEAT CROTCHET SIGHT-READER (4 SPEEDS)
     // ==========================================
     const crotchetSpeeds = [
       { name: 'Speed 1: Andante (80 BPM)', bpm: 80 },
@@ -1639,12 +1765,12 @@
       active: false,
       completed: false,
       speedIdx: 0,
-      pattern: [true, false, true, true, false, true, false, true],
-      currentStep: -1, // -4..-1 = count-in, 0..7 = beats 1..8
+      pattern: [true, true, false, true, true, false, true, true],
+      currentBeat: -5,
       timerId: null,
-      beatIntervalMs: 750,
       lastBeatTime: 0,
-      hitThisBeat: false,
+      beatIntervalMs: 750,
+      hitBeats: new Set(),
       mistakes: 0
     };
 
@@ -1654,13 +1780,12 @@
         crotchetGame.timerId = null;
       }
       crotchetGame.active = false;
-      crotchetGame.currentStep = -1;
+      crotchetGame.currentBeat = -5;
     }
 
     function generateCrotchetPattern() {
-      const pat = Array.from({ length: 8 }, () => Math.random() > 0.4);
-      if (!pat.includes(true)) pat[0] = true;
-      if (!pat.includes(false)) pat[1] = false;
+      const pat = Array.from({ length: 8 }, () => Math.random() > 0.35);
+      if (pat.filter(Boolean).length < 4) pat[0] = pat[2] = pat[4] = pat[6] = true;
       crotchetGame.pattern = pat;
     }
 
@@ -1683,11 +1808,9 @@
         <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Rhythm Reading Minigame</span>
-              <h3 class="text-xl font-black text-white">8-Beat Crotchet Sight-Reader</h3>
-              <p class="text-xs text-slate-300 mt-1">
-                Press <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> (or tap the button) <strong>ONLY on beats with a Crotchet (♩)</strong>. Skip the rests (𝄽)! Complete all <strong>4 speeds</strong> to earn +10 Tokens.
-              </p>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Crotchet Sight-Reader Minigame</span>
+              <h3 class="text-xl font-black text-white">8-Beat Crotchet Tap Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">Press <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> <strong>ONLY on beats with a Crotchet (♩)</strong>. Do not tap on Rests (𝄽)! Complete all 4 speeds.</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               ${crotchetSpeeds.map((s, idx) => `
@@ -1720,31 +1843,30 @@
                 <span id="crotchet-status-badge" class="text-slate-300">Ready</span>
               </div>
 
-              <!-- 8-Beat Grid -->
-              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
                 ${crotchetGame.pattern.map((hasNote, idx) => `
-                  <div id="crotchet-cell-${idx}" class="p-3 rounded-2xl border-2 ${hasNote ? 'bg-indigo-950/80 border-indigo-500' : 'bg-slate-800/60 border-slate-700'} flex flex-col items-center justify-between h-24 transition-all">
-                    <span class="text-xs font-black text-slate-400">Beat ${idx + 1}</span>
-                    <span class="text-3xl font-black ${hasNote ? 'text-amber-300' : 'text-slate-600'} leading-none">${hasNote ? '♩' : '𝄽'}</span>
-                    <span class="text-[10px] font-bold uppercase ${hasNote ? 'text-indigo-300' : 'text-slate-500'}">${hasNote ? 'PLAY' : 'REST'}</span>
+                  <div id="crotchet-beat-card-${idx}" class="p-3 rounded-2xl border-2 ${hasNote ? 'bg-indigo-950/90 border-indigo-500' : 'bg-slate-800/60 border-slate-700'} flex flex-col items-center justify-between h-28 transition-all">
+                    <span class="text-xs font-black text-slate-300">Beat ${idx + 1}</span>
+                    ${hasNote ? renderEngravedNoteDarkSVG('crotchet', '#fbbf24', 'w-11 h-12') : '<span class="text-3xl font-black text-slate-600 leading-none">𝄽</span>'}
+                    <span class="text-[10px] font-bold uppercase tracking-wider ${hasNote ? 'text-indigo-300' : 'text-slate-500'}">${hasNote ? 'TAP' : 'REST'}</span>
                   </div>
                 `).join('')}
               </div>
 
               <div id="crotchet-feedback-msg" class="text-center font-black text-slate-300 min-h-[2.75rem] flex items-center justify-center">
-                ${crotchetGame.active ? '<span class="text-2xl sm:text-3xl text-amber-300 tracking-wide">Count-in: 1</span>' : '<span class="text-sm sm:text-base">Press Start Pattern to begin</span>'}
+                ${crotchetGame.active ? '<span class="text-2xl sm:text-3xl text-amber-300">Count-in: 1</span>' : '<span class="text-sm sm:text-base">Press Start Crotchet Pattern to begin</span>'}
               </div>
 
               <div class="flex items-center justify-center gap-3">
                 ${!crotchetGame.active ? `
                   <button onclick="startCrotchetSpeed()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow-lg">
-                    <i class="fa-solid fa-play mr-1"></i> Start Pattern (${spd.bpm} BPM)
+                    <i class="fa-solid fa-play mr-1"></i> Start Crotchet Pattern (${spd.bpm} BPM)
                   </button>
                 ` : `
-                  <button onmousedown="registerCrotchetTap()" ontouchstart="event.preventDefault(); registerCrotchetTap();" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
-                    HIT CROTCHET (or SPACEBAR)
+                  <button onmousedown="registerCrotchetTap()" ontouchstart="event.preventDefault(); registerCrotchetTap();" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg select-none">
+                    TAP CROTCHET (or Press SPACEBAR)
                   </button>
-                  <button onclick="stopCrotchetGameLoop(); renderCrotchetGameUI();" class="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
+                  <button onclick="stopCrotchetGameLoop(); renderCrotchetGameUI();" class="px-4 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
                     Stop
                   </button>
                 `}
@@ -1759,7 +1881,8 @@
       stopCrotchetGameLoop();
       const spd = crotchetSpeeds[crotchetGame.speedIdx] || crotchetSpeeds[0];
       crotchetGame.beatIntervalMs = Math.round(60000 / spd.bpm);
-      crotchetGame.currentStep = -5; // Starts at -5 so first tick increments to -4 (Count-in: 1, 2, 3, 4)
+      crotchetGame.currentBeat = -5;
+      crotchetGame.hitBeats = new Set();
       crotchetGame.mistakes = 0;
       crotchetGame.active = true;
       renderCrotchetGameUI();
@@ -1769,46 +1892,42 @@
           stopCrotchetGameLoop();
           return;
         }
-
-        // Check if previous beat required a note and was missed
-        if (crotchetGame.currentStep >= 0 && crotchetGame.currentStep < 8) {
-          const prevIdx = crotchetGame.currentStep;
-          if (crotchetGame.pattern[prevIdx] && !crotchetGame.hitThisBeat) {
+        if (crotchetGame.currentBeat >= 0 && crotchetGame.currentBeat < 8) {
+          const prev = crotchetGame.currentBeat;
+          if (crotchetGame.pattern[prev] && !crotchetGame.hitBeats.has(prev)) {
             crotchetGame.mistakes++;
-            const prevCell = document.getElementById(`crotchet-cell-${prevIdx}`);
-            if (prevCell) prevCell.classList.add('border-rose-500', 'bg-rose-950/70');
+            const missedEl = document.getElementById(`crotchet-beat-card-${prev}`);
+            if (missedEl) missedEl.classList.add('border-rose-500', 'bg-rose-950/70');
           }
         }
 
-        crotchetGame.currentStep++;
-        crotchetGame.hitThisBeat = false;
+        crotchetGame.currentBeat++;
         crotchetGame.lastBeatTime = performance.now();
-
         const fb = document.getElementById('crotchet-feedback-msg');
         const badge = document.getElementById('crotchet-status-badge');
 
-        if (crotchetGame.currentStep < 0) {
-          const countNum = crotchetGame.currentStep + 5; // 1, 2, 3, 4
+        if (crotchetGame.currentBeat < 0) {
+          const countNum = crotchetGame.currentBeat + 5;
           playTonePitch(countNum === 1 ? 660 : 520, 0.08, 0.3);
           if (fb) fb.innerHTML = `<span class="text-2xl sm:text-3xl font-black text-amber-300 tracking-wide">Count-in: ${countNum}</span>`;
           if (badge) badge.textContent = `Count-in: ${countNum} / 4`;
           return;
         }
 
-        if (crotchetGame.currentStep < 8) {
-          const idx = crotchetGame.currentStep;
-          playTonePitch(idx === 0 || idx === 4 ? 587 : 440, 0.05, 0.18);
-          if (badge) badge.textContent = `Beat ${idx + 1} / 8`;
-          if (fb) fb.innerHTML = crotchetGame.pattern[idx]
-            ? `<span class="text-lg sm:text-xl font-black text-amber-300">Beat ${idx + 1}: PLAY CROTCHET (♩)!</span>`
-            : `<span class="text-lg sm:text-xl font-bold text-slate-400">Beat ${idx + 1}: REST (Hold!)</span>`;
-
+        if (crotchetGame.currentBeat < 8) {
+          const b = crotchetGame.currentBeat;
+          playTonePitch(440, 0.06, 0.22);
+          if (badge) badge.textContent = `Beat ${b + 1} / 8`;
           for (let i = 0; i < 8; i++) {
-            const c = document.getElementById(`crotchet-cell-${i}`);
-            if (c) c.classList.toggle('beat-active', i === idx);
+            const card = document.getElementById(`crotchet-beat-card-${i}`);
+            if (card) card.classList.toggle('beat-active', i === b);
+          }
+          if (fb) {
+            fb.innerHTML = crotchetGame.pattern[b]
+              ? `<span class="text-xl sm:text-2xl font-black text-amber-300">Beat ${b + 1}: TAP! (♩)</span>`
+              : `<span class="text-xl sm:text-2xl font-black text-slate-400">Beat ${b + 1}: REST (𝄽)</span>`;
           }
         } else {
-          // End of 8-beat bar
           const passed = crotchetGame.mistakes === 0;
           stopCrotchetGameLoop();
 
@@ -1822,12 +1941,12 @@
               crotchetGame.completed = true;
               addTokens(10);
               renderCrotchetGameUI();
-              showAppModal('🏆 Crotchet Sight-Reader Master!', 'You mastered all 4 speeds with zero mistakes and earned +10 Tokens!', true);
+              showAppModal('🏆 Crotchet Sight-Reader Master!', 'You sight-read all 4 speeds accurately and earned +10 Tokens!', true);
             }
           } else {
             generateCrotchetPattern();
             renderCrotchetGameUI();
-            showAppModal('Try Again!', `You had ${crotchetGame.mistakes} missed note(s) or extra tap(s). Try the new 8-beat pattern!`, false);
+            showAppModal('Try Again!', 'You missed a crotchet or tapped during a rest. Watch the pattern and try again!', false);
           }
         }
       };
@@ -1838,35 +1957,30 @@
 
     function registerCrotchetTap() {
       if (!crotchetGame.active || crotchetGame.completed) return;
-      const fb = document.getElementById('crotchet-feedback-msg');
+      if (crotchetGame.currentBeat < 0) return;
 
-      // Determine nearest beat index (handles slight early tap just before beat lands)
-      let targetIdx = crotchetGame.currentStep;
-      const elapsed = performance.now() - crotchetGame.lastBeatTime;
-      if (elapsed > crotchetGame.beatIntervalMs * 0.65 && targetIdx < 7) {
-        targetIdx++;
+      const now = performance.now();
+      let targetBeat = crotchetGame.currentBeat;
+      const elapsed = now - crotchetGame.lastBeatTime;
+      if (elapsed > crotchetGame.beatIntervalMs * 0.65 && targetBeat < 7) {
+        targetBeat++;
       }
+      if (targetBeat < 0 || targetBeat > 7) return;
 
-      if (targetIdx < 0 || targetIdx >= 8) return;
-
-      const cell = document.getElementById(`crotchet-cell-${targetIdx}`);
-      if (crotchetGame.pattern[targetIdx]) {
-        if (!crotchetGame.hitThisBeat) {
-          crotchetGame.hitThisBeat = true;
-          playDrumSound('snare');
-          if (cell) cell.classList.add('border-emerald-400', 'bg-emerald-950/70');
-          if (fb) fb.innerHTML = `<span class="text-emerald-400">✓ Clean hit on Beat ${targetIdx + 1}!</span>`;
-        }
+      const card = document.getElementById(`crotchet-beat-card-${targetBeat}`);
+      if (crotchetGame.pattern[targetBeat] && !crotchetGame.hitBeats.has(targetBeat)) {
+        crotchetGame.hitBeats.add(targetBeat);
+        playDrumSound('snare');
+        if (card) card.classList.add('border-emerald-400', 'bg-emerald-950/80');
       } else {
         crotchetGame.mistakes++;
-        playTonePitch(160, 0.15, 0.4);
-        if (cell) cell.classList.add('border-rose-500', 'bg-rose-950/70');
-        if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Oops! Beat ${targetIdx + 1} was a REST!</span>`;
+        playTonePitch(160, 0.14, 0.35);
+        if (card) card.classList.add('border-rose-500', 'bg-rose-950/80');
       }
     }
 
     // ==========================================
-    // QUAVER & CROTCHET COMBO SIGHT-READER MINIGAME (4 SPEEDS)
+    // MINIGAME 3: 8-BEAT QUAVER & CROTCHET SIGHT-READER (4 SPEEDS)
     // ==========================================
     const quaverSpeeds = [
       { name: 'Speed 1: Adagio (72 BPM)', bpm: 72 },
@@ -1879,13 +1993,12 @@
       active: false,
       completed: false,
       speedIdx: 0,
-      // Each beat is 'crotchet' (1 tap), 'quavers' (2 taps: beat & offbeat), or 'rest' (0 taps)
       pattern: ['crotchet', 'quavers', 'crotchet', 'rest', 'quavers', 'crotchet', 'quavers', 'crotchet'],
-      currentStep: -4, // -4..-1 count-in, 0..7 beats
+      currentHalfStep: -9,
       timerId: null,
-      beatIntervalMs: 833,
-      lastBeatTime: 0,
-      hitsThisBeat: 0,
+      lastStepTime: 0,
+      halfStepMs: 416,
+      hitHalfSteps: new Set(),
       mistakes: 0
     };
 
@@ -1895,21 +2008,25 @@
         quaverGame.timerId = null;
       }
       quaverGame.active = false;
-      quaverGame.currentStep = -4;
+      quaverGame.currentHalfStep = -9;
     }
 
     function generateQuaverComboPattern() {
-      const types = ['crotchet', 'quavers', 'rest'];
-      const pat = Array.from({ length: 8 }, (_, idx) => {
-        if (idx === 0) return Math.random() > 0.5 ? 'crotchet' : 'quavers';
-        const r = Math.random();
-        if (r < 0.42) return 'quavers';
-        if (r < 0.80) return 'crotchet';
-        return 'rest';
-      });
-      if (!pat.includes('quavers')) pat[1] = 'quavers';
-      if (!pat.includes('crotchet')) pat[0] = 'crotchet';
+      const choices = ['crotchet', 'quavers', 'quavers', 'rest'];
+      const pat = Array.from({ length: 8 }, () => choices[Math.floor(Math.random() * choices.length)]);
+      if (!pat.includes('quavers')) pat[1] = pat[5] = 'quavers';
+      if (!pat.includes('crotchet')) pat[0] = pat[4] = 'crotchet';
       quaverGame.pattern = pat;
+    }
+
+    function isExpectedHitAtHalfStep(hs) {
+      if (hs < 0 || hs > 15) return false;
+      const beatIdx = Math.floor(hs / 2);
+      const isAnd = hs % 2 === 1;
+      const cell = quaverGame.pattern[beatIdx];
+      if (cell === 'crotchet') return !isAnd;
+      if (cell === 'quavers') return true;
+      return false;
     }
 
     function mountEmbeddedQuaverGame(target) {
@@ -1931,11 +2048,9 @@
         <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Quaver & Crotchet Combo Minigame</span>
-              <h3 class="text-xl font-black text-white">8-Beat Quaver & Crotchet Sight-Reader</h3>
-              <p class="text-xs text-slate-300 mt-1">
-                Tap <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> (or the tap pad): <strong>1 tap</strong> for Crotchets (♩), <strong>2 quick taps ("1 &")</strong> for Paired Quavers (♫), and <strong>0 taps</strong> on Rests (𝄽)! Master all <strong>4 speeds</strong> to earn +10 Tokens.
-              </p>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Quaver & Crotchet Sight-Reader</span>
+              <h3 class="text-xl font-black text-white">8-Beat Quaver & Crotchet Combo Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">Press <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> <strong>once</strong> on a Crotchet (♩), <strong>twice ("1 &")</strong> on Paired Quavers (♫), and hold off on Rests (𝄽)!</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               ${quaverSpeeds.map((s, idx) => `
@@ -1956,7 +2071,7 @@
                 <i class="fa-solid fa-trophy"></i>
               </div>
               <h4 class="text-2xl font-black text-emerald-300">All 4 Quaver & Crotchet Speeds Mastered!</h4>
-              <p class="text-xs text-slate-200">Awesome rhythmic subdivision! You earned <strong>+10 Tokens</strong>.</p>
+              <p class="text-xs text-slate-200">Brilliant subdivision counting! You earned <strong>+10 Tokens</strong>.</p>
               <button onclick="mountEmbeddedQuaverGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
                 Play Again
               </button>
@@ -1968,42 +2083,43 @@
                 <span id="quaver-status-badge" class="text-slate-300">Ready</span>
               </div>
 
-              <!-- 8-Beat Combo Grid -->
-              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                ${quaverGame.pattern.map((type, idx) => {
-                  const isQuaver = type === 'quavers';
-                  const isCrotchet = type === 'crotchet';
-                  const cardStyle = isQuaver
-                    ? 'bg-blue-950/80 border-blue-400'
-                    : isCrotchet
-                    ? 'bg-indigo-950/80 border-indigo-500'
+              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
+                ${quaverGame.pattern.map((cell, idx) => {
+                  const subLabel = cell === 'quavers' ? `${idx + 1} &` : cell === 'crotchet' ? `${idx + 1}` : 'REST';
+                  const cardBg = cell === 'quavers'
+                    ? 'bg-blue-950/90 border-blue-500'
+                    : cell === 'crotchet'
+                    ? 'bg-indigo-950/90 border-indigo-500'
                     : 'bg-slate-800/60 border-slate-700';
-                  const symbol = isQuaver ? '♫' : isCrotchet ? '♩' : '𝄽';
-                  const countLabel = isQuaver ? `${idx + 1} &` : isCrotchet ? `${idx + 1}` : 'REST';
+                  const graphicHtml = cell === 'quavers'
+                    ? renderEngravedNoteDarkSVG('quavers', '#7dd3fc', 'w-12 h-12')
+                    : cell === 'crotchet'
+                    ? renderEngravedNoteDarkSVG('crotchet', '#fbbf24', 'w-11 h-12')
+                    : '<span class="text-3xl font-black text-slate-600 leading-none">𝄽</span>';
                   return `
-                    <div id="quaver-cell-${idx}" class="p-3 rounded-2xl border-2 ${cardStyle} flex flex-col items-center justify-between h-24 transition-all">
-                      <span class="text-xs font-black text-slate-400">Beat ${idx + 1}</span>
-                      <span class="text-3xl font-black ${isQuaver ? 'text-sky-300' : isCrotchet ? 'text-amber-300' : 'text-slate-600'} leading-none">${symbol}</span>
-                      <span class="text-[10px] font-black uppercase ${isQuaver ? 'text-sky-300' : isCrotchet ? 'text-indigo-300' : 'text-slate-500'}">${countLabel}</span>
+                    <div id="quaver-beat-card-${idx}" class="p-3 rounded-2xl border-2 ${cardBg} flex flex-col items-center justify-between h-28 transition-all">
+                      <span class="text-xs font-black text-slate-300">Beat ${idx + 1}</span>
+                      ${graphicHtml}
+                      <span class="text-[11px] font-black uppercase tracking-wider text-white/90">${subLabel}</span>
                     </div>
                   `;
                 }).join('')}
               </div>
 
-              <div id="quaver-feedback-msg" class="text-center text-xs font-bold text-slate-300 h-5">
-                ${quaverGame.active ? 'Count in: 1, 2, 3, 4...' : 'Press Start Combo Pattern to begin'}
+              <div id="quaver-feedback-msg" class="text-center text-sm font-black text-slate-300 h-6">
+                ${quaverGame.active ? 'Count-in: 1' : 'Press Start Quaver Pattern to begin'}
               </div>
 
               <div class="flex items-center justify-center gap-3">
                 ${!quaverGame.active ? `
                   <button onclick="startQuaverSpeed()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow-lg">
-                    <i class="fa-solid fa-play mr-1"></i> Start Combo Pattern (${spd.bpm} BPM)
+                    <i class="fa-solid fa-play mr-1"></i> Start Quaver Pattern (${spd.bpm} BPM)
                   </button>
                 ` : `
-                  <button onmousedown="registerQuaverTap()" ontouchstart="event.preventDefault(); registerQuaverTap();" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
-                    TAP RHYTHM (or SPACEBAR)
+                  <button onmousedown="registerQuaverTap()" ontouchstart="event.preventDefault(); registerQuaverTap();" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg select-none">
+                    TAP RHYTHM (or Press SPACEBAR)
                   </button>
-                  <button onclick="stopQuaverGameLoop(); renderQuaverGameUI();" class="px-4 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
+                  <button onclick="stopQuaverGameLoop(); renderQuaverGameUI();" class="px-4 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
                     Stop
                   </button>
                 `}
@@ -2017,70 +2133,71 @@
     function startQuaverSpeed() {
       stopQuaverGameLoop();
       const spd = quaverSpeeds[quaverGame.speedIdx] || quaverSpeeds[0];
-      quaverGame.beatIntervalMs = Math.round(60000 / spd.bpm);
-      quaverGame.currentStep = -4;
+      quaverGame.halfStepMs = Math.round(30000 / spd.bpm);
+      quaverGame.currentHalfStep = -9;
+      quaverGame.hitHalfSteps = new Set();
       quaverGame.mistakes = 0;
       quaverGame.active = true;
       renderQuaverGameUI();
 
-      const stepTick = () => {
+      const halfStepTick = () => {
         if (!document.getElementById('quaver-feedback-msg')) {
           stopQuaverGameLoop();
           return;
         }
 
-        // Validate the beat that just finished (0..7)
-        if (quaverGame.currentStep >= 0 && quaverGame.currentStep < 8) {
-          const prevIdx = quaverGame.currentStep;
-          const prevType = quaverGame.pattern[prevIdx];
-          const expectedHits = prevType === 'quavers' ? 2 : prevType === 'crotchet' ? 1 : 0;
-          const prevCell = document.getElementById(`quaver-cell-${prevIdx}`);
-
-          if (quaverGame.hitsThisBeat !== expectedHits) {
+        if (quaverGame.currentHalfStep >= 0 && quaverGame.currentHalfStep < 16) {
+          const prevHs = quaverGame.currentHalfStep;
+          if (isExpectedHitAtHalfStep(prevHs) && !quaverGame.hitHalfSteps.has(prevHs)) {
             quaverGame.mistakes++;
-            if (prevCell) prevCell.classList.add('border-rose-500', 'bg-rose-950/70');
-          } else if (expectedHits > 0) {
-            if (prevCell) prevCell.classList.add('border-emerald-400', 'bg-emerald-950/70');
+            const prevBeatIdx = Math.floor(prevHs / 2);
+            const missedEl = document.getElementById(`quaver-beat-card-${prevBeatIdx}`);
+            if (missedEl) missedEl.classList.add('border-rose-500', 'bg-rose-950/70');
           }
         }
 
-        quaverGame.currentStep++;
-        quaverGame.hitsThisBeat = 0;
-        quaverGame.lastBeatTime = performance.now();
-
+        quaverGame.currentHalfStep++;
+        quaverGame.lastStepTime = performance.now();
         const fb = document.getElementById('quaver-feedback-msg');
         const badge = document.getElementById('quaver-status-badge');
 
-        if (quaverGame.currentStep < 0) {
-          const countNum = quaverGame.currentStep + 5;
-          playTonePitch(countNum === 1 ? 660 : 520, 0.06, 0.25);
-          if (fb) fb.innerHTML = `<span class="text-amber-300">Get Ready... Count-in: ${countNum}</span>`;
-          if (badge) badge.textContent = `Count-in: ${countNum}`;
+        if (quaverGame.currentHalfStep < 0) {
+          const absStep = quaverGame.currentHalfStep + 8;
+          if (absStep % 2 === 0) {
+            const countNum = Math.floor(absStep / 2) + 1;
+            playTonePitch(countNum === 1 ? 660 : 520, 0.07, 0.28);
+            if (fb) fb.textContent = `Count-in: ${countNum}`;
+            if (badge) badge.textContent = `Count-in: ${countNum} / 4`;
+          }
           return;
         }
 
-        if (quaverGame.currentStep < 8) {
-          const idx = quaverGame.currentStep;
-          const bType = quaverGame.pattern[idx];
-          playTonePitch(idx === 0 || idx === 4 ? 587 : 440, 0.05, 0.18);
-          if (badge) badge.textContent = `Beat ${idx + 1} / 8`;
+        if (quaverGame.currentHalfStep < 16) {
+          const hs = quaverGame.currentHalfStep;
+          const beatIdx = Math.floor(hs / 2);
+          const isAnd = hs % 2 === 1;
+          const cell = quaverGame.pattern[beatIdx];
 
-          if (fb) {
-            if (bType === 'quavers') {
-              fb.innerHTML = `<span class="text-sky-300">Beat ${idx + 1}: QUAVERS (♫) — Tap twice ("${idx + 1} &")!</span>`;
-            } else if (bType === 'crotchet') {
-              fb.innerHTML = `<span class="text-amber-300">Beat ${idx + 1}: CROTCHET (♩) — Tap once ("${idx + 1}")!</span>`;
-            } else {
-              fb.innerHTML = `<span class="text-slate-400">Beat ${idx + 1}: REST (𝄽) — Hold!</span>`;
-            }
+          if (!isAnd) {
+            playTonePitch(440, 0.05, 0.2);
           }
+          if (badge) badge.textContent = `Beat ${beatIdx + 1}${isAnd ? ' &' : ''}`;
 
           for (let i = 0; i < 8; i++) {
-            const c = document.getElementById(`quaver-cell-${i}`);
-            if (c) c.classList.toggle('beat-active', i === idx);
+            const card = document.getElementById(`quaver-beat-card-${i}`);
+            if (card) card.classList.toggle('beat-active', i === beatIdx);
+          }
+
+          if (fb) {
+            if (cell === 'quavers') {
+              fb.textContent = isAnd ? `Beat ${beatIdx + 1} &: TAP "&"! (♫)` : `Beat ${beatIdx + 1}: TAP "${beatIdx + 1}"! (♫)`;
+            } else if (cell === 'crotchet') {
+              fb.textContent = isAnd ? `Beat ${beatIdx + 1} (hold)` : `Beat ${beatIdx + 1}: TAP ONCE! (♩)`;
+            } else {
+              fb.textContent = `Beat ${beatIdx + 1}: REST (𝄽)`;
+            }
           }
         } else {
-          // End of 8-beat combo bar
           const passed = quaverGame.mistakes === 0;
           stopQuaverGameLoop();
 
@@ -2089,87 +2206,443 @@
               quaverGame.speedIdx++;
               generateQuaverComboPattern();
               renderQuaverGameUI();
-              showAppModal('Combo Cleared!', `Spot-on quavers and crotchets! Advancing to ${quaverSpeeds[quaverGame.speedIdx].name}.`, true);
+              showAppModal('Combo Pattern Cleared!', `Clean quaver & crotchet execution! Advancing to ${quaverSpeeds[quaverGame.speedIdx].name}.`, true);
             } else {
               quaverGame.completed = true;
               addTokens(10);
               renderQuaverGameUI();
-              showAppModal('🏆 Quaver & Crotchet Master!', 'You mastered all 4 speeds of quaver/crotchet combinations and earned +10 Tokens!', true);
+              showAppModal('🏆 Quaver & Crotchet Master!', 'You completed all 4 speeds of Quaver & Crotchet combinations and earned +10 Tokens!', true);
             }
           } else {
             generateQuaverComboPattern();
             renderQuaverGameUI();
-            showAppModal('Try Again!', `You had ${quaverGame.mistakes} beat(s) with incorrect taps. Remember: ♩ = 1 tap, ♫ = 2 quick taps ("1 &"), 𝄽 = 0 taps!`, false);
+            showAppModal('Try Again!', 'Remember: tap twice ("1 &") on Paired Quavers (♫), once on Crotchets (♩), and skip Rests (𝄽).', false);
           }
         }
       };
 
-      stepTick();
-      quaverGame.timerId = setInterval(stepTick, quaverGame.beatIntervalMs);
+      halfStepTick();
+      quaverGame.timerId = setInterval(halfStepTick, quaverGame.halfStepMs);
     }
 
     function registerQuaverTap() {
       if (!quaverGame.active || quaverGame.completed) return;
-      const fb = document.getElementById('quaver-feedback-msg');
+      if (quaverGame.currentHalfStep < 0) return;
 
-      let targetIdx = quaverGame.currentStep;
-      const elapsed = performance.now() - quaverGame.lastBeatTime;
-      // Only snap to next beat if we're at the very end (>85% of beat) and current beat isn't waiting for its 2nd quaver
-      const currentType = targetIdx >= 0 && targetIdx < 8 ? quaverGame.pattern[targetIdx] : null;
-      const needsSecondQuaver = currentType === 'quavers' && quaverGame.hitsThisBeat === 1;
-      if (!needsSecondQuaver && elapsed > quaverGame.beatIntervalMs * 0.85 && targetIdx < 7) {
-        targetIdx++;
+      const now = performance.now();
+      let targetHs = quaverGame.currentHalfStep;
+      const elapsed = now - quaverGame.lastStepTime;
+      if (elapsed > quaverGame.halfStepMs * 0.58 && targetHs < 15) {
+        targetHs++;
       }
+      if (targetHs < 0 || targetHs > 15) return;
 
-      if (targetIdx < 0 || targetIdx >= 8) return;
+      const beatIdx = Math.floor(targetHs / 2);
+      const card = document.getElementById(`quaver-beat-card-${beatIdx}`);
 
-      const bType = quaverGame.pattern[targetIdx];
-      const cell = document.getElementById(`quaver-cell-${targetIdx}`);
-
-      if (bType === 'rest') {
-        quaverGame.mistakes++;
-        playTonePitch(160, 0.15, 0.4);
-        if (cell) cell.classList.add('border-rose-500', 'bg-rose-950/70');
-        if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Oops! Beat ${targetIdx + 1} was a REST!</span>`;
-      } else if (bType === 'crotchet') {
-        quaverGame.hitsThisBeat++;
-        if (quaverGame.hitsThisBeat === 1) {
-          playDrumSound('kick');
-          if (cell) cell.classList.add('border-emerald-400', 'bg-emerald-950/70');
-          if (fb) fb.innerHTML = `<span class="text-emerald-400">✓ Clean Crotchet on Beat ${targetIdx + 1}!</span>`;
-        } else {
-          quaverGame.mistakes++;
-          playTonePitch(160, 0.15, 0.4);
-          if (cell) cell.classList.remove('border-emerald-400', 'bg-emerald-950/70');
-          if (cell) cell.classList.add('border-rose-500', 'bg-rose-950/70');
-          if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Too many taps! Crotchet (♩) is only 1 tap!</span>`;
+      if (isExpectedHitAtHalfStep(targetHs) && !quaverGame.hitHalfSteps.has(targetHs)) {
+        quaverGame.hitHalfSteps.add(targetHs);
+        playDrumSound(targetHs % 2 === 0 ? 'kick' : 'snare');
+        const cell = quaverGame.pattern[beatIdx];
+        const beatComplete = cell === 'crotchet'
+          ? quaverGame.hitHalfSteps.has(beatIdx * 2)
+          : (quaverGame.hitHalfSteps.has(beatIdx * 2) && quaverGame.hitHalfSteps.has(beatIdx * 2 + 1));
+        if (card && beatComplete) {
+          card.classList.add('border-emerald-400', 'bg-emerald-950/80');
         }
-      } else if (bType === 'quavers') {
-        quaverGame.hitsThisBeat++;
-        if (quaverGame.hitsThisBeat <= 2) {
-          playDrumSound('snare');
-          const subLabel = quaverGame.hitsThisBeat === 1 ? `${targetIdx + 1}` : `${targetIdx + 1} &`;
-          if (quaverGame.hitsThisBeat === 2 && cell) {
-            cell.classList.add('border-emerald-400', 'bg-emerald-950/70');
+      } else {
+        quaverGame.mistakes++;
+        playTonePitch(160, 0.12, 0.35);
+        if (card) card.classList.add('border-rose-500', 'bg-rose-950/80');
+      }
+    }
+
+    // ==========================================
+    // LONG NOTE SUSTAIN & HOLD SOUND MODULE GAME (4 SPEEDS)
+    // ==========================================
+    const longNoteSpeeds = [
+      { name: 'Speed 1: Adagio (76 BPM)', bpm: 76 },
+      { name: 'Speed 2: Andante (92 BPM)', bpm: 92 },
+      { name: 'Speed 3: Moderato (108 BPM)', bpm: 108 },
+      { name: 'Speed 4: Allegro (124 BPM)', bpm: 124 }
+    ];
+
+    let longNoteGame = {
+      active: false,
+      completed: false,
+      speedIdx: 0,
+      // 8-beat phrase composed of notes with startBeat (0..7) and duration (1, 2, 3, or 4)
+      notes: [
+        { noteType: 'semibreve', name: 'Semibreve', startBeat: 0, duration: 4 },
+        { noteType: 'dottedMinim', name: 'Dotted Minim', startBeat: 4, duration: 3 },
+        { noteType: 'crotchet', name: 'Crotchet', startBeat: 7, duration: 1 }
+      ],
+      currentBeat: -5, // -4..-1 count-in, 0..7 beats
+      timerId: null,
+      beatIntervalMs: 789,
+      isHolding: false,
+      activeNoteIdx: -1,
+      heldBeatsForCurrent: 0,
+      startedOnTimeForCurrent: false,
+      mistakes: 0,
+      sustainOsc: null,
+      sustainGain: null
+    };
+
+    function startSustainSynth(freq = 329.63) {
+      if (longNoteGame.sustainOsc) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(900, now);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.28, now + 0.04);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+
+      longNoteGame.sustainOsc = osc;
+      longNoteGame.sustainGain = gain;
+    }
+
+    function stopSustainSynth() {
+      if (longNoteGame.sustainOsc && longNoteGame.sustainGain) {
+        try {
+          const ctx = getAudioCtx();
+          const now = ctx ? ctx.currentTime : 0;
+          longNoteGame.sustainGain.gain.setTargetAtTime(0.0001, now, 0.02);
+          longNoteGame.sustainOsc.stop(now + 0.06);
+        } catch (e) {}
+      }
+      longNoteGame.sustainOsc = null;
+      longNoteGame.sustainGain = null;
+    }
+
+    function stopLongNoteGameLoop() {
+      if (longNoteGame.timerId) {
+        clearInterval(longNoteGame.timerId);
+        longNoteGame.timerId = null;
+      }
+      stopSustainSynth();
+      longNoteGame.active = false;
+      longNoteGame.isHolding = false;
+      longNoteGame.currentBeat = -5;
+    }
+
+    function generateLongNotePhrase() {
+      // Build an 8-beat phrase combining Semibreve (4), Dotted Minim (3), Minim (2), and Crotchet (1)
+      const templates = [
+        [
+          { noteType: 'semibreve', name: 'Semibreve', startBeat: 0, duration: 4 },
+          { noteType: 'minim', name: 'Minim', startBeat: 4, duration: 2 },
+          { noteType: 'minim', name: 'Minim', startBeat: 6, duration: 2 }
+        ],
+        [
+          { noteType: 'dottedMinim', name: 'Dotted Minim', startBeat: 0, duration: 3 },
+          { noteType: 'crotchet', name: 'Crotchet', startBeat: 3, duration: 1 },
+          { noteType: 'semibreve', name: 'Semibreve', startBeat: 4, duration: 4 }
+        ],
+        [
+          { noteType: 'minim', name: 'Minim', startBeat: 0, duration: 2 },
+          { noteType: 'dottedMinim', name: 'Dotted Minim', startBeat: 2, duration: 3 },
+          { noteType: 'dottedMinim', name: 'Dotted Minim', startBeat: 5, duration: 3 }
+        ],
+        [
+          { noteType: 'semibreve', name: 'Semibreve', startBeat: 0, duration: 4 },
+          { noteType: 'dottedMinim', name: 'Dotted Minim', startBeat: 4, duration: 3 },
+          { noteType: 'crotchet', name: 'Crotchet', startBeat: 7, duration: 1 }
+        ]
+      ];
+      const chosen = templates[Math.floor(Math.random() * templates.length)];
+      longNoteGame.notes = chosen.map(n => ({ ...n }));
+    }
+
+    function mountEmbeddedLongNoteGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      stopLongNoteGameLoop();
+      longNoteGame.speedIdx = 0;
+      longNoteGame.completed = false;
+      generateLongNotePhrase();
+      renderLongNoteGameUI(target);
+    }
+
+    function renderLongNoteGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const spd = longNoteSpeeds[longNoteGame.speedIdx] || longNoteSpeeds[0];
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Long Note Sustain Synth Module</span>
+              <h3 class="text-xl font-black text-white">8-Beat Long Note Hold Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">
+                <strong>Press & HOLD</strong> <kbd class="px-2 py-0.5 bg-slate-700 border border-slate-600 rounded text-amber-300 font-bold">SPACEBAR</kbd> (or hold the synth pad) for the full duration of each note: <strong>2 beats</strong> for Minim (𝅗𝅥), <strong>3 beats</strong> for Dotted Minim (𝅗𝅥.), and <strong>4 beats</strong> for Semibreve (𝅝). Release briefly to re-strike the next note!
+              </p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${longNoteSpeeds.map((s, idx) => `
+                <span class="px-2.5 py-1 rounded-lg text-xs font-black ${
+                  longNoteGame.completed || idx < longNoteGame.speedIdx
+                    ? 'bg-emerald-500 text-slate-950'
+                    : idx === longNoteGame.speedIdx
+                    ? 'bg-amber-400 text-slate-950'
+                    : 'bg-slate-800 text-slate-500'
+                }">Speed ${idx + 1}</span>
+              `).join('')}
+            </div>
+          </div>
+
+          ${longNoteGame.completed ? `
+            <div class="bg-emerald-950/60 border-2 border-emerald-500/60 rounded-2xl p-6 text-center space-y-3">
+              <div class="w-14 h-14 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-2xl mx-auto shadow-lg">
+                <i class="fa-solid fa-trophy"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">All 4 Long-Note Speeds Mastered!</h4>
+              <p class="text-xs text-slate-200">Superb sustain control across Minims, Dotted Minims, and Semibreves! You earned <strong>+10 Tokens</strong>.</p>
+              <button onclick="mountEmbeddedLongNoteGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
+                Play Again
+              </button>
+            </div>
+          ` : `
+            <div class="space-y-4">
+              <div class="flex items-center justify-between text-xs font-bold px-1">
+                <span class="text-amber-300">${spd.name}</span>
+                <span id="longnote-status-badge" class="text-slate-300">Ready</span>
+              </div>
+
+              <!-- 8-Beat Proportional Timeline -->
+              <div class="grid grid-cols-8 gap-2">
+                ${longNoteGame.notes.map((n, nIdx) => {
+                  const spanClass = n.duration === 4 ? 'col-span-4' : n.duration === 3 ? 'col-span-3' : n.duration === 2 ? 'col-span-2' : 'col-span-1';
+                  const colorClass = n.duration === 4
+                    ? 'bg-amber-950/70 border-amber-400 text-amber-300'
+                    : n.duration === 3
+                    ? 'bg-violet-950/80 border-violet-400 text-violet-300'
+                    : n.duration === 2
+                    ? 'bg-indigo-950/80 border-indigo-400 text-indigo-300'
+                    : 'bg-sky-950/80 border-sky-400 text-sky-300';
+                  const strokeHex = n.duration === 4 ? '#fcd34d' : n.duration === 3 ? '#c4b5fd' : n.duration === 2 ? '#a5b4fc' : '#7dd3fc';
+                  const beatSpanText = n.duration === 1 ? `Beat ${n.startBeat + 1}` : `Beats ${n.startBeat + 1}–${n.startBeat + n.duration}`;
+                  return `
+                    <div id="longnote-card-${nIdx}" class="${spanClass} p-3 rounded-2xl border-2 ${colorClass} flex flex-col items-center justify-between h-32 transition-all">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-slate-300">${beatSpanText}</span>
+                      ${renderEngravedNoteDarkSVG(n.noteType || 'minim', strokeHex, 'w-12 h-14')}
+                      <span class="text-[11px] font-black text-white">${n.name} (${n.duration}b)</span>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <!-- 8-Beat Pulse Strip -->
+              <div class="grid grid-cols-8 gap-2">
+                ${Array.from({ length: 8 }, (_, b) => `
+                  <div id="longnote-beat-dot-${b}" class="py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-center text-[11px] font-black text-slate-400">
+                    ${b + 1}
+                  </div>
+                `).join('')}
+              </div>
+
+              <div id="longnote-feedback-msg" class="text-center font-black text-slate-300 min-h-[2.75rem] flex items-center justify-center">
+                ${longNoteGame.active ? '<span class="text-2xl sm:text-3xl text-amber-300">Count-in: 1</span>' : '<span class="text-sm sm:text-base">Press Start Sustain Challenge to begin</span>'}
+              </div>
+
+              <div class="flex items-center justify-center gap-3">
+                ${!longNoteGame.active ? `
+                  <button onclick="startLongNoteSpeed()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow-lg">
+                    <i class="fa-solid fa-play mr-1"></i> Start Sustain Challenge (${spd.bpm} BPM)
+                  </button>
+                ` : `
+                  <button
+                    onmousedown="handleLongNotePress()"
+                    onmouseup="handleLongNoteRelease()"
+                    onmouseleave="handleLongNoteRelease()"
+                    ontouchstart="event.preventDefault(); handleLongNotePress();"
+                    ontouchend="event.preventDefault(); handleLongNoteRelease();"
+                    class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:bg-emerald-400 text-slate-950 font-black rounded-2xl text-sm shadow-lg select-none">
+                    PRESS & HOLD NOTE (or Hold SPACEBAR)
+                  </button>
+                  <button onclick="stopLongNoteGameLoop(); renderLongNoteGameUI();" class="px-4 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs">
+                    Stop
+                  </button>
+                `}
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function startLongNoteSpeed() {
+      stopLongNoteGameLoop();
+      const spd = longNoteSpeeds[longNoteGame.speedIdx] || longNoteSpeeds[0];
+      longNoteGame.beatIntervalMs = Math.round(60000 / spd.bpm);
+      longNoteGame.currentBeat = -5; // -4..-1 count-in, 0..7 beats
+      longNoteGame.mistakes = 0;
+      longNoteGame.activeNoteIdx = -1;
+      longNoteGame.heldBeatsForCurrent = 0;
+      longNoteGame.startedOnTimeForCurrent = false;
+      longNoteGame.active = true;
+      renderLongNoteGameUI();
+
+      const beatTick = () => {
+        if (!document.getElementById('longnote-feedback-msg')) {
+          stopLongNoteGameLoop();
+          return;
+        }
+
+        // Evaluate the beat that just finished (0..7)
+        if (longNoteGame.currentBeat >= 0 && longNoteGame.currentBeat < 8) {
+          const finishedBeat = longNoteGame.currentBeat;
+          const noteIdx = longNoteGame.notes.findIndex(n => finishedBeat >= n.startBeat && finishedBeat < n.startBeat + n.duration);
+          const noteObj = longNoteGame.notes[noteIdx];
+          const cardEl = document.getElementById(`longnote-card-${noteIdx}`);
+
+          // Check if player was holding during this beat
+          if (longNoteGame.isHolding && longNoteGame.startedOnTimeForCurrent) {
+            longNoteGame.heldBeatsForCurrent++;
+          } else {
+            longNoteGame.mistakes++;
+            if (cardEl) cardEl.classList.add('border-rose-500', 'bg-rose-950/70');
           }
-          if (fb) fb.innerHTML = `<span class="text-sky-300">✓ Quaver hit "${subLabel}" (${quaverGame.hitsThisBeat}/2)</span>`;
+
+          // If this was the final beat of the current note, verify full duration was held
+          if (noteObj && finishedBeat === noteObj.startBeat + noteObj.duration - 1) {
+            if (longNoteGame.heldBeatsForCurrent >= noteObj.duration) {
+              if (cardEl) cardEl.classList.add('border-emerald-400', 'bg-emerald-950/70');
+            } else {
+              longNoteGame.mistakes++;
+              if (cardEl) cardEl.classList.add('border-rose-500', 'bg-rose-950/70');
+            }
+          }
+        }
+
+        longNoteGame.currentBeat++;
+        const fb = document.getElementById('longnote-feedback-msg');
+        const badge = document.getElementById('longnote-status-badge');
+
+        if (longNoteGame.currentBeat < 0) {
+          const countNum = longNoteGame.currentBeat + 5; // 1, 2, 3, 4
+          playTonePitch(countNum === 1 ? 660 : 520, 0.08, 0.3);
+          if (fb) fb.innerHTML = `<span class="text-2xl sm:text-3xl font-black text-amber-300 tracking-wide">Count-in: ${countNum}</span>`;
+          if (badge) badge.textContent = `Count-in: ${countNum} / 4`;
+          return;
+        }
+
+        if (longNoteGame.currentBeat < 8) {
+          const b = longNoteGame.currentBeat;
+          playTonePitch(b === 0 || b === 4 ? 587 : 440, 0.05, 0.16);
+          if (badge) badge.textContent = `Beat ${b + 1} / 8`;
+
+          for (let i = 0; i < 8; i++) {
+            const dot = document.getElementById(`longnote-beat-dot-${i}`);
+            if (dot) {
+              dot.className = i === b
+                ? 'py-1.5 rounded-lg bg-amber-400 border border-amber-300 text-center text-[11px] font-black text-slate-950 scale-105 transition-all'
+                : 'py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-center text-[11px] font-black text-slate-400';
+            }
+          }
+
+          const noteIdx = longNoteGame.notes.findIndex(n => b >= n.startBeat && b < n.startBeat + n.duration);
+          const noteObj = longNoteGame.notes[noteIdx];
+
+          if (noteIdx !== longNoteGame.activeNoteIdx) {
+            longNoteGame.activeNoteIdx = noteIdx;
+            longNoteGame.heldBeatsForCurrent = 0;
+            // Must strike freshly for the new note (not just keep holding from a previous note)
+            longNoteGame.startedOnTimeForCurrent = false;
+          }
+
+          for (let i = 0; i < longNoteGame.notes.length; i++) {
+            const c = document.getElementById(`longnote-card-${i}`);
+            if (c) c.classList.toggle('beat-active', i === noteIdx);
+          }
+
+          if (noteObj && fb) {
+            const beatWithinNote = (b - noteObj.startBeat) + 1;
+            fb.innerHTML = beatWithinNote === 1
+              ? `<span class="text-lg sm:text-xl font-black text-amber-300">STRIKE & HOLD ${noteObj.name} for ${noteObj.duration} beat(s)!</span>`
+              : `<span class="text-lg sm:text-xl font-black text-emerald-300">KEEP HOLDING ${noteObj.name}... (${beatWithinNote} / ${noteObj.duration})</span>`;
+          }
         } else {
-          quaverGame.mistakes++;
-          playTonePitch(160, 0.15, 0.4);
-          if (cell) cell.classList.remove('border-emerald-400', 'bg-emerald-950/70');
-          if (cell) cell.classList.add('border-rose-500', 'bg-rose-950/70');
-          if (fb) fb.innerHTML = `<span class="text-rose-400">✗ Too many taps on Beat ${targetIdx + 1}!</span>`;
+          // End of 8-beat phrase
+          const passed = longNoteGame.mistakes === 0;
+          stopLongNoteGameLoop();
+
+          if (passed) {
+            if (longNoteGame.speedIdx < longNoteSpeeds.length - 1) {
+              longNoteGame.speedIdx++;
+              generateLongNotePhrase();
+              renderLongNoteGameUI();
+              showAppModal('Sustain Phrase Cleared!', `Full note durations held cleanly! Advancing to ${longNoteSpeeds[longNoteGame.speedIdx].name}.`, true);
+            } else {
+              longNoteGame.completed = true;
+              addTokens(10);
+              renderLongNoteGameUI();
+              showAppModal('🏆 Long Note Master!', 'You held every Minim, Dotted Minim, and Semibreve accurately across all 4 speeds and earned +10 Tokens!', true);
+            }
+          } else {
+            generateLongNotePhrase();
+            renderLongNoteGameUI();
+            showAppModal('Try Again!', 'Make sure you strike at the start of each note, hold for its full beat value (2, 3, or 4 beats), and release briefly before the next note!', false);
+          }
+        }
+      };
+
+      beatTick();
+      longNoteGame.timerId = setInterval(beatTick, longNoteGame.beatIntervalMs);
+    }
+
+    function handleLongNotePress() {
+      if (!longNoteGame.active || longNoteGame.completed || longNoteGame.isHolding) return;
+      longNoteGame.isHolding = true;
+
+      const freqs = [261.63, 329.63, 392.00, 523.25];
+      const f = freqs[Math.max(0, longNoteGame.activeNoteIdx) % freqs.length];
+      startSustainSynth(f);
+
+      if (longNoteGame.currentBeat >= 0 && longNoteGame.currentBeat < 8) {
+        const noteObj = longNoteGame.notes[longNoteGame.activeNoteIdx];
+        if (noteObj && longNoteGame.currentBeat === noteObj.startBeat) {
+          longNoteGame.startedOnTimeForCurrent = true;
         }
       }
     }
 
+    function handleLongNoteRelease() {
+      if (!longNoteGame.isHolding) return;
+      longNoteGame.isHolding = false;
+      stopSustainSynth();
+    }
+
     // Unified Spacebar Listener for Active Rhythm Minigames
     window.addEventListener('keydown', function(e) {
-      if (e.code === 'Space' && (beatGame.active || crotchetGame.active || quaverGame.active)) {
+      if (e.code === 'Space' && (beatGame.active || crotchetGame.active || quaverGame.active || longNoteGame.active)) {
         e.preventDefault();
+        if (e.repeat) return;
         if (beatGame.active) registerBeatTap();
         if (crotchetGame.active) registerCrotchetTap();
         if (quaverGame.active) registerQuaverTap();
+        if (longNoteGame.active) handleLongNotePress();
+      }
+    });
+
+    window.addEventListener('keyup', function(e) {
+      if (e.code === 'Space' && longNoteGame.active) {
+        e.preventDefault();
+        handleLongNoteRelease();
       }
     });
 
@@ -2377,7 +2850,7 @@
                   return `
                     <button id="drum-beat-card-${idx}" onclick="togglePatternBeat(${idx})" class="note-btn p-3 rounded-2xl border-2 ${isKick ? 'bg-blue-600/90 border-blue-400' : 'bg-rose-600/90 border-rose-400'} flex flex-col items-center justify-between h-28 shadow-md">
                       <span class="text-[10px] font-black uppercase tracking-wider text-white/80">${isKick ? 'KICK' : 'SNARE'}</span>
-                      <span class="text-4xl font-black text-white leading-none">${type === 'crotchet' ? '♩' : '♫'}</span>
+                      ${renderEngravedNoteDarkSVG(type === 'crotchet' ? 'crotchet' : 'quavers', '#ffffff', 'w-11 h-12')}
                       <span class="text-xs font-black bg-black/25 px-2 py-0.5 rounded-md text-amber-200">${countText}</span>
                     </button>
                   `;
@@ -2414,8 +2887,8 @@
                     <span class="text-xs font-black uppercase tracking-wider text-amber-300 shrink-0">Option ${String.fromCharCode(65 + cIdx)}</span>
                     <div class="grid grid-cols-8 gap-1.5 w-full">
                       ${choice.map((t, bIdx) => `
-                        <div class="p-2 rounded-xl ${bIdx % 2 === 0 ? 'bg-blue-950/90 border border-blue-700' : 'bg-rose-950/90 border border-rose-700'} text-center">
-                          <div class="text-xl font-black text-white leading-none">${t === 'crotchet' ? '♩' : '♫'}</div>
+                        <div class="p-2 rounded-xl ${bIdx % 2 === 0 ? 'bg-blue-950/90 border border-blue-700' : 'bg-rose-950/90 border border-rose-700'} text-center flex flex-col items-center justify-center">
+                          ${renderEngravedNoteDarkSVG(t === 'crotchet' ? 'crotchet' : 'quavers', '#ffffff', 'w-8 h-9')}
                           <div class="text-[9px] font-bold text-slate-300 mt-1">${bIdx + 1}</div>
                         </div>
                       `).join('')}

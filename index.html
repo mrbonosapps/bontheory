@@ -331,15 +331,20 @@
   <!-- CURRICULUM DATA & CORE LOGIC SCRIPT -->
   <script>
     // ==========================================
-    // CORE APPLICATION STATE & NAVIGATION CONTROLLER
+    // RESTORED DYNAMICS MEMORY MATCH & TIMBRE SOUNDBOARD
     // ==========================================
-    window.state = {
-      stats: { tokens: 10, testsTaken: 0 },
-      inventory: [],
-      testHistory: [],
-      completedLessons: [],
-      avatar: { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }
-    };
+    const dynamicsMemoryPairs = [
+      { id: 'pp', front: 'pp', back: 'Pianissimo (Very Soft)' },
+      { id: 'p', front: 'p', back: 'Piano (Soft)' },
+      { id: 'mp', front: 'mp', back: 'Mezzo Piano (Moderately Soft)' },
+      { id: 'mf', front: 'mf', back: 'Mezzo Forte (Moderately Loud)' },
+      { id: 'f', front: 'f', back: 'Forte (Loud)' },
+      { id: 'ff', front: 'ff', back: 'Fortissimo (Very Loud)' },
+      { id: 'cresc', front: '<svg viewBox="0 0 120 36" class="w-12 h-6 mx-auto"><polyline points="108,5 12,18 108,31" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></svg>', back: 'Gradually Getting Louder (cresc.)' },
+      { id: 'decresc', front: '<svg viewBox="0 0 120 36" class="w-12 h-6 mx-auto"><polyline points="12,5 108,18 12,31" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></svg>', back: 'Gradually Getting Softer (dim.)' }
+    ];
+
+    let dynamicsMemoryState = { cards: [], flipped: [], matched: [], lock: false };
 
     function updateNavBar() {
       const loginBtn = document.getElementById('nav-login-btn');
@@ -1141,75 +1146,31 @@
                     </div>
                   </div>
                 `
-              }
-            ],
-            testQuestions: [
-              { q: 'What does "pp" (Pianissimo) instruct a musician to play?', options: ['Very soft', 'Very loud', 'Moderately loud', 'Gradually getting louder'], correct: 0 },
-              { q: 'What does the dynamic marking "p" (Piano) mean?', options: ['Soft', 'Loud', 'Very loud', 'Fast'], correct: 0 },
-              { q: 'What does "mp" (Mezzo Piano) mean?', options: ['Moderately soft', 'Moderately loud', 'Very soft', 'Extremely loud'], correct: 0 },
-              { q: 'What does "mf" (Mezzo Forte) mean?', options: ['Moderately loud', 'Moderately soft', 'Very soft', 'Gradually slowing down'], correct: 0 },
-              { q: 'What does the dynamic marking "f" (Forte) mean?', options: ['Loud', 'Soft', 'Very soft', 'Silent'], correct: 0 },
-              { q: 'Which dynamic marking instructs a performer to play VERY loud?', options: ['ff (Fortissimo)', 'pp (Pianissimo)', 'mp (Mezzo Piano)', 'p (Piano)'], correct: 0 },
-              { q: 'What does the term "Crescendo" (cresc.) mean?', options: ['Gradually getting louder', 'Gradually getting softer', 'Suddenly very soft', 'Playing short and detached'], correct: 0 },
-              { q: 'What does "Decrescendo / Diminuendo" mean?', options: ['Gradually getting softer', 'Gradually getting louder', 'Repeating from the start', 'Holding a note for 4 beats'], correct: 0 },
-              { q: 'What does a hairpin symbol that opens wider from left to right indicate?', options: ['Crescendo (gradually getting louder)', 'Decrescendo (gradually getting softer)', 'Crotchet rest', 'Ascending leap'], correct: 0 },
-              { q: 'Which sequence lists dynamic markings in order from SOFTEST to LOUDEST?', options: ['pp → p → mp → mf → f → ff', 'ff → f → mf → mp → p → pp', 'p → pp → f → ff → mp → mf', 'mf → mp → p → pp → f → ff'], correct: 0 }
-            ]
-          }
-        ]
-      },
-      {
-        id: 'timbre',
-        title: 'Tone Colour (Timbre)',
-        icon: 'fa-guitar',
-        color: 'emerald',
-        summary: 'Identifying instruments by their unique sound quality and descriptive timbre adjectives.',
-        levels: [
-          {
-            level: 1,
-            title: 'Level 1: Descriptive Timbre & Instrument Families',
-            lessons: [
+              },
               {
-                lessonNum: 1,
-                title: 'Lesson 1: Describing Tone Colour (Timbre)',
-                summary: 'Use descriptive adjectives to identify instruments and match sounds on the Timbre Soundboard.',
-                toolType: 'timbreSoundboard',
+                lessonNum: 2,
+                title: 'Lesson 2: Terraced Dynamics & The Great Challenge',
+                summary: 'Explore sudden shifts in volume (terraced dynamics) and test your knowledge of all dynamic symbols in a fast-paced challenge.',
+                toolType: 'dynamicsChallengeGame',
                 contentHtml: `
-                  <p><strong>Tone Colour</strong> (also called <strong>Timbre</strong>, pronounced <em>"tam-ber"</em>) is the unique quality of a sound that lets you tell a violin apart from a trumpet even when both play the exact same pitch at the exact same volume. Musicians describe timbre using vivid <strong>descriptive words (adjectives)</strong>:</p>
-                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                    <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200">
-                      <div class="font-black text-xs text-emerald-900">Violin</div>
-                      <p class="text-[11px] text-emerald-800 mt-0.5">Warm, singing &amp; rich</p>
+                  <p><strong>Terraced Dynamics</strong> are sudden, abrupt changes in volume without any gradual crescendo or decrescendo. It is like stepping up or down a staircase of sound!</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div class="p-5 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center gap-4">
+                      <div class="text-2xl font-black italic text-indigo-700 shrink-0">p &rarr; f</div>
+                      <div>
+                        <div class="font-black text-sm text-indigo-900">Sudden Loudness</div>
+                        <p class="text-xs text-slate-700 mt-1">Playing softly, then immediately shifting to a loud volume.</p>
+                      </div>
                     </div>
-                    <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200">
-                      <div class="font-black text-xs text-amber-900">Trumpet</div>
-                      <p class="text-[11px] text-amber-800 mt-0.5">Brassy, bright &amp; metallic</p>
-                    </div>
-                    <div class="p-3.5 rounded-2xl bg-rose-50 border border-rose-200">
-                      <div class="font-black text-xs text-rose-900">Snare Drum</div>
-                      <p class="text-[11px] text-rose-800 mt-0.5">Short, crisp &amp; crack-like</p>
-                    </div>
-                    <div class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200">
-                      <div class="font-black text-xs text-indigo-900">Bass Drum</div>
-                      <p class="text-[11px] text-indigo-800 mt-0.5">Deep, heavy thud</p>
-                    </div>
-                    <div class="p-3.5 rounded-2xl bg-slate-100 border border-slate-300">
-                      <div class="font-black text-xs text-slate-900">Double Bass</div>
-                      <p class="text-[11px] text-slate-700 mt-0.5">Rumbling, dull &amp; woody</p>
-                    </div>
-                    <div class="p-3.5 rounded-2xl bg-sky-50 border border-sky-200">
-                      <div class="font-black text-xs text-sky-900">Harp</div>
-                      <p class="text-[11px] text-sky-800 mt-0.5">Shimmering &amp; delicate</p>
-                    </div>
-                    <div class="p-3.5 rounded-2xl bg-orange-50 border border-orange-200">
-                      <div class="font-black text-xs text-orange-900">Xylophone</div>
-                      <p class="text-[11px] text-orange-800 mt-0.5">Wooden, dry &amp; hollow</p>
-                    </div>
-                    <div class="p-3.5 rounded-2xl bg-violet-50 border border-violet-200">
-                      <div class="font-black text-xs text-violet-900">Tubular Bells</div>
-                      <p class="text-[11px] text-violet-800 mt-0.5">Resonant, ringing &amp; bright</p>
+                    <div class="p-5 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center gap-4">
+                      <div class="text-2xl font-black italic text-indigo-700 shrink-0">f &rarr; p</div>
+                      <div>
+                        <div class="font-black text-sm text-indigo-900">Sudden Softness</div>
+                        <p class="text-xs text-slate-700 mt-1">Playing loudly, then immediately dropping to a soft volume.</p>
+                      </div>
                     </div>
                   </div>
+                  <p class="mt-4">Test your mastery of all dynamics (including gradual hairpins and sudden terraced shifts) in the interactive challenge below!</p>
                 `
               }
             ],
@@ -1572,6 +1533,7 @@
       const nextLesson = level.lessons[lessonIdx + 1];
 
       const lKey = `${concept.id}_lvl${level.level}_les${lesson.lessonNum}`;
+      if (!window.state) window.state = {};
       if (!window.state.completedLessons) window.state.completedLessons = [];
       if (!window.state.completedLessons.includes(lKey)) {
         window.state.completedLessons.push(lKey);
@@ -1579,14 +1541,11 @@
       }
 
       container.innerHTML = `
-        <div class="max-w-4xl mx-auto space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="space-y-6">
+          <div class="flex items-center justify-between">
             <button onclick="app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white border-2 border-indigo-700 text-xs font-black shadow-md">
               <i class="fa-solid fa-arrow-left"></i> Back to ${level.title}
             </button>
-            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-black">
-              <i class="fa-solid fa-check mr-1"></i> Lesson Progress Saved
-            </span>
           </div>
 
           <article class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
@@ -1626,8 +1585,108 @@
       else if (lesson.toolType === 'melodicContourGame') mountEmbeddedMelodicContourGame(toolBox);
       else if (lesson.toolType === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolBox);
       else if (lesson.toolType === 'dynamicsSimulator') mountEmbeddedDynamicsSimulator(toolBox);
+      else if (lesson.toolType === 'dynamicsChallengeGame') mountEmbeddedDynamicsChallengeGame(toolBox);
       else if (lesson.toolType === 'timbreSoundboard') mountEmbeddedTimbreSoundboard(toolBox);
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
+    }
+
+    function mountEmbeddedDynamicsSimulator(target) {
+      if (!target) return;
+      
+      const pairs = [...dynamicsMemoryPairs];
+      const deck = [];
+      pairs.forEach(p => {
+        deck.push({ id: p.id, type: 'front', content: p.front });
+        deck.push({ id: p.id, type: 'back', content: p.back });
+      });
+      deck.sort(() => Math.random() - 0.5);
+      
+      dynamicsMemoryState = { cards: deck, flipped: [], matched: [], lock: false };
+      renderDynamicsMemoryUI(target);
+    }
+
+    function flipDynamicsCard(index) {
+      const st = dynamicsMemoryState;
+      if (st.lock || st.flipped.includes(index) || st.matched.includes(index)) return;
+
+      st.flipped.push(index);
+      renderDynamicsMemoryUI(document.getElementById('embedded-tool-container'));
+
+      if (st.flipped.length === 2) {
+        st.lock = true;
+        const [i1, i2] = st.flipped;
+        const c1 = st.cards[i1];
+        const c2 = st.cards[i2];
+
+        if (c1.id === c2.id) {
+          playTonePitch(659.25, 0.2, 0.35, 'triangle');
+          setTimeout(() => {
+            st.matched.push(i1, i2);
+            st.flipped = [];
+            st.lock = false;
+            if (st.matched.length === st.cards.length) {
+              addTokens(10);
+              showAppModal('Memory Match Mastered!', 'You matched all 8 dynamic symbols and earned +10 Tokens!', true);
+            }
+            renderDynamicsMemoryUI(document.getElementById('embedded-tool-container'));
+          }, 600);
+        } else {
+          playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+          setTimeout(() => {
+            st.flipped = [];
+            st.lock = false;
+            renderDynamicsMemoryUI(document.getElementById('embedded-tool-container'));
+          }, 1000);
+        }
+      }
+    }
+
+    function renderDynamicsMemoryUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = dynamicsMemoryState;
+      
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Memory Match Game (+10 Tokens)</span>
+              <h3 class="text-xl font-black">Dynamics Flip-Card Memory Match</h3>
+              <p class="text-xs text-slate-300 mt-1">Match all 8 dynamic symbols (including hairpins) with their definitions.</p>
+            </div>
+            <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200 shrink-0">
+              ${st.matched.length / 2} / ${dynamicsMemoryPairs.length} Pairs
+            </span>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2.5">
+            ${st.cards.map((c, idx) => {
+              const isFlipped = st.flipped.includes(idx) || st.matched.includes(idx);
+              const isMatched = st.matched.includes(idx);
+              
+              if (isFlipped) {
+                return `
+                  <div class="p-3 rounded-xl border-2 flex items-center justify-center text-center transition-all ${isMatched ? 'border-emerald-500 bg-emerald-950 text-emerald-200' : 'border-amber-400 bg-indigo-900 text-white'}" style="min-height: 80px;">
+                    <span class="${c.type === 'front' ? 'text-xl font-black italic' : 'text-[10px] font-bold'}">${c.content}</span>
+                  </div>
+                `;
+              } else {
+                return `
+                  <button type="button" onclick="flipDynamicsCard(${idx})" class="p-3 rounded-xl border-2 border-slate-700 bg-slate-800 hover:border-indigo-400 hover:bg-slate-700 flex items-center justify-center transition-all" style="min-height: 80px;">
+                    <i class="fa-solid fa-music text-slate-500 text-xl"></i>
+                  </button>
+                `;
+              }
+            }).join('')}
+          </div>
+          
+          ${st.matched.length === st.cards.length ? `
+            <div class="text-center pt-2">
+              <button type="button" onclick="mountEmbeddedDynamicsSimulator(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
     }
 
     // ==========================================
@@ -3436,96 +3495,141 @@
     }
 
     // ==========================================
-    // RESTORED DYNAMICS MEMORY MATCH & TIMBRE SOUNDBOARD
+    // MINIGAME 8: DYNAMICS CHALLENGE GAME
     // ==========================================
-    const dynamicsMemoryPairs = [
-      { id: 'pp', front: 'pp', back: 'Pianissimo (Very Soft)' },
-      { id: 'p', front: 'p', back: 'Piano (Soft)' },
-      { id: 'mp', front: 'mp', back: 'Mezzo Piano (Moderately Soft)' },
-      { id: 'mf', front: 'mf', back: 'Mezzo Forte (Moderately Loud)' },
-      { id: 'f', front: 'f', back: 'Forte (Loud)' },
-      { id: 'ff', front: 'ff', back: 'Fortissimo (Very Loud)' },
-      { id: 'cresc', front: '< (Crescendo)', back: 'Gradually Getting Louder' },
-      { id: 'decresc', front: '> (Decrescendo)', back: 'Gradually Getting Softer' }
+    const dynamicsChallengeCatalog = [
+      { id: 'pp', desc: 'Pianissimo (Very Soft)', symbol: 'pp' },
+      { id: 'p', desc: 'Piano (Soft)', symbol: 'p' },
+      { id: 'mp', desc: 'Mezzo Piano (Moderately Soft)', symbol: 'mp' },
+      { id: 'mf', desc: 'Mezzo Forte (Moderately Loud)', symbol: 'mf' },
+      { id: 'f', desc: 'Forte (Loud)', symbol: 'f' },
+      { id: 'ff', desc: 'Fortissimo (Very Loud)', symbol: 'ff' },
+      { id: 'cresc', desc: 'Crescendo (Gradually getting louder)', symbol: 'cresc.' },
+      { id: 'decresc', desc: 'Decrescendo (Gradually getting softer)', symbol: 'decresc.' },
+      { id: 'terraced_p_f', desc: 'Terraced: Sudden shift from Soft to Loud', symbol: 'p &rarr; f' },
+      { id: 'terraced_f_p', desc: 'Terraced: Sudden shift from Loud to Soft', symbol: 'f &rarr; p' }
     ];
 
-    let dynamicsMemoryState = { cards: [], flipped: [], matched: [], lock: false };
+    let dynChallengeState = {
+      round: 1,
+      totalRounds: 10,
+      score: 0,
+      target: null,
+      answered: false,
+      lastCorrect: false,
+      completed: false
+    };
 
-    function mountEmbeddedDynamicsSimulator(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const deck = [];
-      dynamicsMemoryPairs.forEach(p => {
-        deck.push({ pairId: p.id, text: p.front, kind: 'symbol' });
-        deck.push({ pairId: p.id, text: p.back, kind: 'def' });
-      });
-      for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
-      }
-      dynamicsMemoryState = { cards: deck, flipped: [], matched: [], lock: false };
-      renderDynamicsMemoryUI(target);
+    function renderDynamicSymbol(id, size = 'w-10 h-6') {
+      if (id === 'cresc') return `<svg viewBox="0 0 120 36" class="${size} mx-auto"><polyline points="108,5 12,18 108,31" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+      if (id === 'decresc') return `<svg viewBox="0 0 120 36" class="${size} mx-auto"><polyline points="12,5 108,18 12,31" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+      const mapping = {
+        'pp': 'pp', 'p': 'p', 'mp': 'mp', 'mf': 'mf', 'f': 'f', 'ff': 'ff',
+        'terraced_p_f': 'p &rarr; f', 'terraced_f_p': 'f &rarr; p'
+      };
+      return `<span class="italic font-black text-xl">${mapping[id]}</span>`;
     }
 
-    function flipDynamicsMemoryCard(idx) {
-      const st = dynamicsMemoryState;
-      if (st.lock || st.flipped.includes(idx) || st.matched.includes(st.cards[idx].pairId)) return;
-      st.flipped.push(idx);
-      renderDynamicsMemoryUI();
+    function mountEmbeddedDynamicsChallengeGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      dynChallengeState = {
+        round: 1,
+        totalRounds: 10,
+        score: 0,
+        target: dynamicsChallengeCatalog[Math.floor(Math.random() * dynamicsChallengeCatalog.length)],
+        answered: false,
+        lastCorrect: false,
+        completed: false
+      };
+      renderDynamicsChallengeUI(target);
+    }
 
-      if (st.flipped.length === 2) {
-        st.lock = true;
-        const [a, b] = st.flipped;
-        if (st.cards[a].pairId === st.cards[b].pairId) {
-          st.matched.push(st.cards[a].pairId);
-          st.flipped = [];
-          st.lock = false;
-          playTonePitch(659.25, 0.15, 0.3, 'triangle');
-          renderDynamicsMemoryUI();
-          if (st.matched.length === dynamicsMemoryPairs.length) {
-            addTokens(10);
-            showAppModal('Dynamics Memory Match Complete!', 'You matched all 8 dynamic symbols and earned +10 Tokens! Reshuffling cards...', true);
-            setTimeout(() => mountEmbeddedDynamicsSimulator(), 600);
-          }
-        } else {
-          setTimeout(() => {
-            st.flipped = [];
-            st.lock = false;
-            renderDynamicsMemoryUI();
-          }, 800);
-        }
+    function guessDynamicsChallenge(id) {
+      const st = dynChallengeState;
+      if (st.answered || st.completed) return;
+      st.answered = true;
+      st.lastCorrect = (st.target.id === id);
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(2);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderDynamicsChallengeUI();
+    }
+
+    function nextDynamicsChallengeRound() {
+      const st = dynChallengeState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        st.target = dynamicsChallengeCatalog[Math.floor(Math.random() * dynamicsChallengeCatalog.length)];
+        st.answered = false;
+        renderDynamicsChallengeUI();
+      } else {
+        st.completed = true;
+        renderDynamicsChallengeUI();
+        showAppModal('Dynamics Challenge Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score * 2} Tokens!`, st.score >= 5);
       }
     }
 
-    function renderDynamicsMemoryUI(target) {
+    function renderDynamicsChallengeUI(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      const st = dynamicsMemoryState;
+      const st = dynChallengeState;
       target.innerHTML = `
         <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Memory Match Game (+10 Tokens)</span>
-              <h3 class="text-xl font-black">Dynamics Flip-Card Memory Match</h3>
-              <p class="text-xs text-slate-300 mt-1">Match all 8 dynamic symbols (pp, p, mp, mf, f, ff, Crescendo, Decrescendo) with their definitions.</p>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 2 Tokens Per Correct Answer</span>
+              <h3 class="text-xl font-black">The Great Dynamics Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">Match the description to the correct dynamic marking or symbol!</p>
             </div>
-            <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
-              ${st.matched.length} / ${dynamicsMemoryPairs.length} Pairs
-            </span>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+                Round ${st.round} / ${st.totalRounds}
+              </span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                Score: ${st.score} (+${st.score * 2} Tokens)
+              </span>
+            </div>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            ${st.cards.map((c, idx) => {
-              const isRevealed = st.flipped.includes(idx) || st.matched.includes(c.pairId);
-              const isDone = st.matched.includes(c.pairId);
-              return `
-                <button type="button" onclick="flipDynamicsMemoryCard(${idx})" class="h-24 p-3 rounded-2xl border-2 font-black text-xs flex items-center justify-center text-center transition-all ${
-                  isDone ? 'border-emerald-500 bg-emerald-950/60 text-emerald-200' : isRevealed ? 'border-amber-400 bg-indigo-900 text-white' : 'border-slate-700 bg-slate-800 hover:border-indigo-400 text-slate-500'
-                }">
-                  ${isRevealed ? c.text : '<i class="fa-solid fa-music text-lg"></i>'}
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
+              <p class="text-xs text-slate-200">You matched <strong>${st.score} / ${st.totalRounds}</strong> dynamics correctly and earned <strong>+${st.score * 2} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedDynamicsChallengeGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : `
+            <div class="flex justify-center py-4">
+              <div class="p-6 rounded-2xl bg-indigo-950 border border-indigo-500 text-center w-full max-w-md shadow-lg">
+                <div class="text-xs font-bold uppercase text-indigo-300 mb-2">Find the marking for:</div>
+                <div class="text-xl sm:text-2xl font-black text-white">${st.target.desc}</div>
+              </div>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? `✓ Spot on! (+2 Tokens)` : `✗ Not quite — it was ${st.target.symbol}.`}</span>
+                <button type="button" onclick="nextDynamicsChallengeRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
                 </button>
-              `;
-            }).join('')}
-          </div>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              ${dynamicsChallengeCatalog.map(opt => `
+                <button type="button" onclick="guessDynamicsChallenge('${opt.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-center transition-all flex items-center justify-center min-h-[72px] ${
+                  st.answered && opt.id === st.target.id ? 'border-emerald-400 bg-emerald-950/60 text-emerald-200 shadow-lg scale-105 z-10' : 
+                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700 text-white shadow-md'
+                }">
+                  ${renderDynamicSymbol(opt.id, 'w-12 h-6')}
+                </button>
+              `).join('')}
+            </div>
+          `}
         </div>
       `;
     }

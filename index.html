@@ -739,17 +739,23 @@
     }
 
     // ==========================================
-    // REWARDS SHOP CATALOG (DOUBLED PRICES + MR H'S VINTAGE COMB & MR B'S WRENCH AT 150)
+    // REWARDS SHOP CATALOG (EXPANDED CATALOG & INCREASED PRESTIGE ITEM COSTS)
     // ==========================================
     const shopCatalog = [
-      { id: 'item_comb', name: "Mr H's Vintage Comb", category: 'Legend Relic', cost: 150, icon: 'fa-wand-magic-sparkles', desc: 'A gleaming tortoise-shell pocket comb of immaculate musical poise.' },
-      { id: 'item_wrench', name: "Mr B's Wrench", category: 'Legend Relic', cost: 150, icon: 'fa-wrench', desc: 'Heavy-duty chrome tuning wrench forged for precision classroom engineering.' },
       { id: 'item_headphones', name: 'Studio Monitor Headphones', category: 'Studio Gear', cost: 40, icon: 'fa-headphones', desc: 'Closed-back reference headphones for crisp rhythm and pitch dictation.' },
       { id: 'item_metronome', name: 'Brass Pyramid Metronome', category: 'Rhythm Tool', cost: 60, icon: 'fa-stopwatch', desc: 'Classic mechanical pendulum metronome for rock-solid tempo control.' },
       { id: 'item_baton', name: 'Maestro Conductor Baton', category: 'Leadership', cost: 80, icon: 'fa-wand-sparkles', desc: 'Balanced cork-handle baton for leading dynamics and tempo.' },
       { id: 'item_synth', name: 'Analog Pocket Synthesizer', category: 'Instrument', cost: 100, icon: 'fa-sliders', desc: 'Portable waveform generator with sawtooth, square, and triangle oscillators.' },
+      { id: 'item_bass8', name: '8-String Bass Guitar', category: 'Instrument', cost: 120, icon: 'fa-guitar', desc: 'Extended range bass for deep, rumbling harmonic textures.' },
       { id: 'item_guitar', name: 'Custom Sunburst Strat', category: 'Instrument', cost: 140, icon: 'fa-guitar', desc: 'Stage-ready electric guitar with bright, cutting timbre.' },
-      { id: 'item_crown', name: 'Golden Clef Trophy', category: 'Prestige', cost: 200, icon: 'fa-trophy', desc: 'The ultimate honour for mastering all Six Concepts of Music.' }
+      { id: 'item_comb', name: "Mr H's Vintage Comb", category: 'Legend Relic', cost: 150, icon: 'fa-wand-magic-sparkles', desc: 'A gleaming tortoise-shell pocket comb of immaculate musical poise.' },
+      { id: 'item_wrench', name: "Mr B's Wrench", category: 'Legend Relic', cost: 150, icon: 'fa-wrench', desc: 'Heavy-duty chrome tuning wrench forged for precision classroom engineering.' },
+      { id: 'item_mjmic', name: "Michael Jackson's Mic", category: 'Legend Relic', cost: 180, icon: 'fa-microphone-lines', desc: 'A legendary studio microphone that captured the King of Pop.' },
+      { id: 'item_drumkit30', name: '30-Piece Drumkit', category: 'Instrument', cost: 190, icon: 'fa-drum', desc: 'A massive percussion station with endless rhythmic possibilities.' },
+      { id: 'item_saxgold', name: 'Solid Gold Saxophone', category: 'Instrument', cost: 200, icon: 'fa-music', desc: 'A dazzling brass woodwind with a rich, soaring tone colour.' },
+      { id: 'item_eltonpiano', name: "Elton John's Piano", category: 'Legend Relic', cost: 250, icon: 'fa-keyboard', desc: 'A glittering grand piano that commands the stage.' },
+      { id: 'item_evhguitar', name: "EVH's Striped Guitar", category: 'Legend Relic', cost: 250, icon: 'fa-bolt', desc: 'The iconic custom-built guitar for face-melting solos.' },
+      { id: 'item_crown', name: 'Golden Clef Trophy', category: 'Prestige', cost: 500, icon: 'fa-trophy', desc: 'The ultimate honour for mastering all Six Concepts of Music.' }
     ];
 
     // ==========================================
@@ -3651,46 +3657,58 @@
       const toks = (window.state.stats && window.state.stats.tokens) || 0;
       const inv = window.state.inventory || [];
       
+      const colorThemes = [
+        { bg: 'bg-indigo-100', text: 'text-indigo-600', border: 'hover:border-indigo-400' },
+        { bg: 'bg-rose-100', text: 'text-rose-600', border: 'hover:border-rose-400' },
+        { bg: 'bg-amber-100', text: 'text-amber-600', border: 'hover:border-amber-400' },
+        { bg: 'bg-emerald-100', text: 'text-emerald-600', border: 'hover:border-emerald-400' },
+        { bg: 'bg-sky-100', text: 'text-sky-600', border: 'hover:border-sky-400' },
+        { bg: 'bg-fuchsia-100', text: 'text-fuchsia-600', border: 'hover:border-fuchsia-400' },
+        { bg: 'bg-violet-100', text: 'text-violet-600', border: 'hover:border-violet-400' }
+      ];
+
       container.innerHTML = `
         <div class="space-y-6">
-          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-black uppercase tracking-widest text-amber-400">Classroom Rewards</span>
-              <h1 class="text-2xl sm:text-3xl font-black mt-1">Music Gear Shop</h1>
-              <p class="text-xs text-slate-300 mt-1">Spend your hard-earned tokens on exclusive virtual gear and legendary relics.</p>
+          <div class="bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+            <div class="absolute -right-6 -bottom-8 text-9xl text-white/10 rotate-12 pointer-events-none"><i class="fa-solid fa-store"></i></div>
+            <div class="relative z-10">
+              <span class="text-xs font-black uppercase tracking-widest text-amber-300">Classroom Rewards</span>
+              <h1 class="text-2xl sm:text-4xl font-black mt-1">Music Gear Shop</h1>
+              <p class="text-xs sm:text-sm text-fuchsia-100 mt-2 max-w-lg">Spend your hard-earned tokens on exclusive virtual gear and legendary musical relics.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-3 shrink-0">
+            <div class="flex flex-wrap items-center gap-3 shrink-0 relative z-10 mt-2 sm:mt-0">
               <span class="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-black text-sm shadow-md">
                 <i class="fa-solid fa-coins mr-1.5"></i> ${toks} Tokens
               </span>
-              <button onclick="openCurrentPortal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-sm shadow-md transition-colors">
+              <button onclick="openCurrentPortal()" class="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white font-black rounded-xl text-sm border border-white/30 shadow-md transition-colors">
                 Back to Dashboard
               </button>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            ${shopCatalog.map(item => {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            ${shopCatalog.map((item, idx) => {
               const isOwned = inv.includes(item.id);
               const canAfford = toks >= item.cost;
+              const theme = colorThemes[idx % colorThemes.length];
               return `
-                <div class="bg-white rounded-3xl p-5 border ${isOwned ? 'border-emerald-400 bg-emerald-50/20' : 'border-slate-200'} flex flex-col justify-between h-full shadow-sm hover:shadow-md transition-shadow">
+                <div class="bg-white rounded-3xl p-5 border-2 ${isOwned ? 'border-emerald-400 bg-emerald-50/40' : 'border-slate-100 ' + theme.border} flex flex-col justify-between h-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                   <div>
-                    <div class="w-14 h-14 rounded-2xl ${isOwned ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-600'} flex items-center justify-center text-2xl mb-4">
+                    <div class="w-14 h-14 rounded-2xl ${isOwned ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : theme.bg + ' ' + theme.text} flex items-center justify-center text-2xl mb-4 transition-colors">
                       <i class="fa-solid ${item.icon}"></i>
                     </div>
-                    <div class="text-[10px] font-black uppercase tracking-widest ${isOwned ? 'text-emerald-500' : 'text-slate-400'} mb-1.5">${item.category}</div>
-                    <h3 class="font-black text-slate-800 leading-tight mb-2">${item.name}</h3>
+                    <div class="text-[10px] font-black uppercase tracking-widest ${isOwned ? 'text-emerald-600' : theme.text} mb-1.5">${item.category}</div>
+                    <h3 class="font-black text-slate-800 leading-tight mb-2 text-lg">${item.name}</h3>
                     <p class="text-xs text-slate-500 leading-relaxed">${item.desc}</p>
                   </div>
-                  <div class="mt-5 pt-4 border-t border-slate-100">
+                  <div class="mt-6 pt-4 border-t border-slate-100">
                     ${isOwned ? `
-                      <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-700 hover:text-rose-700 font-black text-xs transition-colors group">
+                      <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                         <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
                         <span class="hidden group-hover:inline"><i class="fa-solid fa-rotate-left mr-1"></i> Trade Back (+${item.cost})</span>
                       </button>
                     ` : `
-                      <button onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''} class="w-full py-3 rounded-xl font-black text-xs transition-colors ${canAfford ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}">
+                      <button onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''} class="w-full py-3 rounded-xl font-black text-xs transition-all ${canAfford ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md hover:shadow-lg' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}">
                         ${canAfford ? `<i class="fa-solid fa-cart-shopping mr-1.5"></i> Unlock for ${item.cost} Tokens` : `<i class="fa-solid fa-lock mr-1.5"></i> Need ${item.cost} Tokens`}
                       </button>
                     `}

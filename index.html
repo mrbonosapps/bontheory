@@ -643,6 +643,24 @@
       const a = avatar || def;
       const skin = '#fcd34d';
 
+      let bgStyle = `background-color: ${a.bg || def.bg};`;
+      let bgSVG = '';
+      if (a.bg === 'rays') {
+        bgStyle = `background-color: #fde047;`;
+        bgSVG = `<path d="M50 50 L0 0 L20 0 Z M50 50 L40 0 L60 0 Z M50 50 L80 0 L100 0 Z M50 50 L100 20 L100 40 Z M50 50 L100 60 L100 80 Z M50 50 L100 100 L80 100 Z M50 50 L60 100 L40 100 Z M50 50 L20 100 L0 100 Z M50 50 L0 80 L0 60 Z M50 50 L0 40 L0 20 Z" fill="#fef08a" />`;
+      } else if (a.bg === 'bubbles') {
+        bgStyle = `background-color: #38bdf8;`;
+        bgSVG = `<circle cx="20" cy="80" r="10" fill="#7dd3fc" opacity="0.5"/><circle cx="80" cy="30" r="15" fill="#7dd3fc" opacity="0.5"/><circle cx="15" cy="20" r="6" fill="#7dd3fc" opacity="0.5"/><circle cx="70" cy="90" r="8" fill="#7dd3fc" opacity="0.5"/>`;
+      } else if (a.bg === 'zigzag') {
+        bgStyle = `background-color: #f472b6;`;
+        bgSVG = `<path d="M0 20 L20 40 L40 20 L60 40 L80 20 L100 40 L100 0 L0 0 Z" fill="#fbcfe8" opacity="0.5"/><path d="M0 70 L20 90 L40 70 L60 90 L80 70 L100 90 L100 100 L0 100 Z" fill="#fbcfe8" opacity="0.5"/>`;
+      } else if (a.bg === 'neon') {
+        bgStyle = `background-color: #0f172a;`;
+        bgSVG = `<circle cx="50" cy="50" r="45" fill="none" stroke="#22d3ee" stroke-width="2" filter="drop-shadow(0 0 4px #22d3ee)"/><circle cx="50" cy="50" r="35" fill="none" stroke="#f472b6" stroke-width="2" filter="drop-shadow(0 0 4px #f472b6)"/>`;
+      } else if (!a.bg || !a.bg.startsWith('#')) {
+         bgStyle = `background-color: #c7d2fe;`;
+      }
+
       let headSVG = `<circle cx="50" cy="55" r="30" fill="${skin}" />`;
       if (a.head === 'square') headSVG = `<rect x="20" y="25" width="60" height="60" rx="12" fill="${skin}" />`;
       if (a.head === 'tall') headSVG = `<ellipse cx="50" cy="55" rx="24" ry="36" fill="${skin}" />`;
@@ -654,11 +672,20 @@
         eyesSVG = `<path d="M38 40 L41 48 L48 48 L42 53 L44 60 L38 56 L32 60 L34 53 L28 48 L35 48 Z M62 40 L65 48 L72 48 L66 53 L68 60 L62 56 L56 60 L58 53 L52 48 L59 48 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" />`;
       } else if (a.eyes === 'wink') {
         eyesSVG = `<path d="M34 48 Q 38 42 42 48" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" /><circle cx="62" cy="48" r="4" fill="#0f172a" />`;
+      } else if (a.eyes === 'circle_shades') {
+        eyesSVG = `<circle cx="35" cy="46" r="10" fill="#0f172a" /><circle cx="65" cy="46" r="10" fill="#0f172a" /><line x1="45" y1="46" x2="55" y2="46" stroke="#0f172a" stroke-width="2" />`;
+      } else if (a.eyes === 'tri_shades') {
+        eyesSVG = `<polygon points="25,40 45,40 35,55" fill="#0f172a" /><polygon points="55,40 75,40 65,55" fill="#0f172a" /><line x1="45" y1="42" x2="55" y2="42" stroke="#0f172a" stroke-width="2" />`;
+      } else if (a.eyes === 'red_shades') {
+        eyesSVG = `<rect x="25" y="42" width="22" height="12" rx="2" fill="#ef4444" /><rect x="53" y="42" width="22" height="12" rx="2" fill="#ef4444" /><line x1="47" y1="46" x2="53" y2="46" stroke="#ef4444" stroke-width="2" />`;
       }
 
       let mouthSVG = `<path d="M38 65 Q 50 75 62 65" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
       if (a.mouth === 'singing') mouthSVG = `<ellipse cx="50" cy="68" rx="8" ry="12" fill="#0f172a" />`;
       else if (a.mouth === 'smirk') mouthSVG = `<path d="M40 68 L60 62" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
+      else if (a.mouth === 'none') mouthSVG = '';
+      else if (a.mouth === 'sad') mouthSVG = `<path d="M38 72 Q 50 62 62 72" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
+      else if (a.mouth === 'straight') mouthSVG = `<line x1="40" y1="68" x2="60" y2="68" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
 
       let headwearSVG = ``;
       if (a.headwear === 'headphones') {
@@ -667,10 +694,18 @@
         headwearSVG = `<path d="M15 35 Q 50 20 85 35 L80 15 Q 50 5 20 15 Z" fill="#ef4444" /><circle cx="30" cy="22" r="2.5" fill="#fff" /><circle cx="50" cy="18" r="2.5" fill="#fff" /><circle cx="70" cy="22" r="2.5" fill="#fff" />`;
       } else if (a.headwear === 'conductor') {
         headwearSVG = `<rect x="25" y="10" width="50" height="20" fill="#0f172a" /><rect x="15" y="30" width="70" height="5" rx="2" fill="#0f172a" /><rect x="25" y="25" width="50" height="4" fill="#fbbf24" />`;
+      } else if (a.headwear === 'rocker_wig') {
+        headwearSVG = `<path d="M20 50 Q 10 20 50 10 Q 90 20 80 50 Q 95 70 85 80 Q 75 60 70 45 Q 60 30 50 25 Q 40 30 30 45 Q 25 60 15 80 Q 5 70 20 50 Z" fill="#0f172a" />`;
+      } else if (a.headwear === 'mullet') {
+        headwearSVG = `<path d="M20 40 Q 50 10 80 40 L85 70 L75 60 L75 35 Q 50 20 25 35 L25 60 L15 70 Z" fill="#78350f" />`;
+      } else if (a.headwear === 'mohawk') {
+        headwearSVG = `<path d="M40 25 Q 50 -10 60 25 Z M45 25 Q 50 0 55 25 Z" fill="#ef4444" />`;
+      } else if (a.headwear === 'top_hat') {
+        headwearSVG = `<rect x="30" y="5" width="40" height="30" fill="#0f172a" /><rect x="20" y="32" width="60" height="5" rx="2" fill="#0f172a" /><rect x="30" y="27" width="40" height="5" fill="#ef4444" />`;
       }
 
-      return `<svg viewBox="0 0 100 100" class="${sizeClass} rounded-full flex-shrink-0" style="background-color: ${a.bg || def.bg}; border: 2px solid rgba(0,0,0,0.1);">
-        ${headSVG}${eyesSVG}${mouthSVG}${headwearSVG}
+      return `<svg viewBox="0 0 100 100" class="${sizeClass} rounded-full flex-shrink-0" style="${bgStyle} border: 2px solid rgba(0,0,0,0.1); overflow: hidden;">
+        ${bgSVG}${headSVG}${eyesSVG}${mouthSVG}${headwearSVG}
       </svg>`;
     }
 
@@ -3958,20 +3993,89 @@
       const a = window.tempAvatarState;
 
       const opts = {
-        bg: [{id: '#c7d2fe', name: 'Indigo'}, {id: '#fecdd3', name: 'Rose'}, {id: '#fde68a', name: 'Amber'}, {id: '#a7f3d0', name: 'Emerald'}, {id: '#bae6fd', name: 'Sky'}],
-        head: [{id: 'round', name: 'Round'}, {id: 'square', name: 'Square'}, {id: 'tall', name: 'Tall'}],
-        eyes: [{id: 'normal', name: 'Normal'}, {id: 'sunglasses', name: 'Cool Jazz'}, {id: 'stars', name: 'Rockstar'}, {id: 'wink', name: 'Wink'}],
-        mouth: [{id: 'smile', name: 'Smile'}, {id: 'singing', name: 'Singing (O)'}, {id: 'smirk', name: 'Smirk'}],
-        headwear: [{id: 'none', name: 'None'}, {id: 'headphones', name: 'DJ Phones'}, {id: 'bandana', name: 'Rock Bandana'}, {id: 'conductor', name: 'Maestro Hat'}]
+        bg: [
+          {id: '#c7d2fe', name: 'Indigo', cost: 0},
+          {id: '#fecdd3', name: 'Rose', cost: 0},
+          {id: '#fde68a', name: 'Amber', cost: 0},
+          {id: '#a7f3d0', name: 'Emerald', cost: 10},
+          {id: '#bae6fd', name: 'Sky', cost: 10},
+          {id: 'rays', name: 'Light Rays', cost: 30},
+          {id: 'bubbles', name: 'Bubbles', cost: 30},
+          {id: 'zigzag', name: 'Zig Zag', cost: 40},
+          {id: 'neon', name: 'Neon Glow', cost: 50}
+        ],
+        head: [
+          {id: 'round', name: 'Round', cost: 0},
+          {id: 'square', name: 'Square', cost: 20},
+          {id: 'tall', name: 'Tall', cost: 20}
+        ],
+        eyes: [
+          {id: 'normal', name: 'Normal', cost: 0},
+          {id: 'sunglasses', name: 'Cool Jazz', cost: 0},
+          {id: 'stars', name: 'Rockstar', cost: 0},
+          {id: 'wink', name: 'Wink', cost: 15},
+          {id: 'circle_shades', name: 'Circle Shades', cost: 25},
+          {id: 'tri_shades', name: 'Tri Shades', cost: 25},
+          {id: 'red_shades', name: 'Red Shades', cost: 30}
+        ],
+        mouth: [
+          {id: 'smile', name: 'Smile', cost: 0},
+          {id: 'singing', name: 'Singing (O)', cost: 0},
+          {id: 'smirk', name: 'Smirk', cost: 0},
+          {id: 'none', name: 'None', cost: 10},
+          {id: 'sad', name: 'Sad', cost: 10},
+          {id: 'straight', name: 'Straight', cost: 10}
+        ],
+        headwear: [
+          {id: 'none', name: 'None', cost: 0},
+          {id: 'headphones', name: 'DJ Phones', cost: 0},
+          {id: 'bandana', name: 'Rock Bandana', cost: 0},
+          {id: 'conductor', name: 'Maestro Hat', cost: 25},
+          {id: 'rocker_wig', name: 'Rocker Wig', cost: 35},
+          {id: 'mullet', name: 'Mullet', cost: 40},
+          {id: 'mohawk', name: 'Mohawk', cost: 45},
+          {id: 'top_hat', name: 'Top Hat', cost: 50}
+        ]
       };
 
-      const btnClass = (cat, val) => a[cat] === val 
-        ? 'px-3 py-2 rounded-xl bg-indigo-600 text-white font-black text-xs shadow-md' 
-        : 'px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition-colors';
+      const btnHTML = (cat, o) => {
+        const isSelected = a[cat] === o.id;
+        const unlockKey = `avatar_${cat}_${o.id}`;
+        const isUnlocked = o.cost === 0 || (state.inventory && state.inventory.includes(unlockKey));
+        
+        if (isSelected) {
+          return `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-indigo-600 text-white font-black text-xs shadow-md border-2 border-indigo-600">${o.name}</button>`;
+        }
+        if (isUnlocked) {
+          return `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border-2 border-transparent transition-colors">${o.name}</button>`;
+        }
+        return `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 font-semibold text-xs border-2 border-dashed border-slate-300 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> ${o.name} <span class="text-amber-500 font-bold">(${o.cost})</span></button>`;
+      };
 
       window.updateTempAvatar = function(cat, val) {
         window.tempAvatarState[cat] = val;
         renderAvatarMakerView(document.getElementById('app-viewport'));
+      };
+
+      window.attemptAvatarUnlock = function(cat, val, cost) {
+        if (!state.inventory) state.inventory = [];
+        const unlockKey = `avatar_${cat}_${val}`;
+        if (state.inventory.includes(unlockKey) || cost === 0) {
+          updateTempAvatar(cat, val);
+          return;
+        }
+
+        const bal = (state.stats && state.stats.tokens) || 0;
+        if (bal < cost) {
+          showAppModal('Not Enough Tokens', `You need ${cost} tokens to unlock this feature. You currently have ${bal} tokens.`, false);
+          return;
+        }
+
+        state.stats.tokens -= cost;
+        state.inventory.push(unlockKey);
+        saveUserState();
+        updateTempAvatar(cat, val);
+        showAppModal('Feature Unlocked!', `You successfully unlocked a new avatar upgrade!`, true);
       };
 
       window.saveTempAvatar = function() {
@@ -3990,11 +4094,15 @@
 
           <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-8">
             <!-- Preview -->
-            <div class="flex flex-col items-center justify-center shrink-0 space-y-4">
-              <div class="p-2 border-4 border-indigo-100 rounded-full shadow-lg">
+            <div class="flex flex-col items-center justify-start shrink-0 space-y-4">
+              <div class="p-2 border-4 border-indigo-100 rounded-full shadow-lg bg-white">
                 ${renderAvatarSVG(a, 'w-32 h-32 sm:w-40 sm:h-40')}
               </div>
-              <button onclick="saveTempAvatar()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-sm shadow-md transition-transform active:scale-95">
+              <div class="text-center w-full">
+                <div class="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">Tokens Available</div>
+                <div class="font-black text-amber-500 text-lg"><i class="fa-solid fa-coins mr-1"></i> ${(state.stats && state.stats.tokens) || 0}</div>
+              </div>
+              <button onclick="saveTempAvatar()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-sm shadow-md transition-transform active:scale-95 mt-2">
                 <i class="fa-solid fa-floppy-disk mr-1"></i> Save Avatar
               </button>
             </div>
@@ -4002,33 +4110,33 @@
             <!-- Controls -->
             <div class="flex-1 space-y-5">
               <div>
-                <div class="text-xs font-black uppercase text-slate-400 mb-2">Backdrop Color</div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Backdrop &amp; Effects</div>
                 <div class="flex flex-wrap gap-2">
-                  ${opts.bg.map(o => `<button onclick="updateTempAvatar('bg', '${o.id}')" class="${btnClass('bg', o.id)}">${o.name}</button>`).join('')}
+                  ${opts.bg.map(o => btnHTML('bg', o)).join('')}
                 </div>
               </div>
               <div>
                 <div class="text-xs font-black uppercase text-slate-400 mb-2">Head Shape</div>
                 <div class="flex flex-wrap gap-2">
-                  ${opts.head.map(o => `<button onclick="updateTempAvatar('head', '${o.id}')" class="${btnClass('head', o.id)}">${o.name}</button>`).join('')}
+                  ${opts.head.map(o => btnHTML('head', o)).join('')}
                 </div>
               </div>
               <div>
-                <div class="text-xs font-black uppercase text-slate-400 mb-2">Eyes</div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Eyes &amp; Glasses</div>
                 <div class="flex flex-wrap gap-2">
-                  ${opts.eyes.map(o => `<button onclick="updateTempAvatar('eyes', '${o.id}')" class="${btnClass('eyes', o.id)}">${o.name}</button>`).join('')}
+                  ${opts.eyes.map(o => btnHTML('eyes', o)).join('')}
                 </div>
               </div>
               <div>
-                <div class="text-xs font-black uppercase text-slate-400 mb-2">Mouth</div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Mouth Expression</div>
                 <div class="flex flex-wrap gap-2">
-                  ${opts.mouth.map(o => `<button onclick="updateTempAvatar('mouth', '${o.id}')" class="${btnClass('mouth', o.id)}">${o.name}</button>`).join('')}
+                  ${opts.mouth.map(o => btnHTML('mouth', o)).join('')}
                 </div>
               </div>
               <div>
                 <div class="text-xs font-black uppercase text-slate-400 mb-2">Musical Headwear</div>
                 <div class="flex flex-wrap gap-2">
-                  ${opts.headwear.map(o => `<button onclick="updateTempAvatar('headwear', '${o.id}')" class="${btnClass('headwear', o.id)}">${o.name}</button>`).join('')}
+                  ${opts.headwear.map(o => btnHTML('headwear', o)).join('')}
                 </div>
               </div>
             </div>

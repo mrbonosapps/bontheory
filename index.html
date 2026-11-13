@@ -697,7 +697,7 @@
       } else if (a.headwear === 'rocker_wig') {
         headwearSVG = `<path d="M20 50 Q 10 20 50 10 Q 90 20 80 50 Q 95 70 85 80 Q 75 60 70 45 Q 60 30 50 25 Q 40 30 30 45 Q 25 60 15 80 Q 5 70 20 50 Z" fill="#0f172a" />`;
       } else if (a.headwear === 'mullet') {
-        headwearSVG = `<path d="M20 40 Q 50 10 80 40 L85 70 L75 60 L75 35 Q 50 20 25 35 L25 60 L15 70 Z" fill="#78350f" />`;
+        headwearSVG = `<path d="M15 45 C 15 -5, 85 -5, 85 45 L90 80 L75 65 L75 35 Q 50 15 25 35 L25 65 L10 80 Z" fill="#78350f" />`;
       } else if (a.headwear === 'mohawk') {
         headwearSVG = `<path d="M40 25 Q 50 -10 60 25 Z M45 25 Q 50 0 55 25 Z" fill="#ef4444" />`;
       } else if (a.headwear === 'top_hat') {
@@ -4043,13 +4043,22 @@
         const unlockKey = `avatar_${cat}_${o.id}`;
         const isUnlocked = o.cost === 0 || (state.inventory && state.inventory.includes(unlockKey));
         
+        let mainBtn = '';
         if (isSelected) {
-          return `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-indigo-600 text-white font-black text-xs shadow-md border-2 border-indigo-600">${o.name}</button>`;
+          mainBtn = `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-indigo-600 text-white font-black text-xs shadow-md border-2 border-indigo-600">${o.name}</button>`;
+        } else if (isUnlocked) {
+          mainBtn = `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border-2 border-transparent transition-colors">${o.name}</button>`;
+        } else {
+          return `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 font-semibold text-xs border-2 border-dashed border-slate-300 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> ${o.name} <span class="text-amber-500 font-bold">(${o.cost})</span></button>`;
         }
-        if (isUnlocked) {
-          return `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border-2 border-transparent transition-colors">${o.name}</button>`;
+
+        if (isUnlocked && o.cost > 0) {
+          return `<div class="flex items-center gap-1">
+            ${mainBtn}
+            <button onclick="tradeAvatarItem('${cat}', '${o.id}', ${o.cost}, '${o.name}')" class="px-2 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors" title="Trade back for ${o.cost} Tokens"><i class="fa-solid fa-rotate-left"></i></button>
+          </div>`;
         }
-        return `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 font-semibold text-xs border-2 border-dashed border-slate-300 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> ${o.name} <span class="text-amber-500 font-bold">(${o.cost})</span></button>`;
+        return mainBtn;
       };
 
       window.updateTempAvatar = function(cat, val) {
@@ -4076,6 +4085,24 @@
         saveUserState();
         updateTempAvatar(cat, val);
         showAppModal('Feature Unlocked!', `You successfully unlocked a new avatar upgrade!`, true);
+      };
+
+      window.tradeAvatarItem = function(cat, val, cost, name) {
+        if (!state.inventory) return;
+        const unlockKey = `avatar_${cat}_${val}`;
+        const idx = state.inventory.indexOf(unlockKey);
+        if (idx > -1) {
+          state.inventory.splice(idx, 1);
+          state.stats.tokens += cost;
+          // Revert to default if the traded item is currently equipped
+          if (window.tempAvatarState[cat] === val) {
+            const defaults = { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' };
+            window.tempAvatarState[cat] = defaults[cat] || 'none';
+          }
+          saveUserState();
+          showAppModal('Trade Successful!', `You traded back ${name} and received a refund of ${cost} Tokens!`, true);
+          renderAvatarMakerView(document.getElementById('app-viewport'));
+        }
       };
 
       window.saveTempAvatar = function() {

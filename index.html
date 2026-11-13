@@ -500,6 +500,8 @@
     // ==========================================
     // PERSISTENCE, TOKEN WALLET & LEADERBOARD SYNC
     // ==========================================
+    window.leaderboardFilters = { timeframe: 'overall', classGroup: 'ALL' };
+
     function getAllUserRecords() {
       let localDb = {};
       try {
@@ -561,6 +563,13 @@
     function addTokens(amount) {
       if (!window.state.stats) window.state.stats = { tokens: 0, testsTaken: 0 };
       window.state.stats.tokens = Math.max(0, (Number(window.state.stats.tokens) || 0) + Number(amount));
+      
+      const todayStr = new Date().toLocaleDateString();
+      if (!window.state.stats.dailyTokens || window.state.stats.dailyTokens.date !== todayStr) {
+        window.state.stats.dailyTokens = { date: todayStr, amount: 0 };
+      }
+      window.state.stats.dailyTokens.amount += Number(amount);
+
       saveUserState();
     }
 
@@ -581,14 +590,28 @@
     function refreshLeaderboardTableInPlace() {
       const tbody = document.getElementById('overall-leaderboard-tbody');
       if (!tbody) return;
-      const students = getDeduplicatedStudents();
-      students.sort((a, b) => ((b.stats && b.stats.tokens) || 0) - ((a.stats && a.stats.tokens) || 0));
+      let students = getDeduplicatedStudents();
+      
+      const todayStr = new Date().toLocaleDateString();
+      const { timeframe, classGroup } = window.leaderboardFilters || { timeframe: 'overall', classGroup: 'ALL' };
+
+      if (classGroup !== 'ALL') {
+        students = students.filter(s => s.class === classGroup);
+      }
+
+      if (timeframe === 'daily') {
+        students = students.filter(s => s.stats && s.stats.dailyTokens && s.stats.dailyTokens.date === todayStr && s.stats.dailyTokens.amount > 0);
+        students.sort((a, b) => b.stats.dailyTokens.amount - a.stats.dailyTokens.amount);
+      } else {
+        students.sort((a, b) => ((b.stats && b.stats.tokens) || 0) - ((a.stats && a.stats.tokens) || 0));
+      }
+
       if (students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-xs">No student balances recorded yet. Log in as a student to appear on the leaderboard!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-xs">No students found for this leaderboard filter. Log in and play to appear here!</td></tr>`;
         return;
       }
       tbody.innerHTML = students.map((s, idx) => {
-        const toks = (s.stats && s.stats.tokens) || 0;
+        const toks = timeframe === 'daily' ? s.stats.dailyTokens.amount : ((s.stats && s.stats.tokens) || 0);
         const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
         return `
           <tr class="hover:bg-slate-50 transition-colors">
@@ -4137,8 +4160,16 @@
               }).join('')}
             </div>
           `}
+          
+          <!-- Unified Leaderboard View within Teacher Dashboard -->
+          <div class="mt-8">
+            ${renderLeaderboardMarkup()}
+          </div>
         </div>
       `;
+      
+      // Hydrate leaderboard immediately after rendering the dashboard
+      refreshLeaderboardTableInPlace();
     }
 
     function openEditStudentModal(key) {
@@ -4219,18 +4250,27 @@
     // OVERALL STUDENT LEADERBOARD MARKUP
     // ==========================================
     function renderLeaderboardMarkup() {
+      const filters = window.leaderboardFilters || { timeframe: 'overall', classGroup: 'ALL' };
+      const classOptions = ['ALL', '7A', '7B', '7C', '7D', '7E', '7F', '7G', '7H', '7I', '7J', '8A', '8B', '8C', '8D', '8E', '8F', '8G', '8H', '8I', '8J', 'Yr 9', 'Yr 10', 'Yr 11', 'Yr 12'];
+
       return `
-        <section id="overall-student-leaderboard-section" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <section id="overall-student-leaderboard-section" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-6">
+          <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-trophy text-amber-500"></i> Overall Classroom Token Leaderboard
+                <i class="fa-solid fa-trophy text-amber-500"></i> Classroom Leaderboard
               </h2>
-              <p class="text-xs text-slate-500">Live token standings synced across all logged-in devices.</p>
+              <p class="text-xs text-slate-500 mt-1">Live token standings synced across all logged-in devices.</p>
             </div>
-            <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold self-start sm:self-auto">
-              Live Sync Active
-            </span>
+            <div class="flex flex-wrap items-center gap-3">
+              <select onchange="window.leaderboardFilters.timeframe = this.value; refreshLeaderboardTableInPlace();" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="overall" ${filters.timeframe === 'overall' ? 'selected' : ''}>Overall Leaderboard</option>
+                <option value="daily" ${filters.timeframe === 'daily' ? 'selected' : ''}>Daily Leaderboard (Today)</option>
+              </select>
+              <select onchange="window.leaderboardFilters.classGroup = this.value; refreshLeaderboardTableInPlace();" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                ${classOptions.map(c => `<option value="${c}" ${filters.classGroup === c ? 'selected' : ''}>${c === 'ALL' ? 'All Classes' : c}</option>`).join('')}
+              </select>
+            </div>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">

@@ -337,7 +337,8 @@
       stats: { tokens: 10, testsTaken: 0 },
       inventory: [],
       testHistory: [],
-      completedLessons: []
+      completedLessons: [],
+      avatar: { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }
     };
 
     function updateNavBar() {
@@ -404,6 +405,10 @@
             break;
           case 'login':
             renderLoginView(viewport);
+            break;
+          case 'avatarMaker':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderAvatarMakerView(viewport);
             break;
           case 'studentDash':
             if (!this.currentUser) return renderLoginView(viewport);
@@ -544,7 +549,8 @@
           stats: window.state.stats || { tokens: 10, testsTaken: 0 },
           inventory: window.state.inventory || [],
           testHistory: window.state.testHistory || [],
-          completedLessons: window.state.completedLessons || []
+          completedLessons: window.state.completedLessons || [],
+          avatar: window.state.avatar || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }
         };
         try {
           const db = getAllUserRecords();
@@ -616,12 +622,56 @@
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="px-4 py-3 font-black text-slate-700">${medal}</td>
-            <td class="px-4 py-3 font-bold text-slate-800">${s.firstName} ${s.surname}</td>
+            <td class="px-4 py-3 font-bold text-slate-800">
+              <div class="flex items-center gap-2">
+                ${renderAvatarSVG(s.avatar, 'w-7 h-7')}
+                <span>${s.firstName} ${s.surname}</span>
+              </div>
+            </td>
             <td class="px-4 py-3"><span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">${s.class}</span></td>
             <td class="px-4 py-3 text-right font-black text-amber-600"><i class="fa-solid fa-coins text-amber-400 mr-1"></i>${toks}</td>
           </tr>
         `;
       }).join('');
+    }
+
+    // ==========================================
+    // MUSICAL AVATAR ENGINE
+    // ==========================================
+    function renderAvatarSVG(avatar, sizeClass = 'w-10 h-10') {
+      const def = { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' };
+      const a = avatar || def;
+      const skin = '#fcd34d';
+
+      let headSVG = `<circle cx="50" cy="55" r="30" fill="${skin}" />`;
+      if (a.head === 'square') headSVG = `<rect x="20" y="25" width="60" height="60" rx="12" fill="${skin}" />`;
+      if (a.head === 'tall') headSVG = `<ellipse cx="50" cy="55" rx="24" ry="36" fill="${skin}" />`;
+
+      let eyesSVG = `<circle cx="38" cy="48" r="4" fill="#0f172a" /><circle cx="62" cy="48" r="4" fill="#0f172a" />`;
+      if (a.eyes === 'sunglasses') {
+        eyesSVG = `<rect x="26" y="42" width="22" height="12" rx="3" fill="#0f172a" /><rect x="52" y="42" width="22" height="12" rx="3" fill="#0f172a" /><line x1="48" y1="46" x2="52" y2="46" stroke="#0f172a" stroke-width="3" />`;
+      } else if (a.eyes === 'stars') {
+        eyesSVG = `<path d="M38 40 L41 48 L48 48 L42 53 L44 60 L38 56 L32 60 L34 53 L28 48 L35 48 Z M62 40 L65 48 L72 48 L66 53 L68 60 L62 56 L56 60 L58 53 L52 48 L59 48 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" />`;
+      } else if (a.eyes === 'wink') {
+        eyesSVG = `<path d="M34 48 Q 38 42 42 48" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" /><circle cx="62" cy="48" r="4" fill="#0f172a" />`;
+      }
+
+      let mouthSVG = `<path d="M38 65 Q 50 75 62 65" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
+      if (a.mouth === 'singing') mouthSVG = `<ellipse cx="50" cy="68" rx="8" ry="12" fill="#0f172a" />`;
+      else if (a.mouth === 'smirk') mouthSVG = `<path d="M40 68 L60 62" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
+
+      let headwearSVG = ``;
+      if (a.headwear === 'headphones') {
+        headwearSVG = `<path d="M16 50 A 34 34 0 0 1 84 50" fill="none" stroke="#334155" stroke-width="6" /><rect x="10" y="38" width="12" height="28" rx="4" fill="#ef4444" /><rect x="78" y="38" width="12" height="28" rx="4" fill="#ef4444" />`;
+      } else if (a.headwear === 'bandana') {
+        headwearSVG = `<path d="M15 35 Q 50 20 85 35 L80 15 Q 50 5 20 15 Z" fill="#ef4444" /><circle cx="30" cy="22" r="2.5" fill="#fff" /><circle cx="50" cy="18" r="2.5" fill="#fff" /><circle cx="70" cy="22" r="2.5" fill="#fff" />`;
+      } else if (a.headwear === 'conductor') {
+        headwearSVG = `<rect x="25" y="10" width="50" height="20" fill="#0f172a" /><rect x="15" y="30" width="70" height="5" rx="2" fill="#0f172a" /><rect x="25" y="25" width="50" height="4" fill="#fbbf24" />`;
+      }
+
+      return `<svg viewBox="0 0 100 100" class="${sizeClass} rounded-full flex-shrink-0" style="background-color: ${a.bg || def.bg}; border: 2px solid rgba(0,0,0,0.1);">
+        ${headSVG}${eyesSVG}${mouthSVG}${headwearSVG}
+      </svg>`;
     }
 
     // ==========================================
@@ -3883,19 +3933,108 @@
           stats: existing.stats || { tokens: 10, testsTaken: 0 },
           inventory: existing.inventory || [],
           testHistory: existing.testHistory || [],
-          completedLessons: existing.completedLessons || []
+          completedLessons: existing.completedLessons || [],
+          avatar: existing.avatar || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }
         };
       } else {
         state = {
           stats: { tokens: 10, testsTaken: 0 },
           inventory: [],
           testHistory: [],
-          completedLessons: []
+          completedLessons: [],
+          avatar: { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }
         };
       }
 
       saveUserState();
       app.navigate('studentDash');
+    }
+
+    window.tempAvatarState = null;
+    function renderAvatarMakerView(container) {
+      if (!window.tempAvatarState) {
+        window.tempAvatarState = { ...(state.avatar || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }) };
+      }
+      const a = window.tempAvatarState;
+
+      const opts = {
+        bg: [{id: '#c7d2fe', name: 'Indigo'}, {id: '#fecdd3', name: 'Rose'}, {id: '#fde68a', name: 'Amber'}, {id: '#a7f3d0', name: 'Emerald'}, {id: '#bae6fd', name: 'Sky'}],
+        head: [{id: 'round', name: 'Round'}, {id: 'square', name: 'Square'}, {id: 'tall', name: 'Tall'}],
+        eyes: [{id: 'normal', name: 'Normal'}, {id: 'sunglasses', name: 'Cool Jazz'}, {id: 'stars', name: 'Rockstar'}, {id: 'wink', name: 'Wink'}],
+        mouth: [{id: 'smile', name: 'Smile'}, {id: 'singing', name: 'Singing (O)'}, {id: 'smirk', name: 'Smirk'}],
+        headwear: [{id: 'none', name: 'None'}, {id: 'headphones', name: 'DJ Phones'}, {id: 'bandana', name: 'Rock Bandana'}, {id: 'conductor', name: 'Maestro Hat'}]
+      };
+
+      const btnClass = (cat, val) => a[cat] === val 
+        ? 'px-3 py-2 rounded-xl bg-indigo-600 text-white font-black text-xs shadow-md' 
+        : 'px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs transition-colors';
+
+      window.updateTempAvatar = function(cat, val) {
+        window.tempAvatarState[cat] = val;
+        renderAvatarMakerView(document.getElementById('app-viewport'));
+      };
+
+      window.saveTempAvatar = function() {
+        state.avatar = { ...window.tempAvatarState };
+        saveUserState();
+        window.tempAvatarState = null;
+        app.navigate('studentDash');
+      };
+
+      container.innerHTML = `
+        <div class="max-w-2xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <h1 class="text-2xl font-black text-slate-800">Customize Your Musical Avatar</h1>
+            <button onclick="window.tempAvatarState = null; app.navigate('studentDash')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Cancel</button>
+          </div>
+
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-8">
+            <!-- Preview -->
+            <div class="flex flex-col items-center justify-center shrink-0 space-y-4">
+              <div class="p-2 border-4 border-indigo-100 rounded-full shadow-lg">
+                ${renderAvatarSVG(a, 'w-32 h-32 sm:w-40 sm:h-40')}
+              </div>
+              <button onclick="saveTempAvatar()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-sm shadow-md transition-transform active:scale-95">
+                <i class="fa-solid fa-floppy-disk mr-1"></i> Save Avatar
+              </button>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex-1 space-y-5">
+              <div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Backdrop Color</div>
+                <div class="flex flex-wrap gap-2">
+                  ${opts.bg.map(o => `<button onclick="updateTempAvatar('bg', '${o.id}')" class="${btnClass('bg', o.id)}">${o.name}</button>`).join('')}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Head Shape</div>
+                <div class="flex flex-wrap gap-2">
+                  ${opts.head.map(o => `<button onclick="updateTempAvatar('head', '${o.id}')" class="${btnClass('head', o.id)}">${o.name}</button>`).join('')}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Eyes</div>
+                <div class="flex flex-wrap gap-2">
+                  ${opts.eyes.map(o => `<button onclick="updateTempAvatar('eyes', '${o.id}')" class="${btnClass('eyes', o.id)}">${o.name}</button>`).join('')}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Mouth</div>
+                <div class="flex flex-wrap gap-2">
+                  ${opts.mouth.map(o => `<button onclick="updateTempAvatar('mouth', '${o.id}')" class="${btnClass('mouth', o.id)}">${o.name}</button>`).join('')}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Musical Headwear</div>
+                <div class="flex flex-wrap gap-2">
+                  ${opts.headwear.map(o => `<button onclick="updateTempAvatar('headwear', '${o.id}')" class="${btnClass('headwear', o.id)}">${o.name}</button>`).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     function renderStudentDash(container) {
@@ -3908,10 +4047,17 @@
         <div class="space-y-6">
           <!-- Welcome Header Card -->
           <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Student Portal • Class ${u.class} (${u.teacher})</span>
-              <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">Welcome back, ${u.firstName}!</h1>
-              <p class="text-xs text-slate-500 mt-1">Your assessment marks are private between you and ${u.teacher}.</p>
+            <div class="flex items-center gap-4">
+              ${renderAvatarSVG(state.avatar, 'w-16 h-16 sm:w-20 sm:h-20')}
+              <div>
+                <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Student Portal • Class ${u.class} (${u.teacher})</span>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">Welcome back, ${u.firstName}!</h1>
+                <div class="mt-2 flex gap-2">
+                  <button onclick="app.navigate('avatarMaker')" class="text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-colors border border-slate-200">
+                    <i class="fa-solid fa-user-astronaut mr-1"></i> Customize Avatar
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="flex flex-wrap items-center gap-3 shrink-0">
               <button onclick="app.navigate('shop')" class="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow">

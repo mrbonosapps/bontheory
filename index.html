@@ -3685,8 +3685,9 @@
                   </div>
                   <div class="mt-5 pt-4 border-t border-slate-100">
                     ${isOwned ? `
-                      <button disabled class="w-full py-3 rounded-xl bg-emerald-100 text-emerald-700 font-black text-xs cursor-not-allowed">
-                        <i class="fa-solid fa-check mr-1"></i> Owned In Locker
+                      <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-700 hover:text-rose-700 font-black text-xs transition-colors group">
+                        <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
+                        <span class="hidden group-hover:inline"><i class="fa-solid fa-rotate-left mr-1"></i> Trade Back (+${item.cost})</span>
                       </button>
                     ` : `
                       <button onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''} class="w-full py-3 rounded-xl font-black text-xs transition-colors ${canAfford ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-sm' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}">
@@ -3718,6 +3719,25 @@
       state.inventory.push(item.id);
       saveUserState();
       showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
+      renderShopView(document.getElementById('app-viewport'));
+    }
+
+    function tradeShopItem(itemId) {
+      const item = shopCatalog.find(i => i.id === itemId);
+      if (!item) return;
+      if (!state.inventory) return;
+      
+      const idx = state.inventory.indexOf(item.id);
+      if (idx === -1) return; // Item not owned
+
+      const bal = (state.stats && state.stats.tokens) || 0;
+      
+      // Refund the tokens and remove from inventory
+      state.stats.tokens = bal + item.cost;
+      state.inventory.splice(idx, 1);
+      
+      saveUserState();
+      showAppModal('Trade Successful!', `You traded back ${item.name} and received a refund of ${item.cost} Tokens!`, true);
       renderShopView(document.getElementById('app-viewport'));
     }
 

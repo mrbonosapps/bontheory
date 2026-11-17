@@ -1879,6 +1879,15 @@
     // ==========================================
     // CURRICULUM & LESSON NAVIGATION VIEWS
     // ==========================================
+    const conceptThemes = {
+      indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', textHover: 'group-hover:text-indigo-700', bgHover: 'group-hover:bg-indigo-600', textLight: 'text-indigo-400', borderHover: 'hover:border-indigo-400', borderActive: 'border-indigo-300', btn: 'bg-indigo-600', btnHover: 'hover:bg-indigo-700', borderBtn: 'border-indigo-700', accent: 'accent-indigo-600', radioHover: 'hover:bg-indigo-50' },
+      sky: { bg: 'bg-sky-50', text: 'text-sky-600', textHover: 'group-hover:text-sky-700', bgHover: 'group-hover:bg-sky-600', textLight: 'text-sky-400', borderHover: 'hover:border-sky-400', borderActive: 'border-sky-300', btn: 'bg-sky-600', btnHover: 'hover:bg-sky-700', borderBtn: 'border-sky-700', accent: 'accent-sky-600', radioHover: 'hover:bg-sky-50' },
+      amber: { bg: 'bg-amber-50', text: 'text-amber-600', textHover: 'group-hover:text-amber-700', bgHover: 'group-hover:bg-amber-600', textLight: 'text-amber-400', borderHover: 'hover:border-amber-400', borderActive: 'border-amber-300', btn: 'bg-amber-600', btnHover: 'hover:bg-amber-700', borderBtn: 'border-amber-700', accent: 'accent-amber-600', radioHover: 'hover:bg-amber-50' },
+      emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', textHover: 'group-hover:text-emerald-700', bgHover: 'group-hover:bg-emerald-600', textLight: 'text-emerald-400', borderHover: 'hover:border-emerald-400', borderActive: 'border-emerald-300', btn: 'bg-emerald-600', btnHover: 'hover:bg-emerald-700', borderBtn: 'border-emerald-700', accent: 'accent-emerald-600', radioHover: 'hover:bg-emerald-50' },
+      pink: { bg: 'bg-pink-50', text: 'text-pink-600', textHover: 'group-hover:text-pink-700', bgHover: 'group-hover:bg-pink-600', textLight: 'text-pink-400', borderHover: 'hover:border-pink-400', borderActive: 'border-pink-300', btn: 'bg-pink-600', btnHover: 'hover:bg-pink-700', borderBtn: 'border-pink-700', accent: 'accent-pink-600', radioHover: 'hover:bg-pink-50' },
+      violet: { bg: 'bg-violet-50', text: 'text-violet-600', textHover: 'group-hover:text-violet-700', bgHover: 'group-hover:bg-violet-600', textLight: 'text-violet-400', borderHover: 'hover:border-violet-400', borderActive: 'border-violet-300', btn: 'bg-violet-600', btnHover: 'hover:bg-violet-700', borderBtn: 'border-violet-700', accent: 'accent-violet-600', radioHover: 'hover:bg-violet-50' }
+    };
+
     function renderHomeView(container) {
       const isLoggedIn = Boolean(window.app.currentUser);
       container.innerHTML = `
@@ -1892,7 +1901,7 @@
                 Master the Six Concepts of Music
               </h1>
               <p class="text-sm sm:text-base text-indigo-100 leading-relaxed max-w-2xl">
-                Explore interactive rhythm games, pitch &amp; contour labs, dynamic memory challenges, timbre soundboards, texture mixers, and 15-question mastery tests.
+                Explore interactive rhythm games, pitch &amp; contour labs, dynamic memory challenges, timbre soundboards, texture mixers, and end of Level mastery tests.
               </p>
               <div class="pt-2 flex flex-wrap items-center gap-3">
                 ${isLoggedIn ? `
@@ -1925,19 +1934,21 @@
               </button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              ${conceptsCurriculum.map(c => `
-                <div onclick="protectedNavigate('conceptDetail', { conceptId: '${c.id}' })" class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-indigo-400 shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                  <div class="w-12 h-12 rounded-2xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-600 group-hover:text-white flex items-center justify-center text-xl mb-4 transition-colors">
+              ${conceptsCurriculum.map(c => {
+                const t = conceptThemes[c.color] || conceptThemes.indigo;
+                return `
+                <div onclick="protectedNavigate('conceptDetail', { conceptId: '${c.id}' })" class="bg-white rounded-3xl p-6 border border-slate-200 ${t.borderHover} shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                  <div class="w-12 h-12 rounded-2xl ${t.bg} ${t.bgHover} ${t.text} group-hover:text-white flex items-center justify-center text-xl mb-4 transition-colors">
                     <i class="fa-solid ${c.icon}"></i>
                   </div>
-                  <h3 class="font-black text-lg text-slate-800 group-hover:text-indigo-700 transition-colors">${c.title}</h3>
+                  <h3 class="font-black text-lg text-slate-800 ${t.textHover} transition-colors">${c.title}</h3>
                   <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">${c.summary}</p>
-                  <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-indigo-600">
+                  <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black ${t.text}">
                     <span>${c.levels.reduce((acc, l) => acc + l.lessons.length, 0)} Interactive Lessons</span>
                     <span>Start &rarr;</span>
                   </div>
                 </div>
-              `).join('')}
+              `}).join('')}
             </div>
           </section>
 
@@ -1969,11 +1980,12 @@
                 total++;
                 if (completed.includes(`${c.id}_lvl${lvl.level}_les${les.lessonNum}`)) done++;
               }));
+              const t = conceptThemes[c.color] || conceptThemes.indigo;
               return `
-                <div onclick="window.app.navigate('conceptDetail', { conceptId: '${c.id}' })" class="bg-white rounded-3xl p-6 border border-slate-200 hover:border-indigo-400 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between">
+                <div onclick="window.app.navigate('conceptDetail', { conceptId: '${c.id}' })" class="bg-white rounded-3xl p-6 border border-slate-200 ${t.borderHover} shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between">
                   <div>
                     <div class="flex items-center justify-between mb-4">
-                      <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                      <div class="w-12 h-12 rounded-2xl ${t.bg} ${t.text} flex items-center justify-center text-xl">
                         <i class="fa-solid ${c.icon}"></i>
                       </div>
                       <span class="px-3 py-1 rounded-full text-xs font-black ${done === total && total > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
@@ -1983,7 +1995,7 @@
                     <h2 class="text-xl font-black text-slate-800">${c.title}</h2>
                     <p class="text-xs text-slate-500 mt-2 leading-relaxed">${c.summary}</p>
                   </div>
-                  <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black text-indigo-600">
+                  <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-black ${t.text}">
                     <span>Open ${c.title}</span>
                     <span>&rarr;</span>
                   </div>
@@ -1997,14 +2009,15 @@
 
     function renderConceptDetail(container, { conceptId }) {
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
+      const t = conceptThemes[concept.color] || conceptThemes.indigo;
       container.innerHTML = `
         <div class="space-y-6">
-          <button onclick="window.app.navigate('conceptsHub')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white border-2 border-indigo-700 text-xs font-black shadow-md">
+          <button onclick="window.app.navigate('conceptsHub')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl ${t.btn} ${t.btnHover} text-white border-2 ${t.borderBtn} text-xs font-black shadow-md">
             <i class="fa-solid fa-arrow-left"></i> Back to All Concepts
           </button>
 
           <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg">
-            <span class="text-xs font-black uppercase tracking-widest text-amber-400">Musical Concept Module</span>
+            <span class="text-xs font-black uppercase tracking-widest ${t.textLight}">Musical Concept Module</span>
             <h1 class="text-2xl sm:text-4xl font-black mt-1">${concept.title}</h1>
             <p class="text-xs sm:text-sm text-slate-300 mt-2 max-w-2xl">${concept.summary}</p>
           </div>
@@ -2014,10 +2027,10 @@
               <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <span class="text-xs font-black uppercase text-indigo-600">${lvl.lessons.length} Interactive Lessons + 15-Question Test</span>
+                    <span class="text-xs font-black uppercase ${t.text}">${lvl.lessons.length} Interactive Lessons + 15-Question Test</span>
                     <h2 class="text-xl font-black text-slate-800 mt-1">${lvl.title}</h2>
                   </div>
-                  <button onclick="window.app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level} })" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl text-xs shadow shrink-0">
+                  <button onclick="window.app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level} })" class="px-6 py-3 ${t.btn} ${t.btnHover} text-white font-black rounded-2xl text-xs shadow shrink-0">
                     Open Level ${lvl.level} &rarr;
                   </button>
                 </div>
@@ -2028,9 +2041,9 @@
                       const lKey = `${concept.id}_lvl${lvl.level}_les${les.lessonNum}`;
                       const isDone = ((window.state && window.state.completedLessons) || []).includes(lKey);
                       return `
-                        <li onclick="window.app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level}, lessonNum: ${les.lessonNum} })" class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-300 cursor-pointer transition-colors text-xs">
-                          <span class="font-bold text-slate-700 truncate">${les.title}</span>
-                          <span class="shrink-0 font-black ${isDone ? 'text-emerald-600' : 'text-indigo-500'}">
+                        <li onclick="window.app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level}, lessonNum: ${les.lessonNum} })" class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 ${t.borderHover} cursor-pointer transition-colors text-xs group">
+                          <span class="font-bold text-slate-700 truncate group-hover:text-slate-900">${les.title}</span>
+                          <span class="shrink-0 font-black ${isDone ? 'text-emerald-600' : t.text}">
                             ${isDone ? '<i class="fa-solid fa-circle-check"></i>' : '&rarr;'}
                           </span>
                         </li>
@@ -2050,16 +2063,17 @@
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
       const completed = (window.state && window.state.completedLessons) || [];
       const qCount = (level.testQuestions || []).length;
+      const t = conceptThemes[concept.color] || conceptThemes.indigo;
 
       container.innerHTML = `
         <div class="space-y-6">
-          <button onclick="window.app.navigate('conceptDetail', { conceptId: '${concept.id}' })" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white border-2 border-indigo-700 text-xs font-black shadow-md">
+          <button onclick="window.app.navigate('conceptDetail', { conceptId: '${concept.id}' })" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl ${t.btn} ${t.btnHover} text-white border-2 ${t.borderBtn} text-xs font-black shadow-md">
             <i class="fa-solid fa-arrow-left"></i> Back to ${concept.title}
           </button>
 
           <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span class="text-xs font-black uppercase tracking-widest text-indigo-600">${concept.title}</span>
+              <span class="text-xs font-black uppercase tracking-widest ${t.text}">${concept.title}</span>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">${level.title}</h1>
               <p class="text-xs text-slate-500 mt-1">Complete the interactive lessons and minigames below, then take the ${qCount}-question Final Level Test.</p>
             </div>
@@ -2073,10 +2087,10 @@
               const lKey = `${concept.id}_lvl${level.level}_les${les.lessonNum}`;
               const isDone = completed.includes(lKey);
               return `
-                <div onclick="window.app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${les.lessonNum} })" class="bg-white rounded-3xl p-6 border ${isDone ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200'} hover:border-indigo-400 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between">
+                <div onclick="window.app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${les.lessonNum} })" class="bg-white rounded-3xl p-6 border ${isDone ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200'} ${t.borderHover} shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between">
                   <div>
                     <div class="flex items-center justify-between mb-2">
-                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-50 text-indigo-700'}">
+                      <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${isDone ? 'bg-emerald-100 text-emerald-800' : `${t.bg} ${t.text}`}">
                         ${isDone ? '✓ Completed' : `Lesson ${les.lessonNum}`}
                       </span>
                       ${les.toolType ? '<span class="text-[11px] font-bold text-amber-600"><i class="fa-solid fa-gamepad mr-1"></i>Interactive Lab/Game</span>' : ''}
@@ -2084,7 +2098,7 @@
                     <h3 class="font-black text-lg text-slate-800">${les.title}</h3>
                     <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">${les.summary}</p>
                   </div>
-                  <div class="mt-4 pt-3 border-t border-slate-100 text-xs font-black text-indigo-600 flex items-center justify-between">
+                  <div class="mt-4 pt-3 border-t border-slate-100 text-xs font-black ${t.text} flex items-center justify-between">
                     <span>Open Lesson</span>
                     <span>&rarr;</span>
                   </div>
@@ -2102,6 +2116,7 @@
       const lessonIdx = level.lessons.findIndex(l => l.lessonNum === lessonNum);
       const lesson = level.lessons[lessonIdx >= 0 ? lessonIdx : 0];
       const nextLesson = level.lessons[lessonIdx + 1];
+      const t = conceptThemes[concept.color] || conceptThemes.indigo;
 
       const lKey = `${concept.id}_lvl${level.level}_les${lesson.lessonNum}`;
       if (!window.state) window.state = {};
@@ -2114,13 +2129,13 @@
       container.innerHTML = `
         <div class="space-y-6">
           <div class="flex items-center justify-between">
-            <button onclick="window.app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white border-2 border-indigo-700 text-xs font-black shadow-md">
+            <button onclick="window.app.navigate('levelDetail', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl ${t.btn} ${t.btnHover} text-white border-2 ${t.borderBtn} text-xs font-black shadow-md">
               <i class="fa-solid fa-arrow-left"></i> Back to ${level.title}
             </button>
           </div>
 
           <article class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
-            <span class="text-xs font-black uppercase tracking-widest text-indigo-600">${concept.title} • ${level.title}</span>
+            <span class="text-xs font-black uppercase tracking-widest ${t.text}">${concept.title} • ${level.title}</span>
             <h1 class="text-2xl sm:text-3xl font-black text-slate-900">${lesson.title}</h1>
             <div class="text-sm text-slate-700 leading-relaxed space-y-4">
               ${lesson.contentHtml}
@@ -2134,7 +2149,7 @@
               All Level ${level.level} Lessons
             </button>
             ${nextLesson ? `
-              <button onclick="window.app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${nextLesson.lessonNum} })" class="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-md">
+              <button onclick="window.app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${level.level}, lessonNum: ${nextLesson.lessonNum} })" class="px-6 py-3.5 rounded-2xl ${t.btn} ${t.btnHover} text-white font-black text-xs shadow-md">
                 Next: ${nextLesson.title} &rarr;
               </button>
             ` : `
@@ -5657,7 +5672,7 @@
                 <i class="fa-solid fa-lock text-indigo-600"></i> My Confidential Assessment Marks
               </h2>
               ${history.length === 0 ? `
-                <p class="text-xs text-slate-400 py-4">No 15-question level tests completed yet. Open any Concept Level to take its Final Level Test!</p>
+                <p class="text-xs text-slate-400 py-4">No end of Level tests completed yet. Open any Concept Level to take its Final Level Test!</p>
               ` : `
                 <div class="divide-y divide-slate-100">
                   ${history.map(h => `

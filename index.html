@@ -4433,6 +4433,261 @@
     }
 
     // ==========================================
+    // MINIGAME 9.1: PITCH WAVE GAME (HIGH VS LOW)
+    // ==========================================
+    let pitchWaveState = { round: 1, totalRounds: 10, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+
+    function setupPitchWaveRound() {
+      pitchWaveState.targetType = Math.random() > 0.5 ? 'high' : 'low';
+      pitchWaveState.answered = false;
+      pitchWaveState.lastCorrect = false;
+    }
+
+    function mountEmbeddedPitchWaveGame(target) {
+      if (!target) return;
+      pitchWaveState = { round: 1, totalRounds: 10, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+      setupPitchWaveRound();
+      renderPitchWaveGameUI(target);
+    }
+
+    function playPitchWaveTarget() {
+      if (pitchWaveState.isPlaying) return;
+      pitchWaveState.isPlaying = true;
+      renderPitchWaveGameUI();
+      const freq = pitchWaveState.targetType === 'high' ? 880 : 130.81;
+      const wave = pitchWaveState.targetType === 'high' ? 'sine' : 'sawtooth';
+      playTonePitch(freq, 0.8, 0.4, wave);
+      setTimeout(() => {
+        pitchWaveState.isPlaying = false;
+        renderPitchWaveGameUI();
+      }, 1000);
+    }
+
+    function guessPitchWave(type) {
+      const st = pitchWaveState;
+      if (st.answered || st.completed || st.isPlaying) return;
+      st.answered = true;
+      st.lastCorrect = (st.targetType === type);
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderPitchWaveGameUI();
+    }
+
+    function nextPitchWaveRound() {
+      const st = pitchWaveState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupPitchWaveRound();
+        renderPitchWaveGameUI();
+      } else {
+        st.completed = true;
+        renderPitchWaveGameUI();
+        showAppModal('Pitch & Frequency Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderPitchWaveGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = pitchWaveState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">High vs. Low Pitch Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the mystery pitch and determine if it has a high frequency (fast waves) or low frequency (slow waves).</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Pitch Detective Complete!</h4>
+              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> pitches correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedPitchWaveGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+              <span class="text-xs sm:text-sm font-black text-sky-300">${st.isPlaying ? 'Listening to pitch...' : 'Ready to hear the mystery pitch!'}</span>
+              <button type="button" onclick="playPitchWaveTarget()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Pitch
+              </button>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : '✗ Not quite. The correct answer was ' + (st.targetType === 'high' ? 'High Pitch' : 'Low Pitch') + '.'}</span>
+                <button type="button" onclick="nextPitchWaveRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+              <button type="button" onclick="guessPitchWave('high')" ${st.answered ? 'disabled' : ''} class="p-6 rounded-2xl border-2 transition-all flex flex-col items-center justify-center ${
+                  st.answered && st.targetType === 'high' ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
+                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white'
+              }">
+                <svg viewBox="0 0 200 50" class="w-3/4 h-12 mb-3"><path d="M0 25 Q 6.25 4, 12.5 25 T 25 25 T 37.5 25 T 50 25 T 62.5 25 T 75 25 T 87.5 25 T 100 25 T 112.5 25 T 125 25 T 137.5 25 T 150 25 T 162.5 25 T 175 25 T 187.5 25 T 200 25" fill="none" stroke="#fbbf24" stroke-width="2.5"/></svg>
+                <div class="font-black text-sm">High Pitch</div>
+                <div class="text-[10px] text-slate-400 mt-1">Fast frequency (tight waves)</div>
+              </button>
+              <button type="button" onclick="guessPitchWave('low')" ${st.answered ? 'disabled' : ''} class="p-6 rounded-2xl border-2 transition-all flex flex-col items-center justify-center ${
+                  st.answered && st.targetType === 'low' ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
+                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white'
+              }">
+                <svg viewBox="0 0 200 50" class="w-3/4 h-12 mb-3"><path d="M0 25 Q 25 4, 50 25 T 100 25 T 150 25 T 200 25" fill="none" stroke="#818cf8" stroke-width="3.5"/></svg>
+                <div class="font-black text-sm">Low Pitch</div>
+                <div class="text-[10px] text-slate-400 mt-1">Slow frequency (wide waves)</div>
+              </button>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME 9.2: MELODIC CONTOUR GAME
+    // ==========================================
+    let melodicContourState = { round: 1, totalRounds: 10, score: 0, targetContour: null, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+
+    const contourTypes = [
+      { id: 'step_up', name: 'Ascending Step', intervals: [ [261.63, 293.66], [329.63, 349.23], [392.00, 440.00] ] },
+      { id: 'step_down', name: 'Descending Step', intervals: [ [293.66, 261.63], [349.23, 329.63], [440.00, 392.00] ] },
+      { id: 'leap_up', name: 'Ascending Leap', intervals: [ [261.63, 392.00], [293.66, 440.00], [329.63, 523.25] ] },
+      { id: 'leap_down', name: 'Descending Leap', intervals: [ [392.00, 261.63], [440.00, 293.66], [523.25, 329.63] ] }
+    ];
+
+    function setupMelodicContourRound() {
+      const type = contourTypes[Math.floor(Math.random() * contourTypes.length)];
+      const interval = type.intervals[Math.floor(Math.random() * type.intervals.length)];
+      melodicContourState.targetContour = { id: type.id, name: type.name, interval };
+      melodicContourState.answered = false;
+      melodicContourState.lastCorrect = false;
+    }
+
+    function mountEmbeddedMelodicContourGame(target) {
+      if (!target) return;
+      melodicContourState = { round: 1, totalRounds: 10, score: 0, targetContour: null, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+      setupMelodicContourRound();
+      renderMelodicContourUI(target);
+    }
+
+    function playMelodicInterval(interval) {
+        playTonePitch(interval[0], 0.4, 0.3, 'triangle');
+        setTimeout(() => {
+          playTonePitch(interval[1], 0.4, 0.3, 'triangle');
+        }, 500);
+    }
+
+    function playMelodicContourTarget() {
+      if (melodicContourState.isPlaying) return;
+      melodicContourState.isPlaying = true;
+      renderMelodicContourUI();
+      
+      playMelodicInterval(melodicContourState.targetContour.interval);
+      setTimeout(() => {
+        melodicContourState.isPlaying = false;
+        renderMelodicContourUI();
+      }, 1000);
+    }
+
+    function guessMelodicContour(id) {
+      const st = melodicContourState;
+      if (st.answered || st.completed || st.isPlaying) return;
+      st.answered = true;
+      st.lastCorrect = (st.targetContour.id === id);
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderMelodicContourUI();
+    }
+
+    function nextMelodicContourRound() {
+      const st = melodicContourState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupMelodicContourRound();
+        renderMelodicContourUI();
+      } else {
+        st.completed = true;
+        renderMelodicContourUI();
+        showAppModal('Melodic Contour Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderMelodicContourUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = melodicContourState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">Melodic Contour Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the 2 notes and determine the melodic motion.</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Contour Detective Complete!</h4>
+              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> motions correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedMelodicContourGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+              <span class="text-xs sm:text-sm font-black text-sky-300">${st.isPlaying ? 'Listening to notes...' : 'Ready to hear the melodic motion!'}</span>
+              <button type="button" onclick="playMelodicContourTarget()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Melody
+              </button>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : '✗ Not quite. The correct answer was ' + st.targetContour.name + '.'}</span>
+                <button type="button" onclick="nextMelodicContourRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+              ${contourTypes.map(c => `
+                <button type="button" onclick="guessMelodicContour('${c.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center ${
+                    st.answered && st.targetContour.id === c.id ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
+                    st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white'
+                }">
+                  <div class="font-black text-sm text-center">${c.name}</div>
+                </button>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
     // MINIGAME 11: PITCH KEYBOARD EAR CHALLENGE
     // ==========================================
     let pitchKeyboardState = {

@@ -1431,11 +1431,57 @@
                 summary: 'Learn the lines (E-G-B-D-F) and spaces (F-A-C-E) of the treble staff.',
                 toolType: 'staffNotationGame',
                 contentHtml: `
-                  <p>Pitches are written on a <strong>Staff (or Stave)</strong> made of 5 parallel lines. The <strong>Treble Clef</strong> is used for higher-pitched instruments (like Violin, Flute, and the right hand of the Piano).</p>
-                  <ul class="list-disc pl-5 mt-2 space-y-1 text-sm text-slate-700">
-                    <li><strong>Lines:</strong> E - G - B - D - F <em>(Every Good Boy Deserves Fruit)</em></li>
-                    <li><strong>Spaces:</strong> F - A - C - E <em>(Rhymes with Space)</em></li>
+                  <ul class="list-disc pl-5 space-y-3 text-sm text-slate-700 marker:text-slate-500">
+                    <li>The <strong>Treble Clef</strong> (or G Clef) is used for higher-pitched instruments like the flute, violin, trumpet, and soprano voices.</li>
+                    <li>It curls around the 2nd line from the bottom, which is the note <strong>G</strong>.</li>
+                    <li>To remember the <strong>line notes</strong> (E-G-B-D-F from bottom to top), use the mnemonic <strong>Every Good Boy Deserves Fruit</strong> (or <em>Every Good Boy Drives Ferraris</em>).</li>
+                    <li>To remember the <strong>space notes</strong> (F-A-C-E from bottom to top), they spell the word <strong>FACE</strong>.</li>
+                    <li><strong>Middle C</strong> sits on its own small line right below the staff, called a <strong>ledger line</strong>.</li>
                   </ul>
+                  
+                  <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 mt-6 text-center shadow-sm">
+                    <h4 class="font-black text-lg text-slate-800 mb-6">Notes on the Treble Staff</h4>
+                    <svg viewBox="0 0 400 130" class="w-full max-w-md mx-auto h-auto">
+                      <!-- Staff Lines -->
+                      <line x1="20" y1="20" x2="380" y2="20" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="40" x2="380" y2="40" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="60" x2="380" y2="60" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="80" x2="380" y2="80" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="100" x2="380" y2="100" stroke="#475569" stroke-width="1.5"/>
+                      
+                      <!-- Treble Clef -->
+                      <text x="25" y="105" font-size="70" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+
+                      <!-- Line Notes (Blue) -->
+                      <ellipse cx="80" cy="100" rx="9" ry="6" fill="none" stroke="#3b82f6" stroke-width="2" transform="rotate(-15 80 100)"/>
+                      <text x="80" y="122" fill="#3b82f6" font-size="12" font-weight="bold" text-anchor="middle">E</text>
+                      
+                      <ellipse cx="110" cy="80" rx="9" ry="6" fill="none" stroke="#3b82f6" stroke-width="2" transform="rotate(-15 110 80)"/>
+                      <text x="110" y="122" fill="#3b82f6" font-size="12" font-weight="bold" text-anchor="middle">G</text>
+                      
+                      <ellipse cx="140" cy="60" rx="9" ry="6" fill="none" stroke="#3b82f6" stroke-width="2" transform="rotate(-15 140 60)"/>
+                      <text x="140" y="122" fill="#3b82f6" font-size="12" font-weight="bold" text-anchor="middle">B</text>
+                      
+                      <ellipse cx="170" cy="40" rx="9" ry="6" fill="none" stroke="#3b82f6" stroke-width="2" transform="rotate(-15 170 40)"/>
+                      <text x="170" y="122" fill="#3b82f6" font-size="12" font-weight="bold" text-anchor="middle">D</text>
+                      
+                      <ellipse cx="200" cy="20" rx="9" ry="6" fill="none" stroke="#3b82f6" stroke-width="2" transform="rotate(-15 200 20)"/>
+                      <text x="200" y="122" fill="#3b82f6" font-size="12" font-weight="bold" text-anchor="middle">F</text>
+
+                      <!-- Space Notes (Red) -->
+                      <ellipse cx="240" cy="90" rx="9" ry="6" fill="none" stroke="#ef4444" stroke-width="2" transform="rotate(-15 240 90)"/>
+                      <text x="240" y="122" fill="#ef4444" font-size="12" font-weight="bold" text-anchor="middle">F</text>
+                      
+                      <ellipse cx="270" cy="70" rx="9" ry="6" fill="none" stroke="#ef4444" stroke-width="2" transform="rotate(-15 270 70)"/>
+                      <text x="270" y="122" fill="#ef4444" font-size="12" font-weight="bold" text-anchor="middle">A</text>
+                      
+                      <ellipse cx="300" cy="50" rx="9" ry="6" fill="none" stroke="#ef4444" stroke-width="2" transform="rotate(-15 300 50)"/>
+                      <text x="300" y="122" fill="#ef4444" font-size="12" font-weight="bold" text-anchor="middle">C</text>
+                      
+                      <ellipse cx="330" cy="30" rx="9" ry="6" fill="none" stroke="#ef4444" stroke-width="2" transform="rotate(-15 330 30)"/>
+                      <text x="330" y="122" fill="#ef4444" font-size="12" font-weight="bold" text-anchor="middle">E</text>
+                    </svg>
+                  </div>
                 `
               }
             ],
@@ -2010,6 +2056,9 @@
     function renderConceptDetail(container, { conceptId }) {
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const t = conceptThemes[concept.color] || conceptThemes.indigo;
+      const completed = (window.state && window.state.completedLessons) || [];
+      const testHistory = (window.state && window.state.testHistory) || [];
+
       container.innerHTML = `
         <div class="space-y-6">
           <button onclick="window.app.navigate('conceptsHub')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl ${t.btn} ${t.btnHover} text-white border-2 ${t.borderBtn} text-xs font-black shadow-md">
@@ -2039,7 +2088,7 @@
                   <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     ${lvl.lessons.map(les => {
                       const lKey = `${concept.id}_lvl${lvl.level}_les${les.lessonNum}`;
-                      const isDone = ((window.state && window.state.completedLessons) || []).includes(lKey);
+                      const isDone = completed.includes(lKey);
                       return `
                         <li onclick="window.app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level}, lessonNum: ${les.lessonNum} })" class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200/80 ${t.borderHover} cursor-pointer transition-colors text-xs group">
                           <span class="font-bold text-slate-700 truncate group-hover:text-slate-900">${les.title}</span>
@@ -2049,6 +2098,24 @@
                         </li>
                       `;
                     }).join('')}
+                    ${(() => {
+                      const allLessonsDone = lvl.lessons.every(les => completed.includes(`${concept.id}_lvl${lvl.level}_les${les.lessonNum}`));
+                      const isTestDone = testHistory.some(th => th.concept === concept.title && th.level === lvl.title);
+                      
+                      return `
+                        <li onclick="${allLessonsDone ? `window.app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${lvl.level} })` : ''}" 
+                            class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl border transition-colors text-xs group sm:col-span-2 ${
+                              allLessonsDone 
+                                ? `bg-white hover:bg-slate-50 border-slate-200 cursor-pointer ${t.borderHover}` 
+                                : 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
+                            }">
+                          <span class="font-black ${allLessonsDone ? 'text-slate-800' : 'text-slate-500'}"><i class="fa-solid fa-file-pen mr-1"></i> End of Level Mastery Test</span>
+                          <span class="shrink-0 font-bold ${isTestDone ? 'text-emerald-600' : 'text-slate-400'}">
+                            ${isTestDone ? '<i class="fa-solid fa-circle-check"></i> Completed' : 'Not Completed'}
+                          </span>
+                        </li>
+                      `;
+                    })()}
                   </ul>
                 </div>
               </div>
@@ -2062,8 +2129,11 @@
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
       const completed = (window.state && window.state.completedLessons) || [];
+      const testHistory = (window.state && window.state.testHistory) || [];
       const qCount = (level.testQuestions || []).length;
       const t = conceptThemes[concept.color] || conceptThemes.indigo;
+      const allLessonsDone = level.lessons.every(les => completed.includes(`${concept.id}_lvl${level.level}_les${les.lessonNum}`));
+      const isTestDone = testHistory.some(th => th.concept === concept.title && th.level === level.title);
 
       container.innerHTML = `
         <div class="space-y-6">
@@ -2077,8 +2147,9 @@
               <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">${level.title}</h1>
               <p class="text-xs text-slate-500 mt-1">Complete the interactive lessons and minigames below, then take the ${qCount}-question Final Level Test.</p>
             </div>
-            <button onclick="window.app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs shadow-md shrink-0">
-              <i class="fa-solid fa-file-pen mr-1.5"></i> Take ${qCount}-Question Level Test
+            <button onclick="${allLessonsDone ? `window.app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })` : ''}" 
+                    class="px-6 py-3.5 ${allLessonsDone ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-300 cursor-not-allowed'} text-white font-black rounded-2xl text-xs shadow-md shrink-0">
+              <i class="fa-solid ${allLessonsDone ? 'fa-file-pen' : 'fa-lock'} mr-1.5"></i> Take ${qCount}-Question Level Test
             </button>
           </div>
 
@@ -2105,6 +2176,26 @@
                 </div>
               `;
             }).join('')}
+            
+            <div onclick="${allLessonsDone ? `window.app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })` : ''}" 
+                 class="bg-white rounded-3xl p-6 border ${isTestDone ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200'} ${allLessonsDone ? t.borderHover + ' cursor-pointer hover:shadow-md' : 'opacity-60 cursor-not-allowed'} shadow-sm transition-all flex flex-col justify-between md:col-span-2 lg:col-span-1">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${isTestDone ? 'bg-emerald-100 text-emerald-800' : `bg-slate-100 text-slate-600`}">
+                    ${isTestDone ? '✓ Completed' : 'Final Assessment'}
+                  </span>
+                  <span class="text-[11px] font-bold ${isTestDone ? 'text-emerald-600' : 'text-slate-400'}">
+                    ${isTestDone ? 'Completed' : 'Not Completed'}
+                  </span>
+                </div>
+                <h3 class="font-black text-lg text-slate-800">End of Level Mastery Test</h3>
+                <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Test your knowledge of the concepts learned in this level. Contains ${qCount} questions.</p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-slate-100 text-xs font-black ${allLessonsDone ? t.text : 'text-slate-400'} flex items-center justify-between">
+                <span>${allLessonsDone ? 'Take Test' : 'Locked'}</span>
+                <span>${allLessonsDone ? '&rarr;' : '<i class="fa-solid fa-lock"></i>'}</span>
+              </div>
+            </div>
           </div>
         </div>
       `;
@@ -2125,6 +2216,8 @@
         window.state.completedLessons.push(lKey);
         saveUserState();
       }
+
+      const allLessonsDone = level.lessons.every(l => window.state.completedLessons.includes(`${concept.id}_lvl${level.level}_les${l.lessonNum}`));
 
       container.innerHTML = `
         <div class="space-y-6">
@@ -2153,8 +2246,9 @@
                 Next: ${nextLesson.title} &rarr;
               </button>
             ` : `
-              <button onclick="window.app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })" class="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md">
-                Take Final ${(level.testQuestions || []).length}-Question Test &rarr;
+              <button onclick="${allLessonsDone ? `window.app.navigate('levelTest', { conceptId: '${concept.id}', levelNum: ${level.level} })` : ''}" 
+                      class="px-6 py-3.5 rounded-2xl ${allLessonsDone ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-300 cursor-not-allowed'} text-white font-black text-xs shadow-md">
+                <i class="fa-solid ${allLessonsDone ? 'fa-file-pen' : 'fa-lock'} mr-1"></i> Take Final ${(level.testQuestions || []).length}-Question Test &rarr;
               </button>
             `}
           </div>
@@ -2170,6 +2264,7 @@
       else if (lesson.toolType === 'pitchWaveGame') mountEmbeddedPitchWaveGame(toolBox);
       else if (lesson.toolType === 'melodicContourGame') mountEmbeddedMelodicContourGame(toolBox);
       else if (lesson.toolType === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolBox);
+      else if (lesson.toolType === 'trebleClefGame') mountEmbeddedTrebleClefGame(toolBox);
       else if (lesson.toolType === 'dynamicsSimulator') mountEmbeddedDynamicsSimulator(toolBox);
       else if (lesson.toolType === 'dynamicsChallengeGame') mountEmbeddedDynamicsChallengeGame(toolBox);
       else if (lesson.toolType === 'timbreSoundboard') mountEmbeddedTimbreSoundboard(toolBox);
@@ -4323,76 +4418,69 @@
     // MINIGAME 12: TREBLE CLEF STAFF NOTATION GAME
     // ==========================================
     const trebleClefPositions = [
-      { note: 'F5', y: 30, freq: 698.46, type: 'line' },
-      { note: 'E5', y: 35, freq: 659.25, type: 'space' },
-      { note: 'D5', y: 40, freq: 587.33, type: 'line' },
-      { note: 'C5', y: 45, freq: 523.25, type: 'space' },
-      { note: 'B4', y: 50, freq: 493.88, type: 'line' },
-      { note: 'A4', y: 55, freq: 440.00, type: 'space' },
-      { note: 'G4', y: 60, freq: 392.00, type: 'line' },
-      { note: 'F4', y: 65, freq: 349.23, type: 'space' },
-      { note: 'E4', y: 70, freq: 329.63, type: 'line' }
+      { note: 'F5', name: 'F', y: 30, freq: 698.46 },
+      { note: 'E5', name: 'E', y: 35, freq: 659.25 },
+      { note: 'D5', name: 'D', y: 40, freq: 587.33 },
+      { note: 'C5', name: 'C', y: 45, freq: 523.25 },
+      { note: 'B4', name: 'B', y: 50, freq: 493.88 },
+      { note: 'A4', name: 'A', y: 55, freq: 440.00 },
+      { note: 'G4', name: 'G', y: 60, freq: 392.00 },
+      { note: 'F4', name: 'F', y: 65, freq: 349.23 },
+      { note: 'E4', name: 'E', y: 70, freq: 329.63 }
     ];
 
-    let trebleClefState = {
-      round: 1, totalRounds: 10, score: 0, targetKey: null, guess: null, answered: false, lastCorrect: false, completed: false
+    let trebleClefGameState = {
+      streak: 0,
+      best: 0,
+      targetKey: null,
+      answered: false,
+      lastCorrect: false,
+      selectedNote: null
     };
 
     function startTrebleClefRound() {
       const randIdx = Math.floor(Math.random() * trebleClefPositions.length);
-      trebleClefState.targetKey = trebleClefPositions[randIdx];
-      trebleClefState.guess = null;
-      trebleClefState.answered = false;
-      trebleClefState.lastCorrect = false;
-      
-      // Play target note
-      setTimeout(() => {
-         if (!trebleClefState.answered) {
-             playTonePitch(trebleClefState.targetKey.freq, 0.45, 0.3, 'triangle');
-         }
-      }, 300);
-      
+      trebleClefGameState.targetKey = trebleClefPositions[randIdx];
+      trebleClefGameState.answered = false;
+      trebleClefGameState.lastCorrect = false;
+      trebleClefGameState.selectedNote = null;
       renderTrebleClefGameUI();
     }
 
-    function guessTrebleClefNote(noteName) {
-      const st = trebleClefState;
-      if (st.answered || st.completed) return;
+    function guessTrebleClefLetter(letter) {
+      const st = trebleClefGameState;
+      if (st.answered) return;
       
       st.answered = true;
-      st.guess = noteName;
-      const guessedKey = trebleClefPositions.find(k => k.note === noteName);
+      st.selectedNote = letter;
       
-      playTonePitch(guessedKey.freq, 0.4, 0.35, 'triangle');
-
-      if (noteName === st.targetKey.note) {
+      if (letter === st.targetKey.name) {
         st.lastCorrect = true;
-        st.score++;
+        st.streak++;
+        if (st.streak > st.best) st.best = st.streak;
         addTokens(1);
-        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 500);
+        playTonePitch(st.targetKey.freq, 0.4, 0.35, 'triangle');
+        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 300);
+        renderTrebleClefGameUI();
+        setTimeout(() => {
+          startTrebleClefRound();
+        }, 1200);
       } else {
         st.lastCorrect = false;
-        setTimeout(() => playTonePitch(155.56, 0.25, 0.3, 'sawtooth'), 500);
-      }
-      renderTrebleClefGameUI();
-    }
-
-    function nextTrebleClefRound() {
-      const st = trebleClefState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        startTrebleClefRound();
-      } else {
-        st.completed = true;
+        st.streak = 0;
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
         renderTrebleClefGameUI();
-        showAppModal('Treble Clef Master Complete!', `You identified ${st.score}/${st.totalRounds} notes correctly and earned +${st.score} Tokens!`, st.score >= 5);
+        setTimeout(() => {
+          startTrebleClefRound();
+        }, 2000);
       }
     }
 
     function mountEmbeddedTrebleClefGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      trebleClefState = {
-        round: 1, totalRounds: 10, score: 0, targetKey: null, guess: null, answered: false, lastCorrect: false, completed: false
+      trebleClefGameState = {
+        streak: 0, best: 0, targetKey: null, answered: false, lastCorrect: false, selectedNote: null
       };
       startTrebleClefRound();
     }
@@ -4400,88 +4488,70 @@
     function renderTrebleClefGameUI(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      const st = trebleClefState;
+      const st = trebleClefGameState;
+      const letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
       target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 1 Token Per Correct Answer</span>
-              <h3 class="text-xl font-black">Treble Clef Staff Master</h3>
-              <p class="text-xs text-slate-300 mt-1">Click on the lines or spaces of the staff to place a whole note on the target pitch!</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
-                Round ${st.round} / ${st.totalRounds}
-              </span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
-                Score: ${st.score} (+${st.score} Tokens)
-              </span>
+              <h3 class="text-2xl font-black text-slate-800">Treble Clef Game</h3>
+              <p class="text-sm text-slate-500 mt-1">Identify the note on the Treble Clef!</p>
             </div>
           </div>
-
-          ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Staff Master Complete!</h4>
-              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> notes correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedTrebleClefGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+          
+          <div class="flex flex-col md:flex-row gap-6 md:gap-10">
+            <!-- Left: Staff Image -->
+            <div class="flex-1 rounded-2xl border border-slate-200 bg-white p-6 flex items-center justify-center min-h-[220px] shadow-sm relative">
+              ${st.targetKey ? `
+                <svg viewBox="0 0 200 120" class="w-full max-w-[200px] h-auto bg-transparent">
+                  <line x1="40" y1="40" x2="180" y2="40" stroke="#1e293b" stroke-width="2"/>
+                  <line x1="40" y1="50" x2="180" y2="50" stroke="#1e293b" stroke-width="2"/>
+                  <line x1="40" y1="60" x2="180" y2="60" stroke="#1e293b" stroke-width="2"/>
+                  <line x1="40" y1="70" x2="180" y2="70" stroke="#1e293b" stroke-width="2"/>
+                  <line x1="40" y1="80" x2="180" y2="80" stroke="#1e293b" stroke-width="2"/>
+                  <text x="40" y="87" font-size="56" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                  
+                  <ellipse cx="130" cy="${st.targetKey.y + 10}" rx="9" ry="6" fill="none" stroke="#1e293b" stroke-width="2" transform="rotate(-15 130 ${st.targetKey.y + 10})"/>
+                </svg>
+              ` : ''}
+              
+              ${st.answered ? `
+                <div class="absolute inset-0 bg-white/90 rounded-2xl flex items-center justify-center backdrop-blur-[2px] transition-all">
+                  <span class="text-5xl font-black ${st.lastCorrect ? 'text-emerald-500' : 'text-rose-500'} drop-shadow-md">
+                    ${st.lastCorrect ? '<i class="fa-solid fa-check"></i>' : st.targetKey.name}
+                  </span>
+                </div>
+              ` : ''}
             </div>
-          ` : `
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
-              <span class="text-xs sm:text-sm font-black text-amber-300">Place a note on: <strong class="text-xl">${st.targetKey ? st.targetKey.note : ''}</strong></span>
-              <button type="button" onclick="playTonePitch(${st.targetKey ? st.targetKey.freq : 440}, 0.5, 0.4, 'triangle')" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0">
-                <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Target Pitch
-              </button>
-            </div>
 
-            ${st.answered ? `
-              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)! That is ' + st.targetKey.note + '.' : '✗ Incorrect. You clicked ' + st.guess + ' instead of ' + st.targetKey.note + '.'}</span>
-                <button type="button" onclick="nextTrebleClefRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                </button>
+            <!-- Right: Buttons & Score -->
+            <div class="flex-1 flex flex-col justify-center">
+              <div class="flex items-center justify-between mb-6">
+                <span class="text-sm font-black text-slate-700">Streak: <span class="text-sky-500 text-lg">${st.streak}</span></span>
+                <span class="text-sm font-black text-slate-700">Best: <span class="text-emerald-500 text-lg">${st.best}</span></span>
               </div>
-            ` : ''}
-
-            <div class="mt-6 flex justify-center overflow-x-auto">
-              <svg viewBox="0 0 300 100" class="w-full max-w-lg min-w-[300px] h-auto bg-white rounded-xl shadow-inner border border-slate-300">
-                 <!-- Staff lines -->
-                 <line x1="20" y1="30" x2="280" y2="30" stroke="#64748b" stroke-width="1.5" />
-                 <line x1="20" y1="40" x2="280" y2="40" stroke="#64748b" stroke-width="1.5" />
-                 <line x1="20" y1="50" x2="280" y2="50" stroke="#64748b" stroke-width="1.5" />
-                 <line x1="20" y1="60" x2="280" y2="60" stroke="#64748b" stroke-width="1.5" />
-                 <line x1="20" y1="70" x2="280" y2="70" stroke="#64748b" stroke-width="1.5" />
-
-                 <!-- Treble Clef -->
-                 <text x="30" y="77" font-size="62" font-family="serif" fill="#475569" font-weight="bold">&#119070;</text>
-
-                 <!-- Clickable Zones & Feedback -->
-                 ${trebleClefPositions.map(k => `
-                   <g onclick="guessTrebleClefNote('${k.note}')" class="cursor-pointer group">
-                      <rect x="90" y="${k.y - 2.5}" width="180" height="5" fill="transparent" />
-                      
-                      <!-- Hover Indicator (Only when not answered) -->
-                      ${!st.answered ? `<ellipse cx="175" cy="${k.y}" rx="7" ry="5.5" transform="rotate(-15 175 ${k.y})" class="fill-indigo-600 opacity-0 group-hover:opacity-40 transition-opacity" />` : ''}
-                      
-                      ${st.answered && st.guess === k.note ? `
-                         <!-- Selected Note -->
-                         <ellipse cx="175" cy="${k.y}" rx="7" ry="5.5" transform="rotate(-15 175 ${k.y})" fill="${st.lastCorrect ? '#10b981' : '#f43f5e'}" class="opacity-100" />
-                      ` : ''}
-                      
-                      ${st.answered && !st.lastCorrect && st.targetKey.note === k.note ? `
-                         <!-- Actual Target if wrong -->
-                         <ellipse cx="175" cy="${k.y}" rx="7" ry="5.5" transform="rotate(-15 175 ${k.y})" fill="#3b82f6" class="opacity-60" />
-                         <text x="195" y="${k.y + 4}" fill="#3b82f6" font-size="12" font-weight="bold">${k.note}</text>
-                      ` : ''}
-                      
-                      ${st.answered && st.guess === k.note && !st.lastCorrect ? `
-                         <text x="195" y="${k.y + 4}" fill="#f43f5e" font-size="12" font-weight="bold">${k.note}</text>
-                      ` : ''}
-                   </g>
-                 `).join('')}
-              </svg>
+              <div class="grid grid-cols-3 gap-3">
+                ${letters.map(letter => {
+                  let btnClass = 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800';
+                  if (st.answered) {
+                    if (letter === st.targetKey.name) {
+                       btnClass = 'bg-emerald-50 border-emerald-400 text-emerald-700 shadow-inner scale-[1.02]';
+                    } else if (letter === st.selectedNote) {
+                       btnClass = 'bg-rose-50 border-rose-400 text-rose-700 shadow-inner scale-[0.98]';
+                    } else {
+                       btnClass = 'bg-slate-50 border-slate-200 text-slate-400 opacity-50';
+                    }
+                  }
+                  return `
+                    <button type="button" onclick="guessTrebleClefLetter('${letter}')" ${st.answered ? 'disabled' : ''} class="py-4 rounded-xl border-2 text-lg font-black transition-all shadow-sm active:scale-95 ${btnClass}">
+                      ${letter}
+                    </button>
+                  `;
+                }).join('')}
+              </div>
             </div>
-          `}
+          </div>
         </div>
       `;
     }

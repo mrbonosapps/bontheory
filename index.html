@@ -3595,27 +3595,154 @@
       `;
     }
 
+    const pitchKeyboardKeys = [
+      { note: 'C4', freq: 261.63 }, { note: 'D4', freq: 293.66 }, { note: 'E4', freq: 329.63 },
+      { note: 'F4', freq: 349.23 }, { note: 'G4', freq: 392.00 }, { note: 'A4', freq: 440.00 },
+      { note: 'B4', freq: 493.88 }, { note: 'C5', freq: 523.25 }
+    ];
+
+    let pitchKeyboardState = {
+      round: 1, totalRounds: 10, score: 0, targetKey: null, isPlaying: false, answered: false, lastCorrect: false, completed: false
+    };
+
+    function startPitchKeyboardRound() {
+      const randIdx = Math.floor(Math.random() * pitchKeyboardKeys.length);
+      pitchKeyboardState.targetKey = pitchKeyboardKeys[randIdx];
+      pitchKeyboardState.answered = false;
+      pitchKeyboardState.lastCorrect = false;
+      pitchKeyboardState.isPlaying = false;
+      renderPitchKeyboardUI();
+    }
+
+    function playPitchKeyboardMystery() {
+      const st = pitchKeyboardState;
+      if (st.isPlaying || !st.targetKey) return;
+      st.isPlaying = true;
+      renderPitchKeyboardUI();
+      
+      // Play C4 Reference
+      playTonePitch(261.63, 0.45, 0.35, 'triangle');
+      
+      // Play Mystery Target Note
+      setTimeout(() => {
+        playTonePitch(st.targetKey.freq, 0.55, 0.35, 'triangle');
+      }, 850);
+
+      setTimeout(() => {
+        st.isPlaying = false;
+        renderPitchKeyboardUI();
+      }, 1500);
+    }
+
+    function guessPitchKeyboardNote(noteName) {
+      const st = pitchKeyboardState;
+      if (st.answered || st.completed || !st.targetKey) {
+        // If the round is over, just allow them to play the keys for fun
+        const key = pitchKeyboardKeys.find(k => k.note === noteName);
+        if (key) playTonePitch(key.freq, 0.45, 0.35, 'triangle');
+        return;
+      }
+      
+      st.answered = true;
+      const guessedKey = pitchKeyboardKeys.find(k => k.note === noteName);
+      playTonePitch(guessedKey.freq, 0.45, 0.35, 'triangle');
+
+      if (noteName === st.targetKey.note) {
+        st.lastCorrect = true;
+        st.score++;
+        addTokens(1);
+        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 550);
+      } else {
+        st.lastCorrect = false;
+        setTimeout(() => playTonePitch(155.56, 0.25, 0.3, 'sawtooth'), 550);
+      }
+      renderPitchKeyboardUI();
+    }
+
+    function nextPitchKeyboardRound() {
+      const st = pitchKeyboardState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        startPitchKeyboardRound();
+      } else {
+        st.completed = true;
+        renderPitchKeyboardUI();
+        showAppModal('Keyboard Ear Training Complete!', `You identified ${st.score}/${st.totalRounds} pitches correctly and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
     function mountEmbeddedPitchKeyboard(target) {
       if (!target) return;
-      const keys = [
-        { note: 'C4', freq: 261.63 }, { note: 'D4', freq: 293.66 }, { note: 'E4', freq: 329.63 },
-        { note: 'F4', freq: 349.23 }, { note: 'G4', freq: 392.00 }, { note: 'A4', freq: 440.00 },
-        { note: 'B4', freq: 493.88 }, { note: 'C5', freq: 523.25 }
-      ];
+      pitchKeyboardState = {
+        round: 1, totalRounds: 10, score: 0, targetKey: null, isPlaying: false, answered: false, lastCorrect: false, completed: false
+      };
+      startPitchKeyboardRound();
+    }
+
+    function renderPitchKeyboardUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = pitchKeyboardState;
+
       target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-4 border border-slate-800">
-          <div>
-            <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Interactive Pitch Lab</span>
-            <h3 class="text-xl font-black">C Major Octave Keyboard</h3>
-            <p class="text-xs text-slate-300 mt-1">Click or tap any key from C4 to C5 to hear how pitch ascends across the 7 musical letters.</p>
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Ear Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">C Major Octave Keyboard</h3>
+              <p class="text-xs text-slate-300 mt-1">Click "Hear Notes" to listen to the reference C4, then the mystery pitch. Find the matching key!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+                Round ${st.round} / ${st.totalRounds}
+              </span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                Score: ${st.score} (+${st.score} Tokens)
+              </span>
+            </div>
           </div>
-          <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            ${keys.map(k => `
-              <button type="button" onmousedown="playTonePitch(${k.freq}, 0.45, 0.35, 'triangle')" class="h-28 rounded-2xl bg-white hover:bg-amber-100 active:scale-95 text-slate-900 font-black text-sm flex flex-col justify-end items-center pb-3 shadow-md transition-all">
-                <span>${k.note}</span>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Keyboard Ear Training Complete!</h4>
+              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> pitches correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedPitchKeyboard(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+              <span class="text-xs sm:text-sm font-black text-amber-300">${st.isPlaying ? 'Listen closely to the interval...' : st.targetKey ? 'Ready to play the mystery notes!' : ''}</span>
+              <button type="button" onclick="playPitchKeyboardMystery()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Notes (C4 &rarr; ?)
               </button>
-            `).join('')}
-          </div>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)! That was ' + st.targetKey.note + '.' : '✗ Not quite. The correct note was ' + st.targetKey.note + '.'}</span>
+                <button type="button" onclick="nextPitchKeyboardRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-4 sm:grid-cols-8 gap-2 mt-4">
+              ${pitchKeyboardKeys.map(k => {
+                let btnClass = 'bg-white hover:bg-amber-100 text-slate-900 border border-slate-300';
+                if (st.answered) {
+                  if (k.note === st.targetKey.note) {
+                    btnClass = 'bg-emerald-400 text-slate-950 border-emerald-500 shadow-[0_0_15px_rgba(52,211,153,0.6)] z-10 scale-105';
+                  } else {
+                    btnClass = 'bg-slate-700 text-slate-400 border-slate-600 opacity-50 cursor-not-allowed';
+                  }
+                }
+                return `
+                  <button type="button" onmousedown="guessPitchKeyboardNote('${k.note}')" ontouchstart="event.preventDefault(); guessPitchKeyboardNote('${k.note}');" ${st.answered && k.note !== st.targetKey.note ? 'disabled' : ''} class="h-28 rounded-2xl font-black text-sm flex flex-col justify-end items-center pb-3 shadow-md transition-all ${btnClass}">
+                    <span>${k.note}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          `}
         </div>
       `;
     }

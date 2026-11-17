@@ -1325,65 +1325,6 @@
               { q: 'Which note has an open hollow oval notehead with NO stem and lasts 4 beats?', options: ['Semibreve', 'Minim', 'Crotchet', 'Paired Quavers'], correct: 0 },
               { q: 'What is the difference between the beat and rhythm?', options: ['The beat is the steady pulse, while rhythm is the pattern of long and short sounds over it', 'The beat is only played by drums, while rhythm is only sung', 'They are two words for dynamic volume', 'Rhythm never uses rests or quavers'], correct: 0 }
             ]
-          },
-          {
-            level: 2,
-            title: 'Level 2: Stem Direction & Notation Rules',
-            lessons: [
-              {
-                lessonNum: 1,
-                title: 'Lesson 1: Stem Direction Rules',
-                summary: 'Learn the strict engraving rules for drawing stems on notes above and below the middle line.',
-                toolType: 'stemDirectionGame',
-                contentHtml: `
-                  <p>When note heads have stems, their direction is determined by strict engraving rules based on the <strong>middle line (Line 3 - B in Treble Clef)</strong> of the staff:</p>
-                  <ul class="list-disc pl-5 space-y-3 text-sm text-slate-700 marker:text-slate-500 mt-2">
-                    <li><strong>Below the middle line:</strong> The stem points <strong>UP on the RIGHT</strong> side of the notehead.</li>
-                    <li><strong>Above the middle line:</strong> The stem points <strong>DOWN on the LEFT</strong> side of the notehead.</li>
-                    <li><strong>On the middle line:</strong> The stem can point either up or down depending on nearby notes!</li>
-                  </ul>
-                  <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 mt-6 text-center shadow-sm">
-                    <svg viewBox="0 0 400 120" class="w-full max-w-md mx-auto h-auto">
-                      <!-- Staff Lines -->
-                      <line x1="40" y1="20" x2="360" y2="20" stroke="#475569" stroke-width="1.5"/>
-                      <line x1="40" y1="40" x2="360" y2="40" stroke="#475569" stroke-width="1.5"/>
-                      <line x1="40" y1="60" x2="360" y2="60" stroke="#3b82f6" stroke-width="2"/> <!-- Middle line highlighted -->
-                      <line x1="40" y1="80" x2="360" y2="80" stroke="#475569" stroke-width="1.5"/>
-                      <line x1="40" y1="100" x2="360" y2="100" stroke="#475569" stroke-width="1.5"/>
-                      
-                      <text x="45" y="105" font-size="70" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
-                      
-                      <!-- Below middle line: Stem Up -->
-                      <ellipse cx="140" cy="90" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 140 90)"/>
-                      <line x1="148" y1="90" x2="148" y2="45" stroke="#0f172a" stroke-width="2"/>
-                      
-                      <!-- Above middle line: Stem Down -->
-                      <ellipse cx="230" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 230 30)"/>
-                      <line x1="222" y1="30" x2="222" y2="75" stroke="#0f172a" stroke-width="2"/>
-                      
-                      <!-- On middle line: Stem Up/Down -->
-                      <ellipse cx="300" cy="60" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 300 60)"/>
-                      <line x1="308" y1="60" x2="308" y2="15" stroke="#0f172a" stroke-width="2"/>
-                      
-                      <ellipse cx="340" cy="60" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 340 60)"/>
-                      <line x1="332" y1="60" x2="332" y2="105" stroke="#0f172a" stroke-width="2"/>
-                    </svg>
-                    <div class="flex justify-between max-w-md mx-auto mt-2 px-6 text-[10px] font-bold text-slate-500 uppercase">
-                      <div class="text-center w-24">Stem Up<br/><span class="text-[9px] normal-case font-normal">(Below middle line)</span></div>
-                      <div class="text-center w-24">Stem Down<br/><span class="text-[9px] normal-case font-normal">(Above middle line)</span></div>
-                      <div class="text-center w-24">On Middle Line<br/><span class="text-[9px] normal-case font-normal">(Up or down!)</span></div>
-                    </div>
-                  </div>
-                `
-              }
-            ],
-            testQuestions: [
-              { q: 'What is the general rule for note stem direction when a notehead is placed BELOW the middle line of the staff?', options: ['The stem points UP on the RIGHT side', 'The stem points DOWN on the LEFT side', 'The stem points UP on the LEFT side', 'The stem points DOWN on the RIGHT side'], correct: 0 },
-              { q: 'Where does the stem attach when pointing UP?', options: ['On the RIGHT side of the notehead', 'On the LEFT side of the notehead', 'In the middle of the notehead', 'It does not attach'], correct: 0 },
-              { q: 'What is the general rule for note stem direction when a notehead is placed ABOVE the middle line of the staff?', options: ['The stem points DOWN on the LEFT side', 'The stem points UP on the RIGHT side', 'The stem points DOWN on the RIGHT side', 'The stem points UP on the LEFT side'], correct: 0 },
-              { q: 'What happens to the stem direction if a note is placed exactly ON the middle line (Line 3)?', options: ['It can point either up or down depending on nearby notes', 'It must always point down', 'It must always point up', 'It is drawn without a stem'], correct: 0 },
-              { q: 'How many lines does the standard musical staff have?', options: ['5 lines', '4 lines', '6 lines', '3 lines'], correct: 0 }
-            ]
           }
         ]
       },
@@ -1659,6 +1600,52 @@
                     </svg>
                   </div>
                 `
+              },
+              {
+                lessonNum: 5,
+                title: 'Lesson 5: Stem Direction Rules',
+                summary: 'Learn the strict engraving rules for drawing stems on notes above and below the middle line.',
+                toolType: 'stemDirectionGame',
+                contentHtml: `
+                  <p>When note heads have stems, their direction is determined by strict engraving rules based on the <strong>middle line (Line 3 - B in Treble Clef)</strong> of the staff:</p>
+                  <ul class="list-disc pl-5 space-y-3 text-sm text-slate-700 marker:text-slate-500 mt-2">
+                    <li><strong>Below the middle line:</strong> The stem points <strong>UP on the RIGHT</strong> side of the notehead.</li>
+                    <li><strong>Above the middle line:</strong> The stem points <strong>DOWN on the LEFT</strong> side of the notehead.</li>
+                    <li><strong>On the middle line:</strong> The stem can point either up or down depending on nearby notes!</li>
+                  </ul>
+                  <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 mt-6 text-center shadow-sm">
+                    <svg viewBox="0 0 400 120" class="w-full max-w-md mx-auto h-auto">
+                      <!-- Staff Lines -->
+                      <line x1="40" y1="20" x2="360" y2="20" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="40" y1="40" x2="360" y2="40" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="40" y1="60" x2="360" y2="60" stroke="#3b82f6" stroke-width="2"/> <!-- Middle line highlighted -->
+                      <line x1="40" y1="80" x2="360" y2="80" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="40" y1="100" x2="360" y2="100" stroke="#475569" stroke-width="1.5"/>
+                      
+                      <text x="45" y="105" font-size="70" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      
+                      <!-- Below middle line: Stem Up -->
+                      <ellipse cx="140" cy="90" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 140 90)"/>
+                      <line x1="148" y1="90" x2="148" y2="45" stroke="#0f172a" stroke-width="2"/>
+                      
+                      <!-- Above middle line: Stem Down -->
+                      <ellipse cx="230" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 230 30)"/>
+                      <line x1="222" y1="30" x2="222" y2="75" stroke="#0f172a" stroke-width="2"/>
+                      
+                      <!-- On middle line: Stem Up/Down -->
+                      <ellipse cx="300" cy="60" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 300 60)"/>
+                      <line x1="308" y1="60" x2="308" y2="15" stroke="#0f172a" stroke-width="2"/>
+                      
+                      <ellipse cx="340" cy="60" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 340 60)"/>
+                      <line x1="332" y1="60" x2="332" y2="105" stroke="#0f172a" stroke-width="2"/>
+                    </svg>
+                    <div class="flex justify-between max-w-md mx-auto mt-2 px-6 text-[10px] font-bold text-slate-500 uppercase">
+                      <div class="text-center w-24">Stem Up<br/><span class="text-[9px] normal-case font-normal">(Below middle line)</span></div>
+                      <div class="text-center w-24">Stem Down<br/><span class="text-[9px] normal-case font-normal">(Above middle line)</span></div>
+                      <div class="text-center w-24">On Middle Line<br/><span class="text-[9px] normal-case font-normal">(Up or down!)</span></div>
+                    </div>
+                  </div>
+                `
               }
             ],
             testQuestions: [
@@ -1672,7 +1659,11 @@
               { q: 'How many semitones make up a whole tone?', options: ['Two semitones', 'One semitone', 'Three semitones', 'Four semitones'], correct: 0 },
               { q: 'Which pair of white keys are naturally separated by a semitone?', options: ['E to F', 'C to D', 'F to G', 'G to A'], correct: 0 },
               { q: 'What kind of interval is between C and D?', options: ['A tone', 'A semitone', 'A leap', 'An octave'], correct: 0 },
-              { q: 'If you move from a white key to the immediate next black key, what distance is that?', options: ['A semitone', 'A tone', 'Two tones', 'A flat'], correct: 0 }
+              { q: 'If you move from a white key to the immediate next black key, what distance is that?', options: ['A semitone', 'A tone', 'Two tones', 'A flat'], correct: 0 },
+              { q: 'What is the general rule for note stem direction when a notehead is placed BELOW the middle line of the staff?', options: ['The stem points UP on the RIGHT side', 'The stem points DOWN on the LEFT side', 'The stem points UP on the LEFT side', 'The stem points DOWN on the RIGHT side'], correct: 0 },
+              { q: 'Where does the stem attach when pointing UP?', options: ['On the RIGHT side of the notehead', 'On the LEFT side of the notehead', 'In the middle of the notehead', 'It does not attach'], correct: 0 },
+              { q: 'What is the general rule for note stem direction when a notehead is placed ABOVE the middle line of the staff?', options: ['The stem points DOWN on the LEFT side', 'The stem points UP on the RIGHT side', 'The stem points DOWN on the RIGHT side', 'The stem points UP on the LEFT side'], correct: 0 },
+              { q: 'What happens to the stem direction if a note is placed exactly ON the middle line (Line 3)?', options: ['It can point either up or down depending on nearby notes', 'It must always point down', 'It must always point up', 'It is drawn without a stem'], correct: 0 }
             ]
           }
         ]
@@ -2566,20 +2557,20 @@
       round: 1, totalRounds: 10, score: 0, streak: 0, best: 0,
       targetStem: 'up', // 'up' or 'down'
       answered: false, lastCorrect: false, completed: false,
-      droppedZone: null, roundStartTime: 0
+      droppedY: null, roundStartTime: 0
     };
 
     function setupStemDirectionRound() {
       stemDirectionGameState.targetStem = Math.random() > 0.5 ? 'up' : 'down';
       stemDirectionGameState.answered = false;
       stemDirectionGameState.lastCorrect = false;
-      stemDirectionGameState.droppedZone = null;
+      stemDirectionGameState.droppedY = null;
       stemDirectionGameState.roundStartTime = performance.now();
     }
 
     function mountEmbeddedStemDirectionGame(target) {
       if (!target) return;
-      stemDirectionGameState = { round: 1, totalRounds: 10, score: 0, streak: 0, best: 0, targetStem: 'up', answered: false, lastCorrect: false, completed: false, droppedZone: null, roundStartTime: 0 };
+      stemDirectionGameState = { round: 1, totalRounds: 10, score: 0, streak: 0, best: 0, targetStem: 'up', answered: false, lastCorrect: false, completed: false, droppedY: null, roundStartTime: 0 };
       setupStemDirectionRound();
       renderStemDirectionUI(target);
     }
@@ -2588,17 +2579,43 @@
        if (e && e.dataTransfer) { e.dataTransfer.setData('text/plain', 'stemNote'); e.dataTransfer.effectAllowed = 'copy'; }
     }
 
-    function handleStemDrop(event, zone) {
+    function handleStemDrop(event, fallbackZone) {
        if (event) event.preventDefault();
        const st = stemDirectionGameState;
        if (st.answered || st.completed) return;
        if (performance.now() - st.roundStartTime < 800) return;
        
        st.answered = true;
-       st.droppedZone = zone;
+       let snappedY;
+
+       // Calculate exact line or space from coordinates if event exists
+       if (event && event.clientY) {
+           const svg = event.currentTarget.tagName === 'svg' ? event.currentTarget : event.currentTarget.ownerSVGElement;
+           if (svg) {
+               const pt = svg.createSVGPoint();
+               pt.x = event.clientX;
+               pt.y = event.clientY;
+               const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+               // Snap to nearest 10 units (half space based on 20px line spacing)
+               snappedY = Math.round(svgP.y / 10) * 10;
+               // Keep note strictly within the 5 staff lines (Y: 20 to 100)
+               snappedY = Math.max(20, Math.min(100, snappedY));
+           }
+       }
+
+       // Fallback logic if needed
+       if (snappedY === undefined) {
+           snappedY = fallbackZone === 'above' ? 40 : 80;
+       }
+
+       st.droppedY = snappedY;
+       
+       const isAboveMiddle = st.droppedY < 60;
+       const isBelowMiddle = st.droppedY > 60;
        let isCorrect = false;
-       if (st.targetStem === 'up' && zone === 'below') isCorrect = true;
-       if (st.targetStem === 'down' && zone === 'above') isCorrect = true;
+       
+       if (st.targetStem === 'up' && isBelowMiddle) isCorrect = true;
+       if (st.targetStem === 'down' && isAboveMiddle) isCorrect = true;
        
        st.lastCorrect = isCorrect;
 
@@ -2670,21 +2687,14 @@
 
                   ${!st.answered ? `
                     <!-- Interactive Drop Zones (Hidden graphically, active on mouse/touch) -->
-                    <rect x="70" y="0" width="100" height="55" fill="transparent" class="cursor-pointer"
-                      ondragover="event.preventDefault(); this.setAttribute('fill', 'rgba(56,189,248,0.2)');"
+                    <rect x="50" y="10" width="130" height="100" fill="transparent" class="cursor-pointer"
+                      ondragover="event.preventDefault(); this.setAttribute('fill', 'rgba(56,189,248,0.1)');"
                       ondragleave="this.setAttribute('fill', 'transparent');"
-                      ondrop="this.setAttribute('fill', 'transparent'); handleStemDrop(event, 'above');"
-                      onclick="handleStemDrop(null, 'above')" />
-                    <rect x="70" y="65" width="100" height="55" fill="transparent" class="cursor-pointer"
-                      ondragover="event.preventDefault(); this.setAttribute('fill', 'rgba(56,189,248,0.2)');"
-                      ondragleave="this.setAttribute('fill', 'transparent');"
-                      ondrop="this.setAttribute('fill', 'transparent'); handleStemDrop(event, 'below');"
-                      onclick="handleStemDrop(null, 'below')" />
+                      ondrop="this.setAttribute('fill', 'transparent'); handleStemDrop(event, null);"
+                      onclick="handleStemDrop(event, null)" />
                   ` : `
-                    <!-- Answer Display -->
-                    ${st.droppedZone === 'above' 
-                      ? `<g transform="translate(100, -10)">${stemSvg}</g>`
-                      : `<g transform="translate(100, 30)">${stemSvg}</g>`}
+                    <!-- Answer Display precisely snapped to line/space -->
+                    <g transform="translate(80, ${st.droppedY - (st.targetStem === 'up' ? 50 : 15)})">${stemSvg}</g>
                   `}
                 </svg>
               </div>

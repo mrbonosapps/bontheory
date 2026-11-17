@@ -1286,6 +1286,66 @@
                     </div>
                   </div>
                 `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Repeat Signs & Roadmaps',
+                summary: 'Learn how to navigate double bar lines, inward-facing dots, and section repeats.',
+                toolType: 'repeatSignGame',
+                contentHtml: `
+                  <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200 mb-5 space-y-3">
+                    <h3 class="font-black text-lg text-sky-900 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass"></i> Anatomy of a Repeat Sign</h3>
+                    <p class="text-sm text-slate-700">A repeat sign looks like a double bar line (one thin line and one thick line) combined with <strong>two dots</strong> placed in spaces 2 and 3 of the staff:</p>
+                    <div class="p-3 bg-white rounded-xl border border-sky-200 text-center font-bold text-sky-900 shadow-sm">
+                      The dots always face INWARD toward the music that needs to be repeated!
+                    </div>
+                  </div>
+
+                  <h3 class="font-black text-lg text-slate-800 mb-3 flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-blue-600"></div> The Two Repeat Scenarios</h3>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
+                      <div class="flex items-center justify-between">
+                        <h4 class="font-black text-lg text-slate-800">1. Repeat to the Start</h4>
+                        <span class="px-2 py-1 bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase rounded">Back-Only</span>
+                      </div>
+                      <p class="text-xs text-slate-600">When you see a <strong>backward repeat sign alone</strong> (dots on the left side of the bar line) with NO opening repeat sign earlier in the piece, it instructs you to:</p>
+                      <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-bold text-amber-900">
+                        &rarr; Jump all the way back to the very beginning (Bar 1) and play forward.
+                      </div>
+                      <svg viewBox="0 0 200 60" class="w-full h-16 bg-slate-900 rounded-xl mt-2">
+                        <line x1="10" y1="20" x2="190" y2="20" stroke="#475569" stroke-width="1"/><line x1="10" y1="25" x2="190" y2="25" stroke="#475569" stroke-width="1"/><line x1="10" y1="30" x2="190" y2="30" stroke="#475569" stroke-width="1"/><line x1="10" y1="35" x2="190" y2="35" stroke="#475569" stroke-width="1"/><line x1="10" y1="40" x2="190" y2="40" stroke="#475569" stroke-width="1"/>
+                        <line x1="10" y1="20" x2="10" y2="40" stroke="#94a3b8" stroke-width="1"/>
+                        <text x="50" y="32" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Bar 1</text>
+                        <line x1="100" y1="20" x2="100" y2="40" stroke="#94a3b8" stroke-width="1"/>
+                        <text x="145" y="32" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Bar 2</text>
+                        <circle cx="178" cy="27.5" r="1.5" fill="#38bdf8" /><circle cx="178" cy="32.5" r="1.5" fill="#38bdf8" />
+                        <line x1="184" y1="20" x2="184" y2="40" stroke="#fff" stroke-width="1"/>
+                        <line x1="188" y1="20" x2="188" y2="40" stroke="#fff" stroke-width="3"/>
+                      </svg>
+                      <div class="text-[11px] text-slate-500 text-center">Path: <strong>Bar 1 &rarr; Bar 2 &rarr; Bar 1 &rarr; Bar 2</strong></div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
+                      <div class="flex items-center justify-between">
+                        <h4 class="font-black text-lg text-slate-800">2. Paired Repeat Signs</h4>
+                        <span class="px-2 py-1 bg-fuchsia-100 text-fuchsia-800 text-[10px] font-black uppercase rounded">Section Repeat</span>
+                      </div>
+                      <p class="text-xs text-slate-600">When a <strong>forward repeat sign</strong> (dots on the right) and a <strong>backward repeat sign</strong> (dots on the left) frame a section:</p>
+                      <div class="p-3 bg-fuchsia-50 border border-fuchsia-200 rounded-xl text-xs font-bold text-fuchsia-900">
+                        &rarr; Jump back only as far as the forward repeat sign, NOT to the beginning!
+                      </div>
+                      <svg viewBox="0 0 200 60" class="w-full h-16 bg-slate-900 rounded-xl mt-2">
+                        <line x1="10" y1="20" x2="190" y2="20" stroke="#475569" stroke-width="1"/><line x1="10" y1="25" x2="190" y2="25" stroke="#475569" stroke-width="1"/><line x1="10" y1="30" x2="190" y2="30" stroke="#475569" stroke-width="1"/><line x1="10" y1="35" x2="190" y2="35" stroke="#475569" stroke-width="1"/><line x1="10" y1="40" x2="190" y2="40" stroke="#475569" stroke-width="1"/>
+                        <line x1="20" y1="20" x2="20" y2="40" stroke="#fff" stroke-width="3"/><line x1="24" y1="20" x2="24" y2="40" stroke="#fff" stroke-width="1"/>
+                        <circle cx="30" cy="27.5" r="1.5" fill="#d946ef" /><circle cx="30" cy="32.5" r="1.5" fill="#d946ef" />
+                        <text x="100" y="32" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Repeated Passage</text>
+                        <circle cx="170" cy="27.5" r="1.5" fill="#d946ef" /><circle cx="170" cy="32.5" r="1.5" fill="#d946ef" />
+                        <line x1="176" y1="20" x2="176" y2="40" stroke="#fff" stroke-width="1"/><line x1="180" y1="20" x2="180" y2="40" stroke="#fff" stroke-width="3"/>
+                      </svg>
+                      <div class="text-[11px] text-slate-500 text-center">Only the measures enclosed between the dots are repeated.</div>
+                    </div>
+                  </div>
+                `
               }
             ],
             testQuestions: [
@@ -1298,7 +1358,12 @@
               { q: 'What is the section pattern for Ternary Form?', options: ['A – B – A', 'A – B', 'A – B – A – C – A', 'B – A'], correct: 0 },
               { q: 'Which form uses a three-part sandwich structure where Section A returns after a contrasting Section B?', options: ['Ternary Form (A – B – A)', 'Binary Form (A – B)', 'Rondo Form (A – B – A – C – A)', 'Solo Form'], correct: 0 },
               { q: 'What is the section pattern for Rondo Form?', options: ['A – B – A – C – A', 'A – B', 'A – B – A', 'A – B – C – D'], correct: 0 },
-              { q: 'In Rondo Form (A – B – A – C – A), which section keeps returning between contrasting episodes (B and C)?', options: ['The main theme (Section A)', 'Only Section C', 'Only the silence', 'The crescendo'], correct: 0 }
+              { q: 'In Rondo Form (A – B – A – C – A), which section keeps returning between contrasting episodes (B and C)?', options: ['The main theme (Section A)', 'Only Section C', 'Only the silence', 'The crescendo'], correct: 0 },
+              { q: 'What does a repeat sign look like in sheet music?', options: ['A double bar line with two dots', 'A single thick line', 'A wedge-shaped hairpin', 'A hollow notehead'], correct: 0 },
+              { q: 'Which direction do the two dots on a repeat sign face?', options: ['INWARD toward the music that needs to be repeated', 'Always to the right', 'Always to the left', 'Upwards toward the title'], correct: 0 },
+              { q: 'What should you do when you reach a backward repeat sign (dots on the left) with no forward repeat sign earlier?', options: ['Jump all the way back to the very beginning and play forward', 'Stop playing immediately', 'Play only the last bar again', 'Jump to the end of the piece'], correct: 0 },
+              { q: 'When there is a paired forward and backward repeat sign framing a section, where do you jump back to?', options: ['Only as far back as the forward repeat sign', 'All the way to the beginning', 'To the next line', 'To the nearest rest'], correct: 0 },
+              { q: 'If a 4-bar piece has a paired repeat framing Bars 2 and 3, what is the correct playing roadmap?', options: ['Bars 1, 2, 3, 2, 3, 4', 'Bars 1, 2, 3, 4, 1, 2, 3, 4', 'Bars 1, 2, 3, 4', 'Bars 1, 2, 3, 4, 2, 3'], correct: 0 }
             ]
           }
         ]
@@ -1377,7 +1442,7 @@
     }
 
     function renderConceptsHub(container) {
-      const completed = window.state.completedLessons || [];
+      const completed = (window.state && window.state.completedLessons) || [];
       container.innerHTML = `
         <div class="space-y-6">
           <div class="flex flex-wrap items-center justify-between gap-3">
@@ -1455,7 +1520,7 @@
                   <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     ${lvl.lessons.map(les => {
                       const lKey = `${concept.id}_lvl${lvl.level}_les${les.lessonNum}`;
-                      const isDone = (window.state.completedLessons || []).includes(lKey);
+                      const isDone = ((window.state && window.state.completedLessons) || []).includes(lKey);
                       return `
                         <li onclick="app.navigate('lessonDetail', { conceptId: '${concept.id}', levelNum: ${lvl.level}, lessonNum: ${les.lessonNum} })" class="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 hover:border-indigo-300 cursor-pointer transition-colors text-xs">
                           <span class="font-bold text-slate-700 truncate">${les.title}</span>
@@ -1477,7 +1542,7 @@
     function renderLevelDetail(container, { conceptId, levelNum }) {
       const concept = conceptsCurriculum.find(c => c.id === conceptId) || conceptsCurriculum[0];
       const level = concept.levels.find(l => l.level === levelNum) || concept.levels[0];
-      const completed = window.state.completedLessons || [];
+      const completed = (window.state && window.state.completedLessons) || [];
       const qCount = (level.testQuestions || []).length;
 
       container.innerHTML = `
@@ -1588,6 +1653,7 @@
       else if (lesson.toolType === 'dynamicsChallengeGame') mountEmbeddedDynamicsChallengeGame(toolBox);
       else if (lesson.toolType === 'timbreSoundboard') mountEmbeddedTimbreSoundboard(toolBox);
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
+      else if (lesson.toolType === 'repeatSignGame') mountEmbeddedRepeatSignGame(toolBox);
     }
 
     function mountEmbeddedDynamicsSimulator(target) {
@@ -3495,248 +3561,213 @@
     }
 
     // ==========================================
-    // MINIGAME 8: DYNAMICS CHALLENGE GAME
+    // MINIGAME 10: REPEAT SIGN ROADMAP GAME (STRUCTURE & FORM)
     // ==========================================
-    const dynamicsChallengeCatalog = [
-      { id: 'pp', desc: 'Pianissimo (Very Soft)', symbol: 'pp' },
-      { id: 'p', desc: 'Piano (Soft)', symbol: 'p' },
-      { id: 'mp', desc: 'Mezzo Piano (Moderately Soft)', symbol: 'mp' },
-      { id: 'mf', desc: 'Mezzo Forte (Moderately Loud)', symbol: 'mf' },
-      { id: 'f', desc: 'Forte (Loud)', symbol: 'f' },
-      { id: 'ff', desc: 'Fortissimo (Very Loud)', symbol: 'ff' },
-      { id: 'cresc', desc: 'Crescendo (Gradually getting louder)', symbol: 'cresc.' },
-      { id: 'decresc', desc: 'Decrescendo (Gradually getting softer)', symbol: 'decresc.' },
-      { id: 'terraced_p_f', desc: 'Terraced: Sudden shift from Soft to Loud', symbol: 'p &rarr; f' },
-      { id: 'terraced_f_p', desc: 'Terraced: Sudden shift from Loud to Soft', symbol: 'f &rarr; p' }
+    const repeatGameScenarios = [
+      {
+        id: 'back_4',
+        title: 'Backward repeat sign at the end of Bar 4 (Repeats all 4 bars)',
+        fwd: null, bwd: 4,
+        correctPath: '1, 2, 3, 4, 1, 2, 3, 4',
+        wrongPaths: ['1, 2, 3, 4', '1, 2, 3, 4, 4', '1, 2, 3, 1, 2, 3, 4']
+      },
+      {
+        id: 'back_2',
+        title: 'Backward repeat sign at the end of Bar 2',
+        fwd: null, bwd: 2,
+        correctPath: '1, 2, 1, 2, 3, 4',
+        wrongPaths: ['1, 2, 3, 4, 1, 2, 3, 4', '1, 2, 3, 2, 3, 4', '1, 1, 2, 3, 4']
+      },
+      {
+        id: 'paired_2_3',
+        title: 'Paired repeat signs around Bars 2 and 3',
+        fwd: 2, bwd: 3,
+        correctPath: '1, 2, 3, 2, 3, 4',
+        wrongPaths: ['1, 2, 3, 4, 2, 3', '1, 2, 3, 1, 2, 3, 4', '1, 2, 3, 4, 1, 2, 3, 4']
+      },
+      {
+        id: 'paired_3_4',
+        title: 'Paired repeat signs around Bars 3 and 4',
+        fwd: 3, bwd: 4,
+        correctPath: '1, 2, 3, 4, 3, 4',
+        wrongPaths: ['1, 2, 3, 4, 1, 2, 3, 4', '1, 2, 3, 4, 4', '1, 2, 3, 4, 2, 3, 4']
+      },
+      {
+        id: 'paired_1_2',
+        title: 'Paired repeat signs around Bars 1 and 2',
+        fwd: 1, bwd: 2,
+        correctPath: '1, 2, 1, 2, 3, 4',
+        wrongPaths: ['1, 2, 3, 4, 1, 2', '1, 2, 3, 1, 2, 3, 4', '1, 2, 3, 4, 1, 2, 3, 4']
+      },
+      {
+        id: 'back_3',
+        title: 'Backward repeat sign at the end of Bar 3',
+        fwd: null, bwd: 3,
+        correctPath: '1, 2, 3, 1, 2, 3, 4',
+        wrongPaths: ['1, 2, 3, 2, 3, 4', '1, 2, 3, 4, 1, 2, 3, 4', '1, 2, 3, 3, 4']
+      }
     ];
 
-    let dynChallengeState = {
+    let repeatSignGameState = {
       round: 1,
       totalRounds: 10,
       score: 0,
-      target: null,
+      currentScenario: null,
+      choices: [],
       answered: false,
       lastCorrect: false,
       completed: false
     };
 
-    function renderDynamicSymbol(id, size = 'w-10 h-6') {
-      if (id === 'cresc') return `<svg viewBox="0 0 120 36" class="${size} mx-auto"><polyline points="108,5 12,18 108,31" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
-      if (id === 'decresc') return `<svg viewBox="0 0 120 36" class="${size} mx-auto"><polyline points="12,5 108,18 12,31" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
-      const mapping = {
-        'pp': 'pp', 'p': 'p', 'mp': 'mp', 'mf': 'mf', 'f': 'f', 'ff': 'ff',
-        'terraced_p_f': 'p &rarr; f', 'terraced_f_p': 'f &rarr; p'
-      };
-      return `<span class="italic font-black text-xl">${mapping[id]}</span>`;
+    function createRepeatScoreSVG(fwdBar, bwdBar) {
+      let svg = `<svg viewBox="0 0 400 80" class="w-full max-w-xl mx-auto h-auto bg-slate-950 rounded-xl mb-3 shadow-inner py-2">`;
+      for (let i = 0; i < 5; i++) {
+         const y = 25 + (i * 7.5);
+         svg += `<line x1="20" y1="${y}" x2="380" y2="${y}" stroke="#475569" stroke-width="1.5"/>`;
+      }
+      if (fwdBar === 1) {
+          svg += `<line x1="20" y1="25" x2="20" y2="55" stroke="#fff" stroke-width="4"/><line x1="26" y1="25" x2="26" y2="55" stroke="#fff" stroke-width="1.5"/><circle cx="34" cy="36.25" r="2.5" fill="#38bdf8"/><circle cx="34" cy="43.75" r="2.5" fill="#38bdf8"/>`;
+      } else {
+          svg += `<line x1="20" y1="25" x2="20" y2="55" stroke="#94a3b8" stroke-width="1.5"/>`;
+      }
+      let x = 110;
+      if (bwdBar === 1) {
+         svg += `<circle cx="${x-8}" cy="36.25" r="2.5" fill="#38bdf8"/><circle cx="${x-8}" cy="43.75" r="2.5" fill="#38bdf8"/><line x1="${x-2}" y1="25" x2="${x-2}" y2="55" stroke="#fff" stroke-width="1.5"/><line x1="${x+2}" y1="25" x2="${x+2}" y2="55" stroke="#fff" stroke-width="4"/>`;
+      } else if (fwdBar === 2) {
+         svg += `<line x1="${x-2}" y1="25" x2="${x-2}" y2="55" stroke="#fff" stroke-width="4"/><line x1="${x+2}" y1="25" x2="${x+2}" y2="55" stroke="#fff" stroke-width="1.5"/><circle cx="${x+10}" cy="36.25" r="2.5" fill="#38bdf8"/><circle cx="${x+10}" cy="43.75" r="2.5" fill="#38bdf8"/>`;
+      } else {
+         svg += `<line x1="${x}" y1="25" x2="${x}" y2="55" stroke="#94a3b8" stroke-width="1.5"/>`;
+      }
+      x = 200;
+      if (bwdBar === 2) {
+         svg += `<circle cx="${x-8}" cy="36.25" r="2.5" fill="#38bdf8"/><circle cx="${x-8}" cy="43.75" r="2.5" fill="#38bdf8"/><line x1="${x-2}" y1="25" x2="${x-2}" y2="55" stroke="#fff" stroke-width="1.5"/><line x1="${x+2}" y1="25" x2="${x+2}" y2="55" stroke="#fff" stroke-width="4"/>`;
+      } else if (fwdBar === 3) {
+         svg += `<line x1="${x-2}" y1="25" x2="${x-2}" y2="55" stroke="#fff" stroke-width="4"/><line x1="${x+2}" y1="25" x2="${x+2}" y2="55" stroke="#fff" stroke-width="1.5"/><circle cx="${x+10}" cy="36.25" r="2.5" fill="#38bdf8"/><circle cx="${x+10}" cy="43.75" r="2.5" fill="#38bdf8"/>`;
+      } else {
+         svg += `<line x1="${x}" y1="25" x2="${x}" y2="55" stroke="#94a3b8" stroke-width="1.5"/>`;
+      }
+      x = 290;
+      if (bwdBar === 3) {
+         svg += `<circle cx="${x-8}" cy="36.25" r="2.5" fill="#38bdf8"/><circle cx="${x-8}" cy="43.75" r="2.5" fill="#38bdf8"/><line x1="${x-2}" y1="25" x2="${x-2}" y2="55" stroke="#fff" stroke-width="1.5"/><line x1="${x+2}" y1="25" x2="${x+2}" y2="55" stroke="#fff" stroke-width="4"/>`;
+      } else if (fwdBar === 4) {
+         svg += `<line x1="${x-2}" y1="25" x2="${x-2}" y2="55" stroke="#fff" stroke-width="4"/><line x1="${x+2}" y1="25" x2="${x+2}" y2="55" stroke="#fff" stroke-width="1.5"/><circle cx="${x+10}" cy="36.25" r="2.5" fill="#38bdf8"/><circle cx="${x+10}" cy="43.75" r="2.5" fill="#38bdf8"/>`;
+      } else {
+         svg += `<line x1="${x}" y1="25" x2="${x}" y2="55" stroke="#94a3b8" stroke-width="1.5"/>`;
+      }
+      x = 380;
+      if (bwdBar === 4) {
+         svg += `<circle cx="${x-8}" cy="36.25" r="2.5" fill="#38bdf8"/><circle cx="${x-8}" cy="43.75" r="2.5" fill="#38bdf8"/><line x1="${x-3}" y1="25" x2="${x-3}" y2="55" stroke="#fff" stroke-width="1.5"/><line x1="${x+1}" y1="25" x2="${x+1}" y2="55" stroke="#fff" stroke-width="4"/>`;
+      } else {
+         svg += `<line x1="${x-2}" y1="25" x2="${x-2}" y2="55" stroke="#fff" stroke-width="1.5"/><line x1="${x+2}" y1="25" x2="${x+2}" y2="55" stroke="#fff" stroke-width="4"/>`;
+      }
+      svg += `
+        <text x="65" y="43" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">Bar 1</text>
+        <text x="155" y="43" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">Bar 2</text>
+        <text x="245" y="43" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">Bar 3</text>
+        <text x="335" y="43" fill="#fff" font-size="12" font-weight="bold" text-anchor="middle">Bar 4</text>
+      </svg>`;
+      return svg;
     }
 
-    function mountEmbeddedDynamicsChallengeGame(target) {
+    function setupRepeatSignRound() {
+      const scenario = repeatGameScenarios[Math.floor(Math.random() * repeatGameScenarios.length)];
+      repeatSignGameState.currentScenario = scenario;
+      const choices = [scenario.correctPath, ...scenario.wrongPaths].sort(() => Math.random() - 0.5);
+      repeatSignGameState.choices = choices;
+      repeatSignGameState.answered = false;
+    }
+
+    function mountEmbeddedRepeatSignGame(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      dynChallengeState = {
-        round: 1,
-        totalRounds: 10,
-        score: 0,
-        target: dynamicsChallengeCatalog[Math.floor(Math.random() * dynamicsChallengeCatalog.length)],
-        answered: false,
-        lastCorrect: false,
-        completed: false
+      repeatSignGameState = {
+        round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false
       };
-      renderDynamicsChallengeUI(target);
+      setupRepeatSignRound();
+      renderRepeatSignGameUI(target);
     }
 
-    function guessDynamicsChallenge(id) {
-      const st = dynChallengeState;
+    function guessRepeatPath(selectedPath) {
+      const st = repeatSignGameState;
       if (st.answered || st.completed) return;
       st.answered = true;
-      st.lastCorrect = (st.target.id === id);
+      st.lastCorrect = (st.currentScenario.correctPath === selectedPath);
       if (st.lastCorrect) {
         st.score++;
-        addTokens(2);
+        addTokens(1);
         playTonePitch(659.25, 0.2, 0.35, 'triangle');
       } else {
         playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
       }
-      renderDynamicsChallengeUI();
+      renderRepeatSignGameUI();
     }
 
-    function nextDynamicsChallengeRound() {
-      const st = dynChallengeState;
+    function nextRepeatSignRound() {
+      const st = repeatSignGameState;
       if (st.round < st.totalRounds) {
         st.round++;
-        st.target = dynamicsChallengeCatalog[Math.floor(Math.random() * dynamicsChallengeCatalog.length)];
-        st.answered = false;
-        renderDynamicsChallengeUI();
+        setupRepeatSignRound();
+        renderRepeatSignGameUI();
       } else {
         st.completed = true;
-        renderDynamicsChallengeUI();
-        showAppModal('Dynamics Challenge Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score * 2} Tokens!`, st.score >= 5);
+        renderRepeatSignGameUI();
+        showAppModal('Repeat Sign Path Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
       }
     }
 
-    function renderDynamicsChallengeUI(target) {
+    function renderRepeatSignGameUI(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      const st = dynChallengeState;
+      const st = repeatSignGameState;
+      const scenario = st.currentScenario;
+
       target.innerHTML = `
         <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 2 Tokens Per Correct Answer</span>
-              <h3 class="text-xl font-black">The Great Dynamics Challenge</h3>
-              <p class="text-xs text-slate-300 mt-1">Match the description to the correct dynamic marking or symbol!</p>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">Repeat Sign Path Game</h3>
+              <p class="text-xs text-slate-300 mt-1">Trace the exact roadmap! Look at the score snippet and choose the correct order of bars played.</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
                 Round ${st.round} / ${st.totalRounds}
               </span>
               <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
-                Score: ${st.score} (+${st.score * 2} Tokens)
+                Score: ${st.score} (+${st.score} Tokens)
               </span>
             </div>
           </div>
 
           ${st.completed ? `
             <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
-              <p class="text-xs text-slate-200">You matched <strong>${st.score} / ${st.totalRounds}</strong> dynamics correctly and earned <strong>+${st.score * 2} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedDynamicsChallengeGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+              <h4 class="text-xl font-black text-emerald-300">Roadmap Challenge Complete!</h4>
+              <p class="text-xs text-slate-200">You traced <strong>${st.score} / ${st.totalRounds}</strong> roadmaps correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedRepeatSignGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
             </div>
           ` : `
-            <div class="flex justify-center py-4">
-              <div class="p-6 rounded-2xl bg-indigo-950 border border-indigo-500 text-center w-full max-w-md shadow-lg">
-                <div class="text-xs font-bold uppercase text-indigo-300 mb-2">Find the marking for:</div>
-                <div class="text-xl sm:text-2xl font-black text-white">${st.target.desc}</div>
-              </div>
+            <div class="bg-white text-slate-900 p-6 sm:p-8 rounded-3xl text-center shadow-lg">
+              <h4 class="font-black text-lg sm:text-xl text-slate-800 mb-4">Path for: ${scenario.title}</h4>
+              ${createRepeatScoreSVG(scenario.fwd, scenario.bwd)}
+              <p class="text-xs font-bold text-slate-400 mt-1">Follow the dots inward!</p>
             </div>
 
             ${st.answered ? `
               <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? `✓ Spot on! (+2 Tokens)` : `✗ Not quite — it was ${st.target.symbol}.`}</span>
-                <button type="button" onclick="nextDynamicsChallengeRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Correct! You traced the perfect roadmap.' : `✗ Incorrect. The correct path was: <strong>${scenario.correctPath}</strong>`}</span>
+                <button type="button" onclick="nextRepeatSignRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
                   ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
                 </button>
               </div>
             ` : ''}
 
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              ${dynamicsChallengeCatalog.map(opt => `
-                <button type="button" onclick="guessDynamicsChallenge('${opt.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-center transition-all flex items-center justify-center min-h-[72px] ${
-                  st.answered && opt.id === st.target.id ? 'border-emerald-400 bg-emerald-950/60 text-emerald-200 shadow-lg scale-105 z-10' : 
-                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700 text-white shadow-md'
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${st.choices.map(choice => `
+                <button type="button" onclick="guessRepeatPath('${choice}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-center text-sm font-black transition-all ${
+                  st.answered && choice === scenario.correctPath ? 'border-emerald-400 bg-emerald-950/60 text-emerald-200 shadow-lg scale-[1.02]' :
+                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-white border-slate-200 text-slate-800 hover:border-indigo-400 hover:text-indigo-700 shadow-sm hover:shadow'
                 }">
-                  ${renderDynamicSymbol(opt.id, 'w-12 h-6')}
-                </button>
-              `).join('')}
-            </div>
-          `}
-        </div>
-      `;
-    }
-
-    const timbreInstruments = [
-      { id: 'violin', name: 'Violin', desc: 'Warm, singing & rich', play: () => playTonePitch(440, 0.7, 0.3, 'sawtooth') },
-      { id: 'trumpet', name: 'Trumpet', desc: 'Brassy, bright & metallic', play: () => playTonePitch(587.33, 0.55, 0.35, 'square') },
-      { id: 'snare', name: 'Snare Drum', desc: 'Short, crisp & crack-like', play: () => playDrumSound('snare') },
-      { id: 'bassdrum', name: 'Bass Drum', desc: 'Deep, heavy thud', play: () => playDrumSound('kick') },
-      { id: 'doublebass', name: 'Double Bass', desc: 'Rumbling, dull & woody', play: () => playTonePitch(73.42, 0.8, 0.45, 'triangle') },
-      { id: 'harp', name: 'Harp', desc: 'Shimmering & delicate', play: () => { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => setTimeout(() => playTonePitch(f, 0.45, 0.22, 'sine'), i * 90)); } },
-      { id: 'xylophone', name: 'Xylophone', desc: 'Wooden, dry & hollow', play: () => playTonePitch(880, 0.14, 0.35, 'triangle') },
-      { id: 'bells', name: 'Tubular Bells', desc: 'Resonant, ringing & bright', play: () => playTonePitch(1046.5, 1.1, 0.3, 'sine') }
-    ];
-
-    let timbreGameState = { round: 1, totalRounds: 6, score: 0, target: timbreInstruments[0], answered: false, lastCorrect: false, completed: false };
-
-    function mountEmbeddedTimbreSoundboard(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      timbreGameState = {
-        round: 1,
-        totalRounds: 6,
-        score: 0,
-        target: timbreInstruments[Math.floor(Math.random() * timbreInstruments.length)],
-        answered: false,
-        lastCorrect: false,
-        completed: false
-      };
-      renderTimbreSoundboardUI(target);
-    }
-
-    function guessTimbreInstrument(id) {
-      const st = timbreGameState;
-      if (st.answered || st.completed) return;
-      st.answered = true;
-      st.lastCorrect = st.target.id === id;
-      if (st.lastCorrect) {
-        st.score++;
-        playTonePitch(659.25, 0.2, 0.35, 'triangle');
-      } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-      }
-      renderTimbreSoundboardUI();
-    }
-
-    function nextTimbreRound() {
-      const st = timbreGameState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        st.target = timbreInstruments[Math.floor(Math.random() * timbreInstruments.length)];
-        st.answered = false;
-        renderTimbreSoundboardUI();
-      } else {
-        st.completed = true;
-        const reward = st.score >= 4 ? 10 : 5;
-        addTokens(reward);
-        renderTimbreSoundboardUI();
-        showAppModal('Timbre Soundboard Complete!', `You identified ${st.score}/${st.totalRounds} instruments and earned +${reward} Tokens!`, st.score >= 3);
-      }
-    }
-
-    function renderTimbreSoundboardUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = timbreGameState;
-      target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Timbre Listening Challenge</span>
-              <h3 class="text-xl font-black">8-Instrument Timbre Soundboard</h3>
-              <p class="text-xs text-slate-300 mt-1">Play the mystery timbre clip and match it to the correct instrument pad!</p>
-            </div>
-            <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
-              Round ${st.round} / ${st.totalRounds} &bull; Score: ${st.score}
-            </span>
-          </div>
-
-          ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Timbre Soundboard Complete (${st.score}/${st.totalRounds})!</h4>
-              <button type="button" onclick="mountEmbeddedTimbreSoundboard(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
-            </div>
-          ` : `
-            <div class="flex justify-center">
-              <button type="button" onclick="timbreInstruments.find(i => i.id === '${st.target.id}').play()" class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
-                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Sound
-              </button>
-            </div>
-
-            ${st.answered ? `
-              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? `✓ Correct! That was ${st.target.name} (${st.target.desc}).` : `✗ Not quite — that was ${st.target.name} (${st.target.desc}).`}</span>
-                <button type="button" onclick="nextTimbreRound()" class="px-4 py-2 bg-white text-slate-950 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Sound →' : 'Finish'}
-                </button>
-              </div>
-            ` : ''}
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              ${timbreInstruments.map(inst => `
-                <button type="button" onclick="guessTimbreInstrument('${inst.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-left transition-all ${
-                  st.answered && inst.id === st.target.id ? 'border-emerald-400 bg-emerald-950/60' : 'border-slate-700 bg-slate-800 hover:border-amber-400'
-                }">
-                  <div class="font-black text-xs text-white">${inst.name}</div>
-                  <div class="text-[11px] text-slate-400 mt-0.5">${inst.desc}</div>
+                  ${choice}
                 </button>
               `).join('')}
             </div>
@@ -3761,8 +3792,9 @@
       const pct = Math.round((score / questions.length) * 100);
       const earnedTokens = pct >= 80 ? 25 : pct >= 50 ? 15 : 5;
 
-      if (!state.testHistory) state.testHistory = [];
-      state.testHistory.unshift({
+      if (!window.state) window.state = {};
+      if (!window.state.testHistory) window.state.testHistory = [];
+      window.state.testHistory.unshift({
         concept: concept.title,
         level: level.title,
         score: score,
@@ -3770,8 +3802,8 @@
         percentage: pct,
         date: new Date().toLocaleDateString()
       });
-      if (!state.stats) state.stats = { tokens: 0, testsTaken: 0 };
-      state.stats.testsTaken = (state.stats.testsTaken || 0) + 1;
+      if (!window.state.stats) window.state.stats = { tokens: 0, testsTaken: 0 };
+      window.state.stats.testsTaken = (window.state.stats.testsTaken || 0) + 1;
       addTokens(earnedTokens);
 
       showAppModal(
@@ -3913,17 +3945,18 @@
     function buyShopItem(itemId) {
       const item = shopCatalog.find(i => i.id === itemId);
       if (!item) return;
-      if (!state.inventory) state.inventory = [];
-      if (state.inventory.includes(item.id)) return;
+      if (!window.state) window.state = {};
+      if (!window.state.inventory) window.state.inventory = [];
+      if (window.state.inventory.includes(item.id)) return;
 
-      const bal = (state.stats && state.stats.tokens) || 0;
+      const bal = (window.state.stats && window.state.stats.tokens) || 0;
       if (bal < item.cost) {
         showAppModal('Not Enough Tokens', `You need ${item.cost} tokens for ${item.name}, and you currently have ${bal}. Complete lessons and tests to earn more!`, false);
         return;
       }
 
-      state.stats.tokens = bal - item.cost;
-      state.inventory.push(item.id);
+      window.state.stats.tokens = bal - item.cost;
+      window.state.inventory.push(item.id);
       saveUserState();
       showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
       renderShopView(document.getElementById('app-viewport'));
@@ -3932,16 +3965,16 @@
     function tradeShopItem(itemId) {
       const item = shopCatalog.find(i => i.id === itemId);
       if (!item) return;
-      if (!state.inventory) return;
+      if (!window.state || !window.state.inventory) return;
       
-      const idx = state.inventory.indexOf(item.id);
+      const idx = window.state.inventory.indexOf(item.id);
       if (idx === -1) return; // Item not owned
 
-      const bal = (state.stats && state.stats.tokens) || 0;
+      const bal = (window.state.stats && window.state.stats.tokens) || 0;
       
       // Refund the tokens and remove from inventory
-      state.stats.tokens = bal + item.cost;
-      state.inventory.splice(idx, 1);
+      window.state.stats.tokens = bal + item.cost;
+      window.state.inventory.splice(idx, 1);
       
       saveUserState();
       showAppModal('Trade Successful!', `You traded back ${item.name} and received a refund of ${item.cost} Tokens!`, true);
@@ -4068,7 +4101,7 @@
       };
 
       if (existing) {
-        state = {
+        window.state = {
           stats: existing.stats || { tokens: 10, testsTaken: 0 },
           inventory: existing.inventory || [],
           testHistory: existing.testHistory || [],
@@ -4076,7 +4109,7 @@
           avatar: existing.avatar || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }
         };
       } else {
-        state = {
+        window.state = {
           stats: { tokens: 10, testsTaken: 0 },
           inventory: [],
           testHistory: [],
@@ -4092,7 +4125,7 @@
     window.tempAvatarState = null;
     function renderAvatarMakerView(container) {
       if (!window.tempAvatarState) {
-        window.tempAvatarState = { ...(state.avatar || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }) };
+        window.tempAvatarState = { ...((window.state && window.state.avatar) || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }) };
       }
       const a = window.tempAvatarState;
 
@@ -4171,33 +4204,34 @@
       };
 
       window.attemptAvatarUnlock = function(cat, val, cost) {
-        if (!state.inventory) state.inventory = [];
+        if (!window.state) window.state = {};
+        if (!window.state.inventory) window.state.inventory = [];
         const unlockKey = `avatar_${cat}_${val}`;
-        if (state.inventory.includes(unlockKey) || cost === 0) {
+        if (window.state.inventory.includes(unlockKey) || cost === 0) {
           updateTempAvatar(cat, val);
           return;
         }
 
-        const bal = (state.stats && state.stats.tokens) || 0;
+        const bal = (window.state.stats && window.state.stats.tokens) || 0;
         if (bal < cost) {
           showAppModal('Not Enough Tokens', `You need ${cost} tokens to unlock this feature. You currently have ${bal} tokens.`, false);
           return;
         }
 
-        state.stats.tokens -= cost;
-        state.inventory.push(unlockKey);
+        window.state.stats.tokens -= cost;
+        window.state.inventory.push(unlockKey);
         saveUserState();
         updateTempAvatar(cat, val);
         showAppModal('Feature Unlocked!', `You successfully unlocked a new avatar upgrade!`, true);
       };
 
       window.tradeAvatarItem = function(cat, val, cost, name) {
-        if (!state.inventory) return;
+        if (!window.state || !window.state.inventory) return;
         const unlockKey = `avatar_${cat}_${val}`;
-        const idx = state.inventory.indexOf(unlockKey);
+        const idx = window.state.inventory.indexOf(unlockKey);
         if (idx > -1) {
-          state.inventory.splice(idx, 1);
-          state.stats.tokens += cost;
+          window.state.inventory.splice(idx, 1);
+          window.state.stats.tokens += cost;
           // Revert to default if the traded item is currently equipped
           if (window.tempAvatarState[cat] === val) {
             const defaults = { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' };
@@ -4210,7 +4244,8 @@
       };
 
       window.saveTempAvatar = function() {
-        state.avatar = { ...window.tempAvatarState };
+        if (!window.state) window.state = {};
+        window.state.avatar = { ...window.tempAvatarState };
         saveUserState();
         window.tempAvatarState = null;
         app.navigate('studentDash');
@@ -4278,16 +4313,17 @@
 
     function renderStudentDash(container) {
       const u = app.currentUser;
-      const toks = (state.stats && state.stats.tokens) || 0;
-      const history = state.testHistory || [];
-      const ownedItems = (state.inventory || []).map(id => shopCatalog.find(i => i.id === id)).filter(Boolean);
+      const toks = (window.state && window.state.stats && window.state.stats.tokens) || 0;
+      const history = (window.state && window.state.testHistory) || [];
+      const ownedItems = ((window.state && window.state.inventory) || []).map(id => shopCatalog.find(i => i.id === id)).filter(Boolean);
+      const avatarState = (window.state && window.state.avatar) || null;
 
       container.innerHTML = `
         <div class="space-y-6">
           <!-- Welcome Header Card -->
           <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-              ${renderAvatarSVG(state.avatar, 'w-16 h-16 sm:w-20 sm:h-20')}
+              ${renderAvatarSVG(avatarState, 'w-16 h-16 sm:w-20 sm:h-20')}
               <div>
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Student Portal • Class ${u.class} (${u.teacher})</span>
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">Welcome back, ${u.firstName}!</h1>

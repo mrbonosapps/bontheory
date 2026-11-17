@@ -849,6 +849,340 @@
     ];
 
     // ==========================================
+    // RESTORED MISSING MINIGAMES (STAFF NOTATION, DYNAMICS CHALLENGE, TIMBRE)
+    // ==========================================
+    
+    // --- TIMBRE SOUNDBOARD ---
+    const timbreInstruments = [
+      { id: 'violin', name: 'Violin', family: 'Strings', desc: 'Warm, singing, and rich.', icon: 'fa-violin', freq: 440, wave: 'sawtooth' },
+      { id: 'trumpet', name: 'Trumpet', family: 'Brass', desc: 'Brassy, bright, and metallic.', icon: 'fa-trumpet', freq: 466.16, wave: 'square' },
+      { id: 'doublebass', name: 'Double Bass', family: 'Strings', desc: 'Rumbling, dull, and woody.', icon: 'fa-guitar', freq: 65.41, wave: 'sine' },
+      { id: 'harp', name: 'Harp', family: 'Strings', desc: 'Shimmering and delicate.', icon: 'fa-music', freq: 523.25, wave: 'triangle' },
+      { id: 'snare', name: 'Snare Drum', family: 'Percussion', desc: 'Short, crisp, and crack-like.', icon: 'fa-drum', type: 'snare' },
+      { id: 'bassdrum', name: 'Bass Drum', family: 'Percussion', desc: 'Deep, heavy thud.', icon: 'fa-drum', type: 'kick' },
+      { id: 'xylo', name: 'Xylophone', family: 'Percussion', desc: 'Wooden, dry, and hollow.', icon: 'fa-keyboard', freq: 783.99, wave: 'square' },
+      { id: 'chimes', name: 'Tubular Bells', family: 'Percussion', desc: 'Resonant, ringing, and bright.', icon: 'fa-bell', freq: 1046.50, wave: 'sine' }
+    ];
+
+    function mountEmbeddedTimbreSoundboard(target) {
+      if (!target) return;
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white border border-slate-800 space-y-6">
+          <div class="border-b border-slate-800 pb-4">
+            <span class="text-[11px] font-black uppercase tracking-widest text-emerald-400">Timbre Explorer</span>
+            <h3 class="text-xl font-black text-white">Interactive Timbre Soundboard</h3>
+            <p class="text-xs text-slate-300 mt-1">Click the instruments below to hear their unique tone colours and read the adjectives used to describe them.</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            ${timbreInstruments.map(inst => `
+              <button onclick="playTimbreInstrument('${inst.id}')" class="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 hover:border-emerald-400 text-left transition-all group">
+                <div class="w-12 h-12 rounded-xl bg-slate-950 text-emerald-400 flex items-center justify-center text-2xl mb-3 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
+                  <i class="fa-solid ${inst.icon}"></i>
+                </div>
+                <div class="text-[10px] font-black uppercase text-emerald-500 mb-0.5">${inst.family}</div>
+                <div class="font-black text-sm text-white">${inst.name}</div>
+                <div class="text-[11px] text-slate-400 mt-1 italic">"${inst.desc}"</div>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function playTimbreInstrument(id) {
+      const inst = timbreInstruments.find(i => i.id === id);
+      if (!inst) return;
+      if (inst.type === 'snare' || inst.type === 'kick') {
+        playDrumSound(inst.type);
+      } else {
+        playTonePitch(inst.freq, 0.5, 0.4, inst.wave);
+      }
+    }
+
+    // --- DYNAMICS CHALLENGE GAME ---
+    let dynamicsChallengeState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false };
+
+    const dynamicsChallengePool = [
+      { type: 'symbol', symbol: 'pp', label: 'Pianissimo', desc: 'Very Soft' },
+      { type: 'symbol', symbol: 'p', label: 'Piano', desc: 'Soft' },
+      { type: 'symbol', symbol: 'mp', label: 'Mezzo Piano', desc: 'Moderately Soft' },
+      { type: 'symbol', symbol: 'mf', label: 'Mezzo Forte', desc: 'Moderately Loud' },
+      { type: 'symbol', symbol: 'f', label: 'Forte', desc: 'Loud' },
+      { type: 'symbol', symbol: 'ff', label: 'Fortissimo', desc: 'Very Loud' },
+      { type: 'hairpin', symbol: '<', label: 'Crescendo', desc: 'Gradually getting louder' },
+      { type: 'hairpin', symbol: '>', label: 'Decrescendo', desc: 'Gradually getting softer' },
+      { type: 'terraced', symbol: 'p \u2192 f', label: 'Terraced Shift (p to f)', desc: 'Sudden shift from soft to loud' },
+      { type: 'terraced', symbol: 'f \u2192 p', label: 'Terraced Shift (f to p)', desc: 'Sudden shift from loud to soft' }
+    ];
+
+    function setupDynamicsChallengeRound() {
+      const target = dynamicsChallengePool[Math.floor(Math.random() * dynamicsChallengePool.length)];
+      dynamicsChallengeState.target = target;
+      const wrongOpts = dynamicsChallengePool.filter(d => d.label !== target.label).sort(() => Math.random() - 0.5).slice(0, 3);
+      dynamicsChallengeState.options = [target, ...wrongOpts].sort(() => Math.random() - 0.5);
+      dynamicsChallengeState.answered = false;
+    }
+
+    function mountEmbeddedDynamicsChallengeGame(target) {
+      if (!target) return;
+      dynamicsChallengeState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false };
+      setupDynamicsChallengeRound();
+      renderDynamicsChallengeUI(target);
+    }
+
+    function guessDynamicsChallenge(label) {
+      const st = dynamicsChallengeState;
+      if (st.answered || st.completed) return;
+      st.answered = true;
+      st.lastCorrect = (st.target.label === label);
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(2);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderDynamicsChallengeUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextDynamicsChallengeRound() {
+      const st = dynamicsChallengeState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupDynamicsChallengeRound();
+        renderDynamicsChallengeUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderDynamicsChallengeUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Dynamics Challenge Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score * 2} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderDynamicsChallengeUI(target) {
+      if (!target) return;
+      const st = dynamicsChallengeState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 2 Tokens Per Correct Answer</span>
+              <h3 class="text-xl font-black">The Great Dynamics Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">Identify the correct definition for the dynamic symbol or shift!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score * 2} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
+              <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score * 2} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedDynamicsChallengeGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex justify-center my-6">
+              <div class="w-32 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-center shadow-inner">
+                ${st.target.type === 'hairpin' 
+                  ? (st.target.symbol === '<' 
+                    ? '<svg viewBox="0 0 120 36" class="w-20 h-10"><polyline points="108,5 12,18 108,31" fill="none" stroke="#fbbf24" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></svg>'
+                    : '<svg viewBox="0 0 120 36" class="w-20 h-10"><polyline points="12,5 108,18 12,31" fill="none" stroke="#fbbf24" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></svg>')
+                  : `<span class="text-4xl font-black italic text-amber-400">${st.target.symbol}</span>`
+                }
+              </div>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+2 Tokens)!' : `✗ Incorrect. The correct answer was: <strong>${st.target.label} - ${st.target.desc}</strong>`}</span>
+                <button type="button" onclick="nextDynamicsChallengeRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${st.options.map(opt => `
+                <button type="button" onclick="guessDynamicsChallenge('${opt.label}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-center ${
+                  st.answered && opt.label === st.target.label ? 'border-emerald-400 bg-emerald-950/60' : 
+                  st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700'
+                }">
+                  <span class="font-black text-sm text-white">${opt.label}</span>
+                  <span class="text-xs text-slate-400 mt-0.5">${opt.desc}</span>
+                </button>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // --- STAFF NOTATION GAME ---
+    const staffNoteY = { 'E4': 80, 'F4': 72.5, 'G4': 65, 'A4': 57.5, 'B4': 50, 'C5': 42.5, 'D5': 35, 'E5': 27.5, 'F5': 20 };
+    let staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, isPlaying: false, answered: false, guessedY: null, lastCorrect: false, completed: false };
+
+    function getFreqForNote(note) {
+      const p = pitchKeyboardKeys.find(k => k.note === note);
+      if (p) return p.freq;
+      if (note === 'D5') return 587.33;
+      if (note === 'E5') return 659.25;
+      if (note === 'F5') return 698.46;
+      return 440;
+    }
+
+    function setupStaffNotationRound() {
+      const pool = Object.keys(staffNoteY);
+      staffNotationState.targetNote = pool[Math.floor(Math.random() * pool.length)];
+      staffNotationState.answered = false;
+      staffNotationState.guessedY = null;
+      staffNotationState.isPlaying = false;
+    }
+
+    function mountEmbeddedStaffNotationGame(target) {
+      if (!target) return;
+      staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, isPlaying: false, answered: false, guessedY: null, lastCorrect: false, completed: false };
+      setupStaffNotationRound();
+      renderStaffNotationGameUI(target);
+    }
+    
+    function playStaffNotationTarget() {
+      const st = staffNotationState;
+      if (st.isPlaying || !st.targetNote) return;
+      st.isPlaying = true;
+      renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
+      playTonePitch(getFreqForNote(st.targetNote), 0.6, 0.35, 'triangle');
+      setTimeout(() => {
+        st.isPlaying = false;
+        renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
+      }, 800);
+    }
+
+    function handleStaffClick(event) {
+      const st = staffNotationState;
+      if (st.answered || st.completed || !st.targetNote) return;
+      
+      const svg = event.currentTarget;
+      const pt = svg.createSVGPoint();
+      pt.x = event.clientX;
+      pt.y = event.clientY;
+      const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
+      
+      let closestNote = null;
+      let minDiff = Infinity;
+      for (const [note, y] of Object.entries(staffNoteY)) {
+        const diff = Math.abs(svgP.y - y);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestNote = note;
+        }
+      }
+      
+      if (minDiff > 12) return; 
+      
+      st.guessedY = staffNoteY[closestNote];
+      st.answered = true;
+      st.lastCorrect = (closestNote === st.targetNote);
+      
+      playTonePitch(getFreqForNote(closestNote), 0.4, 0.35, 'triangle');
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 500);
+      } else {
+        setTimeout(() => playTonePitch(155.56, 0.25, 0.3, 'sawtooth'), 500);
+      }
+      renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextStaffNotationRound() {
+      const st = staffNotationState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupStaffNotationRound();
+        renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Staff Notation Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderStaffNotationGameUI(target) {
+      if (!target) return;
+      const st = staffNotationState;
+      let staffLines = '';
+      for (let i = 0; i < 5; i++) {
+        staffLines += `<line x1="20" y1="${20 + i*15}" x2="280" y2="${20 + i*15}" stroke="#475569" stroke-width="2"/>`;
+      }
+      staffLines += `<path d="M 40,75 C 20,75 20,55 40,55 C 60,55 60,35 40,15 C 30,5 30,5 40,5 C 50,5 50,25 40,45 C 35,55 35,65 40,85 C 45,95 35,95 35,85" fill="none" stroke="#94a3b8" stroke-width="2.5"/>`;
+
+      let answerDots = '';
+      if (st.answered) {
+        const targetY = staffNoteY[st.targetNote];
+        if (st.lastCorrect) {
+          answerDots = `<ellipse cx="150" cy="${st.guessedY}" rx="9" ry="6" fill="#34d399" transform="rotate(-15 150 ${st.guessedY})"/>`;
+        } else {
+          answerDots = `
+            <ellipse cx="150" cy="${st.guessedY}" rx="9" ry="6" fill="#ef4444" transform="rotate(-15 150 ${st.guessedY})"/>
+            <ellipse cx="150" cy="${targetY}" rx="9" ry="6" fill="#34d399" opacity="0.6" transform="rotate(-15 150 ${targetY})"/>
+          `;
+        }
+      }
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">Treble Staff Notation Game</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the target note, then click the correct line or space on the staff to place the note!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Staff Notation Game Complete!</h4>
+              <p class="text-xs text-slate-200">You placed <strong>${st.score} / ${st.totalRounds}</strong> notes correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedStaffNotationGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+              <div class="text-center sm:text-left">
+                <span class="text-xs sm:text-sm font-black text-sky-300">Target Note: ${st.targetNote}</span>
+                <div class="text-[10px] text-sky-200 opacity-80 mt-0.5">${st.isPlaying ? 'Listening...' : 'Click "Hear Target Pitch" then click the staff.'}</div>
+              </div>
+              <button type="button" onclick="playStaffNotationTarget()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Target Pitch
+              </button>
+            </div>
+
+            <div class="flex justify-center mt-4">
+              <svg viewBox="0 0 300 100" class="w-full max-w-md h-auto bg-slate-950 rounded-xl shadow-inner cursor-crosshair border border-slate-800" onclick="handleStaffClick(event)">
+                ${staffLines}
+                ${answerDots}
+              </svg>
+            </div>
+
+            ${st.answered ? `
+              <div class="mt-4 p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Not quite. You clicked near ${Object.keys(staffNoteY).find(key => staffNoteY[key] === st.guessedY)}.`}</span>
+                <button type="button" onclick="nextStaffNotationRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
     // 6 CONCEPTS OF MUSIC CURRICULUM & UNIQUE 15-QUESTION TESTS
     // ==========================================
     const conceptsCurriculum = [
@@ -1063,15 +1397,6 @@
                     </div>
                   </div>
                 `
-              },
-              {
-                lessonNum: 3,
-                title: 'Lesson 3: Interactive Keyboard & Note Names (C to C)',
-                summary: 'Explore the 7 musical alphabet letters (A–G) on an interactive playable keyboard.',
-                toolType: 'pitchKeyboard',
-                contentHtml: `
-                  <p>Western music names pitches using the first seven letters of the alphabet: <strong>A, B, C, D, E, F, G</strong>, before repeating at the octave. Play the keys below to hear how pitch ascends from left to right.</p>
-                `
               }
             ],
             testQuestions: [
@@ -1085,6 +1410,41 @@
               { q: 'What term describes a melody moving downwards from higher to lower pitches?', options: ['Descending', 'Ascending', 'Forte', 'Conjunct'], correct: 0 },
               { q: 'What is the overall upward and downward shape of a melody called?', options: ['Melodic contour', 'Tone colour', 'Dynamic hairpin', 'Time signature'], correct: 0 },
               { q: 'How many letter names (A through G) are used in the musical alphabet before repeating at the octave?', options: ['7 letter names', '5 letter names', '10 letter names', '12 letter names'], correct: 0 }
+            ]
+          },
+          {
+            level: 2,
+            title: 'Level 2: The Musical Alphabet & Treble Clef',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: The Musical Alphabet',
+                summary: 'Explore the 7 musical alphabet letters (A–G) on an interactive playable keyboard.',
+                toolType: 'pitchKeyboard',
+                contentHtml: `
+                  <p>Western music names pitches using the first seven letters of the alphabet: <strong>A, B, C, D, E, F, G</strong>, before repeating at the octave. Play the keys below to hear how pitch ascends from left to right.</p>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Treble Clef & Staff Notation',
+                summary: 'Learn the lines (E-G-B-D-F) and spaces (F-A-C-E) of the treble staff.',
+                toolType: 'staffNotationGame',
+                contentHtml: `
+                  <p>Pitches are written on a <strong>Staff (or Stave)</strong> made of 5 parallel lines. The <strong>Treble Clef</strong> is used for higher-pitched instruments (like Violin, Flute, and the right hand of the Piano).</p>
+                  <ul class="list-disc pl-5 mt-2 space-y-1 text-sm text-slate-700">
+                    <li><strong>Lines:</strong> E - G - B - D - F <em>(Every Good Boy Deserves Fruit)</em></li>
+                    <li><strong>Spaces:</strong> F - A - C - E <em>(Rhymes with Space)</em></li>
+                  </ul>
+                `
+              }
+            ],
+            testQuestions: [
+              { q: 'What are the letter names used in the musical alphabet?', options: ['A, B, C, D, E, F, G', 'H, I, J, K, L, M, N', 'A, B, C, D, E, F, G, H', 'Do, Re, Mi, Fa, Sol, La, Ti'], correct: 0 },
+              { q: 'How many lines make up a standard musical staff (stave)?', options: ['5 lines', '4 lines', '6 lines', '3 lines'], correct: 0 },
+              { q: 'What is the phrase used to remember the notes on the LINES of the Treble Clef (from bottom to top)?', options: ['Every Good Boy Deserves Fruit (E-G-B-D-F)', 'FACE', 'All Cows Eat Grass', 'Good Boys Do Fine Always'], correct: 0 },
+              { q: 'What word do the notes in the SPACES of the Treble Clef spell (from bottom to top)?', options: ['F-A-C-E', 'E-G-B-D', 'B-E-A-D', 'C-A-G-E'], correct: 0 },
+              { q: 'Which clef is typically used for high-pitched instruments like the violin and flute?', options: ['Treble Clef', 'Bass Clef', 'Alto Clef', 'Tenor Clef'], correct: 0 }
             ]
           }
         ]
@@ -1171,6 +1531,52 @@
                     </div>
                   </div>
                   <p class="mt-4">Test your mastery of all dynamics (including gradual hairpins and sudden terraced shifts) in the interactive challenge below!</p>
+                `
+              }
+            ],
+            testQuestions: [
+              { q: 'What does the term Dynamics refer to in music?', options: ['How loud or soft the music is played', 'The speed of the beat', 'The thickness of the texture', 'The pitch of the notes'], correct: 0 },
+              { q: 'What does the Italian dynamic marking "p" (piano) mean?', options: ['Soft', 'Loud', 'Very Soft', 'Moderately Soft'], correct: 0 },
+              { q: 'What does the dynamic marking "f" (forte) mean?', options: ['Loud', 'Soft', 'Very Loud', 'Gradually getting louder'], correct: 0 },
+              { q: 'Which marking indicates to play "Very Soft"?', options: ['pp (pianissimo)', 'mp (mezzo piano)', 'mf (mezzo forte)', 'ff (fortissimo)'], correct: 0 },
+              { q: 'Which marking indicates to play "Moderately Loud"?', options: ['mf (mezzo forte)', 'mp (mezzo piano)', 'f (forte)', 'pp (pianissimo)'], correct: 0 },
+              { q: 'What does a Crescendo hairpin (opening wedge <) instruct the performer to do?', options: ['Gradually get louder', 'Gradually get softer', 'Play very fast', 'Stop playing'], correct: 0 },
+              { q: 'What does a Decrescendo or Diminuendo hairpin (closing wedge >) instruct the performer to do?', options: ['Gradually get softer', 'Gradually get louder', 'Play short and detached', 'Play moderately loud'], correct: 0 },
+              { q: 'What does the marking "ff" (fortissimo) mean?', options: ['Very Loud', 'Moderately Loud', 'Loud', 'Gradually louder'], correct: 0 },
+              { q: 'What is the musical term for sudden, abrupt shifts in volume without gradual changes?', options: ['Terraced Dynamics', 'Crescendo', 'Timbre', 'Melodic Contour'], correct: 0 },
+              { q: 'Which order arranges dynamic markings from SOFTEST to LOUDEST?', options: ['pp, p, mp, mf, f, ff', 'ff, f, mf, mp, p, pp', 'p, mp, pp, f, mf, ff', 'mf, mp, f, p, ff, pp'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'timbre',
+        title: 'Tone Colour (Timbre)',
+        icon: 'fa-guitar',
+        color: 'emerald',
+        summary: 'Identify the unique sound qualities of instruments (warm, brassy, crisp) across families.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Identifying Instrument Timbres',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Timbre & Descriptive Words',
+                summary: 'Learn how to describe sound qualities using adjectives.',
+                toolType: null,
+                contentHtml: `
+                  <p><strong>Tone Colour</strong> (or <strong>Timbre</strong>) is the unique quality of a sound that allows us to distinguish one instrument from another, even if they are playing the exact same pitch at the same volume.</p>
+                  <p>Musicians describe timbre using adjectives like <em>warm, bright, brassy, dark, harsh, woody, or shimmering</em>.</p>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Interactive Timbre Soundboard',
+                summary: 'Listen to and identify the timbres of different instruments.',
+                toolType: 'timbreSoundboard',
+                contentHtml: `
+                  <p>Explore the soundboard below to hear how different instruments produce distinct timbres based on their materials and how they are played.</p>
                 `
               }
             ],
@@ -1266,23 +1672,34 @@
             lessons: [
               {
                 lessonNum: 1,
-                title: 'Lesson 1: Binary (AB), Ternary (ABA) & Verse-Chorus Form',
-                summary: 'Learn how composers label contrasting and repeating sections using letters (A, B, C).',
-                toolType: null,
+                title: 'Lesson 1: Binary (AB) & Ternary (ABA) Form',
+                summary: 'Learn how composers label contrasting sections using letters (A, B) and visualize them with creative examples.',
+                toolType: 'structureFormGame',
                 contentHtml: `
-                  <p><strong>Structure</strong> (or <strong>Form</strong>) is the overall architectural blueprint of a piece of music—how sections are arranged, repeated, and contrasted over time. Musicians label each distinct section with capital letters: <strong>A</strong> for the opening section, <strong>B</strong> for a contrasting section, and <strong>C</strong> for a third new section.</p>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                    <div class="p-4 rounded-2xl bg-violet-50 border border-violet-200 space-y-1">
-                      <div class="font-black text-sm text-violet-900">Binary Form (A – B)</div>
-                      <p class="text-xs text-slate-600">Two contrasting sections: Section A followed by a different Section B.</p>
+                  <p><strong>Structure</strong> (or <strong>Form</strong>) is the overall architectural blueprint of a piece of music—how sections are arranged, repeated, and contrasted over time. Musicians label each distinct section with capital letters: <strong>A</strong> for the opening section, and <strong>B</strong> for a contrasting section.</p>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div class="p-5 rounded-3xl bg-sky-50 border border-sky-200 space-y-2 text-center">
+                      <div class="flex items-center justify-center gap-3 border-b border-sky-100 pb-3">
+                        <div class="font-black text-lg text-sky-900">Binary Form (AB)</div>
+                      </div>
+                      <div class="text-4xl py-2">🌞 🌙</div>
+                      <p class="text-xs text-slate-700">Two distinct, contrasting sections. Like <strong>Day (A)</strong> followed by <strong>Night (B)</strong>.</p>
+                      <div class="flex gap-2 font-black text-center text-sm mt-3">
+                        <div class="flex-1 bg-sky-200 text-sky-800 py-1.5 rounded-xl border border-sky-300 shadow-sm">Section A</div>
+                        <div class="flex-1 bg-indigo-900 text-indigo-200 py-1.5 rounded-xl shadow-sm">Section B</div>
+                      </div>
                     </div>
-                    <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 space-y-1">
-                      <div class="font-black text-sm text-indigo-900">Ternary Form (A – B – A)</div>
-                      <p class="text-xs text-slate-600">Three-part sandwich structure: Section A, contrasting Section B, then a return of Section A.</p>
-                    </div>
-                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-1">
-                      <div class="font-black text-sm text-amber-900">Rondo Form (A – B – A – C – A)</div>
-                      <p class="text-xs text-slate-600">A main theme (A) keeps returning between contrasting episodes (B, C).</p>
+                    <div class="p-5 rounded-3xl bg-amber-50 border border-amber-200 space-y-2 text-center">
+                      <div class="flex items-center justify-center gap-3 border-b border-amber-100 pb-3">
+                        <div class="font-black text-lg text-amber-900">Ternary Form (ABA)</div>
+                      </div>
+                      <div class="text-4xl py-2 drop-shadow-md">🍔</div>
+                      <p class="text-xs text-slate-700">A three-part "hamburger" sandwich! Top Bun <strong>(A)</strong>, contrasting Meat/Fillings <strong>(B)</strong>, and a return of the Bottom Bun <strong>(A)</strong>.</p>
+                      <div class="flex gap-1 font-black text-center text-[10px] sm:text-xs mt-3">
+                        <div class="flex-1 bg-amber-200 text-amber-800 py-1.5 rounded-xl border border-amber-300 shadow-sm">Section A</div>
+                        <div class="flex-1 bg-rose-400 text-rose-950 py-1.5 rounded-xl border border-rose-500 shadow-sm">Section B</div>
+                        <div class="flex-1 bg-amber-200 text-amber-800 py-1.5 rounded-xl border border-amber-300 shadow-sm">Section A</div>
+                      </div>
                     </div>
                   </div>
                 `
@@ -1714,6 +2131,7 @@
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
       else if (lesson.toolType === 'repeatSignGame') mountEmbeddedRepeatSignGame(toolBox);
       else if (lesson.toolType === 'voltaBracketGame') mountEmbeddedVoltaBracketGame(toolBox);
+      else if (lesson.toolType === 'structureFormGame') mountEmbeddedStructureFormGame(toolBox);
     }
 
     function mountEmbeddedDynamicsSimulator(target) {
@@ -3685,12 +4103,176 @@
       const st = pitchKeyboardState;
 
       target.innerHTML = `
+        <div class="space-y-6">
+          <!-- FREE PLAY PRACTICE KEYBOARD -->
+          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-sky-600">Free Play Mode</span>
+              <h3 class="text-xl font-black text-slate-800">Practice Keyboard</h3>
+              <p class="text-xs text-slate-500 mt-1">Play the C Major scale (C4 to C5) to get familiar with each pitch before starting the ear training challenge!</p>
+            </div>
+            <div class="flex justify-center gap-1 sm:gap-2">
+              ${pitchKeyboardKeys.map(k => `
+                <button type="button" onmousedown="playTonePitch(${k.freq}, 0.45, 0.35, 'triangle')" ontouchstart="event.preventDefault(); playTonePitch(${k.freq}, 0.45, 0.35, 'triangle');" class="h-32 w-10 sm:w-16 rounded-b-xl font-black text-xs sm:text-sm flex flex-col justify-end items-center pb-3 shadow bg-white hover:bg-sky-50 active:bg-sky-200 text-slate-800 border-2 border-slate-300 transition-colors">
+                  <span>${k.note}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- 10-ROUND EAR CHALLENGE -->
+          <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Ear Challenge • 1 Token Per Correct Answer</span>
+                <h3 class="text-xl font-black">C Major Octave Challenge</h3>
+                <p class="text-xs text-slate-300 mt-1">Click "Hear Notes" to listen to the reference C4, then the mystery pitch. Find the matching key!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+                  Round ${st.round} / ${st.totalRounds}
+                </span>
+                <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                  Score: ${st.score} (+${st.score} Tokens)
+                </span>
+              </div>
+            </div>
+
+            ${st.completed ? `
+              <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+                <h4 class="text-xl font-black text-emerald-300">Keyboard Ear Training Complete!</h4>
+                <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> pitches correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+                <button type="button" onclick="mountEmbeddedPitchKeyboard(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+              </div>
+            ` : `
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+                <span class="text-xs sm:text-sm font-black text-amber-300">${st.isPlaying ? 'Listen closely to the interval...' : st.targetKey ? 'Ready to play the mystery notes!' : ''}</span>
+                <button type="button" onclick="playPitchKeyboardMystery()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Notes (C4 &rarr; ?)
+                </button>
+              </div>
+
+              ${st.answered ? `
+                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)! That was ' + st.targetKey.note + '.' : '✗ Not quite. The correct note was ' + st.targetKey.note + '.'}</span>
+                  <button type="button" onclick="nextPitchKeyboardRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                    ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                  </button>
+                </div>
+              ` : ''}
+
+              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2 mt-4">
+                ${pitchKeyboardKeys.map(k => {
+                  let btnClass = 'bg-white hover:bg-amber-100 text-slate-900 border border-slate-300';
+                  if (st.answered) {
+                    if (k.note === st.targetKey.note) {
+                      btnClass = 'bg-emerald-400 text-slate-950 border-emerald-500 shadow-[0_0_15px_rgba(52,211,153,0.6)] z-10 scale-105';
+                    } else {
+                      btnClass = 'bg-slate-700 text-slate-400 border-slate-600 opacity-50 cursor-not-allowed';
+                    }
+                  }
+                  return `
+                  <button type="button" onmousedown="guessPitchKeyboardNote('${k.note}')" ontouchstart="event.preventDefault(); guessPitchKeyboardNote('${k.note}');" ${st.answered && k.note !== st.targetKey.note ? 'disabled' : ''} class="h-28 rounded-2xl font-black text-sm flex flex-col justify-end items-center pb-3 shadow-md transition-all ${btnClass}">
+                    <span>${k.note}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME 12: TREBLE CLEF STAFF NOTATION GAME
+    // ==========================================
+    const trebleClefPositions = [
+      { note: 'F5', y: 30, freq: 698.46, type: 'line' },
+      { note: 'E5', y: 35, freq: 659.25, type: 'space' },
+      { note: 'D5', y: 40, freq: 587.33, type: 'line' },
+      { note: 'C5', y: 45, freq: 523.25, type: 'space' },
+      { note: 'B4', y: 50, freq: 493.88, type: 'line' },
+      { note: 'A4', y: 55, freq: 440.00, type: 'space' },
+      { note: 'G4', y: 60, freq: 392.00, type: 'line' },
+      { note: 'F4', y: 65, freq: 349.23, type: 'space' },
+      { note: 'E4', y: 70, freq: 329.63, type: 'line' }
+    ];
+
+    let trebleClefState = {
+      round: 1, totalRounds: 10, score: 0, targetKey: null, guess: null, answered: false, lastCorrect: false, completed: false
+    };
+
+    function startTrebleClefRound() {
+      const randIdx = Math.floor(Math.random() * trebleClefPositions.length);
+      trebleClefState.targetKey = trebleClefPositions[randIdx];
+      trebleClefState.guess = null;
+      trebleClefState.answered = false;
+      trebleClefState.lastCorrect = false;
+      
+      // Play target note
+      setTimeout(() => {
+         if (!trebleClefState.answered) {
+             playTonePitch(trebleClefState.targetKey.freq, 0.45, 0.3, 'triangle');
+         }
+      }, 300);
+      
+      renderTrebleClefGameUI();
+    }
+
+    function guessTrebleClefNote(noteName) {
+      const st = trebleClefState;
+      if (st.answered || st.completed) return;
+      
+      st.answered = true;
+      st.guess = noteName;
+      const guessedKey = trebleClefPositions.find(k => k.note === noteName);
+      
+      playTonePitch(guessedKey.freq, 0.4, 0.35, 'triangle');
+
+      if (noteName === st.targetKey.note) {
+        st.lastCorrect = true;
+        st.score++;
+        addTokens(1);
+        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 500);
+      } else {
+        st.lastCorrect = false;
+        setTimeout(() => playTonePitch(155.56, 0.25, 0.3, 'sawtooth'), 500);
+      }
+      renderTrebleClefGameUI();
+    }
+
+    function nextTrebleClefRound() {
+      const st = trebleClefState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        startTrebleClefRound();
+      } else {
+        st.completed = true;
+        renderTrebleClefGameUI();
+        showAppModal('Treble Clef Master Complete!', `You identified ${st.score}/${st.totalRounds} notes correctly and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function mountEmbeddedTrebleClefGame(target) {
+      if (!target) return;
+      trebleClefState = {
+        round: 1, totalRounds: 10, score: 0, targetKey: null, guess: null, answered: false, lastCorrect: false, completed: false
+      };
+      startTrebleClefRound();
+    }
+
+    function renderTrebleClefGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = trebleClefState;
+
+      target.innerHTML = `
         <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Ear Challenge • 1 Token Per Correct Answer</span>
-              <h3 class="text-xl font-black">C Major Octave Keyboard</h3>
-              <p class="text-xs text-slate-300 mt-1">Click "Hear Notes" to listen to the reference C4, then the mystery pitch. Find the matching key!</p>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">Treble Clef Staff Master</h3>
+              <p class="text-xs text-slate-300 mt-1">Click on the lines or spaces of the staff to place a whole note on the target pitch!</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
@@ -3704,43 +4286,64 @@
 
           ${st.completed ? `
             <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Keyboard Ear Training Complete!</h4>
-              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> pitches correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedPitchKeyboard(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+              <h4 class="text-xl font-black text-emerald-300">Staff Master Complete!</h4>
+              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> notes correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedTrebleClefGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
             </div>
           ` : `
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
-              <span class="text-xs sm:text-sm font-black text-amber-300">${st.isPlaying ? 'Listen closely to the interval...' : st.targetKey ? 'Ready to play the mystery notes!' : ''}</span>
-              <button type="button" onclick="playPitchKeyboardMystery()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
-                <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Notes (C4 &rarr; ?)
+              <span class="text-xs sm:text-sm font-black text-amber-300">Place a note on: <strong class="text-xl">${st.targetKey ? st.targetKey.note : ''}</strong></span>
+              <button type="button" onclick="playTonePitch(${st.targetKey ? st.targetKey.freq : 440}, 0.5, 0.4, 'triangle')" class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Target Pitch
               </button>
             </div>
 
             ${st.answered ? `
               <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)! That was ' + st.targetKey.note + '.' : '✗ Not quite. The correct note was ' + st.targetKey.note + '.'}</span>
-                <button type="button" onclick="nextPitchKeyboardRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)! That is ' + st.targetKey.note + '.' : '✗ Incorrect. You clicked ' + st.guess + ' instead of ' + st.targetKey.note + '.'}</span>
+                <button type="button" onclick="nextTrebleClefRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
                   ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
                 </button>
               </div>
             ` : ''}
 
-            <div class="grid grid-cols-4 sm:grid-cols-8 gap-2 mt-4">
-              ${pitchKeyboardKeys.map(k => {
-                let btnClass = 'bg-white hover:bg-amber-100 text-slate-900 border border-slate-300';
-                if (st.answered) {
-                  if (k.note === st.targetKey.note) {
-                    btnClass = 'bg-emerald-400 text-slate-950 border-emerald-500 shadow-[0_0_15px_rgba(52,211,153,0.6)] z-10 scale-105';
-                  } else {
-                    btnClass = 'bg-slate-700 text-slate-400 border-slate-600 opacity-50 cursor-not-allowed';
-                  }
-                }
-                return `
-                  <button type="button" onmousedown="guessPitchKeyboardNote('${k.note}')" ontouchstart="event.preventDefault(); guessPitchKeyboardNote('${k.note}');" ${st.answered && k.note !== st.targetKey.note ? 'disabled' : ''} class="h-28 rounded-2xl font-black text-sm flex flex-col justify-end items-center pb-3 shadow-md transition-all ${btnClass}">
-                    <span>${k.note}</span>
-                  </button>
-                `;
-              }).join('')}
+            <div class="mt-6 flex justify-center overflow-x-auto">
+              <svg viewBox="0 0 300 100" class="w-full max-w-lg min-w-[300px] h-auto bg-white rounded-xl shadow-inner border border-slate-300">
+                 <!-- Staff lines -->
+                 <line x1="20" y1="30" x2="280" y2="30" stroke="#64748b" stroke-width="1.5" />
+                 <line x1="20" y1="40" x2="280" y2="40" stroke="#64748b" stroke-width="1.5" />
+                 <line x1="20" y1="50" x2="280" y2="50" stroke="#64748b" stroke-width="1.5" />
+                 <line x1="20" y1="60" x2="280" y2="60" stroke="#64748b" stroke-width="1.5" />
+                 <line x1="20" y1="70" x2="280" y2="70" stroke="#64748b" stroke-width="1.5" />
+
+                 <!-- Treble Clef -->
+                 <text x="30" y="77" font-size="62" font-family="serif" fill="#475569" font-weight="bold">&#119070;</text>
+
+                 <!-- Clickable Zones & Feedback -->
+                 ${trebleClefPositions.map(k => `
+                   <g onclick="guessTrebleClefNote('${k.note}')" class="cursor-pointer group">
+                      <rect x="90" y="${k.y - 2.5}" width="180" height="5" fill="transparent" />
+                      
+                      <!-- Hover Indicator (Only when not answered) -->
+                      ${!st.answered ? `<ellipse cx="175" cy="${k.y}" rx="7" ry="5.5" transform="rotate(-15 175 ${k.y})" class="fill-indigo-600 opacity-0 group-hover:opacity-40 transition-opacity" />` : ''}
+                      
+                      ${st.answered && st.guess === k.note ? `
+                         <!-- Selected Note -->
+                         <ellipse cx="175" cy="${k.y}" rx="7" ry="5.5" transform="rotate(-15 175 ${k.y})" fill="${st.lastCorrect ? '#10b981' : '#f43f5e'}" class="opacity-100" />
+                      ` : ''}
+                      
+                      ${st.answered && !st.lastCorrect && st.targetKey.note === k.note ? `
+                         <!-- Actual Target if wrong -->
+                         <ellipse cx="175" cy="${k.y}" rx="7" ry="5.5" transform="rotate(-15 175 ${k.y})" fill="#3b82f6" class="opacity-60" />
+                         <text x="195" y="${k.y + 4}" fill="#3b82f6" font-size="12" font-weight="bold">${k.note}</text>
+                      ` : ''}
+                      
+                      ${st.answered && st.guess === k.note && !st.lastCorrect ? `
+                         <text x="195" y="${k.y + 4}" fill="#f43f5e" font-size="12" font-weight="bold">${k.note}</text>
+                      ` : ''}
+                   </g>
+                 `).join('')}
+              </svg>
             </div>
           `}
         </div>
@@ -4168,6 +4771,174 @@
                   ${choice}
                 </button>
               `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME 12: BINARY & TERNARY FORM EAR CHALLENGE
+    // ==========================================
+    let structureGameState = {
+      round: 1, totalRounds: 5, score: 0,
+      targetForm: null, // 'AB' or 'ABA'
+      motifs: { A: [], B: [] },
+      isPlaying: false, answered: false, lastCorrect: false, completed: false
+    };
+
+    function setupStructureGameRound() {
+      structureGameState.targetForm = Math.random() > 0.5 ? 'AB' : 'ABA';
+      
+      const scales = [
+        [261.63, 293.66, 329.63, 349.23, 392.00], // C Major
+        [440.00, 493.88, 523.25, 587.33, 659.25], // A minor higher
+        [196.00, 220.00, 246.94, 261.63, 293.66], // G Major low
+        [349.23, 392.00, 440.00, 466.16, 523.25]  // F Major
+      ];
+      
+      const sA = scales.splice(Math.floor(Math.random() * scales.length), 1)[0];
+      const sB = scales[Math.floor(Math.random() * scales.length)];
+
+      const genMotif = (scale) => [
+        scale[Math.floor(Math.random() * scale.length)],
+        scale[Math.floor(Math.random() * scale.length)],
+        scale[Math.floor(Math.random() * scale.length)],
+        scale[Math.floor(Math.random() * scale.length)]
+      ];
+      
+      structureGameState.motifs.A = genMotif(sA);
+      structureGameState.motifs.B = genMotif(sB);
+      structureGameState.answered = false;
+    }
+
+    function playStructureMysterySequence() {
+      if(structureGameState.isPlaying) return;
+      structureGameState.isPlaying = true;
+      renderStructureFormGameUI();
+
+      const form = structureGameState.targetForm;
+      const noteDelay = 250;
+      let delayCursor = 0;
+
+      const playSection = (motif, wave) => {
+        motif.forEach((freq, i) => {
+          setTimeout(() => playTonePitch(freq, 0.2, 0.35, wave), delayCursor + (i * noteDelay));
+        });
+        delayCursor += (motif.length * noteDelay) + 400; // time + pause gap
+      };
+
+      // Play Section A
+      playSection(structureGameState.motifs.A, 'triangle');
+      // Play Section B
+      playSection(structureGameState.motifs.B, 'square');
+      // Play Section A again if Ternary
+      if (form === 'ABA') playSection(structureGameState.motifs.A, 'triangle');
+
+      setTimeout(() => {
+        structureGameState.isPlaying = false;
+        renderStructureFormGameUI();
+      }, delayCursor);
+    }
+
+    function guessStructureForm(guess) {
+      if(structureGameState.answered || structureGameState.completed) return;
+      structureGameState.answered = true;
+      structureGameState.lastCorrect = (guess === structureGameState.targetForm);
+      
+      if(structureGameState.lastCorrect) {
+        structureGameState.score++;
+        addTokens(2);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderStructureFormGameUI();
+    }
+
+    function nextStructureFormRound() {
+      if (structureGameState.round < structureGameState.totalRounds) {
+        structureGameState.round++;
+        setupStructureGameRound();
+        renderStructureFormGameUI();
+      } else {
+        structureGameState.completed = true;
+        renderStructureFormGameUI();
+        showAppModal('Form Detective Complete!', `You identified ${structureGameState.score}/${structureGameState.totalRounds} musical forms correctly and earned +${structureGameState.score * 2} Tokens!`, structureGameState.score >= 3);
+      }
+    }
+
+    function mountEmbeddedStructureFormGame(target) {
+      if (!target) return;
+      structureGameState = { round: 1, totalRounds: 5, score: 0, targetForm: null, motifs: {A:[], B:[]}, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+      setupStructureGameRound();
+      renderStructureFormGameUI(target);
+    }
+
+    function renderStructureFormGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = structureGameState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-violet-400">5-Round Ear Challenge • 2 Tokens Per Correct Answer</span>
+              <h3 class="text-xl font-black">Binary vs. Ternary Form Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the short melodic sections. Is it a two-part <strong>Binary (AB)</strong> or a three-part <strong>Ternary (ABA)</strong> structure?</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+                Round ${st.round} / ${st.totalRounds}
+              </span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                Score: ${st.score} (+${st.score * 2} Tokens)
+              </span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Form Detective Complete!</h4>
+              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> forms correctly and earned <strong>+${st.score * 2} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedStructureFormGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 5 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+              <span class="text-xs sm:text-sm font-black text-amber-300">${st.isPlaying ? 'Listen to the sections (A... B...)...' : 'Ready to hear the piece!'}</span>
+              <button type="button" onclick="playStructureMysterySequence()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Melody
+              </button>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Correct! That was ' + (st.targetForm === 'AB' ? 'Binary (AB)' : 'Ternary (ABA)') + '.' : '✗ Not quite. The correct structure was ' + (st.targetForm === 'AB' ? 'Binary (AB)' : 'Ternary (ABA)') + '.'}</span>
+                <button type="button" onclick="nextStructureFormRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <button type="button" onclick="guessStructureForm('AB')" ${st.answered ? 'disabled' : ''} class="h-36 rounded-2xl border-2 transition-all flex flex-col items-center justify-center p-4 ${
+                  st.answered && st.targetForm === 'AB' ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
+                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-white hover:bg-indigo-50 border-slate-200 text-slate-800 shadow-sm'
+              }">
+                <div class="text-4xl mb-2 ${st.answered && st.targetForm !== 'AB' ? 'opacity-50 grayscale' : ''}">🌞 🌙</div>
+                <div class="font-black text-sm">Binary Form (AB)</div>
+                <div class="text-[10px] ${st.answered && st.targetForm !== 'AB' ? 'text-slate-600' : 'text-slate-500'} mt-1">Two contrasting sections</div>
+              </button>
+
+              <button type="button" onclick="guessStructureForm('ABA')" ${st.answered ? 'disabled' : ''} class="h-36 rounded-2xl border-2 transition-all flex flex-col items-center justify-center p-4 ${
+                  st.answered && st.targetForm === 'ABA' ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
+                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-white hover:bg-indigo-50 border-slate-200 text-slate-800 shadow-sm'
+              }">
+                <div class="text-4xl mb-2 ${st.answered && st.targetForm !== 'ABA' ? 'opacity-50 grayscale' : ''} drop-shadow-md">🍔</div>
+                <div class="font-black text-sm">Ternary Form (ABA)</div>
+                <div class="text-[10px] ${st.answered && st.targetForm !== 'ABA' ? 'text-slate-600' : 'text-slate-500'} mt-1">Three sections (A returns)</div>
+              </button>
             </div>
           `}
         </div>

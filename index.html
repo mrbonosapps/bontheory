@@ -900,7 +900,7 @@
     }
 
     // --- DYNAMICS CHALLENGE GAME ---
-    let dynamicsChallengeState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false };
+    let dynamicsChallengeState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
 
     const dynamicsChallengePool = [
       { type: 'symbol', symbol: 'pp', label: 'Pianissimo', desc: 'Very Soft' },
@@ -921,11 +921,12 @@
       const wrongOpts = dynamicsChallengePool.filter(d => d.label !== target.label).sort(() => Math.random() - 0.5).slice(0, 3);
       dynamicsChallengeState.options = [target, ...wrongOpts].sort(() => Math.random() - 0.5);
       dynamicsChallengeState.answered = false;
+      dynamicsChallengeState.roundStartTime = performance.now();
     }
 
     function mountEmbeddedDynamicsChallengeGame(target) {
       if (!target) return;
-      dynamicsChallengeState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false };
+      dynamicsChallengeState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
       setupDynamicsChallengeRound();
       renderDynamicsChallengeUI(target);
     }
@@ -933,6 +934,7 @@
     function guessDynamicsChallenge(label) {
       const st = dynamicsChallengeState;
       if (st.answered || st.completed) return;
+      if (performance.now() - st.roundStartTime < 800) return;
       st.answered = true;
       st.lastCorrect = (st.target.label === label);
       if (st.lastCorrect) {
@@ -1021,7 +1023,7 @@
 
     // --- STAFF NOTATION GAME ---
     const staffNoteY = { 'E4': 80, 'F4': 72.5, 'G4': 65, 'A4': 57.5, 'B4': 50, 'C5': 42.5, 'D5': 35, 'E5': 27.5, 'F5': 20 };
-    let staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, isPlaying: false, answered: false, guessedY: null, lastCorrect: false, completed: false };
+    let staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, isPlaying: false, answered: false, guessedY: null, lastCorrect: false, completed: false, audioPlayed: false, roundStartTime: 0 };
 
     function getFreqForNote(note) {
       const p = pitchKeyboardKeys.find(k => k.note === note);
@@ -1038,11 +1040,13 @@
       staffNotationState.answered = false;
       staffNotationState.guessedY = null;
       staffNotationState.isPlaying = false;
+      staffNotationState.audioPlayed = false;
+      staffNotationState.roundStartTime = performance.now();
     }
 
     function mountEmbeddedStaffNotationGame(target) {
       if (!target) return;
-      staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, isPlaying: false, answered: false, guessedY: null, lastCorrect: false, completed: false };
+      staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, isPlaying: false, answered: false, guessedY: null, lastCorrect: false, completed: false, audioPlayed: false, roundStartTime: 0 };
       setupStaffNotationRound();
       renderStaffNotationGameUI(target);
     }
@@ -1051,6 +1055,7 @@
       const st = staffNotationState;
       if (st.isPlaying || !st.targetNote) return;
       st.isPlaying = true;
+      st.audioPlayed = true;
       renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
       playTonePitch(getFreqForNote(st.targetNote), 0.6, 0.35, 'triangle');
       setTimeout(() => {
@@ -1062,6 +1067,8 @@
     function handleStaffClick(event) {
       const st = staffNotationState;
       if (st.answered || st.completed || !st.targetNote) return;
+      if (performance.now() - st.roundStartTime < 800) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the target pitch before guessing!', false); return; }
       
       const svg = event.currentTarget;
       const pt = svg.createSVGPoint();
@@ -1317,6 +1324,65 @@
               { q: 'How many beats does a Dotted Minim last?', options: ['3 beats (2 + 1)', '2 beats', '4 beats', '1.5 beats'], correct: 0 },
               { q: 'Which note has an open hollow oval notehead with NO stem and lasts 4 beats?', options: ['Semibreve', 'Minim', 'Crotchet', 'Paired Quavers'], correct: 0 },
               { q: 'What is the difference between the beat and rhythm?', options: ['The beat is the steady pulse, while rhythm is the pattern of long and short sounds over it', 'The beat is only played by drums, while rhythm is only sung', 'They are two words for dynamic volume', 'Rhythm never uses rests or quavers'], correct: 0 }
+            ]
+          },
+          {
+            level: 2,
+            title: 'Level 2: Stem Direction & Notation Rules',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Stem Direction Rules',
+                summary: 'Learn the strict engraving rules for drawing stems on notes above and below the middle line.',
+                toolType: 'stemDirectionGame',
+                contentHtml: `
+                  <p>When note heads have stems, their direction is determined by strict engraving rules based on the <strong>middle line (Line 3 - B in Treble Clef)</strong> of the staff:</p>
+                  <ul class="list-disc pl-5 space-y-3 text-sm text-slate-700 marker:text-slate-500 mt-2">
+                    <li><strong>Below the middle line:</strong> The stem points <strong>UP on the RIGHT</strong> side of the notehead.</li>
+                    <li><strong>Above the middle line:</strong> The stem points <strong>DOWN on the LEFT</strong> side of the notehead.</li>
+                    <li><strong>On the middle line:</strong> The stem can point either up or down depending on nearby notes!</li>
+                  </ul>
+                  <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 mt-6 text-center shadow-sm">
+                    <svg viewBox="0 0 400 120" class="w-full max-w-md mx-auto h-auto">
+                      <!-- Staff Lines -->
+                      <line x1="40" y1="20" x2="360" y2="20" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="40" y1="40" x2="360" y2="40" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="40" y1="60" x2="360" y2="60" stroke="#3b82f6" stroke-width="2"/> <!-- Middle line highlighted -->
+                      <line x1="40" y1="80" x2="360" y2="80" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="40" y1="100" x2="360" y2="100" stroke="#475569" stroke-width="1.5"/>
+                      
+                      <text x="45" y="105" font-size="70" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      
+                      <!-- Below middle line: Stem Up -->
+                      <ellipse cx="140" cy="90" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 140 90)"/>
+                      <line x1="148" y1="90" x2="148" y2="45" stroke="#0f172a" stroke-width="2"/>
+                      
+                      <!-- Above middle line: Stem Down -->
+                      <ellipse cx="230" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 230 30)"/>
+                      <line x1="222" y1="30" x2="222" y2="75" stroke="#0f172a" stroke-width="2"/>
+                      
+                      <!-- On middle line: Stem Up/Down -->
+                      <ellipse cx="300" cy="60" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 300 60)"/>
+                      <line x1="308" y1="60" x2="308" y2="15" stroke="#0f172a" stroke-width="2"/>
+                      
+                      <ellipse cx="340" cy="60" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 340 60)"/>
+                      <line x1="332" y1="60" x2="332" y2="105" stroke="#0f172a" stroke-width="2"/>
+                    </svg>
+                    <div class="flex justify-between max-w-md mx-auto mt-2 px-6 text-[10px] font-bold text-slate-500 uppercase">
+                      <div class="text-center w-24">Stem Up<br/><span class="text-[9px] normal-case font-normal">(Below middle line)</span></div>
+                      <div class="text-center w-24">Stem Down<br/><span class="text-[9px] normal-case font-normal">(Above middle line)</span></div>
+                      <div class="text-center w-24">On Middle Line<br/><span class="text-[9px] normal-case font-normal">(Up or down!)</span></div>
+                    </div>
+                  </div>
+                `
+              }
+            ],
+            testQuestions: [
+              { q: 'What is the general rule for note stem direction when a notehead is placed BELOW the middle line of the staff?', options: ['The stem points UP on the RIGHT side', 'The stem points DOWN on the LEFT side', 'The stem points UP on the LEFT side', 'The stem points DOWN on the RIGHT side'], correct: 0 },
+              { q: 'Where does the stem attach when pointing UP?', options: ['On the RIGHT side of the notehead', 'On the LEFT side of the notehead', 'In the middle of the notehead', 'It does not attach'], correct: 0 },
+              { q: 'What is the general rule for note stem direction when a notehead is placed ABOVE the middle line of the staff?', options: ['The stem points DOWN on the LEFT side', 'The stem points UP on the RIGHT side', 'The stem points DOWN on the RIGHT side', 'The stem points UP on the LEFT side'], correct: 0 },
+              { q: 'What happens to the stem direction if a note is placed exactly ON the middle line (Line 3)?', options: ['It can point either up or down depending on nearby notes', 'It must always point down', 'It must always point up', 'It is drawn without a stem'], correct: 0 },
+              { q: 'How many lines does the standard musical staff have?', options: ['5 lines', '4 lines', '6 lines', '3 lines'], correct: 0 }
             ]
           }
         ]
@@ -2377,6 +2443,7 @@
       else if (lesson.toolType === 'quaverGame') mountEmbeddedQuaverGame(toolBox);
       else if (lesson.toolType === 'drumModule') mountEmbeddedDrumModule(toolBox);
       else if (lesson.toolType === 'longNoteGame') mountEmbeddedLongNoteGame(toolBox);
+      else if (lesson.toolType === 'stemDirectionGame') mountEmbeddedStemDirectionGame(toolBox);
       else if (lesson.toolType === 'pitchWaveGame') mountEmbeddedPitchWaveGame(toolBox);
       else if (lesson.toolType === 'melodicContourGame') mountEmbeddedMelodicContourGame(toolBox);
       else if (lesson.toolType === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolBox);
@@ -2493,8 +2560,168 @@
     }
 
     // ==========================================
+    // STEM DIRECTION GAME (DURATION LEVEL 2)
+    // ==========================================
+    let stemDirectionGameState = {
+      round: 1, totalRounds: 10, score: 0, streak: 0, best: 0,
+      targetStem: 'up', // 'up' or 'down'
+      answered: false, lastCorrect: false, completed: false,
+      droppedZone: null, roundStartTime: 0
+    };
+
+    function setupStemDirectionRound() {
+      stemDirectionGameState.targetStem = Math.random() > 0.5 ? 'up' : 'down';
+      stemDirectionGameState.answered = false;
+      stemDirectionGameState.lastCorrect = false;
+      stemDirectionGameState.droppedZone = null;
+      stemDirectionGameState.roundStartTime = performance.now();
+    }
+
+    function mountEmbeddedStemDirectionGame(target) {
+      if (!target) return;
+      stemDirectionGameState = { round: 1, totalRounds: 10, score: 0, streak: 0, best: 0, targetStem: 'up', answered: false, lastCorrect: false, completed: false, droppedZone: null, roundStartTime: 0 };
+      setupStemDirectionRound();
+      renderStemDirectionUI(target);
+    }
+
+    function handleStemDragStart(e) {
+       if (e && e.dataTransfer) { e.dataTransfer.setData('text/plain', 'stemNote'); e.dataTransfer.effectAllowed = 'copy'; }
+    }
+
+    function handleStemDrop(event, zone) {
+       if (event) event.preventDefault();
+       const st = stemDirectionGameState;
+       if (st.answered || st.completed) return;
+       if (performance.now() - st.roundStartTime < 800) return;
+       
+       st.answered = true;
+       st.droppedZone = zone;
+       let isCorrect = false;
+       if (st.targetStem === 'up' && zone === 'below') isCorrect = true;
+       if (st.targetStem === 'down' && zone === 'above') isCorrect = true;
+       
+       st.lastCorrect = isCorrect;
+
+       if (isCorrect) {
+         st.score++;
+         st.streak++;
+         if (st.streak > st.best) st.best = st.streak;
+         addTokens(1);
+         playTonePitch(659.25, 0.2, 0.35, 'triangle');
+       } else {
+         st.streak = 0;
+         playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+       }
+       renderStemDirectionUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextStemDirectionRound() {
+      const st = stemDirectionGameState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupStemDirectionRound();
+        renderStemDirectionUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderStemDirectionUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Stem Direction Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderStemDirectionUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = stemDirectionGameState;
+
+      const stemSvg = st.targetStem === 'up' 
+        ? `<ellipse cx="30" cy="50" rx="9" ry="6" fill="#eab308" transform="rotate(-15 30 50)"/><line x1="38" y1="50" x2="38" y2="5" stroke="#eab308" stroke-width="2"/>`
+        : `<ellipse cx="30" cy="15" rx="9" ry="6" fill="#eab308" transform="rotate(-15 30 15)"/><line x1="22" y1="15" x2="22" y2="60" stroke="#eab308" stroke-width="2"/>`;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">Stem Direction Game</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag the yellow note to a correct position ABOVE or BELOW the middle line based on its stem direction!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Stem Direction Game Complete!</h4>
+              <p class="text-xs text-slate-200">You placed <strong>${st.score} / ${st.totalRounds}</strong> notes correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedStemDirectionGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col md:flex-row gap-6">
+              <div class="flex-1 bg-slate-50 rounded-2xl border border-slate-200 p-6 relative flex items-center justify-center min-h-[200px]">
+                <svg viewBox="0 0 200 120" class="w-full h-auto bg-transparent">
+                  <line x1="20" y1="20" x2="180" y2="20" stroke="#475569" stroke-width="1.5"/>
+                  <line x1="20" y1="40" x2="180" y2="40" stroke="#475569" stroke-width="1.5"/>
+                  <line x1="20" y1="60" x2="180" y2="60" stroke="#3b82f6" stroke-width="2"/> <!-- Middle Line -->
+                  <line x1="20" y1="80" x2="180" y2="80" stroke="#475569" stroke-width="1.5"/>
+                  <line x1="20" y1="100" x2="180" y2="100" stroke="#475569" stroke-width="1.5"/>
+                  <text x="25" y="105" font-size="65" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+
+                  ${!st.answered ? `
+                    <!-- Interactive Drop Zones (Hidden graphically, active on mouse/touch) -->
+                    <rect x="70" y="0" width="100" height="55" fill="transparent" class="cursor-pointer"
+                      ondragover="event.preventDefault(); this.setAttribute('fill', 'rgba(56,189,248,0.2)');"
+                      ondragleave="this.setAttribute('fill', 'transparent');"
+                      ondrop="this.setAttribute('fill', 'transparent'); handleStemDrop(event, 'above');"
+                      onclick="handleStemDrop(null, 'above')" />
+                    <rect x="70" y="65" width="100" height="55" fill="transparent" class="cursor-pointer"
+                      ondragover="event.preventDefault(); this.setAttribute('fill', 'rgba(56,189,248,0.2)');"
+                      ondragleave="this.setAttribute('fill', 'transparent');"
+                      ondrop="this.setAttribute('fill', 'transparent'); handleStemDrop(event, 'below');"
+                      onclick="handleStemDrop(null, 'below')" />
+                  ` : `
+                    <!-- Answer Display -->
+                    ${st.droppedZone === 'above' 
+                      ? `<g transform="translate(100, -10)">${stemSvg}</g>`
+                      : `<g transform="translate(100, 30)">${stemSvg}</g>`}
+                  `}
+                </svg>
+              </div>
+
+              <div class="flex-1 flex flex-col justify-center gap-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-black text-amber-300">Streak: ${st.streak}</span>
+                  <span class="text-sm font-black text-emerald-300">Best: ${st.best}</span>
+                </div>
+                
+                ${!st.answered ? `
+                  <div class="bg-indigo-950/80 border border-indigo-700 p-5 rounded-2xl text-center space-y-3 shadow-inner">
+                    <h4 class="font-black text-sm text-white">Place this note correctly!</h4>
+                    <p class="text-xs text-indigo-200">Drag it above or below the middle line based on its stem direction.</p>
+                    <div draggable="true" ondragstart="handleStemDragStart(event)" class="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto cursor-grab active:cursor-grabbing border-2 border-amber-300 shadow-md">
+                       <svg viewBox="0 0 60 60" class="w-12 h-12">${stemSvg}</svg>
+                    </div>
+                  </div>
+                ` : `
+                  <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col items-center justify-center text-center gap-3">
+                    <span class="text-sm font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. Stem ${st.targetStem === 'up' ? 'UP notes go BELOW' : 'DOWN notes go ABOVE'} the middle line.`}</span>
+                    <button type="button" onclick="nextStemDirectionRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs">
+                      ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                    </button>
+                  </div>
+                `}
+              </div>
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
     // DURATION & RHYTHM MINIGAMES (BEAT TAP, CROTCHET, QUAVER, LONG NOTE, DRUM & DICTATION)
     // ==========================================
+    
     let beatTapState = { running: false, speedIdx: 0, speeds: [80, 105, 130, 155], streak: 0, lastBeatTime: 0, intervalId: null, completed: false };
 
     function stopBeatTapLoop() {
@@ -3228,7 +3455,8 @@
       dictationTarget: ['crotchet', 'quavers', 'crotchet', 'quavers'],
       dictationGuess: [null, null, null, null],
       dictationPlaying: false,
-      dictationStatusText: 'Click "Hear Pattern (4-Beat Count-In)" to listen!'
+      dictationStatusText: 'Click "Hear Pattern (4-Beat Count-In)" to listen!',
+      audioPlayed: false
     };
 
     const drumSubdivisionLabels = ['1', '&', '2', '&', '3', '&', '4', '&'];
@@ -3297,6 +3525,7 @@
     function playDictationMysteryPattern() {
       if (drumLabState.dictationPlaying) return;
       drumLabState.dictationPlaying = true;
+      drumLabState.audioPlayed = true;
       const beatMs = 600;
 
       // 4-Beat Count-In (1, 2, 3, 4)
@@ -3369,6 +3598,7 @@
     function checkDictationPatternGuess() {
       const st = drumLabState;
       if (st.dictationAnswered || st.dictationCompleted) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the 4-beat pattern before checking your answer!', false); return; }
       if (st.dictationGuess.includes(null)) {
         showAppModal('Incomplete Bar', 'Please drag and drop a Crotchet or Paired Quavers into all 4 beat boxes before checking!', false);
         return;
@@ -3395,6 +3625,7 @@
         st.dictationTarget = generateSimpleRhythmDictation();
         st.dictationGuess = [null, null, null, null];
         st.dictationAnswered = false;
+        st.audioPlayed = false;
         st.dictationStatusText = `Round ${st.dictationRound}: Click "Hear Pattern (4-Beat Count-In)" to listen!`;
         mountEmbeddedDrumModule(document.getElementById('embedded-tool-container'));
       } else {
@@ -3413,6 +3644,7 @@
       drumLabState.dictationScore = 0;
       drumLabState.dictationCompleted = false;
       drumLabState.dictationAnswered = false;
+      drumLabState.audioPlayed = false;
       drumLabState.dictationTarget = generateSimpleRhythmDictation();
       drumLabState.dictationGuess = [null, null, null, null];
       drumLabState.dictationStatusText = 'Click "Hear Pattern (4-Beat Count-In)" to listen!';
@@ -3605,7 +3837,8 @@
       selectedGuess: [],
       answered: false,
       lastCorrect: false,
-      completed: false
+      completed: false,
+      audioPlayed: false
     };
 
     function playTextureLayerCombination(layerIds) {
@@ -3724,6 +3957,7 @@
     }
 
     function playMysteryTextureMix() {
+      textureLabState.audioPlayed = true;
       playTextureLayerCombination(textureLabState.targetLayers);
     }
 
@@ -3741,6 +3975,7 @@
     function submitTextureLayerGuess() {
       const st = textureLabState;
       if (st.answered || st.completed || st.selectedGuess.length === 0) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the mystery mix before guessing!', false); return; }
 
       const sortedTarget = [...st.targetLayers].sort();
       const sortedGuess = [...st.selectedGuess].sort();
@@ -3767,6 +4002,7 @@
         st.targetLayers = generateRandomTextureLayerSet();
         st.selectedGuess = [];
         st.answered = false;
+        st.audioPlayed = false;
         renderTextureLabGameUI();
       } else {
         st.completed = true;
@@ -3919,8 +4155,7 @@
       'B3': { y: 142.5, lines: [135], label: 'B below the staff' },
       'A3': { y: 150, lines: [135, 150], label: 'A below the staff' } 
     };
-
-    let ledgerLineGameState = { round: 1, totalRounds: 10, score: 0, targetNote: null, answered: false, guessedNote: null, lastCorrect: false, completed: false };
+    let ledgerLineGameState = { round: 1, totalRounds: 10, score: 0, targetNote: null, answered: false, guessedNote: null, lastCorrect: false, completed: false, roundStartTime: 0 };
 
     function setupLedgerLineRound() {
       const pool = Object.keys(ledgerGameNotes);
@@ -3928,11 +4163,12 @@
       ledgerLineGameState.answered = false;
       ledgerLineGameState.guessedNote = null;
       ledgerLineGameState.lastCorrect = false;
+      ledgerLineGameState.roundStartTime = performance.now();
     }
 
     function mountEmbeddedLedgerLineGame(target) {
       if (!target) return;
-      ledgerLineGameState = { round: 1, totalRounds: 10, score: 0, targetNote: null, answered: false, guessedNote: null, lastCorrect: false, completed: false };
+      ledgerLineGameState = { round: 1, totalRounds: 10, score: 0, targetNote: null, answered: false, guessedNote: null, lastCorrect: false, completed: false, roundStartTime: 0 };
       setupLedgerLineRound();
       renderLedgerLineGameUI(target);
     }
@@ -3948,6 +4184,7 @@
       if (event) event.preventDefault();
       const st = ledgerLineGameState;
       if (st.answered || st.completed || !st.targetNote) return;
+      if (performance.now() - st.roundStartTime < 800) return;
       
       st.guessedNote = droppedNoteName;
       st.answered = true;
@@ -4092,7 +4329,7 @@
       config: { 'bass': 1, 'cello': 2, 'ostinato': 3, 'melody': 4, 'chime': 5 },
       round: 1, totalRounds: 5, score: 0,
       gameTargetOrder: [], gameGuessOrder: [],
-      gameAnswered: false, gameCompleted: false
+      gameAnswered: false, gameCompleted: false, audioPlayed: false
     };
 
     function stopStaggeredLabLoop() {
@@ -4200,12 +4437,14 @@
       st.gameGuessOrder = [];
       st.gameAnswered = false;
       st.gameCompleted = false;
+      st.audioPlayed = false;
       stopStaggeredLabLoop();
     }
 
     function playStaggeredMystery() {
        if (staggeredLabState.playing) return;
        staggeredLabState.gameGuessOrder = [];
+       staggeredLabState.audioPlayed = true;
        toggleStaggeredLabPlayback();
        // Auto-stop after the sequence finishes (Wait for highest entry bar + 1 bar to hear it)
        const highestBar = staggeredLabState.gameTargetOrder.length;
@@ -4218,6 +4457,7 @@
 
     function guessStaggeredLayer(layerId) {
       if (staggeredLabState.gameAnswered || staggeredLabState.gameCompleted) return;
+      if (!staggeredLabState.audioPlayed) { showAppModal('Listen First', 'Please play the mystery sequence before guessing!', false); return; }
       if (!staggeredLabState.gameGuessOrder.includes(layerId)) {
         staggeredLabState.gameGuessOrder.push(layerId);
         playTonePitch(523.25, 0.1, 0.2, 'triangle');
@@ -4478,17 +4718,18 @@
     // ==========================================
     // MINIGAME 9.1: PITCH WAVE GAME (HIGH VS LOW)
     // ==========================================
-    let pitchWaveState = { round: 1, totalRounds: 10, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+    let pitchWaveState = { round: 1, totalRounds: 10, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
 
     function setupPitchWaveRound() {
       pitchWaveState.targetType = Math.random() > 0.5 ? 'high' : 'low';
       pitchWaveState.answered = false;
       pitchWaveState.lastCorrect = false;
+      pitchWaveState.audioPlayed = false;
     }
 
     function mountEmbeddedPitchWaveGame(target) {
       if (!target) return;
-      pitchWaveState = { round: 1, totalRounds: 10, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+      pitchWaveState = { round: 1, totalRounds: 10, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
       setupPitchWaveRound();
       renderPitchWaveGameUI(target);
     }
@@ -4496,6 +4737,7 @@
     function playPitchWaveTarget() {
       if (pitchWaveState.isPlaying) return;
       pitchWaveState.isPlaying = true;
+      pitchWaveState.audioPlayed = true;
       renderPitchWaveGameUI();
       const freq = pitchWaveState.targetType === 'high' ? 880 : 130.81;
       const wave = pitchWaveState.targetType === 'high' ? 'sine' : 'sawtooth';
@@ -4509,6 +4751,7 @@
     function guessPitchWave(type) {
       const st = pitchWaveState;
       if (st.answered || st.completed || st.isPlaying) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the mystery pitch before guessing!', false); return; }
       st.answered = true;
       st.lastCorrect = (st.targetType === type);
       if (st.lastCorrect) {
@@ -4602,7 +4845,7 @@
     // ==========================================
     // MINIGAME 9.2: MELODIC CONTOUR GAME
     // ==========================================
-    let melodicContourState = { round: 1, totalRounds: 10, score: 0, targetContour: null, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+    let melodicContourState = { round: 1, totalRounds: 10, score: 0, targetContour: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
 
     const contourTypes = [
       { id: 'step_up', name: 'Ascending Step', intervals: [ [261.63, 293.66], [329.63, 349.23], [392.00, 440.00] ] },
@@ -4617,11 +4860,12 @@
       melodicContourState.targetContour = { id: type.id, name: type.name, interval };
       melodicContourState.answered = false;
       melodicContourState.lastCorrect = false;
+      melodicContourState.audioPlayed = false;
     }
 
     function mountEmbeddedMelodicContourGame(target) {
       if (!target) return;
-      melodicContourState = { round: 1, totalRounds: 10, score: 0, targetContour: null, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+      melodicContourState = { round: 1, totalRounds: 10, score: 0, targetContour: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
       setupMelodicContourRound();
       renderMelodicContourUI(target);
     }
@@ -4636,6 +4880,7 @@
     function playMelodicContourTarget() {
       if (melodicContourState.isPlaying) return;
       melodicContourState.isPlaying = true;
+      melodicContourState.audioPlayed = true;
       renderMelodicContourUI();
       
       playMelodicInterval(melodicContourState.targetContour.interval);
@@ -4648,6 +4893,7 @@
     function guessMelodicContour(id) {
       const st = melodicContourState;
       if (st.answered || st.completed || st.isPlaying) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the melody before guessing!', false); return; }
       st.answered = true;
       st.lastCorrect = (st.targetContour.id === id);
       if (st.lastCorrect) {
@@ -4735,7 +4981,7 @@
     // ==========================================
     let pitchKeyboardState = {
       round: 1, totalRounds: 10, score: 0,
-      targetKey: null, isPlaying: false, answered: false, lastCorrect: false, completed: false
+      targetKey: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false
     };
 
     const pitchKeyboardKeys = [
@@ -4754,6 +5000,7 @@
       pitchKeyboardState.targetKey = pool[Math.floor(Math.random() * pool.length)];
       pitchKeyboardState.answered = false;
       pitchKeyboardState.lastCorrect = false;
+      pitchKeyboardState.audioPlayed = false;
     }
 
     function mountEmbeddedPitchKeyboard(target) {
@@ -4761,7 +5008,7 @@
       if (!target) return;
       pitchKeyboardState = {
         round: 1, totalRounds: 10, score: 0,
-        targetKey: null, isPlaying: false, answered: false, lastCorrect: false, completed: false
+        targetKey: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false
       };
       setupPitchKeyboardRound();
       renderPitchKeyboardUI(target);
@@ -4770,6 +5017,7 @@
     function playPitchKeyboardMystery() {
       if (pitchKeyboardState.isPlaying || pitchKeyboardState.answered) return;
       pitchKeyboardState.isPlaying = true;
+      pitchKeyboardState.audioPlayed = true;
       renderPitchKeyboardUI();
       
       playTonePitch(261.63, 0.5, 0.35, 'triangle'); // C4 Reference
@@ -4785,6 +5033,7 @@
     function guessPitchKeyboardNote(noteName) {
       const st = pitchKeyboardState;
       if (st.answered || st.completed || st.isPlaying) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the mystery notes before guessing!', false); return; }
       
       st.answered = true;
       st.lastCorrect = (st.targetKey.note === noteName);
@@ -4922,7 +5171,8 @@
       targetKey: null,
       answered: false,
       lastCorrect: false,
-      selectedNote: null
+      selectedNote: null,
+      roundStartTime: 0
     };
 
     function startTrebleClefRound() {
@@ -4931,12 +5181,14 @@
       trebleClefGameState.answered = false;
       trebleClefGameState.lastCorrect = false;
       trebleClefGameState.selectedNote = null;
+      trebleClefGameState.roundStartTime = performance.now();
       renderTrebleClefGameUI();
     }
 
     function guessTrebleClefLetter(letter) {
       const st = trebleClefGameState;
       if (st.answered) return;
+      if (performance.now() - st.roundStartTime < 800) return;
       
       st.answered = true;
       st.selectedNote = letter;
@@ -4967,7 +5219,7 @@
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
       trebleClefGameState = {
-        streak: 0, best: 0, targetKey: null, answered: false, lastCorrect: false, selectedNote: null
+        streak: 0, best: 0, targetKey: null, answered: false, lastCorrect: false, selectedNote: null, roundStartTime: 0
       };
       startTrebleClefRound();
     }
@@ -5046,7 +5298,7 @@
     // ==========================================
     // MINIGAME 13: TONES & SEMITONES DETECTIVE
     // ==========================================
-    let toneSemitoneState = { round: 1, totalRounds: 10, score: 0, targetIsTone: null, targetKeys: [], isPlaying: false, answered: false, lastCorrect: false, completed: false };
+    let toneSemitoneState = { round: 1, totalRounds: 10, score: 0, targetIsTone: null, targetKeys: [], isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
 
     const toneSemitoneScale = [
       { id: 0, note: 'C', type: 'white', freq: 261.63, left: null },
@@ -5072,11 +5324,12 @@
       toneSemitoneState.targetKeys = [startIdx, endIdx];
       toneSemitoneState.answered = false;
       toneSemitoneState.lastCorrect = false;
+      toneSemitoneState.audioPlayed = false;
     }
 
     function mountEmbeddedToneSemitoneGame(target) {
       if (!target) return;
-      toneSemitoneState = { round: 1, totalRounds: 10, score: 0, targetIsTone: null, targetKeys: [], isPlaying: false, answered: false, lastCorrect: false, completed: false };
+      toneSemitoneState = { round: 1, totalRounds: 10, score: 0, targetIsTone: null, targetKeys: [], isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
       setupToneSemitoneRound();
       renderToneSemitoneGameUI(target);
     }
@@ -5084,6 +5337,7 @@
     function playToneSemitoneMystery() {
       if (toneSemitoneState.isPlaying || toneSemitoneState.answered) return;
       toneSemitoneState.isPlaying = true;
+      toneSemitoneState.audioPlayed = true;
       renderToneSemitoneGameUI();
       
       const key1 = toneSemitoneScale[toneSemitoneState.targetKeys[0]];
@@ -5102,6 +5356,7 @@
     function guessToneSemitone(guessIsTone) {
       const st = toneSemitoneState;
       if (st.answered || st.completed || st.isPlaying) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please hear the notes before guessing!', false); return; }
       
       st.answered = true;
       st.lastCorrect = (st.targetIsTone === guessIsTone);
@@ -5223,7 +5478,7 @@
       { id: 'rs3', title: 'Bar 1, 2, 3, repeat back to Bar 2 ||: 2, 3 :|| 4', fwd: 2, bwd: 3, correctPath: '1, 2, 3, 2, 3, 4', wrongPaths: ['1, 2, 3, 1, 2, 3, 4', '1, 2, 3, 4', '1, 2, 3, 2, 4'] }
     ];
 
-    let repeatSignGameState = { round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false };
+    let repeatSignGameState = { round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
 
     function createRepeatScoreSVG(fwd, bwd) {
       let svg = `<svg viewBox="0 0 400 80" class="w-full max-w-xl mx-auto h-auto bg-slate-950 rounded-xl mb-3 shadow-inner py-2">`;
@@ -5275,12 +5530,13 @@
       repeatSignGameState.currentScenario = scenario;
       repeatSignGameState.choices = [scenario.correctPath, ...scenario.wrongPaths].sort(() => Math.random() - 0.5);
       repeatSignGameState.answered = false;
+      repeatSignGameState.roundStartTime = performance.now();
     }
 
     function mountEmbeddedRepeatSignGame(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      repeatSignGameState = { round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false };
+      repeatSignGameState = { round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
       setupRepeatSignRound();
       renderRepeatSignGameUI(target);
     }
@@ -5288,6 +5544,7 @@
     function guessRepeatPath(selectedPath) {
       const st = repeatSignGameState;
       if (st.answered || st.completed) return;
+      if (performance.now() - st.roundStartTime < 800) return;
       st.answered = true;
       st.lastCorrect = (st.currentScenario.correctPath === selectedPath);
       if (st.lastCorrect) {
@@ -5416,7 +5673,8 @@
       choices: [],
       answered: false,
       lastCorrect: false,
-      completed: false
+      completed: false,
+      roundStartTime: 0
     };
 
     function createVoltaScoreSVG(fwdBar, v1Start, v1End, v2Start) {
@@ -5484,13 +5742,14 @@
       const choices = [scenario.correctPath, ...scenario.wrongPaths].sort(() => Math.random() - 0.5);
       voltaGameState.choices = choices;
       voltaGameState.answered = false;
+      voltaGameState.roundStartTime = performance.now();
     }
 
     function mountEmbeddedVoltaBracketGame(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
       voltaGameState = {
-        round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false
+        round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0
       };
       setupVoltaBracketRound();
       renderVoltaBracketGameUI(target);
@@ -5499,6 +5758,7 @@
     function guessVoltaPath(selectedPath) {
       const st = voltaGameState;
       if (st.answered || st.completed) return;
+      if (performance.now() - st.roundStartTime < 800) return;
       st.answered = true;
       st.lastCorrect = (st.currentScenario.correctPath === selectedPath);
       if (st.lastCorrect) {
@@ -5592,7 +5852,7 @@
       round: 1, totalRounds: 5, score: 0,
       targetForm: null, // 'AB' or 'ABA'
       motifs: { A: [], B: [] },
-      isPlaying: false, answered: false, lastCorrect: false, completed: false
+      isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false
     };
 
     function setupStructureGameRound() {
@@ -5618,11 +5878,13 @@
       structureGameState.motifs.A = genMotif(sA);
       structureGameState.motifs.B = genMotif(sB);
       structureGameState.answered = false;
+      structureGameState.audioPlayed = false;
     }
 
     function playStructureMysterySequence() {
       if(structureGameState.isPlaying) return;
       structureGameState.isPlaying = true;
+      structureGameState.audioPlayed = true;
       renderStructureFormGameUI();
 
       const form = structureGameState.targetForm;
@@ -5651,6 +5913,7 @@
 
     function guessStructureForm(guess) {
       if(structureGameState.answered || structureGameState.completed) return;
+      if(!structureGameState.audioPlayed) { showAppModal('Listen First', 'Please play the mystery melody before guessing!', false); return; }
       structureGameState.answered = true;
       structureGameState.lastCorrect = (guess === structureGameState.targetForm);
       
@@ -5678,7 +5941,7 @@
 
     function mountEmbeddedStructureFormGame(target) {
       if (!target) return;
-      structureGameState = { round: 1, totalRounds: 5, score: 0, targetForm: null, motifs: {A:[], B:[]}, isPlaying: false, answered: false, lastCorrect: false, completed: false };
+      structureGameState = { round: 1, totalRounds: 5, score: 0, targetForm: null, motifs: {A:[], B:[]}, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
       setupStructureGameRound();
       renderStructureFormGameUI(target);
     }

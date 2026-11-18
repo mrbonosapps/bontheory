@@ -7694,7 +7694,7 @@
       if (!droppedRestId) return;
 
       st.answered = true;
-      st.lastCorrect = (st.target.id === droppedRestId);
+      st.lastCorrect = (st.target.req === droppedRestId);
       
       if (st.lastCorrect) {
         st.score++;
@@ -7737,8 +7737,8 @@
                 ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-slate-700');" : ""}"
                 ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-slate-700');" : ""}"
                 ondrop="${!st.answered ? "handleRestDrop(event)" : ""}"
-                class="w-32 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-slate-200 shadow-inner transition-colors ${!st.answered ? 'hover:border-amber-400' : 'opacity-50'}">
-                ${renderEngravedNoteDarkSVG(st.target.match, 'w-20 h-24')}
+                class="min-w-[8rem] px-6 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-slate-200 shadow-inner transition-colors ${!st.answered ? 'hover:border-amber-400' : 'opacity-50'}">
+                ${st.target.html()}
               </div>
             </div>
 

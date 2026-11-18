@@ -921,7 +921,7 @@
       { type: 'hairpin', symbol: '<', label: 'Crescendo', desc: 'Gradually getting louder' },
       { type: 'hairpin', symbol: '>', label: 'Decrescendo', desc: 'Gradually getting softer' },
       { type: 'terraced', symbol: 'p \u2192 f', label: 'Terraced Shift (p to f)', desc: 'Sudden shift from soft to loud' },
-      { type: 'terraced', symbol: 'f \u2192 p', label: 'Terraced Shift (f to p)', desc: 'Sudden shift from loud to soft' }
+      { id: 'terraced', symbol: 'f \u2192 p', label: 'Terraced Shift (f to p)', desc: 'Sudden shift from loud to soft' }
     ];
 
     function handleDynamicsDragStart(event) {
@@ -1044,6 +1044,199 @@
                 </div>
               `).join('')}
             </div>
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // ARTICULATION DETECTIVE GAME
+    // ==========================================
+    let articulationGameState = {
+      round: 1, totalRounds: 10, score: 0,
+      target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0
+    };
+
+    const articulationGameItems = [
+      { id: 'staccato', label: 'Staccato', desc: 'Short & Detached', box: {x: 104, y: 70, w: 22, h: 22} },
+      { id: 'accent', label: 'Accent', desc: 'Strong Emphasis', box: {x: 65, y: 15, w: 30, h: 20} },
+      { id: 'tenuto', label: 'Tenuto', desc: 'Full Value / Stressed', box: {x: 390, y: 25, w: 25, h: 15} },
+      { id: 'slur', label: 'Slur', desc: 'Smooth (Legato)', box: {x: 275, y: 80, w: 80, h: 25} },
+      { id: 'tie', label: 'Tie', desc: 'Join Same Pitches', box: {x: 168, y: 68, w: 50, h: 22} }
+    ];
+
+    function setupArticulationRound() {
+      const pool = [...articulationGameItems];
+      const target = pool[Math.floor(Math.random() * pool.length)];
+      articulationGameState.target = target;
+      articulationGameState.options = pool.sort(() => Math.random() - 0.5);
+      articulationGameState.answered = false;
+      articulationGameState.lastCorrect = false;
+      articulationGameState.roundStartTime = performance.now();
+    }
+
+    function mountEmbeddedArticulationGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      articulationGameState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
+      setupArticulationRound();
+      renderArticulationGameUI(target);
+    }
+
+    function handleArticulationDragStart(e, id) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleArticulationDrop(e) {
+      if (e) e.preventDefault();
+      const st = articulationGameState;
+      if (st.answered || st.completed) return;
+      if (performance.now() - st.roundStartTime < 800) return;
+      
+      let droppedId = null;
+      if (e && e.dataTransfer) {
+        droppedId = e.dataTransfer.getData('text/plain');
+      }
+      if (!droppedId) return;
+      
+      st.answered = true;
+      st.lastCorrect = (st.target.id === droppedId);
+      
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderArticulationGameUI();
+    }
+
+    function nextArticulationRound() {
+      const st = articulationGameState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupArticulationRound();
+        renderArticulationGameUI();
+      } else {
+        st.completed = true;
+        renderArticulationGameUI();
+        showAppModal('Articulation Detective Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderArticulationGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = articulationGameState;
+
+      const svgScore = `
+        <svg viewBox="0 0 500 120" class="w-full h-auto bg-slate-50 rounded-xl shadow-inner border border-slate-300">
+          <!-- Staff Lines -->
+          ${[30, 45, 60, 75, 90].map(y => `<line x1="20" y1="${y}" x2="480" y2="${y}" stroke="#475569" stroke-width="1.5"/>`).join('')}
+          <!-- Bar Lines -->
+          ${[30, 140, 250, 360, 470].map(x => `<line x1="${x}" y1="30" x2="${x}" y2="90" stroke="#475569" stroke-width="1.5"/>`).join('')}
+          <!-- Treble Clef -->
+          <text x="35" y="95" font-size="60" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+          
+          <!-- Bar 1: Accent (C5) and Staccato (A4) -->
+          <ellipse cx="80" cy="45" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 80 45)"/>
+          <line x1="74" y1="45" x2="74" y2="85" stroke="#0f172a" stroke-width="2"/>
+          <path d="M 68,20 L 85,25 L 68,30 L 73,25 Z" fill="#0f172a"/> <!-- Accent -->
+          
+          <ellipse cx="115" cy="55" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 115 55)"/>
+          <line x1="109" y1="55" x2="109" y2="95" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="115" cy="80" r="2.5" fill="#0f172a"/> <!-- Staccato -->
+
+          <!-- Bar 2: Tie (G4 to G4) -->
+          <ellipse cx="175" cy="60" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 175 60)"/>
+          <line x1="181" y1="60" x2="181" y2="25" stroke="#0f172a" stroke-width="2"/>
+          <ellipse cx="215" cy="60" rx="7" ry="5" fill="none" stroke="#0f172a" stroke-width="2.5" transform="rotate(-15 215 60)"/>
+          <line x1="221" y1="60" x2="221" y2="25" stroke="#0f172a" stroke-width="2"/>
+          <path d="M 180,75 Q 195,85 210,75" fill="none" stroke="#0f172a" stroke-width="2.5"/> <!-- Tie -->
+
+          <!-- Bar 3: Slur (E4 to G4) -->
+          <ellipse cx="280" cy="70" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 280 70)"/>
+          <line x1="286" y1="70" x2="286" y2="35" stroke="#0f172a" stroke-width="2"/>
+          <ellipse cx="315" cy="65" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 315 65)"/>
+          <line x1="321" y1="65" x2="321" y2="30" stroke="#0f172a" stroke-width="2"/>
+          <ellipse cx="350" cy="60" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 350 60)"/>
+          <line x1="356" y1="60" x2="356" y2="25" stroke="#0f172a" stroke-width="2"/>
+          <path d="M 280,85 Q 315,100 350,75" fill="none" stroke="#0f172a" stroke-width="2.5"/> <!-- Slur -->
+
+          <!-- Bar 4: Tenuto (C5) -->
+          <ellipse cx="400" cy="45" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 400 45)"/>
+          <line x1="394" y1="45" x2="394" y2="85" stroke="#0f172a" stroke-width="2"/>
+          <line x1="390" y1="32" x2="410" y2="32" stroke="#0f172a" stroke-width="3"/> <!-- Tenuto -->
+
+          ${!st.answered ? `
+            <rect x="${st.target.box.x}" y="${st.target.box.y}" width="${st.target.box.w}" height="${st.target.box.h}" 
+                  fill="rgba(251,191,36,0.3)" stroke="#fbbf24" stroke-width="2" rx="4" class="animate-pulse cursor-pointer"
+                  ondragover="event.preventDefault(); this.setAttribute('fill', 'rgba(56,189,248,0.4)');"
+                  ondragleave="this.setAttribute('fill', 'rgba(251,191,36,0.3)');"
+                  ondrop="this.setAttribute('fill', 'rgba(251,191,36,0.3)'); handleArticulationDrop(event);" />
+          ` : `
+            <rect x="${st.target.box.x}" y="${st.target.box.y}" width="${st.target.box.w}" height="${st.target.box.h}" 
+                  fill="${st.lastCorrect ? 'rgba(52,211,153,0.3)' : 'rgba(244,63,94,0.3)'}" 
+                  stroke="${st.lastCorrect ? '#34d399' : '#f43f5e'}" stroke-width="3" rx="4" />
+          `}
+        </svg>
+      `;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • Drag &amp; Drop</span>
+              <h3 class="text-xl font-black">Articulation &amp; Symbols Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">Identify the highlighted articulation mark in the score. Drag the matching label onto the glowing box!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Detective Work Complete!</h4>
+              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> symbols correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedArticulationGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col gap-6">
+              <!-- SVG Score Display -->
+              <div class="w-full relative">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center mb-3">Drop label onto the glowing box:</div>
+                ${svgScore}
+              </div>
+
+              <!-- Options -->
+              <div>
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center mb-3">Drag a Label:</div>
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  ${st.options.map(opt => `
+                    <div draggable="${!st.answered}" ondragstart="handleArticulationDragStart(event, '${opt.id}')" 
+                         class="p-3 bg-slate-800 border-2 border-slate-600 rounded-xl text-center select-none flex flex-col justify-center min-h-[70px] ${!st.answered ? 'cursor-grab active:cursor-grabbing hover:border-amber-400 hover:bg-slate-700' : 'opacity-50'}">
+                      <div class="text-xs font-black text-white pointer-events-none">${opt.label}</div>
+                      <div class="text-[9px] font-bold text-slate-400 mt-1 pointer-events-none">${opt.desc}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. That was a <strong>${st.target.label}</strong> (${st.target.desc}).`}</span>
+                <button type="button" onclick="nextArticulationRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
           `}
         </div>
       `;
@@ -1937,6 +2130,83 @@
               { q: 'What is the musical term for sudden, abrupt shifts in volume without gradual changes?', options: ['Terraced Dynamics', 'Crescendo', 'Timbre', 'Melodic Contour'], correct: 0 },
               { q: 'Which order arranges dynamic markings from SOFTEST to LOUDEST?', options: ['pp, p, mp, mf, f, ff', 'ff, f, mf, mp, p, pp', 'p, mp, pp, f, mf, ff', 'mf, mp, f, p, ff, pp'], correct: 0 }
             ]
+          },
+          {
+            level: 2,
+            title: 'Level 2: Articulation Signs & Symbols',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Articulation Markings',
+                summary: 'Learn how symbols like staccato, accents, tenuto, slurs, and ties change how notes are played.',
+                toolType: null,
+                contentHtml: `
+                  <p><strong>Articulation</strong> tells a musician <em>how</em> to play a specific note—whether to play it short and punchy, smooth and connected, or with extra force.</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-center gap-4">
+                      <div class="text-2xl font-black text-sky-700 shrink-0 w-10 text-center mb-4">.</div>
+                      <div>
+                        <div class="font-black text-sm text-sky-900">Staccato (Dot)</div>
+                        <p class="text-xs text-slate-700 mt-1">Play the note <strong>short and detached</strong>. It creates a bouncy, crisp sound.</p>
+                      </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center gap-4">
+                      <div class="text-xl font-black text-rose-700 shrink-0 w-10 text-center">&gt;</div>
+                      <div>
+                        <div class="font-black text-sm text-rose-900">Accent</div>
+                        <p class="text-xs text-slate-700 mt-1">Play the note with a sudden <strong>strong force or emphasis</strong>.</p>
+                      </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-4">
+                      <div class="text-xl font-black text-emerald-700 shrink-0 w-10 text-center">&ndash;</div>
+                      <div>
+                        <div class="font-black text-sm text-emerald-900">Tenuto</div>
+                        <p class="text-xs text-slate-700 mt-1">Hold the note for its <strong>full, exact value</strong>, sometimes with a slight stress or leaning on the note.</p>
+                      </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center gap-4">
+                      <div class="text-xl font-black text-amber-700 shrink-0 w-10 text-center">
+                        <svg viewBox="0 0 40 20" class="w-8 h-4 mx-auto"><path d="M 5,15 Q 20,0 35,15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                      </div>
+                      <div>
+                        <div class="font-black text-sm text-amber-900">Slur</div>
+                        <p class="text-xs text-slate-700 mt-1">A curved line connecting notes of <strong>different pitches</strong>. Play them smoothly and connected (Legato).</p>
+                      </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-violet-50 border border-violet-200 flex items-center gap-4 sm:col-span-2">
+                      <div class="text-xl font-black text-violet-700 shrink-0 w-10 text-center">
+                        <svg viewBox="0 0 40 20" class="w-8 h-4 mx-auto"><path d="M 5,15 Q 20,5 35,15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                      </div>
+                      <div>
+                        <div class="font-black text-sm text-violet-900">Tie</div>
+                        <p class="text-xs text-slate-700 mt-1">A curved line connecting two notes of the <strong>same pitch</strong>. You add their rhythmic values together and play them as a single, longer note.</p>
+                      </div>
+                    </div>
+                  </div>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Articulation Detective',
+                summary: 'Identify articulation symbols in a real musical score.',
+                toolType: 'articulationGame',
+                contentHtml: `
+                  <p>Can you spot the difference between a slur and a tie? Test your knowledge by dragging the correct articulation label onto the highlighted symbol in the score!</p>
+                `
+              }
+            ],
+            testQuestions: [
+              { q: 'What does a Staccato dot indicate?', options: ['Play the note short and detached', 'Play the note smoothly', 'Hold the note longer', 'Play the note loudly'], correct: 0 },
+              { q: 'Which symbol tells a musician to play a note with sudden strong force or emphasis?', options: ['Accent (>)', 'Tenuto (-)', 'Staccato (.)', 'Forte (f)'], correct: 0 },
+              { q: 'What does a Tenuto line (-) above or below a note mean?', options: ['Hold the note for its full value or give it a slight stress', 'Play it as short as possible', 'Play it very loudly', 'Slide to the next note'], correct: 0 },
+              { q: 'What is the curved line called that connects notes of DIFFERENT pitches to be played smoothly?', options: ['A Slur', 'A Tie', 'A Beam', 'A Crescendo'], correct: 0 },
+              { q: 'What is the curved line called that connects two notes of the SAME pitch to combine their duration?', options: ['A Tie', 'A Slur', 'An Octave', 'A Bar Line'], correct: 0 },
+              { q: 'If two crotchets of the SAME pitch are connected by a tie, how long do you hold the sound?', options: ['2 beats total', '1 beat total', '4 beats total', '1/2 beat total'], correct: 0 },
+              { q: 'What is the musical term for playing notes smoothly and connectedly (often indicated by a slur)?', options: ['Legato', 'Staccato', 'Marcato', 'Pizzicato'], correct: 0 },
+              { q: 'Which articulation marking creates a bouncy, crisp sound?', options: ['Staccato', 'Tenuto', 'Slur', 'Tie'], correct: 0 },
+              { q: 'True or False: A Tie can connect notes of different pitches.', options: ['False (A tie only connects notes of the same pitch)', 'True', 'Only in Jazz', 'Only on the piano'], correct: 0 },
+              { q: 'What does the word Articulation mean in music?', options: ['How a specific note is played (short, smooth, accented, etc.)', 'How loud the entire piece is', 'The speed of the pulse', 'The overall structure of the song'], correct: 0 }
+            ]
           }
         ]
       },
@@ -2617,6 +2887,7 @@
       else if (lesson.toolType === 'ledgerLineGame') mountEmbeddedLedgerLineGame(toolBox);
       else if (lesson.toolType === 'dynamicsSimulator') mountEmbeddedDynamicsSimulator(toolBox);
       else if (lesson.toolType === 'dynamicsChallengeGame') mountEmbeddedDynamicsChallengeGame(toolBox);
+      else if (lesson.toolType === 'articulationGame') mountEmbeddedArticulationGame(toolBox);
       else if (lesson.toolType === 'timbreSoundboard') mountEmbeddedTimbreSoundboard(toolBox);
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
       else if (lesson.toolType === 'staggeredTextureLab') mountEmbeddedStaggeredTextureLab(toolBox);

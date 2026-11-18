@@ -1344,6 +1344,110 @@
               { q: 'Which note has an open hollow oval notehead with NO stem and lasts 4 beats?', options: ['Semibreve', 'Minim', 'Crotchet', 'Paired Quavers'], correct: 0 },
               { q: 'What is the difference between the beat and rhythm?', options: ['The beat is the steady pulse, while rhythm is the pattern of long and short sounds over it', 'The beat is only played by drums, while rhythm is only sung', 'They are two words for dynamic volume', 'Rhythm never uses rests or quavers'], correct: 0 }
             ]
+          },
+          {
+            level: 2,
+            title: 'Level 2: Quavers & Beaming Rules',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Quavers (Eighth Notes)',
+                summary: 'Master the rules for drawing quaver tails and beams.',
+                toolType: 'quaverBuilderGame',
+                contentHtml: `
+                  <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200 mb-6 flex items-center justify-between gap-4">
+                    <div>
+                      <h4 class="font-black text-lg text-amber-900">Value of a Quaver</h4>
+                      <p class="text-sm text-amber-800 mt-1">A Quaver is worth exactly <strong>1/2 of a beat</strong> (half of a Crotchet).</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-white border-2 border-amber-200 flex items-center justify-center text-amber-600 font-black text-lg shrink-0 shadow-sm">½</div>
+                  </div>
+
+                  <h3 class="font-black text-xl text-slate-800 mb-3">Single Quavers</h3>
+                  <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700 marker:text-slate-400">
+                    <li>A single quaver has a solid note head, a stem, and a wavy <strong>tail</strong>.</li>
+                    <li><strong>The Tail Rule:</strong> The tail is <strong>always</strong> placed on the <strong>right side</strong> of the stem, regardless of whether the stem points up or down!</li>
+                  </ul>
+                  
+                  <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 mt-4 text-center shadow-sm">
+                    <svg viewBox="0 0 300 120" class="w-full max-w-sm mx-auto h-auto">
+                      <!-- Staff Lines -->
+                      <line x1="20" y1="30" x2="280" y2="30" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="45" x2="280" y2="45" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="60" x2="280" y2="60" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="75" x2="280" y2="75" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="90" x2="280" y2="90" stroke="#475569" stroke-width="1.5"/>
+                      
+                      <text x="25" y="95" font-size="60" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      
+                      <!-- Stem Up, Tail on Right -->
+                      <ellipse cx="120" cy="75" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 120 75)"/>
+                      <line x1="126" y1="75" x2="126" y2="35" stroke="#0f172a" stroke-width="2"/>
+                      <path d="M126 35 C133 40, 137 50, 132 60 C133 50, 128 45, 126 45" fill="#0f172a"/>
+                      
+                      <!-- Stem Down, Tail on Right -->
+                      <ellipse cx="200" cy="45" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 200 45)"/>
+                      <line x1="194" y1="45" x2="194" y2="85" stroke="#0f172a" stroke-width="2"/>
+                      <path d="M194 85 C201 80, 205 70, 200 60 C201 70, 196 75, 194 75" fill="#0f172a"/>
+                    </svg>
+                    <div class="flex justify-between max-w-sm mx-auto mt-2 px-16 text-[10px] font-bold text-slate-500 uppercase">
+                      <div class="text-center">Stem Up<br/><span class="text-[9px] normal-case font-normal text-slate-400">Tail on Right</span></div>
+                      <div class="text-center">Stem Down<br/><span class="text-[9px] normal-case font-normal text-slate-400">Tail on Right</span></div>
+                    </div>
+                  </div>
+
+                  <h3 class="font-black text-xl text-slate-800 mt-8 mb-3">Beamed Quavers</h3>
+                  <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700 marker:text-slate-400">
+                    <li>When two or more quavers sit next to each other, their individual tails are usually replaced by a thick line connecting their stems together called a <strong>beam</strong>.</li>
+                  </ul>
+
+                  <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 mt-4 text-center shadow-sm">
+                    <svg viewBox="0 0 300 120" class="w-full max-w-sm mx-auto h-auto">
+                      <!-- Staff Lines -->
+                      <line x1="20" y1="30" x2="280" y2="30" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="45" x2="280" y2="45" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="60" x2="280" y2="60" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="75" x2="280" y2="75" stroke="#475569" stroke-width="1.5"/>
+                      <line x1="20" y1="90" x2="280" y2="90" stroke="#475569" stroke-width="1.5"/>
+                      
+                      <text x="25" y="95" font-size="60" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      
+                      <!-- Beamed Stems Up -->
+                      <ellipse cx="100" cy="75" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 100 75)"/>
+                      <line x1="106" y1="75" x2="106" y2="40" stroke="#0f172a" stroke-width="2"/>
+                      <ellipse cx="130" cy="82.5" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 130 82.5)"/>
+                      <line x1="136" y1="82.5" x2="136" y2="45" stroke="#0f172a" stroke-width="2"/>
+                      <!-- Beam -->
+                      <polygon points="106,35 136,40 136,45 106,40" fill="#0f172a"/>
+
+                      <!-- Beamed Stems Down -->
+                      <ellipse cx="190" cy="45" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 190 45)"/>
+                      <line x1="184" y1="45" x2="184" y2="80" stroke="#0f172a" stroke-width="2"/>
+                      <ellipse cx="220" cy="37.5" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 220 37.5)"/>
+                      <line x1="214" y1="37.5" x2="214" y2="75" stroke="#0f172a" stroke-width="2"/>
+                      <!-- Beam -->
+                      <polygon points="184,80 214,75 214,70 184,75" fill="#0f172a"/>
+                    </svg>
+                    <div class="flex justify-between max-w-sm mx-auto mt-2 px-12 text-[10px] font-bold text-slate-500 uppercase">
+                      <div class="text-center">Beamed<br/><span class="text-[9px] normal-case font-normal text-slate-400">(Stems Up)</span></div>
+                      <div class="text-center">Beamed<br/><span class="text-[9px] normal-case font-normal text-slate-400">(Stems Down)</span></div>
+                    </div>
+                  </div>
+                `
+              }
+            ],
+            testQuestions: [
+              { q: 'How much is a Quaver worth?', options: ['1/2 of a beat', '1 beat', '2 beats', '4 beats'], correct: 0 },
+              { q: 'What are the parts of a single quaver?', options: ['A solid note head, a stem, and a wavy tail', 'A hollow note head and a stem', 'A hollow note head, a stem, and a dot', 'Just a solid note head'], correct: 0 },
+              { q: 'On which side of the stem is a quaver tail ALWAYS drawn?', options: ['On the right side', 'On the left side', 'It depends if the stem goes up or down', 'On top of the stem'], correct: 0 },
+              { q: 'If a quaver has a stem pointing DOWN, where does the tail go?', options: ['On the right side of the stem', 'On the left side of the stem', 'Straight across', 'It does not have a tail'], correct: 0 },
+              { q: 'What is a beam used for?', options: ['To connect the stems of two or more quavers next to each other', 'To make a note louder', 'To show a rest', 'To make the pitch higher'], correct: 0 },
+              { q: 'How many quavers are equal to one crotchet?', options: ['2', '1', '4', '8'], correct: 0 },
+              { q: 'If you see two quavers connected by a thick line at their stems, what is the line called?', options: ['A beam', 'A tail', 'A slur', 'A tie'], correct: 0 },
+              { q: 'Does beaming change the value of the quavers?', options: ['No, they are still worth 1/2 beat each', 'Yes, it makes them worth 1 beat each', 'Yes, it turns them into crotchets', 'Yes, it makes them twice as fast'], correct: 0 },
+              { q: 'Can beamed quavers have stems pointing down?', options: ['Yes, if the notes are high on the staff', 'No, beamed notes must always point up', 'Only if there are 4 of them', 'No, beams only work on stems pointing up'], correct: 0 },
+              { q: 'If you draw a single quaver with a stem pointing UP, the tail curves:', options: ['Downwards and to the right', 'Upwards and to the left', 'Straight out', 'Downwards and to the left'], correct: 0 }
+            ]
           }
         ]
       },
@@ -2454,6 +2558,7 @@
       else if (lesson.toolType === 'drumModule') mountEmbeddedDrumModule(toolBox);
       else if (lesson.toolType === 'longNoteGame') mountEmbeddedLongNoteGame(toolBox);
       else if (lesson.toolType === 'stemDirectionGame') mountEmbeddedStemDirectionGame(toolBox);
+      else if (lesson.toolType === 'quaverBuilderGame') mountEmbeddedQuaverBuilderGame(toolBox);
       else if (lesson.toolType === 'pitchWaveGame') mountEmbeddedPitchWaveGame(toolBox);
       else if (lesson.toolType === 'melodicContourGame') mountEmbeddedMelodicContourGame(toolBox);
       else if (lesson.toolType === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolBox);
@@ -2468,6 +2573,186 @@
       else if (lesson.toolType === 'repeatSignGame') mountEmbeddedRepeatSignGame(toolBox);
       else if (lesson.toolType === 'voltaBracketGame') mountEmbeddedVoltaBracketGame(toolBox);
       else if (lesson.toolType === 'structureFormGame') mountEmbeddedStructureFormGame(toolBox);
+    }
+
+    // ==========================================
+    // MINIGAME: QUAVER BUILDER CHALLENGE (DRAG & DROP)
+    // ==========================================
+    let quaverBuilderState = {
+      round: 1, totalRounds: 10, score: 0,
+      target: null, answered: false, lastCorrect: false, completed: false, roundStartTime: 0
+    };
+
+    const quaverBuilderTargets = [
+      { id: 'single_up', type: 'single', stem: 'up', correct: 'tail_right', desc: 'Single note with stem UP.' },
+      { id: 'single_down', type: 'single', stem: 'down', correct: 'tail_right', desc: 'Single note with stem DOWN.' },
+      { id: 'pair_up', type: 'pair', stem: 'up', correct: 'beam', desc: 'Two adjacent notes with stems UP.' },
+      { id: 'pair_down', type: 'pair', stem: 'down', correct: 'beam', desc: 'Two adjacent notes with stems DOWN.' }
+    ];
+
+    function setupQuaverBuilderRound() {
+      const randIdx = Math.floor(Math.random() * quaverBuilderTargets.length);
+      quaverBuilderState.target = quaverBuilderTargets[randIdx];
+      quaverBuilderState.answered = false;
+      quaverBuilderState.lastCorrect = false;
+      quaverBuilderState.roundStartTime = performance.now();
+    }
+
+    function mountEmbeddedQuaverBuilderGame(target) {
+      if (!target) return;
+      quaverBuilderState = { round: 1, totalRounds: 10, score: 0, target: null, answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
+      setupQuaverBuilderRound();
+      renderQuaverBuilderGameUI(target);
+    }
+
+    function handleQuaverToolDragStart(e, toolType) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', toolType);
+        e.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleQuaverToolDrop(event) {
+      if (event) event.preventDefault();
+      const st = quaverBuilderState;
+      if (st.answered || st.completed) return;
+      if (performance.now() - st.roundStartTime < 800) return; // debounce
+      
+      let droppedTool = null;
+      if (event && event.dataTransfer) {
+        droppedTool = event.dataTransfer.getData('text/plain');
+      }
+      if (!droppedTool) return;
+      
+      st.answered = true;
+      st.lastCorrect = (st.target.correct === droppedTool);
+      
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderQuaverBuilderGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextQuaverBuilderRound() {
+      const st = quaverBuilderState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupQuaverBuilderRound();
+        renderQuaverBuilderGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderQuaverBuilderGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Quaver Builder Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderQuaverBuilderGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = quaverBuilderState;
+
+      // Generate the base SVG without tails/beams
+      let baseSvg = '';
+      if (st.target) {
+        if (st.target.type === 'single') {
+          if (st.target.stem === 'up') {
+            baseSvg = `<ellipse cx="70" cy="70" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 70 70)"/><line x1="78" y1="70" x2="78" y2="25" stroke="#0f172a" stroke-width="2"/>`;
+            if (st.answered && st.lastCorrect) baseSvg += `<path d="M78 25 C87 30, 92 42, 86 54 C87 42, 81 36, 78 36" fill="#0f172a"/>`; // Right Tail
+          } else {
+            baseSvg = `<ellipse cx="70" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 70 30)"/><line x1="62" y1="30" x2="62" y2="75" stroke="#0f172a" stroke-width="2"/>`;
+            if (st.answered && st.lastCorrect) baseSvg += `<path d="M62 75 C71 70, 76 58, 70 46 C71 58, 65 64, 62 64" fill="#0f172a"/>`; // Right Tail (upwards)
+          }
+        } else {
+          if (st.target.stem === 'up') {
+            baseSvg = `
+              <ellipse cx="50" cy="70" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 50 70)"/><line x1="58" y1="70" x2="58" y2="25" stroke="#0f172a" stroke-width="2"/>
+              <ellipse cx="90" cy="70" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 90 70)"/><line x1="98" y1="70" x2="98" y2="25" stroke="#0f172a" stroke-width="2"/>
+            `;
+            if (st.answered && st.lastCorrect) baseSvg += `<polygon points="58,20 98,20 98,27 58,27" fill="#0f172a"/>`; // Beam
+          } else {
+            baseSvg = `
+              <ellipse cx="50" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 50 30)"/><line x1="42" y1="30" x2="42" y2="75" stroke="#0f172a" stroke-width="2"/>
+              <ellipse cx="90" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 90 30)"/><line x1="82" y1="30" x2="82" y2="75" stroke="#0f172a" stroke-width="2"/>
+            `;
+            if (st.answered && st.lastCorrect) baseSvg += `<polygon points="42,75 82,75 82,68 42,68" fill="#0f172a"/>`; // Beam
+          }
+        }
+      }
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • Drag &amp; Drop</span>
+              <h3 class="text-xl font-black">Quaver Constructor</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag the correct part (Left Tail, Right Tail, or Beam) onto the incomplete notes!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Quaver Constructor Complete!</h4>
+              <p class="text-xs text-slate-200">You completed <strong>${st.score} / ${st.totalRounds}</strong> notations correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedQuaverBuilderGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col md:flex-row gap-6">
+              
+              <!-- Draggable Options -->
+              <div class="flex-1 space-y-3">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">Drag a part:</div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div draggable="${!st.answered}" ondragstart="handleQuaverToolDragStart(event, 'tail_left')" class="p-3 bg-slate-800 border-2 border-slate-600 rounded-2xl text-center ${!st.answered ? 'cursor-grab hover:border-amber-400' : 'opacity-50'}">
+                    <svg viewBox="0 0 40 40" class="w-10 h-10 mx-auto stroke-amber-400"><path d="M35 10 C20 15, 10 30, 15 40" fill="none" stroke-width="4"/></svg>
+                    <div class="text-[9px] font-bold text-slate-300 mt-2 uppercase">Left Tail</div>
+                  </div>
+                  <div draggable="${!st.answered}" ondragstart="handleQuaverToolDragStart(event, 'tail_right')" class="p-3 bg-slate-800 border-2 border-slate-600 rounded-2xl text-center ${!st.answered ? 'cursor-grab hover:border-amber-400' : 'opacity-50'}">
+                    <svg viewBox="0 0 40 40" class="w-10 h-10 mx-auto stroke-amber-400"><path d="M5 10 C20 15, 30 30, 25 40" fill="none" stroke-width="4"/></svg>
+                    <div class="text-[9px] font-bold text-slate-300 mt-2 uppercase">Right Tail</div>
+                  </div>
+                  <div draggable="${!st.answered}" ondragstart="handleQuaverToolDragStart(event, 'beam')" class="p-3 bg-slate-800 border-2 border-slate-600 rounded-2xl text-center ${!st.answered ? 'cursor-grab hover:border-amber-400' : 'opacity-50'}">
+                    <div class="w-full h-3 bg-amber-400 mt-3.5 mb-3.5 rounded-sm"></div>
+                    <div class="text-[9px] font-bold text-slate-300 mt-2 uppercase">Beam</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Drop Zone -->
+              <div class="flex-1">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center mb-3">Drop onto note:</div>
+                <div 
+                  ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-indigo-950');" : ""}"
+                  ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950');" : ""}"
+                  ondrop="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950'); handleQuaverToolDrop(event);" : ""}"
+                  class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[160px] transition-colors relative overflow-hidden">
+                  
+                  <div class="text-xs font-bold text-slate-500 absolute top-4 uppercase tracking-widest">${st.target.desc}</div>
+                  <svg viewBox="0 0 140 100" class="w-32 h-24 mt-6">
+                    ${baseSvg}
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. ${st.target.type === 'pair' ? 'Pairs need a beam!' : 'Single tails ALWAYS go on the right side!'}`}</span>
+                <button type="button" onclick="nextQuaverBuilderRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+          `}
+        </div>
+      `;
     }
 
     function mountEmbeddedDynamicsSimulator(target) {

@@ -1026,8 +1026,7 @@
                   ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-slate-700');" : ""}"
                   ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-slate-700');" : ""}"
                   ondrop="${!st.answered ? `handleDynamicsDrop(event, '${opt.label}')` : ""}"
-                  onclick="${!st.answered ? `guessDynamicsChallenge('${opt.label}')` : ""}"
-                  class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-center ${!st.answered ? 'cursor-pointer' : ''} ${
+                  class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-center ${
                   st.answered && opt.label === st.target.label ? 'border-emerald-400 bg-emerald-950/60' : 
                   st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700'
                 }">

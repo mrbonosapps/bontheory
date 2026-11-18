@@ -3761,20 +3761,20 @@
     function handleRestDrop(event) {
       if (event) {
         event.preventDefault();
-        event.currentTarget.classList.remove('border-amber-400', 'bg-indigo-950');
+        event.currentTarget.classList.remove('border-amber-400', 'bg-slate-700');
       }
       const st = restMatcherState;
       if (st.answered || st.completed) return;
       if (performance.now() - st.roundStartTime < 800) return;
       
-      let droppedId = null;
+      let droppedRestId = null;
       if (event && event.dataTransfer) {
-        droppedId = event.dataTransfer.getData('text/plain');
+        droppedRestId = event.dataTransfer.getData('text/plain');
       }
-      if (!droppedId) return;
+      if (!droppedRestId) return;
 
       st.answered = true;
-      st.lastCorrect = (st.target.req === droppedId);
+      st.lastCorrect = (st.target.req === droppedRestId);
       
       if (st.lastCorrect) {
         st.score++;
@@ -3809,8 +3809,8 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
               <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • Drag &amp; Drop</span>
-              <h3 class="text-xl font-black">Rest Value Equivalence Lab</h3>
-              <p class="text-xs text-slate-300 mt-1">Drag the correct Rest symbol from the bottom and drop it onto the matching Note equation!</p>
+              <h3 class="text-xl font-black">Rest Matcher Game</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag the correct rest symbol from below and drop it onto the matching note!</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
@@ -3825,47 +3825,37 @@
               <button type="button" onclick="mountEmbeddedRestMatcherGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
             </div>
           ` : `
-            <div class="flex flex-col gap-6 my-6">
-              
+            <div class="flex justify-center my-6">
               <div 
-                ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-indigo-950');" : ""}"
-                ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950');" : ""}"
-                ondrop="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950'); handleRestDrop(event);" : ""}"
-                class="bg-slate-800 border-2 border-dashed border-slate-500 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-colors relative shadow-inner">
-                
-                <div class="text-xs font-bold text-slate-400 absolute top-4 uppercase tracking-widest">Drop Matching Rest Here</div>
-                
-                ${st.answered && st.lastCorrect ? `
-                  <div class="text-emerald-400 mb-2">${renderEngravedNoteDarkSVG(st.target.req, 'w-20 h-24')}</div>
-                  <div class="font-black text-emerald-300 mt-2">Matches ${st.target.name} (${st.target.beats})</div>
-                ` : `
-                  <div class="mt-4">${st.target.html()}</div>
-                  <div class="font-black text-slate-300 mt-3">${st.target.name} (${st.target.beats})</div>
-                `}
+                ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-slate-700');" : ""}"
+                ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-slate-700');" : ""}"
+                ondrop="${!st.answered ? "handleRestDrop(event)" : ""}"
+                class="min-w-[8rem] px-6 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-slate-200 shadow-inner transition-colors ${!st.answered ? 'hover:border-amber-400' : 'opacity-50'}">
+                ${st.target.html()}
               </div>
+            </div>
 
-              ${st.answered ? `
-                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3 mb-2">
-                  <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. The equivalent silence was the <strong>${restMatcherDraggables.find(d=>d.id===st.target.req).name}</strong>.`}</span>
-                  <button type="button" onclick="nextRestMatcherRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                    ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                  </button>
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. That note requires a <strong>${restMatcherDraggables.find(d=>d.id===st.target.req).name}</strong>.`}</span>
+                <button type="button" onclick="nextRestMatcherRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              ${st.options.map(opt => `
+                <div draggable="${!st.answered}" ondragstart="handleRestDragStart(event, '${opt.id}')"
+                  class="p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center ${
+                  st.answered && opt.id === st.target.req ? 'border-emerald-400 bg-emerald-950/60' : 
+                  st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700 cursor-grab active:cursor-grabbing'
+                }">
+                  <div class="text-slate-300 pointer-events-none mb-2">${renderEngravedNoteDarkSVG(opt.id, 'w-12 h-16')}</div>
+                  <div class="font-black text-sm text-white pointer-events-none">${opt.name}</div>
+                  <div class="text-[10px] font-bold text-slate-400 mt-0.5 pointer-events-none">${opt.beats}</div>
                 </div>
-              ` : ''}
-
-              <!-- Draggable Options -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                ${st.options.map(opt => `
-                  <div draggable="${!st.answered}" ondragstart="handleRestDragStart(event, '${opt.id}')"
-                    class="p-4 rounded-2xl border-2 text-center flex flex-col items-center justify-center transition-all ${
-                    !st.answered ? 'border-slate-600 bg-slate-700 cursor-grab active:cursor-grabbing hover:border-amber-400 hover:bg-slate-600' : 'border-slate-700 bg-slate-800 opacity-50'
-                  }">
-                    <div class="text-slate-300 pointer-events-none mb-2">${renderEngravedNoteDarkSVG(opt.id, 'w-12 h-16')}</div>
-                    <div class="font-black text-sm text-white pointer-events-none">${opt.name}</div>
-                    <div class="text-[10px] font-bold text-slate-400 mt-0.5 pointer-events-none">${opt.beats}</div>
-                  </div>
-                `).join('')}
-              </div>
+              `).join('')}
             </div>
           `}
         </div>
@@ -7775,10 +7765,10 @@
         if (savedSession) {
           const parsed = JSON.parse(savedSession);
           if (parsed && parsed.key) {
-            app.currentUser = parsed;
+            window.app.currentUser = parsed;
             const db = getAllUserRecords();
             if (db[parsed.key]) {
-              state = {
+              window.state = {
                 stats: db[parsed.key].stats || { tokens: 10, testsTaken: 0 },
                 inventory: db[parsed.key].inventory || [],
                 testHistory: db[parsed.key].testHistory || [],

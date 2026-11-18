@@ -2732,7 +2732,7 @@
     // DURATION & RHYTHM MINIGAMES (BEAT TAP, CROTCHET, QUAVER, LONG NOTE, DRUM & DICTATION)
     // ==========================================
     
-    let beatTapState = { running: false, speedIdx: 0, speeds: [80, 105, 130, 155], streak: 0, lastBeatTime: 0, intervalId: null, completed: false };
+    let beatTapState = { running: false, speedIdx: 0, speeds: [80, 105, 130, 155], streak: 0, lastBeatTime: 0, hitThisBeat: false, intervalId: null, completed: false };
 
     function stopBeatTapLoop() {
       if (beatTapState.intervalId) clearInterval(beatTapState.intervalId);
@@ -2743,7 +2743,7 @@
     function mountEmbeddedBeatTapGame(target) {
       if (!target) return;
       stopBeatTapLoop();
-      beatTapState = { running: false, speedIdx: 0, speeds: [80, 105, 130, 155], streak: 0, lastBeatTime: 0, intervalId: null, completed: false };
+      beatTapState = { running: false, speedIdx: 0, speeds: [80, 105, 130, 155], streak: 0, lastBeatTime: 0, hitThisBeat: false, intervalId: null, completed: false };
       renderBeatTapUI(target);
     }
 
@@ -2756,6 +2756,7 @@
 
       const tick = () => {
         beatTapState.lastBeatTime = performance.now();
+        beatTapState.hitThisBeat = false;
         playTonePitch(660, 0.08, 0.3, 'sine');
         const pulseEl = document.getElementById('beat-tap-pulse-ring');
         if (pulseEl) {
@@ -2770,6 +2771,15 @@
 
     function handleBeatTapHit() {
       if (!beatTapState.running || beatTapState.completed) return;
+      
+      // Anti-Spam: Break streak if they mash multiple times on the same beat
+      if (beatTapState.hitThisBeat) {
+        beatTapState.streak = 0;
+        playTonePitch(180, 0.12, 0.25, 'sawtooth');
+        renderBeatTapUI();
+        return;
+      }
+
       const bpm = beatTapState.speeds[beatTapState.speedIdx];
       const beatMs = 60000 / bpm;
       const now = performance.now();
@@ -2777,6 +2787,7 @@
       const dist = Math.min(diff, Math.abs(beatMs - diff));
 
       if (dist <= beatMs * 0.36) {
+        beatTapState.hitThisBeat = true;
         beatTapState.streak++;
         playTonePitch(880, 0.07, 0.25, 'triangle');
         if (beatTapState.streak >= 8) {
@@ -2914,6 +2925,11 @@
       } else {
         crotchetGameState.mistakes++;
         playTonePitch(165, 0.12, 0.3, 'sawtooth');
+        // Anti-Spam: Stop game if too many mashed mistakes occur
+        if (crotchetGameState.mistakes >= 3) {
+          stopCrotchetGameLoop();
+          showAppModal('Spam Detected', 'Avoid auto-clicking or tapping on rests! Try again.', false);
+        }
       }
       renderCrotchetGameUI();
     }
@@ -2980,7 +2996,7 @@
     // ==========================================
     // MINIGAME 3: 8-BEAT QUAVER & CROTCHET SIGHT-READER
     // ==========================================
-    let quaverGameState = { running: false, speedIdx: 0, speeds: [72, 88, 104, 120], pattern: [], halfStepIdx: -8, hitSlots: [], intervalId: null, completed: false };
+    let quaverGameState = { running: false, speedIdx: 0, speeds: [72, 88, 104, 120], pattern: [], halfStepIdx: -8, hitSlots: [], mistakes: 0, intervalId: null, completed: false };
 
     function stopQuaverGameLoop() {
       if (quaverGameState.intervalId) clearInterval(quaverGameState.intervalId);
@@ -2996,7 +3012,7 @@
     function mountEmbeddedQuaverGame(target) {
       if (!target) return;
       stopQuaverGameLoop();
-      quaverGameState = { running: false, speedIdx: 0, speeds: [72, 88, 104, 120], pattern: generateQuaverPattern(), halfStepIdx: -8, hitSlots: [], intervalId: null, completed: false };
+      quaverGameState = { running: false, speedIdx: 0, speeds: [72, 88, 104, 120], pattern: generateQuaverPattern(), halfStepIdx: -8, hitSlots: [], mistakes: 0, intervalId: null, completed: false };
       renderQuaverGameUI(target);
     }
 
@@ -3007,6 +3023,7 @@
       quaverGameState.pattern = generateQuaverPattern();
       quaverGameState.halfStepIdx = -9;
       quaverGameState.hitSlots = [];
+      quaverGameState.mistakes = 0;
       quaverGameState.running = true;
 
       const step = () => {
@@ -3016,14 +3033,20 @@
         else if (h >= 0 && h < 16 && h % 2 === 0) playTonePitch(523.25, 0.05, 0.18, 'sine');
         else if (h >= 16) {
           stopQuaverGameLoop();
-          if (quaverGameState.speedIdx < 3) {
-            quaverGameState.speedIdx++;
-            startQuaverSpeed();
-            return;
+          const required = quaverGameState.pattern.reduce((acc, val) => acc + (val === 'quavers' ? 2 : val === 'crotchet' ? 1 : 0), 0);
+          
+          if (quaverGameState.hitSlots.length >= Math.max(1, required - 2) && quaverGameState.mistakes <= 2) {
+            if (quaverGameState.speedIdx < 3) {
+              quaverGameState.speedIdx++;
+              startQuaverSpeed();
+              return;
+            } else {
+              quaverGameState.completed = true;
+              addTokens(10);
+              showAppModal('Quaver & Crotchet Sight-Reader Complete!', 'You completed all 4 speeds and earned +10 Tokens!', true);
+            }
           } else {
-            quaverGameState.completed = true;
-            addTokens(10);
-            showAppModal('Quaver & Crotchet Sight-Reader Complete!', 'You completed all 4 speeds and earned +10 Tokens!', true);
+            showAppModal('Try Again', 'You missed too many notes or tapped on rests.', false);
           }
         }
         renderQuaverGameUI();
@@ -3039,12 +3062,26 @@
       const beatIdx = Math.floor(h / 2);
       const isAnd = h % 2 === 1;
       const kind = quaverGameState.pattern[beatIdx];
+      
+      let isCorrect = false;
       if ((kind === 'crotchet' && !isAnd) || kind === 'quavers') {
-        if (!quaverGameState.hitSlots.includes(h)) quaverGameState.hitSlots.push(h);
-        playTonePitch(880, 0.07, 0.3, 'triangle');
-      } else {
-        playTonePitch(165, 0.1, 0.25, 'sawtooth');
+        if (!quaverGameState.hitSlots.includes(h)) {
+          isCorrect = true;
+          quaverGameState.hitSlots.push(h);
+          playTonePitch(880, 0.07, 0.3, 'triangle');
+        }
       }
+      
+      if (!isCorrect) {
+        quaverGameState.mistakes++;
+        playTonePitch(165, 0.1, 0.25, 'sawtooth');
+        // Anti-Spam: Stop game if 4 or more mashed mistakes occur
+        if (quaverGameState.mistakes >= 4) {
+           stopQuaverGameLoop();
+           showAppModal('Spam Detected', 'Avoid auto-clicking! Tap only on the correct notes.', false);
+        }
+      }
+      
       renderQuaverGameUI();
     }
 

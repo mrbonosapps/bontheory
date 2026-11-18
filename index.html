@@ -809,6 +809,15 @@
       if (type === 'semibreve') {
         return `<svg viewBox="0 0 64 80" class="${sizeClass} mx-auto"><ellipse cx="32" cy="54" rx="16" ry="10.5" fill="none" stroke="currentColor" stroke-width="5" /><ellipse cx="32" cy="54" rx="9" ry="6.5" transform="rotate(-24 32 54)" fill="none" stroke="currentColor" stroke-width="2" /></svg>`;
       }
+      if (type === 'semibreveRest') {
+        return `<svg viewBox="0 0 64 80" class="${sizeClass} mx-auto"><line x1="12" y1="36" x2="52" y2="36" stroke="currentColor" stroke-width="2" /><rect x="20" y="36" width="24" height="10" fill="currentColor" /></svg>`;
+      }
+      if (type === 'minimRest') {
+        return `<svg viewBox="0 0 64 80" class="${sizeClass} mx-auto"><line x1="12" y1="44" x2="52" y2="44" stroke="currentColor" stroke-width="2" /><rect x="20" y="34" width="24" height="10" fill="currentColor" /></svg>`;
+      }
+      if (type === 'quaverRest') {
+        return `<svg viewBox="0 0 64 80" class="${sizeClass} mx-auto"><circle cx="24" cy="28" r="4.5" fill="currentColor" /><path d="M24 28 C 36 22, 42 38, 34 50 L 24 68" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" /></svg>`;
+      }
       if (type === 'dottedMinim') {
         return `<svg viewBox="0 0 64 80" class="${sizeClass} mx-auto"><line x1="39" y1="12" x2="39" y2="56" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" /><ellipse cx="28" cy="57" rx="11.5" ry="7.8" transform="rotate(-22 28 57)" fill="none" stroke="currentColor" stroke-width="3.8" /><circle cx="48" cy="57" r="3.5" fill="currentColor" /></svg>`;
       }
@@ -1347,7 +1356,7 @@
           },
           {
             level: 2,
-            title: 'Level 2: Quavers & Beaming Rules',
+            title: 'Level 2: Quavers, Beaming & Rests',
             lessons: [
               {
                 lessonNum: 1,
@@ -1434,6 +1443,41 @@
                     </div>
                   </div>
                 `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Rests in Music',
+                summary: 'Learn the symbols for musical silence and match them to their note equivalents.',
+                toolType: 'restMatcherGame',
+                contentHtml: `
+                  <p>Just as notes tell us when to play, <strong>Rests</strong> tell us when to be completely silent for an exact count of beats.</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex flex-col items-center text-center shadow-sm">
+                      <div class="h-20 flex items-center justify-center text-slate-800">${renderEngravedNoteDarkSVG('semibreveRest', 'w-16 h-16')}</div>
+                      <h4 class="font-black text-slate-800 text-sm">Semibreve Rest</h4>
+                      <p class="text-[10px] text-slate-500 mt-1 mb-2">Hangs below the 4th line</p>
+                      <div class="font-black text-amber-600 text-sm mt-auto">4 Beats (Whole Bar)</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex flex-col items-center text-center shadow-sm">
+                      <div class="h-20 flex items-center justify-center text-slate-800">${renderEngravedNoteDarkSVG('minimRest', 'w-16 h-16')}</div>
+                      <h4 class="font-black text-slate-800 text-sm">Minim Rest</h4>
+                      <p class="text-[10px] text-slate-500 mt-1 mb-2">Sits on top of the 3rd line</p>
+                      <div class="font-black text-amber-600 text-sm mt-auto">2 Beats</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex flex-col items-center text-center shadow-sm">
+                      <div class="h-20 flex items-center justify-center text-slate-800">${renderEngravedNoteDarkSVG('rest', 'w-12 h-16')}</div>
+                      <h4 class="font-black text-slate-800 text-sm">Crotchet Rest</h4>
+                      <p class="text-[10px] text-slate-500 mt-1 mb-2">Looks like a squiggly 'Z' and 'C'</p>
+                      <div class="font-black text-amber-600 text-sm mt-auto">1 Beat</div>
+                    </div>
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex flex-col items-center text-center shadow-sm">
+                      <div class="h-20 flex items-center justify-center text-slate-800">${renderEngravedNoteDarkSVG('quaverRest', 'w-12 h-16')}</div>
+                      <h4 class="font-black text-slate-800 text-sm">Quaver Rest</h4>
+                      <p class="text-[10px] text-slate-500 mt-1 mb-2">Looks like the number '7'</p>
+                      <div class="font-black text-amber-600 text-sm mt-auto">½ Beat</div>
+                    </div>
+                  </div>
+                `
               }
             ],
             testQuestions: [
@@ -1446,7 +1490,12 @@
               { q: 'If you see two quavers connected by a thick line at their stems, what is the line called?', options: ['A beam', 'A tail', 'A slur', 'A tie'], correct: 0 },
               { q: 'Does beaming change the value of the quavers?', options: ['No, they are still worth 1/2 beat each', 'Yes, it makes them worth 1 beat each', 'Yes, it turns them into crotchets', 'Yes, it makes them twice as fast'], correct: 0 },
               { q: 'Can beamed quavers have stems pointing down?', options: ['Yes, if the notes are high on the staff', 'No, beamed notes must always point up', 'Only if there are 4 of them', 'No, beams only work on stems pointing up'], correct: 0 },
-              { q: 'If you draw a single quaver with a stem pointing UP, the tail curves:', options: ['Downwards and to the right', 'Upwards and to the left', 'Straight out', 'Downwards and to the left'], correct: 0 }
+              { q: 'If you draw a single quaver with a stem pointing UP, the tail curves:', options: ['Downwards and to the right', 'Upwards and to the left', 'Straight out', 'Downwards and to the left'], correct: 0 },
+              { q: 'Which rest symbol hangs below the 4th line and is worth 4 beats?', options: ['Semibreve Rest', 'Minim Rest', 'Crotchet Rest', 'Quaver Rest'], correct: 0 },
+              { q: 'Which rest symbol sits on top of the 3rd line and is worth 2 beats?', options: ['Minim Rest', 'Semibreve Rest', 'Crotchet Rest', 'Quaver Rest'], correct: 0 },
+              { q: 'Which rest is worth exactly 1 beat of silence?', options: ['Crotchet Rest', 'Minim Rest', 'Quaver Rest', 'Semibreve Rest'], correct: 0 },
+              { q: 'What does a Quaver Rest look like?', options: ['The number 7', 'A squiggly Z and C', 'A solid black rectangle', 'A hollow circle'], correct: 0 },
+              { q: 'How many beats of silence is a Quaver Rest worth?', options: ['1/2 beat', '1 beat', '2 beats', '4 beats'], correct: 0 }
             ]
           }
         ]
@@ -2559,6 +2608,7 @@
       else if (lesson.toolType === 'longNoteGame') mountEmbeddedLongNoteGame(toolBox);
       else if (lesson.toolType === 'stemDirectionGame') mountEmbeddedStemDirectionGame(toolBox);
       else if (lesson.toolType === 'quaverBuilderGame') mountEmbeddedQuaverBuilderGame(toolBox);
+      else if (lesson.toolType === 'restMatcherGame') mountEmbeddedRestMatcherGame(toolBox);
       else if (lesson.toolType === 'pitchWaveGame') mountEmbeddedPitchWaveGame(toolBox);
       else if (lesson.toolType === 'melodicContourGame') mountEmbeddedMelodicContourGame(toolBox);
       else if (lesson.toolType === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolBox);
@@ -4660,6 +4710,149 @@
     }
 
     // ==========================================
+    // MINIGAME: REST MATCHER CHALLENGE (DRAG & DROP)
+    // ==========================================
+    let restMatcherState = {
+      round: 1, totalRounds: 10, score: 0,
+      target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0
+    };
+
+    const restMatcherPairs = [
+      { note: 'semibreve', rest: 'semibreveRest', name: 'Semibreve', beats: '4 Beats' },
+      { note: 'minim', rest: 'minimRest', name: 'Minim', beats: '2 Beats' },
+      { note: 'crotchet', rest: 'rest', name: 'Crotchet', beats: '1 Beat' },
+      { note: 'singleQuaver', rest: 'quaverRest', name: 'Quaver', beats: '½ Beat' }
+    ];
+
+    function setupRestMatcherRound() {
+      const randIdx = Math.floor(Math.random() * restMatcherPairs.length);
+      restMatcherState.target = restMatcherPairs[randIdx];
+      restMatcherState.options = [...restMatcherPairs].sort(() => Math.random() - 0.5);
+      restMatcherState.answered = false;
+      restMatcherState.lastCorrect = false;
+      restMatcherState.roundStartTime = performance.now();
+    }
+
+    function mountEmbeddedRestMatcherGame(target) {
+      if (!target) return;
+      restMatcherState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
+      setupRestMatcherRound();
+      renderRestMatcherGameUI(target);
+    }
+
+    function handleRestMatcherDragStart(e, restType) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', restType);
+        e.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleRestMatcherDrop(event) {
+      if (event) event.preventDefault();
+      const st = restMatcherState;
+      if (st.answered || st.completed) return;
+      if (performance.now() - st.roundStartTime < 800) return; // debounce
+      
+      let droppedRest = null;
+      if (event && event.dataTransfer) {
+        droppedRest = event.dataTransfer.getData('text/plain');
+      }
+      if (!droppedRest) return;
+      
+      st.answered = true;
+      st.lastCorrect = (st.target.rest === droppedRest);
+      
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextRestMatcherRound() {
+      const st = restMatcherState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupRestMatcherRound();
+        renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Rest Matcher Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderRestMatcherGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = restMatcherState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-indigo-400">10-Round Challenge • Drag &amp; Drop</span>
+              <h3 class="text-xl font-black">Rest Matcher</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag the correct Rest symbol onto its matching Note equivalent!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Rest Matcher Complete!</h4>
+              <p class="text-xs text-slate-200">You matched <strong>${st.score} / ${st.totalRounds}</strong> rests correctly and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedRestMatcherGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col md:flex-row gap-6">
+              
+              <!-- Draggable Options -->
+              <div class="flex-1 space-y-3">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">Drag a Rest:</div>
+                <div class="grid grid-cols-2 gap-3">
+                  ${st.options.map(opt => `
+                    <div draggable="${!st.answered}" ondragstart="handleRestMatcherDragStart(event, '${opt.rest}')" class="p-4 bg-slate-800 border-2 border-slate-600 rounded-2xl text-center flex items-center justify-center min-h-[100px] ${!st.answered ? 'cursor-grab hover:border-indigo-400' : 'opacity-50'}">
+                      <div class="text-indigo-300 pointer-events-none">${renderEngravedNoteDarkSVG(opt.rest, 'w-12 h-16')}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- Drop Zone -->
+              <div class="flex-1">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center mb-3">Drop onto note:</div>
+                <div 
+                  ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-indigo-400', 'bg-slate-800');" : ""}"
+                  ondragleave="${!st.answered ? "this.classList.remove('border-indigo-400', 'bg-slate-800');" : ""}"
+                  ondrop="${!st.answered ? "this.classList.remove('border-indigo-400', 'bg-slate-800'); handleRestMatcherDrop(event);" : ""}"
+                  class="bg-slate-900 border-2 border-dashed border-slate-500 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[200px] transition-colors relative overflow-hidden">
+                  
+                  <div class="text-xs font-bold text-slate-400 absolute top-4 uppercase tracking-widest">${st.target.name} (${st.target.beats})</div>
+                  <div class="text-white mt-6 pointer-events-none">${renderEngravedNoteDarkSVG(st.target.note, 'w-16 h-20')}</div>
+                </div>
+              </div>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : '✗ Incorrect. Check the note value carefully!'}</span>
+                <button type="button" onclick="nextRestMatcherRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+          `}
+        </div>
+      `;
+    }
+
     // 6 CONCEPTS OF MUSIC CURRICULUM & UNIQUE 15-QUESTION TESTS
     // ==========================================
     // INTERACTIVE MINIGAME: STAGGERED TEXTURE SOUND LAB

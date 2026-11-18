@@ -861,50 +861,326 @@
     // RESTORED MISSING MINIGAMES (STAFF NOTATION, DYNAMICS CHALLENGE, TIMBRE)
     // ==========================================
     
-    // --- TIMBRE SOUNDBOARD ---
+    // --- TIMBRE SOUNDBOARD & DETECTIVE GAME ---
     const timbreInstruments = [
-      { id: 'violin', name: 'Violin', family: 'Strings', desc: 'Warm, singing, and rich.', icon: 'fa-violin', freq: 440, wave: 'sawtooth' },
-      { id: 'trumpet', name: 'Trumpet', family: 'Brass', desc: 'Brassy, bright, and metallic.', icon: 'fa-trumpet', freq: 466.16, wave: 'square' },
-      { id: 'doublebass', name: 'Double Bass', family: 'Strings', desc: 'Rumbling, dull, and woody.', icon: 'fa-guitar', freq: 65.41, wave: 'sine' },
-      { id: 'harp', name: 'Harp', family: 'Strings', desc: 'Shimmering and delicate.', icon: 'fa-music', freq: 523.25, wave: 'triangle' },
-      { id: 'snare', name: 'Snare Drum', family: 'Percussion', desc: 'Short, crisp, and crack-like.', icon: 'fa-drum', type: 'snare' },
-      { id: 'bassdrum', name: 'Bass Drum', family: 'Percussion', desc: 'Deep, heavy thud.', icon: 'fa-drum', type: 'kick' },
-      { id: 'xylo', name: 'Xylophone', family: 'Percussion', desc: 'Wooden, dry, and hollow.', icon: 'fa-keyboard', freq: 783.99, wave: 'square' },
-      { id: 'chimes', name: 'Tubular Bells', family: 'Percussion', desc: 'Resonant, ringing, and bright.', icon: 'fa-bell', freq: 1046.50, wave: 'sine' }
+      { id: 'violin', name: 'Violin', family: 'Strings', desc: 'Warm, singing, and rich.', iconHtml: `<svg viewBox="0 0 24 24" class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20 M8 7c0-3 8-3 8 0s-8 3-8 5 8 2 8 5-8 3-8 0"/></svg>` },
+      { id: 'trumpet', name: 'Trumpet', family: 'Brass', desc: 'Brassy, bright, and metallic.', iconHtml: `<svg viewBox="0 0 24 24" class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h10 M14 12l4-4h4v8h-4l-4-4 M8 8v4 M11 8v4"/></svg>` },
+      { id: 'doublebass', name: 'Double Bass', family: 'Strings', desc: 'Rumbling, dull, and woody.', iconHtml: `<svg viewBox="0 0 24 24" class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20 M7 9c0-4 10-4 10 0s-10 3-10 6 10 2 10 6-10 4-10 0"/></svg>` },
+      { id: 'harp', name: 'Harp', family: 'Strings', desc: 'Shimmering and delicate.', iconHtml: `<svg viewBox="0 0 24 24" class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22L12 2c0 0 8 2 8 10v10H4z M8 22v-12 M12 22v-16 M16 22v-10"/></svg>` },
+      { id: 'snare', name: 'Snare Drum', family: 'Percussion', desc: 'Short, crisp, and crack-like.', iconHtml: `<svg viewBox="0 0 24 24" class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v10H4z M4 10l8-6 8 6 M8 20L4 10 M16 20l4-10"/></svg>` },
+      { id: 'bassdrum', name: 'Bass Drum', family: 'Percussion', desc: 'Deep, heavy thud.', iconHtml: `<svg viewBox="0 0 24 24" class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 4v16 M4 12h16"/></svg>` },
+      { id: 'xylo', name: 'Xylophone', family: 'Percussion', desc: 'Wooden, dry, and hollow.', iconHtml: `<svg viewBox="0 0 24 24" class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16 M5 12h14 M6 16h12 M7 20h10 M8 4l2 -2 M16 4l-2 -2"/></svg>` },
+      { id: 'chimes', name: 'Tubular Bells', family: 'Percussion', desc: 'Resonant, ringing, and bright.', iconHtml: `<svg viewBox="0 0 24 24" class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16 M6 4v16 M10 4v12 M14 4v14 M18 4v10"/></svg>` }
     ];
 
+    let timbreGameState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, audioPlayed: false };
+
+    function setupTimbreRound() {
+      const randIdx = Math.floor(Math.random() * timbreInstruments.length);
+      timbreGameState.target = timbreInstruments[randIdx];
+      timbreGameState.options = [...timbreInstruments].sort(() => Math.random() - 0.5);
+      timbreGameState.answered = false;
+      timbreGameState.lastCorrect = false;
+      timbreGameState.audioPlayed = false;
+    }
+
     function mountEmbeddedTimbreSoundboard(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
+      timbreGameState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, audioPlayed: false };
+      setupTimbreRound();
+      renderTimbreSoundboardUI(target);
+    }
+
+    function playTimbreMystery() {
+      if (!timbreGameState.target) return;
+      timbreGameState.audioPlayed = true;
+      playTimbreInstrument(timbreGameState.target.id);
+      renderTimbreSoundboardUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function handleTimbreDragStart(e, id) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleTimbreDrop(event) {
+      if (event) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('border-emerald-400', 'bg-emerald-950/40');
+      }
+      const st = timbreGameState;
+      if (st.answered || st.completed) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the mystery instrument before guessing!', false); return; }
+      
+      let droppedId = null;
+      if (event && event.dataTransfer) {
+        droppedId = event.dataTransfer.getData('text/plain');
+      }
+      if (!droppedId) return;
+
+      st.answered = true;
+      st.lastCorrect = (st.target.id === droppedId);
+      
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderTimbreSoundboardUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextTimbreRound() {
+      const st = timbreGameState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupTimbreRound();
+        renderTimbreSoundboardUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderTimbreSoundboardUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Timbre Detective Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderTimbreSoundboardUI(target) {
+      if (!target) return;
+      const st = timbreGameState;
       target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white border border-slate-800 space-y-6">
-          <div class="border-b border-slate-800 pb-4">
-            <span class="text-[11px] font-black uppercase tracking-widest text-emerald-400">Performing Media & Timbre Explorer</span>
-            <h3 class="text-xl font-black text-white">Interactive Performing Media Soundboard</h3>
-            <p class="text-xs text-slate-300 mt-1">Click the instruments below to hear their unique tone colours and read the adjectives used to describe them.</p>
+        <div class="space-y-6">
+          <!-- PART 1: INTERACTIVE SOUNDBOARD -->
+          <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white border border-slate-800 space-y-6 shadow-md">
+            <div class="border-b border-slate-800 pb-4">
+              <span class="text-[11px] font-black uppercase tracking-widest text-emerald-400">Interactive Simulator</span>
+              <h3 class="text-xl font-black text-white mt-1">Performing Media Soundboard</h3>
+              <p class="text-xs text-slate-300 mt-1">Click the instruments below to hear their unique realistic timbres and read the adjectives used to describe them.</p>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              ${timbreInstruments.map(inst => `
+                <button onclick="playTimbreInstrument('${inst.id}')" class="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 hover:border-emerald-400 text-left transition-all group flex flex-col justify-between">
+                  <div>
+                    <div class="text-[9px] font-black uppercase tracking-wider text-emerald-500 mb-1">${inst.family}</div>
+                    <div class="w-12 h-12 rounded-xl bg-slate-950 text-emerald-400 flex items-center justify-center mb-3 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
+                      ${inst.iconHtml}
+                    </div>
+                    <div class="font-black text-sm text-white leading-tight">${inst.name}</div>
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-2 italic border-t border-slate-600/50 pt-2">"${inst.desc}"</div>
+                </button>
+              `).join('')}
+            </div>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            ${timbreInstruments.map(inst => `
-              <button onclick="playTimbreInstrument('${inst.id}')" class="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 hover:border-emerald-400 text-left transition-all group">
-                <div class="w-12 h-12 rounded-xl bg-slate-950 text-emerald-400 flex items-center justify-center text-2xl mb-3 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
-                  <i class="fa-solid ${inst.icon}"></i>
+
+          <!-- PART 2: TIMBRE DETECTIVE DRAG & DROP GAME -->
+          <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white border border-slate-800 space-y-6 shadow-md">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • Drag &amp; Drop</span>
+                <h3 class="text-xl font-black mt-1">Timbre Detective Game</h3>
+                <p class="text-xs text-slate-300 mt-1">Listen to the mystery sound, then drag the matching instrument into the drop zone!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+                <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+              </div>
+            </div>
+
+            ${st.completed ? `
+              <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+                <h4 class="text-xl font-black text-emerald-300">Timbre Detective Complete!</h4>
+                <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
+                <button type="button" onclick="mountEmbeddedTimbreSoundboard(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+              </div>
+            ` : `
+              <div class="flex flex-col md:flex-row gap-6">
+                <!-- Drop Zone -->
+                <div class="flex-1 flex flex-col justify-center space-y-4">
+                  <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+                    <span class="text-xs font-black text-amber-300 text-center sm:text-left">${st.audioPlayed ? 'Which instrument was that?' : 'Click to hear the mystery timbre!'}</span>
+                    <button type="button" onclick="playTimbreMystery()" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow-lg shrink-0">
+                      <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Sound
+                    </button>
+                  </div>
+                  
+                  <div 
+                    ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-emerald-400', 'bg-emerald-950/40');" : ""}"
+                    ondragleave="${!st.answered ? "this.classList.remove('border-emerald-400', 'bg-emerald-950/40');" : ""}"
+                    ondrop="${!st.answered ? "handleTimbreDrop(event)" : ""}"
+                    class="bg-slate-800/80 border-2 border-dashed border-slate-500 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[180px] transition-colors relative shadow-inner">
+                    
+                    <div class="text-xs font-bold text-slate-400 absolute top-4 uppercase tracking-widest">Drop Answer Here</div>
+                    
+                    ${st.answered && st.lastCorrect ? `
+                      <div class="w-16 h-16 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center mt-3 shadow-lg">
+                        ${st.target.iconHtml}
+                      </div>
+                      <div class="font-black text-lg text-emerald-400 mt-3">${st.target.name}</div>
+                    ` : `
+                      <div class="text-slate-500 text-5xl py-4"><i class="fa-solid fa-question"></i></div>
+                    `}
+                  </div>
+
+                  ${st.answered ? `
+                    <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. That was a <strong>${st.target.name}</strong>.`}</span>
+                      <button type="button" onclick="nextTimbreRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                        ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                      </button>
+                    </div>
+                  ` : ''}
                 </div>
-                <div class="text-[10px] font-black uppercase text-emerald-500 mb-0.5">${inst.family}</div>
-                <div class="font-black text-sm text-white">${inst.name}</div>
-                <div class="text-[11px] text-slate-400 mt-1 italic">"${inst.desc}"</div>
-              </button>
-            `).join('')}
+
+                <!-- Draggable Instrument Palette -->
+                <div class="flex-1 grid grid-cols-2 gap-2">
+                  ${st.options.map(opt => `
+                    <div draggable="${!st.answered}" ondragstart="handleTimbreDragStart(event, '${opt.id}')"
+                      class="p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center ${
+                      st.answered && opt.id === st.target.id ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_10px_rgba(52,211,153,0.3)]' : 
+                      st.answered ? 'border-slate-700 bg-slate-800 opacity-40' : 'border-slate-600 bg-slate-700 hover:border-amber-400 cursor-grab active:cursor-grabbing hover:bg-slate-600'
+                    }">
+                      <div class="w-10 h-10 rounded-xl bg-slate-900 text-slate-300 flex items-center justify-center mb-2 pointer-events-none">
+                        ${opt.iconHtml}
+                      </div>
+                      <div class="font-black text-xs text-white pointer-events-none leading-tight">${opt.name}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `}
           </div>
         </div>
       `;
     }
 
     function playTimbreInstrument(id) {
-      const inst = timbreInstruments.find(i => i.id === id);
-      if (!inst) return;
-      if (inst.type === 'snare' || inst.type === 'kick') {
-        playDrumSound(inst.type);
-      } else {
-        playTonePitch(inst.freq, 0.5, 0.4, inst.wave);
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+
+      if (id === 'violin') {
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(440, now); 
+        const lfo = ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(5.5, now); 
+        const lfoGain = ctx.createGain();
+        lfoGain.gain.setValueAtTime(4, now); 
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(2500, now);
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.4, now + 0.15); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+        osc.start(now); lfo.start(now);
+        osc.stop(now + 1.25); lfo.stop(now + 1.25);
+      } else if (id === 'trumpet') {
+        const osc = ctx.createOscillator();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(466.16 * 0.95, now); 
+        osc.frequency.exponentialRampToValueAtTime(466.16, now + 0.05); 
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1000, now);
+        filter.frequency.linearRampToValueAtTime(4000, now + 0.1); 
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.4, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        osc.start(now);
+        osc.stop(now + 0.85);
+      } else if (id === 'doublebass') {
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(65.41, now); 
+        osc.connect(gain);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.6, now + 0.02); 
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+        osc.start(now);
+        osc.stop(now + 1.6);
+      } else if (id === 'harp') {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now); 
+        osc.connect(gain);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.5, now + 0.01); 
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+        osc.start(now);
+        osc.stop(now + 2.1);
+      } else if (id === 'snare') {
+        const bufferSize = ctx.sampleRate * 0.2;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'highpass';
+        noiseFilter.frequency.value = 1000;
+        noise.connect(noiseFilter);
+        noiseFilter.connect(gain);
+        const toneOsc = ctx.createOscillator();
+        toneOsc.type = 'triangle';
+        toneOsc.frequency.setValueAtTime(250, now);
+        const toneGain = ctx.createGain();
+        toneGain.gain.setValueAtTime(0.4, now);
+        toneGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        toneOsc.connect(toneGain);
+        toneGain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        noise.start(now);
+        toneOsc.start(now);
+        noise.stop(now + 0.2);
+        toneOsc.stop(now + 0.2);
+      } else if (id === 'bassdrum') {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.1); 
+        osc.connect(gain);
+        gain.gain.setValueAtTime(0.8, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } else if (id === 'xylo') {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(783.99, now); 
+        osc.connect(gain);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.6, now + 0.005); 
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15); 
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (id === 'chimes') {
+        const freqs = [1046.50, 1420, 1850, 2400];
+        freqs.forEach(f => {
+          const osc = ctx.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, now);
+          const fGain = ctx.createGain();
+          fGain.gain.setValueAtTime(0, now);
+          fGain.gain.linearRampToValueAtTime(0.15, now + 0.01);
+          fGain.gain.exponentialRampToValueAtTime(0.01, now + 2.5); 
+          osc.connect(fGain);
+          fGain.connect(gain);
+          osc.start(now);
+          osc.stop(now + 2.6);
+        });
       }
     }
 
@@ -2226,17 +2502,48 @@
             lessons: [
               {
                 lessonNum: 1,
-                title: 'Lesson 1: Performing Media, Timbre & Descriptive Words',
+                title: 'Lesson 1: How musical sounds are Made',
+                summary: 'Discover how hitting, shaking, scraping, blowing, and electronic means create sound.',
+                toolType: 'soundProductionGame',
+                contentHtml: `
+                  <p>All musical sounds are created by some form of vibration. In both everyday life and musical performance, we produce these vibrations through different actions.</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm">
+                      <div class="font-black text-emerald-800 text-xs uppercase mb-1">Hitting</div>
+                      <p class="text-[11px] text-slate-700 leading-relaxed">Striking an object so it resonates (e.g., a drum or a hammer).</p>
+                    </div>
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm">
+                      <div class="font-black text-emerald-800 text-xs uppercase mb-1">Shaking</div>
+                      <p class="text-[11px] text-slate-700 leading-relaxed">Moving an object back and forth so pieces rattle (e.g., a tambourine or salt shaker).</p>
+                    </div>
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm">
+                      <div class="font-black text-emerald-800 text-xs uppercase mb-1">Scraping</div>
+                      <p class="text-[11px] text-slate-700 leading-relaxed">Dragging an object across a textured surface (e.g., a guiro or cheese grater).</p>
+                    </div>
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm">
+                      <div class="font-black text-emerald-800 text-xs uppercase mb-1">Blowing</div>
+                      <p class="text-[11px] text-slate-700 leading-relaxed">Forcing air through a tube or across a reed (e.g., a flute or whistle).</p>
+                    </div>
+                    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl lg:col-span-2 shadow-sm">
+                      <div class="font-black text-emerald-800 text-xs uppercase mb-1">Electronic</div>
+                      <p class="text-[11px] text-slate-700 leading-relaxed">Generating sound using electrical currents or computers (e.g., a synthesizer or microwave beep).</p>
+                    </div>
+                  </div>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Performing Media, Timbre & Descriptive Words',
                 summary: 'Learn how to describe sound qualities using adjectives.',
-                toolType: null,
+                toolType: 'timbreAdjectiveGame',
                 contentHtml: `
                   <p><strong>Performing Media and Timbre</strong> refer to the unique quality of a sound that allows us to distinguish one instrument from another, even if they are playing the exact same pitch at the same volume.</p>
                   <p>Musicians describe timbre using adjectives like <em>warm, bright, brassy, dark, harsh, woody, or shimmering</em>.</p>
                 `
               },
               {
-                lessonNum: 2,
-                title: 'Lesson 2: Interactive Performing Media Soundboard',
+                lessonNum: 3,
+                title: 'Lesson 3: Interactive Performing Media Soundboard',
                 summary: 'Listen to and identify the timbres of different instruments.',
                 toolType: 'timbreSoundboard',
                 contentHtml: `
@@ -2891,12 +3198,336 @@
       else if (lesson.toolType === 'dynamicsSimulator') mountEmbeddedDynamicsSimulator(toolBox);
       else if (lesson.toolType === 'dynamicsChallengeGame') mountEmbeddedDynamicsChallengeGame(toolBox);
       else if (lesson.toolType === 'articulationGame') mountEmbeddedArticulationGame(toolBox);
+      else if (lesson.toolType === 'soundProductionGame') mountEmbeddedSoundProductionGame(toolBox);
+      else if (lesson.toolType === 'timbreAdjectiveGame') mountEmbeddedTimbreAdjectiveGame(toolBox);
       else if (lesson.toolType === 'timbreSoundboard') mountEmbeddedTimbreSoundboard(toolBox);
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
       else if (lesson.toolType === 'staggeredTextureLab') mountEmbeddedStaggeredTextureLab(toolBox);
       else if (lesson.toolType === 'repeatSignGame') mountEmbeddedRepeatSignGame(toolBox);
       else if (lesson.toolType === 'voltaBracketGame') mountEmbeddedVoltaBracketGame(toolBox);
       else if (lesson.toolType === 'structureFormGame') mountEmbeddedStructureFormGame(toolBox);
+    }
+
+    // ==========================================
+    // MINIGAME: TIMBRE ADJECTIVE CATEGORY MATCH (DRAG & DROP)
+    // ==========================================
+    let timbreAdjState = {
+      completed: false,
+      score: 0,
+      unplaced: [],
+      placed: { bell: [], violin: [], cymbal: [], sticks: [] }
+    };
+
+    const timbreAdjectivesPool = [
+      { word: 'Brassy', cat: 'bell' }, { word: 'Resonant', cat: 'bell' }, { word: 'Ringing', cat: 'bell' },
+      { word: 'Warm', cat: 'violin' }, { word: 'Rich', cat: 'violin' }, { word: 'Smooth', cat: 'violin' },
+      { word: 'Bright', cat: 'cymbal' }, { word: 'Metallic', cat: 'cymbal' }, { word: 'Crashing', cat: 'cymbal' },
+      { word: 'Woody', cat: 'sticks' }, { word: 'Dry', cat: 'sticks' }, { word: 'Hollow', cat: 'sticks' }
+    ];
+
+    function setupTimbreAdjectiveGame() {
+      timbreAdjState = {
+        completed: false,
+        score: 0,
+        unplaced: [...timbreAdjectivesPool].sort(() => Math.random() - 0.5),
+        placed: { bell: [], violin: [], cymbal: [], sticks: [] }
+      };
+    }
+
+    function mountEmbeddedTimbreAdjectiveGame(target) {
+      if (!target) return;
+      setupTimbreAdjectiveGame();
+      renderTimbreAdjectiveGameUI(target);
+    }
+
+    function handleTimbreAdjDragStart(e, wordStr) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', wordStr);
+        e.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleTimbreAdjDrop(e, targetCat) {
+      if (e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('border-amber-400', 'bg-indigo-950/40');
+      }
+      
+      const st = timbreAdjState;
+      if (st.completed) return;
+      
+      let droppedWordStr = null;
+      if (e && e.dataTransfer) {
+        droppedWordStr = e.dataTransfer.getData('text/plain');
+      }
+      if (!droppedWordStr) return;
+
+      const wordObj = st.unplaced.find(w => w.word === droppedWordStr);
+      if (!wordObj) return;
+
+      if (wordObj.cat === targetCat) {
+        st.unplaced = st.unplaced.filter(w => w.word !== droppedWordStr);
+        st.placed[targetCat].push(wordObj);
+        st.score++;
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+        
+        if (st.score === timbreAdjectivesPool.length) {
+          st.completed = true;
+          addTokens(5);
+          showAppModal('Vocabulary Mastered!', 'You successfully categorized all 12 descriptive words and earned +5 Tokens!', true);
+        }
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      
+      renderTimbreAdjectiveGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function renderTimbreAdjectiveGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = timbreAdjState;
+
+      const catHeaders = {
+        bell: { title: 'Bell', icon: 'fa-bell', color: 'text-amber-400' },
+        violin: { title: 'Violin', icon: 'fa-guitar', color: 'text-rose-400' },
+        cymbal: { title: 'Cymbal', icon: 'fa-compact-disc', color: 'text-cyan-400' },
+        sticks: { title: 'Clapping Sticks', icon: 'fa-drumstick-bite', color: 'text-emerald-400' }
+      };
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-emerald-400">Drag &amp; Drop Challenge • +5 Tokens</span>
+              <h3 class="text-xl font-black">Timbre Vocabulary Sorting</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag each descriptive adjective from the word bank into the correct instrument column!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                Score: ${st.score} / 12
+              </span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3 mb-4">
+              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
+              <p class="text-xs text-slate-200">You perfectly matched all adjectives to their instruments and earned <strong>+5 Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedTimbreAdjectiveGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : `
+            <div class="p-4 rounded-xl bg-slate-800 border border-slate-700 mb-2">
+              <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-3 text-center">Word Bank (Drag these)</div>
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                ${st.unplaced.map(w => `
+                  <div draggable="true" ondragstart="handleTimbreAdjDragStart(event, '${w.word}')" class="px-4 py-2 bg-slate-700 border-2 border-slate-500 hover:border-emerald-400 rounded-lg text-sm font-bold cursor-grab active:cursor-grabbing shadow-sm transition-colors">
+                    ${w.word}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `}
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            ${Object.keys(catHeaders).map(catKey => `
+              <div 
+                ondragover="event.preventDefault(); this.classList.add('border-amber-400', 'bg-indigo-950/40');"
+                ondragleave="this.classList.remove('border-amber-400', 'bg-indigo-950/40');"
+                ondrop="handleTimbreAdjDrop(event, '${catKey}')"
+                class="bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-2xl p-4 flex flex-col transition-colors min-h-[160px]">
+                
+                <div class="text-center mb-3 pb-3 border-b border-slate-700/50">
+                  <div class="w-10 h-10 rounded-full bg-slate-900 mx-auto flex items-center justify-center mb-2 shadow-inner">
+                    <i class="fa-solid ${catHeaders[catKey].icon} ${catHeaders[catKey].color}"></i>
+                  </div>
+                  <h4 class="font-black text-sm text-slate-200">${catHeaders[catKey].title}</h4>
+                </div>
+
+                <div class="flex flex-col gap-2 flex-1">
+                  ${st.placed[catKey].map(w => `
+                    <div class="px-3 py-1.5 bg-emerald-950/60 border border-emerald-500 text-emerald-200 rounded-lg text-xs font-bold text-center">
+                      <i class="fa-solid fa-check text-[10px] mr-1"></i> ${w.word}
+                    </div>
+                  `).join('')}
+                  ${st.placed[catKey].length === 0 && !st.completed ? `
+                    <div class="text-[10px] text-slate-500 font-bold text-center mt-2 uppercase tracking-wide opacity-50">Drop Words Here</div>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME: HOW SOUNDS ARE MADE (DRAG & DROP)
+    // ==========================================
+    let soundProductionState = {
+      round: 1, totalRounds: 10, score: 0,
+      target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0
+    };
+
+    const soundProductionItems = [
+      { item: 'Cheese Grater', method: 'Scraping', icon: 'fa-cheese' },
+      { item: 'Hammer & Nail', method: 'Hitting', icon: 'fa-hammer' },
+      { item: 'Whistle', method: 'Blowing', icon: 'fa-wind' },
+      { item: 'Microwave Oven', method: 'Electronic', icon: 'fa-plug' },
+      { item: 'Salt Shaker', method: 'Shaking', icon: 'fa-pepper-hot' },
+      { item: 'Drum', method: 'Hitting', icon: 'fa-drum' },
+      { item: 'Sandpaper', method: 'Scraping', icon: 'fa-scroll' },
+      { item: 'Flute / Recorder', method: 'Blowing', icon: 'fa-fan' },
+      { item: 'Synthesizer App', method: 'Electronic', icon: 'fa-mobile-screen' },
+      { item: 'Tambourine', method: 'Shaking', icon: 'fa-ring' },
+      { item: 'Xylophone', method: 'Hitting', icon: 'fa-keyboard' },
+      { item: 'Guiro (Ribbed Gourd)', method: 'Scraping', icon: 'fa-music' },
+      { item: 'Trumpet', method: 'Blowing', icon: 'fa-bullhorn' },
+      { item: 'Guitar Amplifier', method: 'Electronic', icon: 'fa-bolt' },
+      { item: 'Spray Paint Can', method: 'Shaking', icon: 'fa-spray-can' },
+      { item: 'Match Strike', method: 'Scraping', icon: 'fa-fire' }
+    ];
+
+    const soundProductionMethods = ['Hitting', 'Shaking', 'Scraping', 'Blowing', 'Electronic'];
+
+    function setupSoundProductionRound() {
+      const randIdx = Math.floor(Math.random() * soundProductionItems.length);
+      soundProductionState.target = soundProductionItems[randIdx];
+      soundProductionState.options = [...soundProductionMethods];
+      soundProductionState.answered = false;
+      soundProductionState.lastCorrect = false;
+      soundProductionState.roundStartTime = performance.now();
+    }
+
+    function mountEmbeddedSoundProductionGame(target) {
+      if (!target) return;
+      soundProductionState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
+      setupSoundProductionRound();
+      renderSoundProductionGameUI(target);
+    }
+
+    function handleSoundProductionDragStart(e, method) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', method);
+        e.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleSoundProductionDrop(event) {
+      if (event) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('border-amber-400', 'bg-indigo-950');
+      }
+      const st = soundProductionState;
+      if (st.answered || st.completed) return;
+      if (performance.now() - st.roundStartTime < 800) return;
+      
+      let droppedMethod = null;
+      if (event && event.dataTransfer) {
+        droppedMethod = event.dataTransfer.getData('text/plain');
+      }
+      if (!droppedMethod) return;
+      
+      st.answered = true;
+      st.lastCorrect = (st.target.method === droppedMethod);
+      
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderSoundProductionGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextSoundProductionRound() {
+      const st = soundProductionState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupSoundProductionRound();
+        renderSoundProductionGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderSoundProductionGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Sound Production Lab Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderSoundProductionGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = soundProductionState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-emerald-400">10-Round Challenge • Drag &amp; Drop</span>
+              <h3 class="text-xl font-black">How Sound is Made Lab</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag the correct sound production method from the bottom and drop it onto the item!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Sound Lab Complete!</h4>
+              <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedSoundProductionGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col gap-6 my-4">
+              
+              <!-- Drop Zone Box -->
+              <div 
+                ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-indigo-950');" : ""}"
+                ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950');" : ""}"
+                ondrop="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950'); handleSoundProductionDrop(event);" : ""}"
+                class="bg-slate-800/80 border-2 border-dashed border-slate-500 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-colors relative shadow-inner">
+                
+                <div class="text-xs font-bold text-slate-400 absolute top-4 uppercase tracking-widest">Drop Method Here</div>
+                
+                <div class="w-20 h-20 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-4xl text-white shadow-lg mb-4 mt-4">
+                   <i class="fa-solid ${st.target.icon}"></i>
+                </div>
+                <div class="font-black text-2xl text-slate-100">${st.target.item}</div>
+                
+                ${st.answered ? `
+                  <div class="mt-3 px-4 py-1.5 rounded-full font-black text-sm uppercase tracking-wider ${st.lastCorrect ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                    Method: ${st.target.method}
+                  </div>
+                ` : ``}
+              </div>
+
+              ${st.answered ? `
+                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. A ${st.target.item} makes sound via <strong>${st.target.method}</strong>.`}</span>
+                  <button type="button" onclick="nextSoundProductionRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                    ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                  </button>
+                </div>
+              ` : ''}
+
+              <!-- Draggable Methods Palette -->
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                ${st.options.map(method => `
+                  <div draggable="${!st.answered}" ondragstart="handleSoundProductionDragStart(event, '${method}')"
+                    class="p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center ${
+                    st.answered && method === st.target.method ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_10px_rgba(52,211,153,0.3)]' : 
+                    st.answered ? 'border-slate-700 bg-slate-800 opacity-40' : 'border-slate-600 bg-slate-700 hover:border-amber-400 hover:bg-slate-600 cursor-grab active:cursor-grabbing'
+                  }">
+                    <div class="font-black text-sm text-white pointer-events-none tracking-wide">${method}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `}
+        </div>
+      `;
     }
 
     // ==========================================

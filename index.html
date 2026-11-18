@@ -3079,6 +3079,141 @@
       `;
     }
 
+    // ==========================================
+    // REST MATCHER GAME (DURATION LEVEL 2)
+    // ==========================================
+    let restMatcherState = {
+      round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0
+    };
+
+    const restMatcherItems = [
+      { id: 'semibreveRest', match: 'semibreve', name: 'Semibreve', beats: '4 Beats' },
+      { id: 'minimRest', match: 'minim', name: 'Minim', beats: '2 Beats' },
+      { id: 'rest', match: 'crotchet', name: 'Crotchet', beats: '1 Beat' },
+      { id: 'quaverRest', match: 'singleQuaver', name: 'Quaver', beats: '½ Beat' }
+    ];
+
+    function setupRestMatcherRound() {
+      const target = restMatcherItems[Math.floor(Math.random() * restMatcherItems.length)];
+      restMatcherState.target = target;
+      restMatcherState.options = [...restMatcherItems].sort(() => Math.random() - 0.5);
+      restMatcherState.answered = false;
+      restMatcherState.lastCorrect = false;
+      restMatcherState.roundStartTime = performance.now();
+    }
+
+    function mountEmbeddedRestMatcherGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      restMatcherState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
+      setupRestMatcherRound();
+      renderRestMatcherGameUI(target);
+    }
+
+    function handleRestDragStart(e) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', 'restCard');
+        e.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleRestDrop(event, matchId) {
+      if (event) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('border-amber-400', 'bg-slate-700');
+      }
+      const st = restMatcherState;
+      if (st.answered || st.completed) return;
+      if (performance.now() - st.roundStartTime < 800) return;
+      
+      st.answered = true;
+      st.lastCorrect = (st.target.match === matchId);
+      
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextRestMatcherRound() {
+      const st = restMatcherState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupRestMatcherRound();
+        renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Rest Matcher Complete!', `You matched ${st.score}/${st.totalRounds} rests correctly and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderRestMatcherGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = restMatcherState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • Drag &amp; Drop</span>
+              <h3 class="text-xl font-black">Rest Matcher Game</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag the rest symbol and drop it onto the note with the matching beat value!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
+              <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedRestMatcherGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex justify-center my-6">
+              <div draggable="${!st.answered}" ondragstart="handleRestDragStart(event)" class="w-32 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-slate-200 shadow-inner ${!st.answered ? 'cursor-grab active:cursor-grabbing hover:border-amber-400' : 'opacity-50'}">
+                ${renderEngravedNoteDarkSVG(st.target.id, 'w-20 h-24')}
+              </div>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. That was a <strong>${st.target.name} Rest</strong> (${st.target.beats}).`}</span>
+                <button type="button" onclick="nextRestMatcherRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              ${st.options.map(opt => `
+                <div 
+                  ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-slate-700');" : ""}"
+                  ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-slate-700');" : ""}"
+                  ondrop="${!st.answered ? `handleRestDrop(event, '${opt.match}')` : ""}"
+                  class="p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center ${
+                  st.answered && opt.match === st.target.match ? 'border-emerald-400 bg-emerald-950/60' : 
+                  st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700'
+                }">
+                  <div class="text-slate-300 pointer-events-none mb-2">${renderEngravedNoteDarkSVG(opt.match, 'w-12 h-16')}</div>
+                  <div class="font-black text-sm text-white pointer-events-none">${opt.name}</div>
+                  <div class="text-[10px] font-bold text-slate-400 mt-0.5 pointer-events-none">${opt.beats}</div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
     function mountEmbeddedDynamicsSimulator(target) {
       if (!target) return;
       

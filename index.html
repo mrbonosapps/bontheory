@@ -4926,6 +4926,221 @@
     }
 
     // ==========================================
+    // MINIGAME 15: STAGGERED TEXTURE LAB (LESSON 2)
+    // ==========================================
+    let staggeredTextureState = {
+      sandboxPlaying: false,
+      sandboxActiveLayers: [],
+      sandboxTimeoutIds: [],
+      round: 1, totalRounds: 5, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false
+    };
+
+    function playSandboxStaggered(type) {
+      const st = staggeredTextureState;
+      if (st.sandboxPlaying) return;
+      st.sandboxPlaying = true;
+      st.sandboxActiveLayers = [];
+      renderStaggeredTextureLab(document.getElementById('embedded-tool-container'));
+      
+      const stageDelay = 1600;
+      let stages = type === 'thick' 
+        ? [['bass'], ['bass', 'harmony', 'rhythm'], ['bass', 'harmony', 'rhythm', 'melody', 'air']]
+        : [['bass', 'harmony', 'rhythm', 'melody', 'air'], ['bass', 'harmony', 'melody'], ['melody']];
+
+      stages.forEach((layers, idx) => {
+        const tId = setTimeout(() => {
+          st.sandboxActiveLayers = layers;
+          renderStaggeredTextureLab(document.getElementById('embedded-tool-container'));
+          playTextureLayerCombination(layers);
+        }, idx * stageDelay);
+        st.sandboxTimeoutIds.push(tId);
+      });
+
+      const endId = setTimeout(() => {
+        st.sandboxPlaying = false;
+        st.sandboxActiveLayers = [];
+        renderStaggeredTextureLab(document.getElementById('embedded-tool-container'));
+      }, (stages.length * stageDelay) + 500);
+      st.sandboxTimeoutIds.push(endId);
+    }
+
+    function setupStaggeredTextureRound() {
+      staggeredTextureState.targetType = Math.random() > 0.5 ? 'thick' : 'thin';
+      staggeredTextureState.answered = false;
+      staggeredTextureState.audioPlayed = false;
+    }
+
+    function playStaggeredMysterySequence() {
+      if(staggeredTextureState.isPlaying) return;
+      staggeredTextureState.isPlaying = true;
+      staggeredTextureState.audioPlayed = true;
+      renderStaggeredTextureLab(document.getElementById('embedded-tool-container'));
+
+      const type = staggeredTextureState.targetType;
+      const stageDelay = 1600;
+
+      let stages = type === 'thick' 
+        ? [['bass'], ['bass', 'harmony', 'rhythm'], ['bass', 'harmony', 'rhythm', 'melody', 'air']]
+        : [['bass', 'harmony', 'rhythm', 'melody', 'air'], ['bass', 'harmony', 'melody'], ['melody']];
+
+      stages.forEach((layers, idx) => {
+        setTimeout(() => playTextureLayerCombination(layers), idx * stageDelay);
+      });
+
+      setTimeout(() => {
+        staggeredTextureState.isPlaying = false;
+        renderStaggeredTextureLab(document.getElementById('embedded-tool-container'));
+      }, (stages.length * stageDelay) + 500);
+    }
+
+    function guessStaggeredTexture(guess) {
+      const st = staggeredTextureState;
+      if(st.answered || st.completed) return;
+      if(!st.audioPlayed) { showAppModal('Listen First', 'Please play the mystery sequence before guessing!', false); return; }
+      st.answered = true;
+      st.lastCorrect = (guess === st.targetType);
+      
+      if(st.lastCorrect) {
+        st.score++;
+        addTokens(2);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderStaggeredTextureLab(document.getElementById('embedded-tool-container'));
+    }
+    
+    function nextStaggeredTextureRound() {
+      const st = staggeredTextureState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupStaggeredTextureRound();
+        renderStaggeredTextureLab(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderStaggeredTextureLab(document.getElementById('embedded-tool-container'));
+        showAppModal('Progressive Layering Complete!', `You identified ${st.score}/${st.totalRounds} sequences correctly and earned +${st.score * 2} Tokens!`, st.score >= 3);
+      }
+    }
+
+    function mountEmbeddedStaggeredTextureLab(target) {
+      if (!target) return;
+      // Clear any existing timeouts if game is unmounted mid-play
+      if (staggeredTextureState && staggeredTextureState.sandboxTimeoutIds) {
+        staggeredTextureState.sandboxTimeoutIds.forEach(id => clearTimeout(id));
+      }
+      staggeredTextureState = { sandboxPlaying: false, sandboxActiveLayers: [], sandboxTimeoutIds: [], round: 1, totalRounds: 5, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
+      setupStaggeredTextureRound();
+      renderStaggeredTextureLab(target);
+    }
+
+    function renderStaggeredTextureLab(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = staggeredTextureState;
+
+      target.innerHTML = `
+        <div class="space-y-6">
+          <!-- PART 1: PROGRESSIVE SANDBOX -->
+          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-indigo-600">Interactive Sandbox</span>
+              <h3 class="text-2xl font-black text-slate-900">Progressive Layering Lab</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Click the buttons below to hear and watch how musical texture changes gradually over time.</p>
+            </div>
+            
+            <div class="bg-slate-950 rounded-2xl p-5 sm:p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-xs font-black border bg-indigo-900/80 text-indigo-300 border-indigo-500/40">
+                  ${st.sandboxPlaying ? 'Sequence Active...' : 'Waiting'}
+                </span>
+                <span class="text-[11px] font-bold text-slate-400">${st.sandboxActiveLayers.length} of 5 layers active</span>
+              </div>
+              <div class="space-y-2.5 pt-1">
+                ${[...textureLabLayers].reverse().map(layer => {
+                  const isOn = st.sandboxActiveLayers.includes(layer.id);
+                  return `<div class="h-3 rounded-full transition-all duration-300 ${isOn ? `${layer.barBg} w-full shadow-sm` : 'bg-slate-800/70 w-1/4'}"></div>`;
+                }).join('')}
+              </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button onclick="playSandboxStaggered('thick')" ${st.sandboxPlaying ? 'disabled' : ''} class="flex-1 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs sm:text-sm shadow-md transition-all ${st.sandboxPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                <i class="fa-solid fa-arrow-up-right-dots mr-1"></i> Play Gradual Thickening
+              </button>
+              <button onclick="playSandboxStaggered('thin')" ${st.sandboxPlaying ? 'disabled' : ''} class="flex-1 py-3.5 bg-sky-600 hover:bg-sky-700 text-white font-black rounded-xl text-xs sm:text-sm shadow-md transition-all ${st.sandboxPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                <i class="fa-solid fa-arrow-down-right-dots mr-1"></i> Play Gradual Thinning
+              </button>
+            </div>
+          </div>
+
+          <!-- PART 2: EAR DETECTIVE -->
+          <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">5-Round Ear Challenge • 2 Tokens Per Correct Answer</span>
+                <h3 class="text-xl font-black text-white">Progressive Layering Detective</h3>
+                <p class="text-xs text-slate-300 mt-1">Listen to the sequence. Are instruments being <strong>added (Thickening)</strong> or <strong>removed (Thinning)</strong>?</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+                  Round ${st.round} / ${st.totalRounds}
+                </span>
+                <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                  Score: ${st.score} (+${st.score * 2} Tokens)
+                </span>
+              </div>
+            </div>
+
+            ${st.completed ? `
+              <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+                <h4 class="text-xl font-black text-emerald-300">Detective Work Complete!</h4>
+                <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> sequences correctly and earned <strong>+${st.score * 2} Tokens</strong>!</p>
+                <button type="button" onclick="mountEmbeddedStaggeredTextureLab(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 5 Rounds</button>
+              </div>
+            ` : `
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+                <span class="text-xs sm:text-sm font-black text-amber-300">${st.isPlaying ? 'Listening to sequence...' : 'Ready to hear the piece!'}</span>
+                <button type="button" onclick="playStaggeredMysterySequence()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                  <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Sequence
+                </button>
+              </div>
+
+              ${st.answered ? `
+                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="text-xs font-bold">${st.lastCorrect ? '✓ Correct! You correctly identified the texture change.' : '✗ Not quite. The correct answer was Gradual ' + (st.targetType === 'thick' ? 'Thickening' : 'Thinning') + '.'}</span>
+                  <button type="button" onclick="nextStaggeredTextureRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                    ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                  </button>
+                </div>
+              ` : ''}
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <button type="button" onclick="guessStaggeredTexture('thick')" ${st.answered ? 'disabled' : ''} class="h-32 rounded-2xl border-2 transition-all flex flex-col items-center justify-center p-4 ${
+                    st.answered && st.targetType === 'thick' ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
+                    st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white shadow-sm'
+                }">
+                  <i class="fa-solid fa-arrow-up-right-dots text-3xl mb-2 ${st.answered && st.targetType !== 'thick' ? 'opacity-50 grayscale' : 'text-indigo-400'}"></i>
+                  <div class="font-black text-sm">Gradual Thickening</div>
+                  <div class="text-[10px] ${st.answered && st.targetType !== 'thick' ? 'text-slate-600' : 'text-slate-400'} mt-1">Instruments are added</div>
+                </button>
+
+                <button type="button" onclick="guessStaggeredTexture('thin')" ${st.answered ? 'disabled' : ''} class="h-32 rounded-2xl border-2 transition-all flex flex-col items-center justify-center p-4 ${
+                    st.answered && st.targetType === 'thin' ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
+                    st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white shadow-sm'
+                }">
+                  <i class="fa-solid fa-arrow-down-right-dots text-3xl mb-2 ${st.answered && st.targetType !== 'thin' ? 'opacity-50 grayscale' : 'text-sky-400'}"></i>
+                  <div class="font-black text-sm">Gradual Thinning</div>
+                  <div class="text-[10px] ${st.answered && st.targetType !== 'thin' ? 'text-slate-600' : 'text-slate-400'} mt-1">Instruments drop out</div>
+                </button>
+              </div>
+            ` }
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
     // MINIGAME 13: TONES & SEMITONES DETECTIVE
     // ==========================================
     let toneSemitoneState = { round: 1, totalRounds: 10, score: 0, targetIsTone: null, targetKeys: [], isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };

@@ -1058,11 +1058,11 @@
     };
 
     const articulationGameItems = [
-      { id: 'staccato', label: 'Staccato', desc: 'Short & Detached', box: {x: 104, y: 70, w: 22, h: 22} },
-      { id: 'accent', label: 'Accent', desc: 'Strong Emphasis', box: {x: 65, y: 15, w: 30, h: 20} },
-      { id: 'tenuto', label: 'Tenuto', desc: 'Full Value / Stressed', box: {x: 390, y: 25, w: 25, h: 15} },
-      { id: 'slur', label: 'Slur', desc: 'Smooth (Legato)', box: {x: 275, y: 80, w: 80, h: 25} },
-      { id: 'tie', label: 'Tie', desc: 'Join Same Pitches', box: {x: 168, y: 68, w: 50, h: 22} }
+      { id: 'staccato', label: 'Staccato', desc: 'Short & Detached', box: {x: 90, y: 44, w: 20, h: 20} },
+      { id: 'accent', label: 'Accent', desc: 'Strong Emphasis', box: {x: 58, y: 24, w: 24, h: 16} },
+      { id: 'tenuto', label: 'Tenuto', desc: 'Full Value / Stressed', box: {x: 395, y: 30, w: 30, h: 16} },
+      { id: 'slur', label: 'Slur', desc: 'Smooth (Legato)', box: {x: 270, y: 92, w: 85, h: 25} },
+      { id: 'tie', label: 'Tie', desc: 'Join Same Pitches', box: {x: 175, y: 80, w: 55, h: 25} }
     ];
 
     function setupArticulationRound() {
@@ -1138,39 +1138,42 @@
           <!-- Staff Lines -->
           ${[30, 45, 60, 75, 90].map(y => `<line x1="20" y1="${y}" x2="480" y2="${y}" stroke="#475569" stroke-width="1.5"/>`).join('')}
           <!-- Bar Lines -->
-          ${[30, 140, 250, 360, 470].map(x => `<line x1="${x}" y1="30" x2="${x}" y2="90" stroke="#475569" stroke-width="1.5"/>`).join('')}
+          ${[30, 150, 260, 370, 480].map(x => `<line x1="${x}" y1="30" x2="${x}" y2="90" stroke="#475569" stroke-width="1.5"/>`).join('')}
           <!-- Treble Clef -->
-          <text x="35" y="95" font-size="60" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+          <text x="35" y="98" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
           
-          <!-- Bar 1: Accent (C5) and Staccato (A4) -->
-          <ellipse cx="80" cy="45" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 80 45)"/>
-          <line x1="74" y1="45" x2="74" y2="85" stroke="#0f172a" stroke-width="2"/>
-          <path d="M 68,20 L 85,25 L 68,30 L 73,25 Z" fill="#0f172a"/> <!-- Accent -->
+          <!-- Bar 1: Accent (C5), Staccato (A4), and Crotchet Rest -->
+          <ellipse cx="70" cy="52.5" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 70 52.5)"/>
+          <line x1="61" y1="52.5" x2="61" y2="92.5" stroke="#0f172a" stroke-width="2"/>
+          <path d="M 62,28 L 78,32 L 62,36 L 66,32 Z" fill="#0f172a"/> <!-- Accent -->
           
-          <ellipse cx="115" cy="55" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 115 55)"/>
-          <line x1="109" y1="55" x2="109" y2="95" stroke="#0f172a" stroke-width="2"/>
-          <circle cx="115" cy="80" r="2.5" fill="#0f172a"/> <!-- Staccato -->
+          <ellipse cx="100" cy="67.5" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 100 67.5)"/>
+          <line x1="109" y1="67.5" x2="109" y2="27.5" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="100" cy="54" r="2.5" fill="#0f172a"/> <!-- Staccato -->
+          
+          <path d="M 125,45 L 135,55 L 125,65 L 135,75 C 130,75 125,78 130,82" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/> <!-- Rest -->
 
-          <!-- Bar 2: Tie (G4 to G4) -->
-          <ellipse cx="175" cy="60" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 175 60)"/>
-          <line x1="181" y1="60" x2="181" y2="25" stroke="#0f172a" stroke-width="2"/>
-          <ellipse cx="215" cy="60" rx="7" ry="5" fill="none" stroke="#0f172a" stroke-width="2.5" transform="rotate(-15 215 60)"/>
-          <line x1="221" y1="60" x2="221" y2="25" stroke="#0f172a" stroke-width="2"/>
-          <path d="M 180,75 Q 195,85 210,75" fill="none" stroke="#0f172a" stroke-width="2.5"/> <!-- Tie -->
+          <!-- Bar 2: Tie G4 to G4 Minim -->
+          <ellipse cx="180" cy="75" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 180 75)"/>
+          <line x1="189" y1="75" x2="189" y2="35" stroke="#0f172a" stroke-width="2"/>
+          <ellipse cx="225" cy="75" rx="10.5" ry="7.5" fill="#fff" stroke="#0f172a" stroke-width="2.5" transform="rotate(-15 225 75)"/>
+          <line x1="234" y1="75" x2="234" y2="35" stroke="#0f172a" stroke-width="2"/>
+          <path d="M 183,88 Q 202.5,100 222,88" fill="none" stroke="#0f172a" stroke-width="2.5"/> <!-- Tie -->
 
-          <!-- Bar 3: Slur (E4 to G4) -->
-          <ellipse cx="280" cy="70" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 280 70)"/>
-          <line x1="286" y1="70" x2="286" y2="35" stroke="#0f172a" stroke-width="2"/>
-          <ellipse cx="315" cy="65" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 315 65)"/>
-          <line x1="321" y1="65" x2="321" y2="30" stroke="#0f172a" stroke-width="2"/>
-          <ellipse cx="350" cy="60" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 350 60)"/>
-          <line x1="356" y1="60" x2="356" y2="25" stroke="#0f172a" stroke-width="2"/>
-          <path d="M 280,85 Q 315,100 350,75" fill="none" stroke="#0f172a" stroke-width="2.5"/> <!-- Slur -->
+          <!-- Bar 3: Slur E4 to G4 -->
+          <ellipse cx="280" cy="90" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 280 90)"/>
+          <line x1="289" y1="90" x2="289" y2="50" stroke="#0f172a" stroke-width="2"/>
+          <ellipse cx="312.5" cy="82.5" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 312.5 82.5)"/>
+          <line x1="321.5" y1="82.5" x2="321.5" y2="42.5" stroke="#0f172a" stroke-width="2"/>
+          <ellipse cx="345" cy="75" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 345 75)"/>
+          <line x1="354" y1="75" x2="354" y2="35" stroke="#0f172a" stroke-width="2"/>
+          <path d="M 280,102 Q 312.5,118 345,88" fill="none" stroke="#0f172a" stroke-width="2.5"/> <!-- Slur -->
 
-          <!-- Bar 4: Tenuto (C5) -->
-          <ellipse cx="400" cy="45" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 400 45)"/>
-          <line x1="394" y1="45" x2="394" y2="85" stroke="#0f172a" stroke-width="2"/>
-          <line x1="390" y1="32" x2="410" y2="32" stroke="#0f172a" stroke-width="3"/> <!-- Tenuto -->
+          <!-- Bar 4: Tenuto Dotted Minim (C5) -->
+          <ellipse cx="410" cy="52.5" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 410 52.5)"/>
+          <line x1="401" y1="52.5" x2="401" y2="92.5" stroke="#0f172a" stroke-width="2"/>
+          <circle cx="427" cy="52.5" r="3" fill="#0f172a"/> <!-- Dot -->
+          <line x1="395" y1="38" x2="425" y2="38" stroke="#0f172a" stroke-width="3"/> <!-- Tenuto -->
 
           ${!st.answered ? `
             <rect x="${st.target.box.x}" y="${st.target.box.y}" width="${st.target.box.w}" height="${st.target.box.h}" 
@@ -1344,7 +1347,7 @@
       for (let i = 0; i < 5; i++) {
         staffLines += `<line x1="20" y1="${20 + i*15}" x2="280" y2="${20 + i*15}" stroke="#475569" stroke-width="2"/>`;
       }
-      staffLines += `<path d="M 40,75 C 20,75 20,55 40,55 C 60,55 60,35 40,15 C 30,5 30,5 40,5 C 50,5 50,25 40,45 C 35,55 35,65 40,85 C 45,95 35,95 35,85" fill="none" stroke="#94a3b8" stroke-width="2.5"/>`;
+      staffLines += `<text x="35" y="88" font-size="85" font-family="serif" fill="#94a3b8" font-weight="bold">&#119070;</text>`;
 
       let answerDots = '';
       if (st.answered) {
@@ -1580,7 +1583,7 @@
                       <line x1="20" y1="75" x2="280" y2="75" stroke="#475569" stroke-width="1.5"/>
                       <line x1="20" y1="90" x2="280" y2="90" stroke="#475569" stroke-width="1.5"/>
                       
-                      <text x="25" y="95" font-size="60" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      <text x="25" y="98" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
                       
                       <!-- Stem Up, Tail on Right -->
                       <ellipse cx="120" cy="75" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 120 75)"/>
@@ -1612,7 +1615,7 @@
                       <line x1="20" y1="75" x2="280" y2="75" stroke="#475569" stroke-width="1.5"/>
                       <line x1="20" y1="90" x2="280" y2="90" stroke="#475569" stroke-width="1.5"/>
                       
-                      <text x="25" y="95" font-size="60" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      <text x="25" y="98" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
                       
                       <!-- Beamed Stems Up -->
                       <ellipse cx="100" cy="75" rx="7" ry="5" fill="#0f172a" transform="rotate(-15 100 75)"/>
@@ -1821,7 +1824,7 @@
                       <line x1="20" y1="100" x2="380" y2="100" stroke="#475569" stroke-width="1.5"/>
                       
                       <!-- Treble Clef -->
-                      <text x="25" y="105" font-size="70" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      <text x="25" y="108" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
 
                       <!-- Line Notes (Blue) -->
                       <ellipse cx="80" cy="100" rx="9" ry="6" fill="none" stroke="#3b82f6" stroke-width="2" transform="rotate(-15 80 100)"/>
@@ -1911,7 +1914,7 @@
                       <line x1="20" y1="120" x2="380" y2="120" stroke="#1e293b" stroke-width="1.5"/>
                       
                       <!-- Treble Clef -->
-                      <text x="25" y="130" font-size="75" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      <text x="25" y="128" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
 
                       <!-- Above Staff -->
                       <!-- F5 (top line) -->
@@ -1987,7 +1990,7 @@
                       <line x1="40" y1="80" x2="360" y2="80" stroke="#475569" stroke-width="1.5"/>
                       <line x1="40" y1="100" x2="360" y2="100" stroke="#475569" stroke-width="1.5"/>
                       
-                      <text x="45" y="105" font-size="70" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                      <text x="35" y="108" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
                       
                       <!-- Below middle line: Stem Up -->
                       <ellipse cx="140" cy="90" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 140 90)"/>
@@ -3308,7 +3311,7 @@
                   <line x1="20" y1="60" x2="180" y2="60" stroke="#3b82f6" stroke-width="2"/> <!-- Middle Line -->
                   <line x1="20" y1="80" x2="180" y2="80" stroke="#475569" stroke-width="1.5"/>
                   <line x1="20" y1="100" x2="180" y2="100" stroke="#475569" stroke-width="1.5"/>
-                  <text x="25" y="105" font-size="65" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                  <text x="25" y="108" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
 
                   ${!st.answered ? `
                     <!-- Interactive Drop Zones (Hidden graphically, active on mouse/touch) -->
@@ -4899,7 +4902,7 @@
       for (let i = 0; i < 5; i++) {
         staffLines += `<line x1="20" y1="${60 + i*15}" x2="280" y2="${60 + i*15}" stroke="#475569" stroke-width="2"/>`;
       }
-      staffLines += `<text x="35" y="130" font-size="75" font-family="serif" fill="#94a3b8" font-weight="bold">&#119070;</text>`;
+      staffLines += `<text x="35" y="128" font-size="85" font-family="serif" fill="#94a3b8" font-weight="bold">&#119070;</text>`;
 
       let dropZones = '';
       let answerDots = '';
@@ -6064,7 +6067,7 @@
                   <line x1="40" y1="60" x2="180" y2="60" stroke="#1e293b" stroke-width="2"/>
                   <line x1="40" y1="70" x2="180" y2="70" stroke="#1e293b" stroke-width="2"/>
                   <line x1="40" y1="80" x2="180" y2="80" stroke="#1e293b" stroke-width="2"/>
-                  <text x="40" y="87" font-size="56" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+                  <text x="35" y="88" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
                   
                   <ellipse cx="130" cy="${st.targetKey.y + 10}" rx="9" ry="6" fill="none" stroke="#1e293b" stroke-width="2" transform="rotate(-15 130 ${st.targetKey.y + 10})"/>
                 </svg>

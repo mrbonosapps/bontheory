@@ -915,6 +915,21 @@
       { type: 'terraced', symbol: 'f \u2192 p', label: 'Terraced Shift (f to p)', desc: 'Sudden shift from loud to soft' }
     ];
 
+    function handleDynamicsDragStart(event) {
+      if (event && event.dataTransfer) {
+        event.dataTransfer.setData('text/plain', 'dynamicsCard');
+        event.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleDynamicsDrop(event, label) {
+      if (event) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('border-amber-400', 'bg-slate-700');
+      }
+      guessDynamicsChallenge(label);
+    }
+
     function setupDynamicsChallengeRound() {
       const target = dynamicsChallengePool[Math.floor(Math.random() * dynamicsChallengePool.length)];
       dynamicsChallengeState.target = target;
@@ -970,7 +985,7 @@
             <div>
               <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 2 Tokens Per Correct Answer</span>
               <h3 class="text-xl font-black">The Great Dynamics Challenge</h3>
-              <p class="text-xs text-slate-300 mt-1">Identify the correct definition for the dynamic symbol or shift!</p>
+              <p class="text-xs text-slate-300 mt-1">Drag the symbol card and drop it onto the correct definition!</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
@@ -986,7 +1001,7 @@
             </div>
           ` : `
             <div class="flex justify-center my-6">
-              <div class="w-32 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-center shadow-inner">
+              <div draggable="${!st.answered}" ondragstart="handleDynamicsDragStart(event)" class="w-32 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-center shadow-inner ${!st.answered ? 'cursor-grab active:cursor-grabbing hover:border-amber-400' : 'opacity-50'}">
                 ${st.target.type === 'hairpin' 
                   ? (st.target.symbol === '<' 
                     ? '<svg viewBox="0 0 120 36" class="w-20 h-10"><polyline points="108,5 12,18 108,31" fill="none" stroke="#fbbf24" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /></svg>'
@@ -1007,13 +1022,18 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               ${st.options.map(opt => `
-                <button type="button" onclick="guessDynamicsChallenge('${opt.label}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-center ${
+                <div 
+                  ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-slate-700');" : ""}"
+                  ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-slate-700');" : ""}"
+                  ondrop="${!st.answered ? `handleDynamicsDrop(event, '${opt.label}')` : ""}"
+                  onclick="${!st.answered ? `guessDynamicsChallenge('${opt.label}')` : ""}"
+                  class="p-4 rounded-2xl border-2 text-left transition-all flex flex-col justify-center ${!st.answered ? 'cursor-pointer' : ''} ${
                   st.answered && opt.label === st.target.label ? 'border-emerald-400 bg-emerald-950/60' : 
                   st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700'
                 }">
-                  <span class="font-black text-sm text-white">${opt.label}</span>
-                  <span class="text-xs text-slate-400 mt-0.5">${opt.desc}</span>
-                </button>
+                  <span class="font-black text-sm text-white pointer-events-none">${opt.label}</span>
+                  <span class="text-xs text-slate-400 mt-0.5 pointer-events-none">${opt.desc}</span>
+                </div>
               `).join('')}
             </div>
           `}

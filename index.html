@@ -4590,8 +4590,7 @@
       } catch (e) {}
     }
 
-    function generateRandomTextureLayerSet() {
-      const count = Math.floor(Math.random() * 4) + 1; // 1 to 4 layers (up to 5)
+    function generateRandomTextureLayerSet(count) {
       const allIds = textureLabLayers.map(l => l.id).sort(() => Math.random() - 0.5);
       return allIds.slice(0, Math.min(5, Math.max(1, count)));
     }
@@ -4620,13 +4619,14 @@
       textureLabState = {
         activeLayers: ['bass', 'melody'],
         round: 1,
-        totalRounds: 5,
+        totalRounds: 15,
         score: 0,
-        targetLayers: generateRandomTextureLayerSet(),
+        targetLayers: generateRandomTextureLayerSet(1),
         selectedGuess: [],
         answered: false,
         lastCorrect: false,
-        completed: false
+        completed: false,
+        audioPlayed: false
       };
       renderTextureLabGameUI(target);
     }
@@ -4644,6 +4644,38 @@
       } else {
         textureLabState.selectedGuess.push(layerId);
       }
+      renderTextureLabGameUI();
+    }
+
+    function handleTextureDragStart(event, layerId) {
+      if (event && event.dataTransfer) {
+        event.dataTransfer.setData('text/plain', layerId);
+        event.dataTransfer.effectAllowed = 'copy';
+      }
+    }
+
+    function handleTextureDrop(event) {
+      if (event) event.preventDefault();
+      const st = textureLabState;
+      if (st.answered || st.completed) return;
+      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the mystery mix before guessing!', false); return; }
+
+      let layerId = null;
+      if (event && event.dataTransfer) {
+        layerId = event.dataTransfer.getData('text/plain');
+      }
+      if (!layerId) return;
+
+      if (!st.selectedGuess.includes(layerId)) {
+        st.selectedGuess.push(layerId);
+        renderTextureLabGameUI();
+      }
+    }
+
+    function removeTextureGuess(layerId) {
+      const st = textureLabState;
+      if (st.answered || st.completed) return;
+      st.selectedGuess = st.selectedGuess.filter(id => id !== layerId);
       renderTextureLabGameUI();
     }
 
@@ -4672,9 +4704,27 @@
 
     function nextTextureDetectiveRound() {
       const st = textureLabState;
+      const count = Math.ceil(st.round / 3);
+      
+      if (!st.lastCorrect) {
+        let newLayers = generateRandomTextureLayerSet(count);
+        // Ensure at least one layer is different from the failed attempt if possible
+        if (count < textureLabLayers.length) {
+           while (newLayers.every(l => st.targetLayers.includes(l))) {
+               newLayers = generateRandomTextureLayerSet(count);
+           }
+        }
+        st.targetLayers = newLayers;
+        st.selectedGuess = [];
+        st.answered = false;
+        st.audioPlayed = false;
+        renderTextureLabGameUI();
+        return;
+      }
+
       if (st.round < st.totalRounds) {
         st.round++;
-        st.targetLayers = generateRandomTextureLayerSet();
+        st.targetLayers = generateRandomTextureLayerSet(Math.ceil(st.round / 3));
         st.selectedGuess = [];
         st.answered = false;
         st.audioPlayed = false;
@@ -4686,8 +4736,8 @@
         renderTextureLabGameUI();
         showAppModal(
           '🎚️ Texture Layer Detective Complete!',
-          `You identified ${st.score} out of ${st.totalRounds} mystery textures correctly and earned +${reward} Tokens (2 Tokens per correct answer)!`,
-          st.score >= 3
+          `You completed all ${st.totalRounds} rounds correctly and earned +${reward} Tokens!`,
+          true
         );
       }
     }
@@ -4765,13 +4815,13 @@
             </div>
           </div>
 
-          <!-- PART 2: 5-ROUND MYSTERY TEXTURE LAYER DETECTIVE GAME -->
+          <!-- PART 2: 15-ROUND MYSTERY TEXTURE LAYER DETECTIVE GAME -->
           <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div>
-                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">5-Round Ear Challenge • 2 Tokens Per Correct Answer</span>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">15-Round Ear Challenge • 2 Tokens Per Correct Answer</span>
                 <h3 class="text-xl font-black text-white">Mystery Texture Layer Detective</h3>
-                <p class="text-xs text-slate-300 mt-1">Listen to the randomized mix across <strong>5 rounds</strong>, select <strong>ALL active layers</strong> you hear, and earn <strong>2 Tokens</strong> for every correct round!</p>
+                <p class="text-xs text-slate-300 mt-1">Listen to the randomized mix across <strong>15 rounds</strong>, select <strong>ALL active layers</strong> you hear, and earn <strong>2 Tokens</strong> for every correct round!</p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
@@ -4791,7 +4841,7 @@
                 <h4 class="text-2xl font-black text-emerald-300">Texture Detective Complete!</h4>
                 <p class="text-xs text-slate-200">You got <strong>${st.score} / ${st.totalRounds}</strong> rounds right and earned <strong>+${st.score * 2} Tokens</strong> (2 Tokens per correct answer)!</p>
                 <button type="button" onclick="mountEmbeddedTextureLabGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">
-                  Play Another 5 Rounds
+                  Play Another 15 Rounds
                 </button>
               </div>
             ` : `
@@ -4806,1308 +4856,70 @@
                   </button>
                 </div>
 
-                ${st.answered ? `
-              <div class="mt-4 p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Not quite. You clicked near ${Object.keys(staffNoteY).find(key => staffNoteY[key] === st.guessedY)}.`}</span>
-                <button type="button" onclick="nextStaffNotationRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                </button>
-              </div>
-            ` : ''}
-          `}
-        </div>
-      `;
-    }
-
-    // --- LEDGER LINE GAME ---
-    const ledgerGameNotes = { 
-      'C6': { y: 30, lines: [30, 45], label: 'C above the staff' },
-      'B5': { y: 37.5, lines: [45], label: 'B above the staff' },
-      'A5': { y: 45, lines: [45], label: 'A above the staff' },
-      'G5': { y: 52.5, lines: [], label: 'G above the staff' },
-      'D4': { y: 127.5, lines: [], label: 'D below the staff' },
-      'C4': { y: 135, lines: [135], label: 'C below the staff' },
-      'B3': { y: 142.5, lines: [135], label: 'B below the staff' },
-      'A3': { y: 150, lines: [135, 150], label: 'A below the staff' } 
-    };
-    let ledgerLineGameState = { round: 1, totalRounds: 10, score: 0, targetNote: null, answered: false, guessedNote: null, lastCorrect: false, completed: false, roundStartTime: 0 };
-
-    function setupLedgerLineRound() {
-      const pool = Object.keys(ledgerGameNotes);
-      ledgerLineGameState.targetNote = pool[Math.floor(Math.random() * pool.length)];
-      ledgerLineGameState.answered = false;
-      ledgerLineGameState.guessedNote = null;
-      ledgerLineGameState.lastCorrect = false;
-      ledgerLineGameState.roundStartTime = performance.now();
-    }
-
-    function mountEmbeddedLedgerLineGame(target) {
-      if (!target) return;
-      ledgerLineGameState = { round: 1, totalRounds: 10, score: 0, targetNote: null, answered: false, guessedNote: null, lastCorrect: false, completed: false, roundStartTime: 0 };
-      setupLedgerLineRound();
-      renderLedgerLineGameUI(target);
-    }
-
-    function handleLedgerDragStart(event) {
-      if (event && event.dataTransfer) {
-        event.dataTransfer.setData('text/plain', 'note');
-        event.dataTransfer.effectAllowed = 'copy';
-      }
-    }
-
-    function handleLedgerDrop(event, droppedNoteName) {
-      if (event) event.preventDefault();
-      const st = ledgerLineGameState;
-      if (st.answered || st.completed || !st.targetNote) return;
-      if (performance.now() - st.roundStartTime < 800) return;
-      
-      st.guessedNote = droppedNoteName;
-      st.answered = true;
-      st.lastCorrect = (droppedNoteName === st.targetNote);
-      
-      if (st.lastCorrect) {
-        st.score++;
-        addTokens(1);
-        playTonePitch(659.25, 0.2, 0.35, 'triangle');
-      } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-      }
-      renderLedgerLineGameUI(document.getElementById('embedded-tool-container'));
-    }
-
-    function nextLedgerLineRound() {
-      const st = ledgerLineGameState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        setupLedgerLineRound();
-        renderLedgerLineGameUI(document.getElementById('embedded-tool-container'));
-      } else {
-        st.completed = true;
-        renderLedgerLineGameUI(document.getElementById('embedded-tool-container'));
-        showAppModal('Ledger Line Game Complete!', `You placed ${st.score}/${st.totalRounds} notes correctly and earned +${st.score} Tokens!`, st.score >= 5);
-      }
-    }
-
-    function drawLedgerLinesForTarget(noteName, cx = 150) {
-      const noteDef = ledgerGameNotes[noteName];
-      if (!noteDef || !noteDef.lines) return '';
-      return noteDef.lines.map(y => `<line x1="${cx - 15}" y1="${y}" x2="${cx + 15}" y2="${y}" stroke="#1e293b" stroke-width="2"/>`).join('');
-    }
-
-    function renderLedgerLineGameUI(target) {
-      if (!target) return;
-      const st = ledgerLineGameState;
-      
-      let staffLines = '';
-      for (let i = 0; i < 5; i++) {
-        staffLines += `<line x1="20" y1="${60 + i*15}" x2="280" y2="${60 + i*15}" stroke="#475569" stroke-width="2"/>`;
-      }
-      staffLines += `<text x="35" y="128" font-size="85" font-family="serif" fill="#94a3b8" font-weight="bold">&#119070;</text>`;
-
-      let dropZones = '';
-      let answerDots = '';
-
-      if (!st.answered) {
-        // Render invisible interactive drop zones for each ledger location
-        Object.keys(ledgerGameNotes).forEach(noteName => {
-          const y = ledgerGameNotes[noteName].y;
-          dropZones += `
-            <rect x="80" y="${y - 7.5}" width="140" height="15" fill="transparent" class="cursor-pointer"
-              ondragover="event.preventDefault(); this.setAttribute('fill', 'rgba(56,189,248,0.2)');"
-              ondragleave="this.setAttribute('fill', 'transparent');"
-              ondrop="this.setAttribute('fill', 'transparent'); handleLedgerDrop(event, '${noteName}');"
-              onclick="handleLedgerDrop(null, '${noteName}')"
-            />
-          `;
-        });
-      } else {
-        const guessedY = ledgerGameNotes[st.guessedNote].y;
-        const targetY = ledgerGameNotes[st.targetNote].y;
-        
-        if (st.lastCorrect) {
-          answerDots = drawLedgerLinesForTarget(st.guessedNote, 150) + `<ellipse cx="150" cy="${guessedY}" rx="10" ry="7" fill="#34d399"/>`;
-        } else {
-          answerDots = drawLedgerLinesForTarget(st.guessedNote, 150) + `<ellipse cx="150" cy="${guessedY}" rx="10" ry="7" fill="#ef4444"/>` +
-                       drawLedgerLinesForTarget(st.targetNote, 150) + `<ellipse cx="150" cy="${targetY}" rx="10" ry="7" fill="#34d399" opacity="0.6"/>`;
-        }
-      }
-
-      target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • Drag &amp; Drop</span>
-              <h3 class="text-xl font-black">Ledger Line Target Practice</h3>
-              <p class="text-xs text-slate-300 mt-1">Drag the note (or tap the staff) to place the requested pitch precisely on or between the ledger lines!</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
-            </div>
-          </div>
-
-          ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Ledger Line Game Complete!</h4>
-              <p class="text-xs text-slate-200">You placed <strong>${st.score} / ${st.totalRounds}</strong> notes correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedLedgerLineGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
-            </div>
-          ` : `
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
-              <div class="text-center sm:text-left">
-                <span class="text-sm font-black text-sky-300">Target Note: <span class="text-xl text-white ml-1">${st.targetNote ? ledgerGameNotes[st.targetNote].label : ''}</span></span>
-              </div>
-              <div draggable="true" ondragstart="handleLedgerDragStart(event)" class="w-14 h-14 rounded-full bg-white border-4 border-sky-400 flex items-center justify-center cursor-grab active:cursor-grabbing shadow-lg shadow-sky-500/30 ${st.answered ? 'opacity-50 pointer-events-none' : ''}">
-                 <svg viewBox="0 0 40 40" class="w-8 h-8"><ellipse cx="20" cy="20" rx="14" ry="10" fill="#0f172a"/></svg>
-              </div>
-            </div>
-
-            <div class="flex justify-center mt-4">
-              <svg viewBox="0 15 300 150" class="w-full max-w-md h-auto bg-slate-50 rounded-xl shadow-inner border border-slate-300">
-                ${staffLines}
-                ${dropZones}
-                ${answerDots}
-              </svg>
-            </div>
-
-            ${st.answered ? `
-              <div class="mt-4 p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Not quite. You placed it on ${ledgerGameNotes[st.guessedNote].label}.`}</span>
-                <button type="button" onclick="nextLedgerLineRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                </button>
-              </div>
-            ` : ''}
-          `}
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // MINIGAME: REST MATCHER CHALLENGE (DRAG & DROP)
-    // ==========================================
-    let restMatcherState = {
-      round: 1, totalRounds: 10, score: 0,
-      target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0
-    };
-
-    const restMatcherPairs = [
-      { note: 'semibreve', rest: 'semibreveRest', name: 'Semibreve', beats: '4 Beats' },
-      { note: 'minim', rest: 'minimRest', name: 'Minim', beats: '2 Beats' },
-      { note: 'crotchet', rest: 'rest', name: 'Crotchet', beats: '1 Beat' },
-      { note: 'singleQuaver', rest: 'quaverRest', name: 'Quaver', beats: '½ Beat' }
-    ];
-
-    function setupRestMatcherRound() {
-      const randIdx = Math.floor(Math.random() * restMatcherPairs.length);
-      restMatcherState.target = restMatcherPairs[randIdx];
-      restMatcherState.options = [...restMatcherPairs].sort(() => Math.random() - 0.5);
-      restMatcherState.answered = false;
-      restMatcherState.lastCorrect = false;
-      restMatcherState.roundStartTime = performance.now();
-    }
-
-    function mountEmbeddedRestMatcherGame(target) {
-      if (!target) return;
-      restMatcherState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
-      setupRestMatcherRound();
-      renderRestMatcherGameUI(target);
-    }
-
-    function handleRestMatcherDragStart(e, restType) {
-      if (e && e.dataTransfer) {
-        e.dataTransfer.setData('text/plain', restType);
-        e.dataTransfer.effectAllowed = 'copy';
-      }
-    }
-
-    function handleRestMatcherDrop(event) {
-      if (event) event.preventDefault();
-      const st = restMatcherState;
-      if (st.answered || st.completed) return;
-      if (performance.now() - st.roundStartTime < 800) return; // debounce
-      
-      let droppedRest = null;
-      if (event && event.dataTransfer) {
-        droppedRest = event.dataTransfer.getData('text/plain');
-      }
-      if (!droppedRest) return;
-      
-      st.answered = true;
-      st.lastCorrect = (st.target.rest === droppedRest);
-      
-      if (st.lastCorrect) {
-        st.score++;
-        addTokens(1);
-        playTonePitch(659.25, 0.2, 0.35, 'triangle');
-      } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-      }
-      renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
-    }
-
-    function nextRestMatcherRound() {
-      const st = restMatcherState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        setupRestMatcherRound();
-        renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
-      } else {
-        st.completed = true;
-        renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
-        showAppModal('Rest Matcher Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
-      }
-    }
-
-    function renderRestMatcherGameUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = restMatcherState;
-
-      target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-indigo-400">10-Round Challenge • Drag &amp; Drop</span>
-              <h3 class="text-xl font-black">Rest Matcher</h3>
-              <p class="text-xs text-slate-300 mt-1">Drag the correct Rest symbol onto its matching Note equivalent!</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
-            </div>
-          </div>
-
-          ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Rest Matcher Complete!</h4>
-              <p class="text-xs text-slate-200">You matched <strong>${st.score} / ${st.totalRounds}</strong> rests correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedRestMatcherGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
-            </div>
-          ` : `
-            <div class="flex flex-col md:flex-row gap-6">
-              
-              <!-- Draggable Options -->
-              <div class="flex-1 space-y-3">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">Drag a Rest:</div>
-                <div class="grid grid-cols-2 gap-3">
-                  ${st.options.map(opt => `
-                    <div draggable="${!st.answered}" ondragstart="handleRestMatcherDragStart(event, '${opt.rest}')" class="p-4 bg-slate-800 border-2 border-slate-600 rounded-2xl text-center flex items-center justify-center min-h-[100px] ${!st.answered ? 'cursor-grab hover:border-indigo-400' : 'opacity-50'}">
-                      <div class="text-indigo-300 pointer-events-none">${renderEngravedNoteDarkSVG(opt.rest, 'w-12 h-16')}</div>
+                <div class="flex flex-col md:flex-row gap-6">
+                  <div class="flex-1 space-y-3">
+                    <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">Available Layers (Drag to Mixer)</div>
+                    <div class="grid grid-cols-2 gap-2">
+                      ${textureLabLayers.map(layer => {
+                        const isSelected = st.selectedGuess.includes(layer.id);
+                        return `
+                          <div draggable="${!st.answered && !isSelected}" ondragstart="handleTextureDragStart(event, '${layer.id}')" 
+                               class="p-3 rounded-xl border-2 text-center transition-all flex flex-col justify-center min-h-[60px] ${
+                                 isSelected ? 'bg-slate-800 border-slate-700 text-slate-500 opacity-50' :
+                                 !st.answered ? 'cursor-grab active:cursor-grabbing bg-slate-800 border-slate-600 hover:border-amber-400 text-slate-200' : 'bg-slate-800 border-slate-700 text-slate-500 opacity-50'
+                               }">
+                            <div class="w-4 h-1 rounded-full ${layer.color} mx-auto mb-1.5"></div>
+                            <div class="font-black text-xs pointer-events-none">${layer.name}</div>
+                          </div>
+                        `;
+                      }).join('')}
                     </div>
-                  `).join('')}
-                </div>
-              </div>
-
-              <!-- Drop Zone -->
-              <div class="flex-1">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center mb-3">Drop onto note:</div>
-                <div 
-                  ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-indigo-400', 'bg-slate-800');" : ""}"
-                  ondragleave="${!st.answered ? "this.classList.remove('border-indigo-400', 'bg-slate-800');" : ""}"
-                  ondrop="${!st.answered ? "this.classList.remove('border-indigo-400', 'bg-slate-800'); handleRestMatcherDrop(event);" : ""}"
-                  class="bg-slate-900 border-2 border-dashed border-slate-500 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[200px] transition-colors relative overflow-hidden">
+                  </div>
                   
-                  <div class="text-xs font-bold text-slate-400 absolute top-4 uppercase tracking-widest">${st.target.name} (${st.target.beats})</div>
-                  <div class="text-white mt-6 pointer-events-none">${renderEngravedNoteDarkSVG(st.target.note, 'w-16 h-20')}</div>
-                </div>
-              </div>
-            </div>
-
-            ${st.answered ? `
-              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : '✗ Incorrect. Check the note value carefully!'}</span>
-                <button type="button" onclick="nextRestMatcherRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                </button>
-              </div>
-            ` : ''}
-          `}
-        </div>
-      `;
-    }
-
-    // 6 CONCEPTS OF MUSIC CURRICULUM & UNIQUE 15-QUESTION TESTS
-    // ==========================================
-    // INTERACTIVE MINIGAME: STAGGERED TEXTURE SOUND LAB
-    // ==========================================
-    const staggeredLayers = [
-      { id: 'bass', name: 'Sub Bass Pulse', color: 'bg-indigo-600', hex: '#4f46e5' },
-      { id: 'cello', name: 'Cello Drone', color: 'bg-violet-500', hex: '#8b5cf6' },
-      { id: 'ostinato', name: 'Tension Ostinato', color: 'bg-amber-600', hex: '#d97706' },
-      { id: 'melody', name: 'Haunting Melody', color: 'bg-rose-600', hex: '#e11d48' },
-      { id: 'chime', name: 'High Chime', color: 'bg-cyan-600', hex: '#0891b2' }
-    ];
-
-    let staggeredLabState = {
-      activeTab: 'lab',
-      playing: false,
-      globalBeat: -1,
-      intervalId: null,
-      config: { 'bass': 1, 'cello': 2, 'ostinato': 3, 'melody': 4, 'chime': 5 },
-      round: 1, totalRounds: 5, score: 0,
-      gameTargetOrder: [], gameGuessOrder: [],
-      gameAnswered: false, gameCompleted: false, audioPlayed: false
-    };
-
-    function stopStaggeredLabLoop() {
-      if (staggeredLabState.intervalId) clearInterval(staggeredLabState.intervalId);
-      staggeredLabState.intervalId = null;
-      staggeredLabState.playing = false;
-      staggeredLabState.globalBeat = -1;
-    }
-
-    function toggleStaggeredLabPlayback() {
-      if (staggeredLabState.playing) {
-        stopStaggeredLabLoop();
-        renderStaggeredTextureLabUI();
-        return;
-      }
-      
-      staggeredLabState.playing = true;
-      staggeredLabState.globalBeat = -1;
-      const bpm = 120;
-      const beatMs = 60000 / bpm; // 500ms
-
-      const step = () => {
-        if (!staggeredLabState.playing) return;
-        staggeredLabState.globalBeat++;
-        
-        // Loop back after 6 bars (24 beats)
-        if (staggeredLabState.globalBeat >= 24) {
-           staggeredLabState.globalBeat = 0;
-        }
-
-        const b = staggeredLabState.globalBeat;
-        const currentBar = Math.floor(b / 4) + 1;
-        const beatInBar = b % 4; // 0, 1, 2, 3
-        
-        const cnf = staggeredLabState.activeTab === 'game' ? staggeredLabState.gameConfig : staggeredLabState.config;
-        
-        // Bass: Plays on beats 1 and 3 (0 and 2)
-        if (cnf.bass && currentBar >= cnf.bass && (beatInBar === 0 || beatInBar === 2)) {
-          playTonePitch(65.41, 0.3, 0.4, 'sawtooth');
-        }
-        // Cello: Plays on beat 1, sustained for the whole bar
-        if (cnf.cello && currentBar >= cnf.cello && beatInBar === 0) {
-          playTonePitch(130.81, 1.9, 0.15, 'triangle');
-          playTonePitch(196.00, 1.9, 0.1, 'triangle'); // Fifth
-        }
-        // Ostinato: Plays tight sequence every beat
-        if (cnf.ostinato && currentBar >= cnf.ostinato) {
-          const arp = [392.00, 440.00, 392.00, 349.23];
-          playTonePitch(arp[beatInBar], 0.1, 0.25, 'square');
-          setTimeout(() => playTonePitch(arp[(beatInBar + 1) % 4], 0.1, 0.15, 'square'), 250); // eighth note
-        }
-        // Melody: Slow haunted phrase
-        if (cnf.melody && currentBar >= cnf.melody) {
-           if (beatInBar === 0) playTonePitch(523.25, 0.9, 0.3, 'sawtooth');
-           if (beatInBar === 2) playTonePitch(587.33, 0.9, 0.3, 'sawtooth');
-        }
-        // Chime: Bell hit on beat 2 (index 1)
-        if (cnf.chime && currentBar >= cnf.chime && beatInBar === 1) {
-           playTonePitch(1046.50, 0.8, 0.25, 'sine');
-           setTimeout(() => playTonePitch(1567.98, 0.6, 0.15, 'sine'), 150);
-        }
-
-        renderStaggeredTextureLabUI();
-      };
-      
-      step();
-      staggeredLabState.intervalId = setInterval(step, beatMs);
-    }
-
-    function setStaggeredConfig(layerId, barVal) {
-      if (staggeredLabState.playing) stopStaggeredLabLoop();
-      staggeredLabState.config[layerId] = barVal;
-      renderStaggeredTextureLabUI();
-    }
-
-    function presetStaggeredConfig(type) {
-      if (staggeredLabState.playing) stopStaggeredLabLoop();
-      if (type === 'stagger') {
-        staggeredLabState.config = { 'bass': 1, 'cello': 2, 'ostinato': 3, 'melody': 4, 'chime': 5 };
-      } else if (type === 'all') {
-        staggeredLabState.config = { 'bass': 1, 'cello': 1, 'ostinato': 1, 'melody': 1, 'chime': 1 };
-      } else if (type === 'clear') {
-        staggeredLabState.config = { 'bass': null, 'cello': null, 'ostinato': null, 'melody': null, 'chime': null };
-      }
-      renderStaggeredTextureLabUI();
-    }
-
-    function setupStaggeredGameRound() {
-      const st = staggeredLabState;
-      
-      // Progressive difficulty: Round 1 (2 layers) -> Round 5 (5 layers)
-      const difficultyMap = [2, 3, 3, 4, 5]; 
-      const activeCount = difficultyMap[st.round - 1] || 3;
-      
-      const shuffledIds = staggeredLayers.map(l => l.id).sort(() => Math.random() - 0.5).slice(0, activeCount);
-      
-      st.gameConfig = { 'bass': null, 'cello': null, 'ostinato': null, 'melody': null, 'chime': null };
-      st.gameTargetOrder = shuffledIds;
-      
-      // Assign them sequentially to bars 1, 2, 3, etc.
-      shuffledIds.forEach((id, index) => {
-        st.gameConfig[id] = index + 1;
-      });
-      
-      st.gameGuessOrder = [];
-      st.gameAnswered = false;
-      st.gameCompleted = false;
-      st.audioPlayed = false;
-      stopStaggeredLabLoop();
-    }
-
-    function playStaggeredMystery() {
-       if (staggeredLabState.playing) return;
-       staggeredLabState.gameGuessOrder = [];
-       staggeredLabState.audioPlayed = true;
-       toggleStaggeredLabPlayback();
-       // Auto-stop after the sequence finishes (Wait for highest entry bar + 1 bar to hear it)
-       const highestBar = staggeredLabState.gameTargetOrder.length;
-       const stopAfterMs = (highestBar + 1) * 4 * 500; 
-       setTimeout(() => {
-         if (staggeredLabState.activeTab === 'game') stopStaggeredLabLoop();
-         renderStaggeredTextureLabUI();
-       }, stopAfterMs);
-    }
-
-    function guessStaggeredLayer(layerId) {
-      if (staggeredLabState.gameAnswered || staggeredLabState.gameCompleted) return;
-      if (!staggeredLabState.audioPlayed) { showAppModal('Listen First', 'Please play the mystery sequence before guessing!', false); return; }
-      if (!staggeredLabState.gameGuessOrder.includes(layerId)) {
-        staggeredLabState.gameGuessOrder.push(layerId);
-        playTonePitch(523.25, 0.1, 0.2, 'triangle');
-        renderStaggeredTextureLabUI();
-      }
-    }
-
-    function submitStaggeredGuess() {
-      const st = staggeredLabState;
-      if (st.gameGuessOrder.length !== st.gameTargetOrder.length) return;
-      
-      st.gameAnswered = true;
-      const isRight = st.gameTargetOrder.every((val, idx) => val === st.gameGuessOrder[idx]);
-      st.lastCorrect = isRight;
-
-      if (isRight) {
-        st.score++;
-        addTokens(2);
-        playTonePitch(659.25, 0.2, 0.35, 'triangle');
-      } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-      }
-      renderStaggeredTextureLabUI();
-    }
-
-    function nextStaggeredGameRound() {
-      const st = staggeredLabState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        setupStaggeredGameRound();
-        renderStaggeredTextureLabUI();
-      } else {
-        st.gameCompleted = true;
-        renderStaggeredTextureLabUI();
-        showAppModal('Layer Order Detective Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score * 2} Tokens!`, st.score >= 3);
-      }
-    }
-
-    function mountEmbeddedStaggeredTextureLab(target) {
-      if (!target) return;
-      stopStaggeredLabLoop();
-      staggeredLabState = {
-        activeTab: 'lab', playing: false, globalBeat: -1, intervalId: null,
-        config: { 'bass': 1, 'cello': 2, 'ostinato': 3, 'melody': 4, 'chime': 5 },
-        round: 1, totalRounds: 5, score: 0,
-        gameTargetOrder: [], gameGuessOrder: [], gameAnswered: false, gameCompleted: false
-      };
-      renderStaggeredTextureLabUI(target);
-    }
-
-    function renderStaggeredTextureLabUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = staggeredLabState;
-      
-      const currentBar = st.playing ? Math.floor(st.globalBeat / 4) + 1 : 0;
-      const beatInBar = st.playing ? (st.globalBeat % 4) + 1 : 0;
-      
-      // Calculate visualizer tracks
-      const renderVisualizer = (configObj) => {
-        let gridHtml = '';
-        for (let b = 1; b <= 6; b++) {
-           gridHtml += `<div class="border-r border-slate-700/50 flex flex-col justify-between items-center text-[9px] text-slate-500 font-black tracking-widest pt-2 h-full"><span class="bg-[#0f172a] px-1 z-10">BAR ${b}</span></div>`;
-        }
-        
-        let tracksHtml = '';
-        staggeredLayers.forEach((layer, i) => {
-           const entryBar = configObj[layer.id];
-           if (entryBar) {
-              const leftPct = ((entryBar - 1) / 6) * 100;
-              const widthPct = ((6 - entryBar + 1) / 6) * 100;
-              const isActiveNow = currentBar >= entryBar;
-              const shadowClass = isActiveNow ? 'shadow-[0_0_15px_' + layer.hex + '40]' : '';
-              tracksHtml += `<div class="absolute h-4 rounded-full ${layer.color} ${shadowClass} transition-opacity duration-300" style="top: ${32 + (i * 24)}px; left: ${leftPct}%; width: ${widthPct}%;"></div>`;
-           }
-        });
-        
-        let playheadHtml = '';
-        if (currentBar >= 1 && currentBar <= 6) {
-           const phLeft = (((currentBar - 1) * 4 + (beatInBar - 1)) / 24) * 100;
-           playheadHtml = `<div class="absolute top-0 bottom-0 w-0.5 bg-amber-400 shadow-[0_0_8px_#fbbf24] z-20 transition-all duration-100 ease-linear" style="left: ${phLeft}%;"></div>`;
-        }
-
-        return `
-          <div class="relative w-full h-[160px] bg-[#0b0f19] rounded-2xl border border-slate-800 overflow-hidden mt-4">
-             <div class="absolute inset-0 grid grid-cols-6">${gridHtml}</div>
-             ${tracksHtml}
-             ${playheadHtml}
-          </div>
-        `;
-      };
-
-      let activeCount = Object.values(st.config).filter(v => v !== null).length;
-      let densityStatus = activeCount <= 1 ? 'Thin: Lurking' : activeCount <= 3 ? 'Medium: Building' : 'Thick: Climax';
-
-      target.innerHTML = `
-        <div class="space-y-6">
-          <div class="flex flex-wrap items-center gap-3">
-            <button type="button" onclick="staggeredLabState.activeTab='lab'; stopStaggeredLabLoop(); renderStaggeredTextureLabUI();" class="px-4 py-2.5 rounded-xl text-xs font-black transition-all ${st.activeTab === 'lab' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}">
-              <i class="fa-solid fa-sliders mr-1.5"></i> 1. Staggered Lab
-            </button>
-            <button type="button" onclick="staggeredLabState.activeTab='game'; setupStaggeredGameRound(); renderStaggeredTextureLabUI();" class="px-5 py-2.5 rounded-xl text-xs font-black transition-all border-2 ${st.activeTab === 'game' ? 'bg-amber-400 border-amber-200 text-slate-950 shadow-lg' : 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200'}">
-              <i class="fa-solid fa-ear-listen mr-1.5"></i> 2. Layer Order Detective (2 Tokens)
-            </button>
-          </div>
-
-          ${st.activeTab === 'lab' ? `
-            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h3 class="text-2xl font-black text-slate-800">Staggered Tension Sound Lab</h3>
-                  <p class="text-xs text-slate-500 mt-1">Drag or click layers to stagger their entry bar-by-bar.</p>
-                </div>
-                <div class="flex items-center gap-2 shrink-0">
-                  <button type="button" onclick="presetStaggeredConfig('stagger')" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-xs shadow-sm transition-all">
-                    <i class="fa-solid fa-stairs mr-1.5"></i> Stagger Every Bar
-                  </button>
-                  <button type="button" onclick="toggleStaggeredLabPlayback()" class="px-6 py-2.5 ${st.playing ? 'bg-rose-500 hover:bg-rose-400' : 'bg-emerald-500 hover:bg-emerald-400'} text-white font-black rounded-xl text-sm shadow-md transition-all">
-                    <i class="fa-solid ${st.playing ? 'fa-stop' : 'fa-play'} mr-1.5"></i> ${st.playing ? 'Stop Studio' : 'Start Studio'}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Main Visualizer -->
-              <div class="bg-[#0f172a] rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-800">
-                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-                    <div class="flex items-center gap-3">
-                       <div class="w-3 h-3 rounded-full ${st.playing ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]' : 'bg-indigo-500'}"></div>
-                       <span class="text-xs font-black tracking-widest text-slate-400 uppercase">Current Measure:</span>
-                       <span class="px-3 py-1 bg-slate-800 border border-slate-700 rounded-lg text-amber-400 font-black text-xs min-w-[110px] text-center">
-                          ${st.playing ? `Bar ${currentBar} (Beat ${beatInBar})` : 'Stopped'}
-                       </span>
-                    </div>
-                    <div class="flex items-center gap-4">
-                       <span class="px-3 py-1 bg-indigo-900 border border-indigo-700 text-indigo-200 text-[10px] font-bold rounded-full">${densityStatus}</span>
-                       <span class="text-xs font-mono text-slate-500">Key: A Minor</span>
-                    </div>
-                 </div>
-                 ${renderVisualizer(st.config)}
-              </div>
-
-              <!-- Arrange Entry Bars Controls -->
-              <div class="space-y-3 pt-2">
-                 <div class="flex items-center justify-between">
-                    <h4 class="text-[11px] font-black uppercase tracking-widest text-slate-500">Arrange Entry Bars</h4>
-                    <div class="flex gap-2">
-                       <button onclick="presetStaggeredConfig('clear')" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 font-bold text-xs hover:bg-slate-200">Clear All</button>
-                       <button onclick="presetStaggeredConfig('all')" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-300">All at Bar 1</button>
-                    </div>
-                 </div>
-                 
-                 <div class="space-y-2">
-                   ${staggeredLayers.map(layer => {
-                     const c = st.config[layer.id];
-                     return `
-                       <div class="p-3 rounded-2xl bg-white border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-                          <div class="flex items-center gap-3 min-w-[160px]">
-                            <div class="w-3 h-10 rounded-full ${layer.color}"></div>
-                            <span class="font-black text-sm text-slate-800">${layer.name}</span>
+                  <div class="flex-1 space-y-3">
+                    <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">Mixer (Drop active layers here)</div>
+                    <div 
+                      ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-indigo-950');" : ""}"
+                      ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950');" : ""}"
+                      ondrop="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950'); handleTextureDrop(event);" : ""}"
+                      class="bg-slate-800/60 border-2 border-dashed border-slate-600 rounded-2xl p-4 flex flex-col items-center justify-start min-h-[160px] transition-colors relative gap-2">
+                      
+                      ${st.selectedGuess.length === 0 ? `
+                        <div class="text-slate-500 text-xs font-bold my-auto pointer-events-none">Drop matching layers here</div>
+                      ` : st.selectedGuess.map(id => {
+                        const layer = textureLabLayers.find(l => l.id === id);
+                        return `
+                          <div onclick="removeTextureGuess('${layer.id}')" class="w-full p-2.5 rounded-xl border border-amber-400 bg-indigo-900 text-white flex items-center justify-between shadow-md cursor-pointer hover:bg-rose-900 hover:border-rose-400 group transition-all">
+                             <div class="flex items-center gap-2 pointer-events-none">
+                               <div class="w-2 h-2 rounded-full ${layer.barBg}"></div>
+                               <div class="font-black text-xs">${layer.name}</div>
+                             </div>
+                             <i class="fa-solid fa-xmark text-slate-400 group-hover:text-rose-200 pointer-events-none"></i>
                           </div>
-                          <div class="flex items-center gap-1.5 flex-wrap">
-                            ${[1,2,3,4,5,6].map(b => `
-                               <button type="button" onclick="setStaggeredConfig('${layer.id}', ${b})" class="w-12 py-2 rounded-xl text-xs font-black transition-all ${c === b ? layer.color + ' text-white shadow-md' : 'bg-slate-50 text-indigo-700 border border-slate-200 hover:bg-indigo-50'}">B${b}</button>
-                            `).join('')}
-                            <button type="button" onclick="setStaggeredConfig('${layer.id}', null)" class="ml-2 w-14 py-2 rounded-xl text-xs font-black transition-all ${c === null ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-slate-50 text-rose-600 border border-slate-200 hover:bg-rose-50'}">Mute</button>
-                          </div>
-                       </div>
-                     `;
-                   }).join('')}
-                 </div>
-              </div>
-            </div>
-          ` : `
-            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white space-y-6 border border-slate-800">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                <div>
-                  <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">5-Round Ear Challenge • 2 Tokens Per Correct Answer</span>
-                  <h3 class="text-xl font-black">Layer Order Detective</h3>
-                  <p class="text-xs text-slate-300 mt-1">Listen to the stagger, then click the instruments below in the <strong>exact order</strong> they entered!</p>
-                </div>
-                <div class="flex items-center gap-2 shrink-0">
-                  <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
-                  <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score * 2} Tokens)</span>
-                </div>
-              </div>
-
-              ${st.gameCompleted ? `
-                 <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-                    <h4 class="text-xl font-black text-emerald-300">Stagger Detective Complete!</h4>
-                    <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> stagger patterns correctly and earned <strong>+${st.score * 2} Tokens</strong>!</p>
-                    <button type="button" onclick="staggeredLabState.activeTab='game'; setupStaggeredGameRound(); renderStaggeredTextureLabUI();" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 5 Rounds</button>
-                 </div>
-              ` : `
-                 <div class="flex flex-col items-center justify-center space-y-5">
-                    ${st.playing ? `
-                       <div class="text-center space-y-2">
-                         <div class="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mx-auto animate-pulse">
-                            <i class="fa-solid fa-ear-listen text-2xl text-emerald-400"></i>
-                         </div>
-                         <div class="text-sm font-black text-emerald-300">Listening to stagger sequence...</div>
-                       </div>
-                       ${renderVisualizer(st.gameConfig)}
-                    ` : `
-                       <button type="button" onclick="playStaggeredMystery()" ${st.gameAnswered ? 'disabled' : ''} class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg ${st.gameAnswered ? 'opacity-50 cursor-not-allowed' : ''}">
-                         <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Stagger Sequence
-                       </button>
-                    `}
-                 </div>
-
-                 ${st.gameAnswered ? `
-                    <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+2 Tokens)! You identified the exact order of entry.' : `✗ Incorrect. The correct order was: <strong>${st.gameTargetOrder.map(id => staggeredLayers.find(l=>l.id===id).name).join(', ')}</strong>.`}</span>
-                      <button type="button" onclick="nextStaggeredGameRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                        ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                      </button>
+                        `;
+                      }).join('')}
                     </div>
-                 ` : ''}
-
-                 <div class="space-y-2">
-                   <div class="text-[11px] font-black uppercase text-slate-400">Select layers in order of entry (${st.gameGuessOrder.length}/${st.gameTargetOrder.length}):</div>
-                   <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                     ${staggeredLayers.map(layer => {
-                       const inSequence = st.gameTargetOrder.includes(layer.id);
-                       if (!inSequence) return ''; // Only show the layers actually used in this round to reduce pure guessing noise
-                       
-                       const guessIdx = st.gameGuessOrder.indexOf(layer.id);
-                       const isSelected = guessIdx !== -1;
-                       
-                       return `
-                         <button type="button" onclick="guessStaggeredLayer('${layer.id}')" ${st.playing || st.gameAnswered || isSelected ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-center transition-all ${
-                            isSelected ? 'bg-indigo-900 border-amber-400 text-white shadow-[0_0_10px_rgba(251,191,36,0.5)] scale-105' : 
-                            st.playing || st.gameAnswered ? 'bg-slate-800 border-slate-700 text-slate-500 opacity-50' :
-                            'bg-slate-800 border-slate-600 hover:border-slate-400 text-slate-200'
-                         }">
-                           <div class="w-4 h-1 rounded-full ${layer.color} mx-auto mb-2"></div>
-                           <div class="font-black text-xs">${layer.name}</div>
-                           ${isSelected ? `<div class="mt-2 w-6 h-6 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center mx-auto">${guessIdx + 1}</div>` : ''}
-                         </button>
-                       `;
-                     }).join('')}
-                   </div>
+                  </div>
                  </div>
 
-                 ${!st.gameAnswered && !st.playing && st.gameGuessOrder.length > 0 ? `
+                 ${!st.answered && st.selectedGuess.length > 0 ? `
                    <div class="flex justify-center pt-2">
-                      <button type="button" onclick="submitStaggeredGuess()" class="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md">
-                        Check My Order
+                      <button type="button" onclick="submitTextureLayerGuess()" class="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-md">
+                        Check My Answer
                       </button>
                    </div>
                  ` : ''}
-              `}
-            </div>
-          `}
-        </div>
-      `;
-    }
 
-    // ==========================================
-    // MINIGAME 9.1: PITCH WAVE GAME (HIGH VS LOW)
-    // ==========================================
-    let pitchWaveState = { round: 1, totalRounds: 10, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
-
-    function setupPitchWaveRound() {
-      pitchWaveState.targetType = Math.random() > 0.5 ? 'high' : 'low';
-      pitchWaveState.answered = false;
-      pitchWaveState.lastCorrect = false;
-      pitchWaveState.audioPlayed = false;
-    }
-
-    function mountEmbeddedPitchWaveGame(target) {
-      if (!target) return;
-      pitchWaveState = { round: 1, totalRounds: 10, score: 0, targetType: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
-      setupPitchWaveRound();
-      renderPitchWaveGameUI(target);
-    }
-
-    function playPitchWaveTarget() {
-      if (pitchWaveState.isPlaying) return;
-      pitchWaveState.isPlaying = true;
-      pitchWaveState.audioPlayed = true;
-      renderPitchWaveGameUI();
-      const freq = pitchWaveState.targetType === 'high' ? 880 : 130.81;
-      const wave = pitchWaveState.targetType === 'high' ? 'sine' : 'sawtooth';
-      playTonePitch(freq, 0.8, 0.4, wave);
-      setTimeout(() => {
-        pitchWaveState.isPlaying = false;
-        renderPitchWaveGameUI();
-      }, 1000);
-    }
-
-    function guessPitchWave(type) {
-      const st = pitchWaveState;
-      if (st.answered || st.completed || st.isPlaying) return;
-      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the mystery pitch before guessing!', false); return; }
-      st.answered = true;
-      st.lastCorrect = (st.targetType === type);
-      if (st.lastCorrect) {
-        st.score++;
-        addTokens(1);
-        playTonePitch(659.25, 0.2, 0.35, 'triangle');
-      } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-      }
-      renderPitchWaveGameUI();
-    }
-
-    function nextPitchWaveRound() {
-      const st = pitchWaveState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        setupPitchWaveRound();
-        renderPitchWaveGameUI();
-      } else {
-        st.completed = true;
-        renderPitchWaveGameUI();
-        showAppModal('Pitch & Frequency Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
-      }
-    }
-
-    function renderPitchWaveGameUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = pitchWaveState;
-
-      target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • 1 Token Per Correct Answer</span>
-              <h3 class="text-xl font-black">High vs. Low Pitch Detective</h3>
-              <p class="text-xs text-slate-300 mt-1">Listen to the mystery pitch and determine if it has a high frequency (fast waves) or low frequency (slow waves).</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
-            </div>
-          </div>
-
-          ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Pitch Detective Complete!</h4>
-              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> pitches correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedPitchWaveGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
-            </div>
-          ` : `
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
-              <span class="text-xs sm:text-sm font-black text-sky-300">${st.isPlaying ? 'Listening to pitch...' : 'Ready to hear the mystery pitch!'}</span>
-              <button type="button" onclick="playPitchWaveTarget()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
-                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Pitch
-              </button>
-            </div>
-
-            ${st.answered ? `
-              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : '✗ Not quite. The correct answer was ' + (st.targetType === 'high' ? 'High Pitch' : 'Low Pitch') + '.'}</span>
-                <button type="button" onclick="nextPitchWaveRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                ${st.answered ? `
+              <div class="mt-4 p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+2 Tokens)!' : '✗ Not quite... You must select the exact matching layers to advance!'}</span>
+                <button type="button" onclick="nextTextureDetectiveRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.lastCorrect ? (st.round < st.totalRounds ? 'Next Round →' : 'Finish') : 'Retry Round ↻'}
                 </button>
               </div>
             ` : ''}
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              <button type="button" onclick="guessPitchWave('high')" ${st.answered ? 'disabled' : ''} class="p-6 rounded-2xl border-2 transition-all flex flex-col items-center justify-center ${
-                  st.answered && st.targetType === 'high' ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
-                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white'
-              }">
-                <svg viewBox="0 0 200 50" class="w-3/4 h-12 mb-3"><path d="M0 25 Q 6.25 4, 12.5 25 T 25 25 T 37.5 25 T 50 25 T 62.5 25 T 75 25 T 87.5 25 T 100 25 T 112.5 25 T 125 25 T 137.5 25 T 150 25 T 162.5 25 T 175 25 T 187.5 25 T 200 25" fill="none" stroke="#fbbf24" stroke-width="2.5"/></svg>
-                <div class="font-black text-sm">High Pitch</div>
-                <div class="text-[10px] text-slate-400 mt-1">Fast frequency (tight waves)</div>
-              </button>
-              <button type="button" onclick="guessPitchWave('low')" ${st.answered ? 'disabled' : ''} class="p-6 rounded-2xl border-2 transition-all flex flex-col items-center justify-center ${
-                  st.answered && st.targetType === 'low' ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
-                  st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white'
-              }">
-                <svg viewBox="0 0 200 50" class="w-3/4 h-12 mb-3"><path d="M0 25 Q 25 4, 50 25 T 100 25 T 150 25 T 200 25" fill="none" stroke="#818cf8" stroke-width="3.5"/></svg>
-                <div class="font-black text-sm">Low Pitch</div>
-                <div class="text-[10px] text-slate-400 mt-1">Slow frequency (wide waves)</div>
-              </button>
-            </div>
-          `}
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // MINIGAME 9.2: MELODIC CONTOUR GAME
-    // ==========================================
-    let melodicContourState = { round: 1, totalRounds: 10, score: 0, targetContour: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
-
-    const contourTypes = [
-      { id: 'step_up', name: 'Ascending Step', intervals: [ [261.63, 293.66], [329.63, 349.23], [392.00, 440.00] ] },
-      { id: 'step_down', name: 'Descending Step', intervals: [ [293.66, 261.63], [349.23, 329.63], [440.00, 392.00] ] },
-      { id: 'leap_up', name: 'Ascending Leap', intervals: [ [261.63, 392.00], [293.66, 440.00], [329.63, 523.25] ] },
-      { id: 'leap_down', name: 'Descending Leap', intervals: [ [392.00, 261.63], [440.00, 293.66], [523.25, 329.63] ] }
-    ];
-
-    function setupMelodicContourRound() {
-      const type = contourTypes[Math.floor(Math.random() * contourTypes.length)];
-      const interval = type.intervals[Math.floor(Math.random() * type.intervals.length)];
-      melodicContourState.targetContour = { id: type.id, name: type.name, interval };
-      melodicContourState.answered = false;
-      melodicContourState.lastCorrect = false;
-      melodicContourState.audioPlayed = false;
-    }
-
-    function mountEmbeddedMelodicContourGame(target) {
-      if (!target) return;
-      melodicContourState = { round: 1, totalRounds: 10, score: 0, targetContour: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
-      setupMelodicContourRound();
-      renderMelodicContourUI(target);
-    }
-
-    function playMelodicInterval(interval) {
-        playTonePitch(interval[0], 0.4, 0.3, 'triangle');
-        setTimeout(() => {
-          playTonePitch(interval[1], 0.4, 0.3, 'triangle');
-        }, 500);
-    }
-
-    function playMelodicContourTarget() {
-      if (melodicContourState.isPlaying) return;
-      melodicContourState.isPlaying = true;
-      melodicContourState.audioPlayed = true;
-      renderMelodicContourUI();
-      
-      playMelodicInterval(melodicContourState.targetContour.interval);
-      setTimeout(() => {
-        melodicContourState.isPlaying = false;
-        renderMelodicContourUI();
-      }, 1000);
-    }
-
-    function guessMelodicContour(id) {
-      const st = melodicContourState;
-      if (st.answered || st.completed || st.isPlaying) return;
-      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the melody before guessing!', false); return; }
-      st.answered = true;
-      st.lastCorrect = (st.targetContour.id === id);
-      if (st.lastCorrect) {
-        st.score++;
-        addTokens(1);
-        playTonePitch(659.25, 0.2, 0.35, 'triangle');
-      } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-      }
-      renderMelodicContourUI();
-    }
-
-    function nextMelodicContourRound() {
-      const st = melodicContourState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        setupMelodicContourRound();
-        renderMelodicContourUI();
-      } else {
-        st.completed = true;
-        renderMelodicContourUI();
-        showAppModal('Melodic Contour Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
-      }
-    }
-
-    function renderMelodicContourUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = melodicContourState;
-
-      target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • 1 Token Per Correct Answer</span>
-              <h3 class="text-xl font-black">Melodic Contour Detective</h3>
-              <p class="text-xs text-slate-300 mt-1">Listen to the 2 notes and determine the melodic motion.</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
-            </div>
-          </div>
-
-          ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Contour Detective Complete!</h4>
-              <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> motions correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedMelodicContourGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
-            </div>
-          ` : `
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
-              <span class="text-xs sm:text-sm font-black text-sky-300">${st.isPlaying ? 'Listening to notes...' : 'Ready to hear the melodic motion!'}</span>
-              <button type="button" onclick="playMelodicContourTarget()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
-                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Melody
-              </button>
-            </div>
-
-            ${st.answered ? `
-              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : '✗ Not quite. The correct answer was ' + st.targetContour.name + '.'}</span>
-                <button type="button" onclick="nextMelodicContourRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                </button>
               </div>
-            ` : ''}
-
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-              ${contourTypes.map(c => `
-                <button type="button" onclick="guessMelodicContour('${c.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 transition-all flex flex-col items-center justify-center ${
-                    st.answered && st.targetContour.id === c.id ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_15px_rgba(52,211,153,0.6)] scale-[1.02]' :
-                    st.answered ? 'border-slate-700 bg-slate-800 text-slate-500 opacity-50' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white'
-                }">
-                  <div class="font-black text-sm text-center">${c.name}</div>
-                </button>
-              `).join('')}
-            </div>
-          `}
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // MINIGAME 11: PITCH KEYBOARD EAR CHALLENGE
-    // ==========================================
-    let pitchKeyboardState = {
-      round: 1, totalRounds: 10, score: 0,
-      targetKey: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false
-    };
-
-    const pitchKeyboardKeys = [
-      { note: 'C4', freq: 261.63 },
-      { note: 'D4', freq: 293.66 },
-      { note: 'E4', freq: 329.63 },
-      { note: 'F4', freq: 349.23 },
-      { note: 'G4', freq: 392.00 },
-      { note: 'A4', freq: 440.00 },
-      { note: 'B4', freq: 493.88 },
-      { note: 'C5', freq: 523.25 }
-    ];
-
-    function setupPitchKeyboardRound() {
-      const pool = pitchKeyboardKeys.filter(k => k.note !== 'C4');
-      pitchKeyboardState.targetKey = pool[Math.floor(Math.random() * pool.length)];
-      pitchKeyboardState.answered = false;
-      pitchKeyboardState.lastCorrect = false;
-      pitchKeyboardState.audioPlayed = false;
-    }
-
-    function mountEmbeddedPitchKeyboard(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      pitchKeyboardState = {
-        round: 1, totalRounds: 10, score: 0,
-        targetKey: null, isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false
-      };
-      setupPitchKeyboardRound();
-      renderPitchKeyboardUI(target);
-    }
-
-    function playPitchKeyboardMystery() {
-      if (pitchKeyboardState.isPlaying || pitchKeyboardState.answered) return;
-      pitchKeyboardState.isPlaying = true;
-      pitchKeyboardState.audioPlayed = true;
-      renderPitchKeyboardUI();
-      
-      playTonePitch(261.63, 0.5, 0.35, 'triangle'); // C4 Reference
-      setTimeout(() => {
-        playTonePitch(pitchKeyboardState.targetKey.freq, 0.5, 0.35, 'triangle');
-        setTimeout(() => {
-          pitchKeyboardState.isPlaying = false;
-          renderPitchKeyboardUI();
-        }, 600);
-      }, 800);
-    }
-
-    function guessPitchKeyboardNote(noteName) {
-      const st = pitchKeyboardState;
-      if (st.answered || st.completed || st.isPlaying) return;
-      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the mystery notes before guessing!', false); return; }
-      
-      st.answered = true;
-      st.lastCorrect = (st.targetKey.note === noteName);
-      
-      const k = pitchKeyboardKeys.find(key => key.note === noteName);
-      playTonePitch(k.freq, 0.4, 0.35, 'triangle');
-      
-      if (st.lastCorrect) {
-        st.score++;
-        addTokens(1);
-        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 500);
-      } else {
-        setTimeout(() => playTonePitch(155.56, 0.25, 0.3, 'sawtooth'), 500);
-      }
-      renderPitchKeyboardUI();
-    }
-
-    function nextPitchKeyboardRound() {
-      const st = pitchKeyboardState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        setupPitchKeyboardRound();
-        renderPitchKeyboardUI();
-      } else {
-        st.completed = true;
-        renderPitchKeyboardUI();
-        showAppModal('Keyboard Ear Training Complete!', `You identified ${st.score}/${st.totalRounds} pitches correctly and earned +${st.score} Tokens!`, st.score >= 5);
-      }
-    }
-
-    function renderPitchKeyboardUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = pitchKeyboardState;
-
-      target.innerHTML = `
-        <div class="space-y-6">
-          <!-- FREE PLAY PRACTICE KEYBOARD -->
-          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-5">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-sky-600">Free Play Mode</span>
-              <h3 class="text-xl font-black text-slate-800">Practice Keyboard</h3>
-              <p class="text-xs text-slate-500 mt-1">Play the C Major scale (C4 to C5) to get familiar with each pitch before starting the ear training challenge!</p>
-            </div>
-            <div class="flex justify-center gap-1 sm:gap-2">
-              ${pitchKeyboardKeys.map(k => `
-                <button type="button" onmousedown="playTonePitch(${k.freq}, 0.45, 0.35, 'triangle')" ontouchstart="event.preventDefault(); playTonePitch(${k.freq}, 0.45, 0.35, 'triangle');" class="h-32 w-10 sm:w-16 rounded-b-xl font-black text-xs sm:text-sm flex flex-col justify-end items-center pb-3 shadow bg-white hover:bg-sky-50 active:bg-sky-200 text-slate-800 border-2 border-slate-300 transition-colors">
-                  <span>${k.note}</span>
-                </button>
-              `).join('')}
-            </div>
-          </div>
-
-          <!-- 10-ROUND EAR CHALLENGE -->
-          <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-              <div>
-                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Ear Challenge • 1 Token Per Correct Answer</span>
-                <h3 class="text-xl font-black">C Major Octave Challenge</h3>
-                <p class="text-xs text-slate-300 mt-1">Click "Hear Notes" to listen to the reference C4, then the mystery pitch. Find the matching key!</p>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
-                  Round ${st.round} / ${st.totalRounds}
-                </span>
-                <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
-                  Score: ${st.score} (+${st.score} Tokens)
-                </span>
-              </div>
-            </div>
-
-            ${st.completed ? `
-              <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-                <h4 class="text-xl font-black text-emerald-300">Keyboard Ear Training Complete!</h4>
-                <p class="text-xs text-slate-200">You identified <strong>${st.score} / ${st.totalRounds}</strong> pitches correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-                <button type="button" onclick="mountEmbeddedPitchKeyboard(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
-              </div>
-            ` : `
-              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
-                <span class="text-xs sm:text-sm font-black text-amber-300">${st.isPlaying ? 'Listen closely to the interval...' : st.targetKey ? 'Ready to play the mystery notes!' : ''}</span>
-                <button type="button" onclick="playPitchKeyboardMystery()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
-                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Notes (C4 &rarr; ?)
-                </button>
-              </div>
-
-              ${st.answered ? `
-                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)! That was ' + st.targetKey.note + '.' : '✗ Not quite. The correct note was ' + st.targetKey.note + '.'}</span>
-                  <button type="button" onclick="nextPitchKeyboardRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                    ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                  </button>
-                </div>
-              ` : ''}
-
-              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2 mt-4">
-                ${pitchKeyboardKeys.map(k => {
-                  let btnClass = 'bg-white hover:bg-amber-100 text-slate-900 border border-slate-300';
-                  if (st.answered) {
-                    if (k.note === st.targetKey.note) {
-                      btnClass = 'bg-emerald-400 text-slate-950 border-emerald-500 shadow-[0_0_15px_rgba(52,211,153,0.6)] z-10 scale-105';
-                    } else {
-                      btnClass = 'bg-slate-700 text-slate-400 border-slate-600 opacity-50 cursor-not-allowed';
-                    }
-                  }
-                  return `
-                  <button type="button" onmousedown="guessPitchKeyboardNote('${k.note}')" ontouchstart="event.preventDefault(); guessPitchKeyboardNote('${k.note}');" ${st.answered && k.note !== st.targetKey.note ? 'disabled' : ''} class="h-28 rounded-2xl font-black text-sm flex flex-col justify-end items-center pb-3 shadow-md transition-all ${btnClass}">
-                    <span>${k.note}</span>
-                  </button>
-                `;
-              }).join('')}
-            </div>
-          `}
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // MINIGAME 12: TREBLE CLEF STAFF NOTATION GAME
-    // ==========================================
-    const trebleClefPositions = [
-      { note: 'F5', name: 'F', y: 30, freq: 698.46 },
-      { note: 'E5', name: 'E', y: 35, freq: 659.25 },
-      { note: 'D5', name: 'D', y: 40, freq: 587.33 },
-      { note: 'C5', name: 'C', y: 45, freq: 523.25 },
-      { note: 'B4', name: 'B', y: 50, freq: 493.88 },
-      { note: 'A4', name: 'A', y: 55, freq: 440.00 },
-      { note: 'G4', name: 'G', y: 60, freq: 392.00 },
-      { note: 'F4', name: 'F', y: 65, freq: 349.23 },
-      { note: 'E4', name: 'E', y: 70, freq: 329.63 }
-    ];
-
-    let trebleClefGameState = {
-      streak: 0,
-      best: 0,
-      targetKey: null,
-      answered: false,
-      lastCorrect: false,
-      selectedNote: null,
-      roundStartTime: 0
-    };
-
-    function startTrebleClefRound() {
-      const randIdx = Math.floor(Math.random() * trebleClefPositions.length);
-      trebleClefGameState.targetKey = trebleClefPositions[randIdx];
-      trebleClefGameState.answered = false;
-      trebleClefGameState.lastCorrect = false;
-      trebleClefGameState.selectedNote = null;
-      trebleClefGameState.roundStartTime = performance.now();
-      renderTrebleClefGameUI();
-    }
-
-    function guessTrebleClefLetter(letter) {
-      const st = trebleClefGameState;
-      if (st.answered) return;
-      if (performance.now() - st.roundStartTime < 800) return;
-      
-      st.answered = true;
-      st.selectedNote = letter;
-      
-      if (letter === st.targetKey.name) {
-        st.lastCorrect = true;
-        st.streak++;
-        if (st.streak > st.best) st.best = st.streak;
-        addTokens(1);
-        playTonePitch(st.targetKey.freq, 0.4, 0.35, 'triangle');
-        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 300);
-        renderTrebleClefGameUI();
-        setTimeout(() => {
-          startTrebleClefRound();
-        }, 1200);
-      } else {
-        st.lastCorrect = false;
-        st.streak = 0;
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-        renderTrebleClefGameUI();
-        setTimeout(() => {
-          startTrebleClefRound();
-        }, 2000);
-      }
-    }
-
-    function mountEmbeddedTrebleClefGame(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      trebleClefGameState = {
-        streak: 0, best: 0, targetKey: null, answered: false, lastCorrect: false, selectedNote: null, roundStartTime: 0
-      };
-      startTrebleClefRound();
-    }
-
-    function renderTrebleClefGameUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = trebleClefGameState;
-      const letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-
-      target.innerHTML = `
-        <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
-            <div>
-              <h3 class="text-2xl font-black text-slate-800">Treble Clef Game</h3>
-              <p class="text-sm text-slate-500 mt-1">Identify the note on the Treble Clef!</p>
-            </div>
-          </div>
-          
-          <div class="flex flex-col md:flex-row gap-6 md:gap-10">
-            <!-- Left: Staff Image -->
-            <div class="flex-1 rounded-2xl border border-slate-200 bg-white p-6 flex items-center justify-center min-h-[220px] shadow-sm relative">
-              ${st.targetKey ? `
-                <svg viewBox="0 0 200 120" class="w-full max-w-[200px] h-auto bg-transparent">
-                  <line x1="40" y1="40" x2="180" y2="40" stroke="#1e293b" stroke-width="2"/>
-                  <line x1="40" y1="50" x2="180" y2="50" stroke="#1e293b" stroke-width="2"/>
-                  <line x1="40" y1="60" x2="180" y2="60" stroke="#1e293b" stroke-width="2"/>
-                  <line x1="40" y1="70" x2="180" y2="70" stroke="#1e293b" stroke-width="2"/>
-                  <line x1="40" y1="80" x2="180" y2="80" stroke="#1e293b" stroke-width="2"/>
-                  <text x="35" y="88" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
-                  
-                  <ellipse cx="130" cy="${st.targetKey.y + 10}" rx="9" ry="6" fill="none" stroke="#1e293b" stroke-width="2" transform="rotate(-15 130 ${st.targetKey.y + 10})"/>
-                </svg>
-              ` : ''}
-              
-              ${st.answered ? `
-                <div class="absolute inset-0 bg-white/90 rounded-2xl flex items-center justify-center backdrop-blur-[2px] transition-all">
-                  <span class="text-5xl font-black ${st.lastCorrect ? 'text-emerald-500' : 'text-rose-500'} drop-shadow-md">
-                    ${st.lastCorrect ? '<i class="fa-solid fa-check"></i>' : st.targetKey.name}
-                  </span>
-                </div>
-              ` : ''}
-            </div>
-
-            <!-- Right: Buttons & Score -->
-            <div class="flex-1 flex flex-col justify-center">
-              <div class="flex items-center justify-between mb-6">
-                <span class="text-sm font-black text-slate-700">Streak: <span class="text-sky-500 text-lg">${st.streak}</span></span>
-                <span class="text-sm font-black text-slate-700">Best: <span class="text-emerald-500 text-lg">${st.best}</span></span>
-              </div>
-              <div class="grid grid-cols-3 gap-3">
-                ${letters.map(letter => {
-                  let btnClass = 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800';
-                  if (st.answered) {
-                    if (letter === st.targetKey.name) {
-                       btnClass = 'bg-emerald-50 border-emerald-400 text-emerald-700 shadow-inner scale-[1.02]';
-                    } else if (letter === st.selectedNote) {
-                       btnClass = 'bg-rose-50 border-rose-400 text-rose-700 shadow-inner scale-[0.98]';
-                    } else {
-                       btnClass = 'bg-slate-50 border-slate-200 text-slate-400 opacity-50';
-                    }
-                  }
-                  return `
-                    <button type="button" onclick="guessTrebleClefLetter('${letter}')" ${st.answered ? 'disabled' : ''} class="py-4 rounded-xl border-2 text-lg font-black transition-all shadow-sm active:scale-95 ${btnClass}">
-                      ${letter}
-                    </button>
-                  `;
-                }).join('')}
-              </div>
-            </div>
+            `}
           </div>
         </div>
       `;

@@ -395,6 +395,7 @@
       try { if (typeof stopWaveformGame === 'function') stopWaveformGame(); } catch (e) {}
       try { if (typeof stopDynamicsTracer === 'function') stopDynamicsTracer(); } catch (e) {}
       try { if (typeof stopDrumHeroGame === 'function') stopDrumHeroGame(); } catch (e) {}
+      try { if (typeof stopWrenchGame === 'function') stopWrenchGame(); } catch (e) {}
     }
 
     window.app = {
@@ -460,6 +461,10 @@
           case 'drumHeroGame':
             if (!this.currentUser) return renderLoginView(viewport);
             renderDrumHeroGameView(viewport);
+            break;
+          case 'wrenchGame':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderWrenchGameView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -4748,10 +4753,28 @@
         }
     }
 
-    // Dummy state and functions for the missing Long Note minigame to prevent reference errors
+    // Dummy state and functions for the missing minigames to prevent reference errors
     let longNoteState = { running: false };
     function beginLongNoteHold() {}
     function endLongNoteHold() {}
+    function mountEmbeddedLongNoteGame(target) {
+        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+    }
+    function mountEmbeddedPitchWaveGame(target) {
+        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+    }
+    function mountEmbeddedMelodicContourGame(target) {
+        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+    }
+    function mountEmbeddedPitchKeyboard(target) {
+        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+    }
+    function mountEmbeddedTrebleClefGame(target) {
+        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+    }
+    function mountEmbeddedLedgerLineGame(target) {
+        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+    }
 
     // Global Spacebar handler for rhythm games
     window.addEventListener('keydown', (e) => {
@@ -6737,6 +6760,10 @@
                         <button onclick="window.app.navigate('drumHeroGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Minigame
                         </button>
+                      ` : item.id === 'item_wrench' ? `
+                        <button onclick="window.app.navigate('wrenchGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Minigame
+                        </button>
                       ` : ''}
                       <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                           <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
@@ -6773,8 +6800,14 @@
       window.state.stats.tokens = bal - item.cost;
       window.state.inventory.push(item.id);
       saveUserState();
-      showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
-      renderShopView(document.getElementById('app-viewport'));
+      
+      if (item.id === 'item_wrench') {
+        showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Playing the minigame...`, true);
+        window.app.navigate('wrenchGame');
+      } else {
+        showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
+        renderShopView(document.getElementById('app-viewport'));
+      }
     }
 
     function tradeShopItem(itemId) {
@@ -7232,6 +7265,10 @@
                         <button onclick="window.app.navigate('drumHeroGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
                           Play
                         </button>
+                      ` : it.id === 'item_wrench' ? `
+                        <button onclick="window.app.navigate('wrenchGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
+                          Play
+                        </button>
                       ` : ''}
                     </div>
                   `).join('')}
@@ -7291,22 +7328,23 @@
             </div>
           </div>
 
+          <!-- STUDENT MARKBOOK -->
           <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50">
               <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
                 <i class="fa-solid fa-users text-indigo-600"></i> Student Markbook (${filteredStudents.length})
               </h2>
               <div class="flex flex-wrap items-center gap-2">
-                <select onchange="teacherFilters.classFilter = this.value; renderTeacherDash();" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                <select onchange="teacherFilters.classFilter = this.value; window.app.navigate('teacherDash');" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
                   ${classOptions.map(c => `<option value="${c}" ${teacherFilters.classFilter === c ? 'selected' : ''}>Class: ${c}</option>`).join('')}
                 </select>
-                <select onchange="teacherFilters.teacherFilter = this.value; renderTeacherDash();" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                <select onchange="teacherFilters.teacherFilter = this.value; window.app.navigate('teacherDash');" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
                   <option value="ALL" ${teacherFilters.teacherFilter === 'ALL' ? 'selected' : ''}>Teacher: All</option>
                   <option value="Mr B" ${teacherFilters.teacherFilter === 'Mr B' ? 'selected' : ''}>Teacher: Mr B</option>
                   <option value="Mr H" ${teacherFilters.teacherFilter === 'Mr H' ? 'selected' : ''}>Teacher: Mr H</option>
                   <option value="Mr T" ${teacherFilters.teacherFilter === 'Mr T' ? 'selected' : ''}>Teacher: Mr T</option>
                 </select>
-                <select onchange="teacherFilters.sortBy = this.value; renderTeacherDash();" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                <select onchange="teacherFilters.sortBy = this.value; window.app.navigate('teacherDash');" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
                   <option value="class" ${teacherFilters.sortBy === 'class' ? 'selected' : ''}>Sort: Class</option>
                   <option value="tokens" ${teacherFilters.sortBy === 'tokens' ? 'selected' : ''}>Sort: Tokens</option>
                   <option value="date" ${teacherFilters.sortBy === 'date' ? 'selected' : ''}>Sort: Recent Activity</option>
@@ -7372,8 +7410,12 @@
               </table>
             </div>
           </div>
+
+          <!-- CLASSROOM LEADERBOARD INCLUDED BELOW MARKBOOK -->
+          ${renderLeaderboardMarkup()}
         </div>
       `;
+      refreshLeaderboardTableInPlace();
     }
 
     function openEditStudentModal(key) {
@@ -8314,14 +8356,340 @@
     }
 
     // ==========================================
-    // MINIGAME 5: 8-BEAT DRUM SEQUENCER & DICTATION LAB
+    // MINIGAME ARCADE: MR B'S WRENCH (MELODY ECHO)
     // ==========================================
-    window.addEventListener('keyup', (e) => {
-      if (e.code === 'Space' && longNoteState.running) {
-        e.preventDefault();
-        endLongNoteHold();
+    let wrenchGameState = {
+        running: false,
+        round: 1,
+        sequence: [],
+        playerSequence: [],
+        isPlayingSequence: false,
+        timerId: null,
+        timeLeft: 3,
+        showTimer: false,
+        completed: false,
+        score: 0
+    };
+
+    const wrenchInstruments = [
+      { 
+        id: 'tuba', name: 'Tuba',
+        activeClasses: ['scale-110', 'bg-amber-500', 'text-slate-900', 'border-amber-400'],
+        baseBorder: 'border-amber-500',
+        icon: `<svg viewBox="0 0 100 100" class="w-12 h-12 mx-auto fill-none stroke-current" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M 70,10 L 60,30 L 60,70 C 60,85 40,85 40,70 L 40,40 C 40,25 20,25 20,40 L 20,70 C 20,95 80,95 80,70 L 80,30 L 90,10 Z"/><line x1="40" y1="50" x2="60" y2="50"/><line x1="40" y1="60" x2="60" y2="60"/></svg>`,
+        play: () => { playTonePitch(87.31, 0.4, 0.4, 'triangle'); }
+      },
+      { 
+        id: 'saxophone', name: 'Saxophone',
+        activeClasses: ['scale-110', 'bg-rose-500', 'text-slate-900', 'border-rose-400'],
+        baseBorder: 'border-rose-500',
+        icon: `<svg viewBox="0 0 100 100" class="w-12 h-12 mx-auto fill-none stroke-current" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M 40,10 L 50,10 L 50,60 C 50,80 30,90 20,75 L 30,65 C 35,70 40,65 40,60 L 40,20 Z"/><ellipse cx="20" cy="75" rx="10" ry="10"/><line x1="50" y1="30" x2="60" y2="30"/><line x1="50" y1="40" x2="60" y2="40"/></svg>`,
+        play: () => { playTonePitch(293.66, 0.2, 0.3, 'sawtooth'); setTimeout(() => playTonePitch(349.23, 0.3, 0.3, 'sawtooth'), 200); }
+      },
+      { 
+        id: 'guitar', name: 'Guitar',
+        activeClasses: ['scale-110', 'bg-emerald-500', 'text-slate-900', 'border-emerald-400'],
+        baseBorder: 'border-emerald-500',
+        icon: `<svg viewBox="0 0 100 100" class="w-12 h-12 mx-auto fill-none stroke-current" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M 45,35 C 35,35 30,45 35,55 C 25,60 25,85 50,85 C 75,85 75,60 65,55 C 70,45 65,35 55,35 C 50,35 50,35 45,35 Z"/><circle cx="50" cy="65" r="8"/><rect x="46" y="5" width="8" height="30" fill="currentColor"/></svg>`,
+        play: () => { playTonePitch(196.00, 0.6, 0.3, 'sawtooth'); setTimeout(() => playTonePitch(246.94, 0.5, 0.3, 'sawtooth'), 150); }
+      },
+      { 
+        id: 'harp', name: 'Harp',
+        activeClasses: ['scale-110', 'bg-sky-500', 'text-slate-900', 'border-sky-400'],
+        baseBorder: 'border-sky-500',
+        icon: `<svg viewBox="0 0 100 100" class="w-12 h-12 mx-auto fill-none stroke-current" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M 20,90 L 80,90 L 70,20 C 50,10 30,30 30,90"/><line x1="40" y1="90" x2="40" y2="42"/><line x1="50" y1="90" x2="50" y2="30"/><line x1="60" y1="90" x2="60" y2="22"/></svg>`,
+        play: () => { playTonePitch(523.25, 0.4, 0.2, 'sine'); setTimeout(() => playTonePitch(659.25, 0.4, 0.2, 'sine'), 100); setTimeout(() => playTonePitch(783.99, 0.5, 0.2, 'sine'), 200); }
+      },
+      { 
+        id: 'piano', name: 'Piano',
+        activeClasses: ['scale-110', 'bg-fuchsia-500', 'text-white', 'border-fuchsia-400'],
+        baseBorder: 'border-fuchsia-500',
+        icon: `<svg viewBox="0 0 100 100" class="w-12 h-12 mx-auto fill-none stroke-current" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><rect x="10" y="30" width="80" height="40" rx="4"/><line x1="26" y1="30" x2="26" y2="70"/><line x1="42" y1="30" x2="42" y2="70"/><line x1="58" y1="30" x2="58" y2="70"/><line x1="74" y1="30" x2="74" y2="70"/><rect x="18" y="30" width="8" height="25" fill="currentColor"/><rect x="34" y="30" width="8" height="25" fill="currentColor"/><rect x="58" y="30" width="8" height="25" fill="currentColor"/></svg>`,
+        play: () => { playTonePitch(261.63, 0.5, 0.2, 'triangle'); playTonePitch(329.63, 0.5, 0.2, 'triangle'); playTonePitch(392.00, 0.5, 0.2, 'triangle'); }
       }
-    });
+    ];
+
+    function stopWrenchGame() {
+        if (wrenchGameState.timerId) clearInterval(wrenchGameState.timerId);
+        wrenchGameState.running = false;
+    }
+
+    function startWrenchGame() {
+        stopWrenchGame();
+        wrenchGameState = {
+            running: true,
+            round: 1,
+            sequence: [],
+            playerSequence: [],
+            isPlayingSequence: false,
+            timerId: null,
+            timeLeft: 3,
+            showTimer: false,
+            completed: false,
+            score: 0
+        };
+        nextWrenchRound();
+        renderWrenchGameView(document.getElementById('app-viewport'));
+    }
+
+    function nextWrenchRound() {
+        const st = wrenchGameState;
+        if (st.round > 12) {
+            handleWrenchGameComplete();
+            return;
+        }
+        st.playerSequence = [];
+        
+        // 3 rounds of 2, 3 of 3, 3 of 4, 3 of 5
+        const seqLength = Math.floor((st.round - 1) / 3) + 2; 
+        
+        st.sequence = [];
+        for (let i = 0; i < seqLength; i++) {
+            st.sequence.push(Math.floor(Math.random() * wrenchInstruments.length));
+        }
+        
+        if (st.round >= 7) {
+            st.showTimer = true;
+            st.timeLeft = 3;
+        } else {
+            st.showTimer = false;
+        }
+
+        playWrenchSequence();
+    }
+
+    function playWrenchSequence() {
+        const st = wrenchGameState;
+        st.isPlayingSequence = true;
+        renderWrenchGameUIUpdates();
+
+        let delay = 500;
+        st.sequence.forEach((instIdx, i) => {
+            setTimeout(() => {
+                if(!st.running) return;
+                const btn = document.getElementById('wrench-btn-' + instIdx);
+                const inst = wrenchInstruments[instIdx];
+                const aClasses = inst.activeClasses;
+                if (btn) {
+                    btn.classList.remove('bg-slate-800', inst.baseBorder, 'text-slate-300');
+                    btn.classList.add(...aClasses);
+                }
+                inst.play();
+                setTimeout(() => {
+                    if (btn) {
+                        btn.classList.remove(...aClasses);
+                        btn.classList.add('bg-slate-800', inst.baseBorder, 'text-slate-300');
+                    }
+                }, 400);
+            }, delay);
+            delay += 800;
+        });
+
+        setTimeout(() => {
+            if(!st.running) return;
+            st.isPlayingSequence = false;
+            renderWrenchGameUIUpdates();
+            if (st.showTimer) {
+                st.timerId = setInterval(() => {
+                    st.timeLeft -= 1;
+                    renderWrenchGameUIUpdates();
+                    if (st.timeLeft <= 0) {
+                        clearInterval(st.timerId);
+                        handleWrenchFail();
+                    }
+                }, 1000);
+            }
+        }, delay);
+    }
+
+    function handleWrenchHit(instIdx) {
+        const st = wrenchGameState;
+        if (!st.running || st.isPlayingSequence || st.completed) return;
+
+        const inst = wrenchInstruments[instIdx];
+        inst.play();
+
+        const btn = document.getElementById('wrench-btn-' + instIdx);
+        const aClasses = inst.activeClasses;
+        if (btn) {
+            btn.classList.remove('bg-slate-800', inst.baseBorder, 'text-slate-300');
+            btn.classList.add(...aClasses);
+            setTimeout(() => {
+                btn.classList.remove(...aClasses);
+                btn.classList.add('bg-slate-800', inst.baseBorder, 'text-slate-300');
+            }, 200);
+        }
+
+        st.playerSequence.push(instIdx);
+
+        const currentIndex = st.playerSequence.length - 1;
+        if (st.sequence[currentIndex] !== instIdx) {
+            handleWrenchFail();
+            return;
+        }
+
+        if (st.playerSequence.length === st.sequence.length) {
+            if (st.timerId) clearInterval(st.timerId);
+            const seqLen = st.sequence.length;
+            const reward = seqLen === 1 ? 1 : 2;
+            st.score += reward;
+            addTokens(reward);
+            
+            const statusEl = document.getElementById('wrench-status');
+            if (statusEl) {
+                statusEl.innerHTML = `<span class="text-emerald-400">Perfect! +${reward} Token${reward > 1 ? 's' : ''}</span>`;
+            }
+
+            st.round++;
+            setTimeout(() => {
+                if(st.running) nextWrenchRound();
+            }, 1000);
+        }
+    }
+
+    function handleWrenchFail() {
+        const st = wrenchGameState;
+        if (st.timerId) clearInterval(st.timerId);
+        playTonePitch(155.56, 0.3, 0.3, 'sawtooth');
+        const statusEl = document.getElementById('wrench-status');
+        if (statusEl) {
+            statusEl.innerHTML = `<span class="text-rose-400">Oops! Try that round again...</span>`;
+        }
+        st.playerSequence = [];
+        st.isPlayingSequence = true; 
+        setTimeout(() => {
+            if(st.running) {
+                if (st.round >= 7) st.timeLeft = 3;
+                playWrenchSequence();
+            }
+        }, 1500);
+    }
+
+    function handleWrenchGameComplete() {
+        const st = wrenchGameState;
+        if (st.timerId) clearInterval(st.timerId);
+        st.running = false;
+        st.completed = true;
+        playTonePitch(523.25, 0.2, 0.3, 'triangle');
+        setTimeout(() => playTonePitch(659.25, 0.2, 0.3, 'triangle'), 200);
+        setTimeout(() => playTonePitch(783.99, 0.4, 0.3, 'triangle'), 400);
+        renderWrenchGameView(document.getElementById('app-viewport'));
+    }
+
+    function renderWrenchGameView(container) {
+        if (!container) return;
+        const st = wrenchGameState;
+
+        if (st.completed) {
+            container.innerHTML = `
+              <div class="max-w-2xl mx-auto space-y-6">
+                <div class="flex items-center justify-between">
+                  <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+                  </button>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
+                  <div class="w-20 h-20 bg-rose-500 rounded-full flex items-center justify-center text-slate-900 text-4xl mx-auto mb-6 shadow-[0_0_20px_#f43f5e]">
+                    <i class="fa-solid fa-wrench"></i>
+                  </div>
+                  <h2 class="text-3xl font-black text-rose-400 mb-2">Melody Echo Mastered!</h2>
+                  <p class="text-slate-300 mb-6">You completed all 12 rounds and earned ${st.score} tokens!</p>
+                  <button onclick="startWrenchGame()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-sm transition-all shadow-md">
+                    Play Again
+                  </button>
+                </div>
+              </div>
+            `;
+            return;
+        }
+
+        if (!st.running) {
+             container.innerHTML = `
+              <div class="max-w-2xl mx-auto space-y-6">
+                <div class="flex items-center justify-between">
+                  <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+                  </button>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
+                  <div class="w-20 h-20 bg-indigo-500 rounded-full flex items-center justify-center text-slate-900 text-4xl mx-auto mb-6">
+                    <i class="fa-solid fa-wrench"></i>
+                  </div>
+                  <h2 class="text-3xl font-black mb-2">Melody Echo (Mr B's Wrench)</h2>
+                  <p class="text-slate-400 mb-8 max-w-md mx-auto">Use the wrench to hit the musical instruments in the exact order they play! Starts with 2 instruments, growing to 5. From round 7, a strict 3-second timer starts!</p>
+                  <button onclick="startWrenchGame()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-lg transition-all shadow-md">
+                    Start Tuning <i class="fa-solid fa-play ml-2"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+          <div class="max-w-3xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="stopWrenchGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-indigo-400 tracking-widest"><i class="fa-solid fa-wrench"></i> Melody Echo</span>
+            </div>
+            
+            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800 cursor-pointer">
+              <div class="flex items-center justify-between mb-8">
+                 <h2 class="text-2xl font-black text-indigo-400">Round ${st.round}</h2>
+                 <div class="text-right flex items-center gap-4">
+                   ${st.showTimer ? `
+                     <div class="text-center">
+                       <div class="text-[10px] font-black uppercase text-rose-400 animate-pulse">Time Left</div>
+                       <div id="wrench-timer" class="text-2xl font-black text-rose-500">${st.timeLeft}s</div>
+                     </div>
+                   ` : ''}
+                 </div>
+              </div>
+              
+              <div id="wrench-status" class="text-center text-sm font-black text-amber-400 mb-8 h-6">
+                 ${st.isPlayingSequence ? 'Listen closely...' : 'Your turn! Echo the melody.'}
+              </div>
+
+              <div class="flex flex-wrap justify-center gap-4">
+                 ${wrenchInstruments.map((inst, idx) => `
+                    <button id="wrench-btn-${idx}" onmousedown="handleWrenchHit(${idx})" ontouchstart="event.preventDefault(); handleWrenchHit(${idx})" class="w-24 h-28 sm:w-28 sm:h-32 bg-slate-800 border-2 ${inst.baseBorder} text-slate-300 rounded-2xl flex flex-col items-center justify-center transition-all ${st.isPlayingSequence ? 'pointer-events-none' : 'hover:border-indigo-400 hover:bg-slate-700 active:scale-95'}">
+                       ${inst.icon}
+                       <div class="mt-2 text-xs font-black pointer-events-none">${inst.name}</div>
+                    </button>
+                 `).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+    }
+
+    function renderWrenchGameUIUpdates() {
+        const st = wrenchGameState;
+        const statusEl = document.getElementById('wrench-status');
+        const timerEl = document.getElementById('wrench-timer');
+        
+        if (statusEl) {
+            statusEl.textContent = st.isPlayingSequence ? 'Listen closely...' : 'Your turn! Echo the melody.';
+        }
+        if (timerEl) {
+            timerEl.textContent = st.timeLeft + 's';
+        }
+
+        wrenchInstruments.forEach((inst, idx) => {
+            const btn = document.getElementById('wrench-btn-' + idx);
+            if (btn) {
+                if (st.isPlayingSequence) {
+                    btn.classList.add('pointer-events-none');
+                    btn.classList.remove('hover:border-indigo-400', 'hover:bg-slate-700', 'active:scale-95');
+                } else {
+                    btn.classList.remove('pointer-events-none');
+                    btn.classList.add('hover:border-indigo-400', 'hover:bg-slate-700', 'active:scale-95');
+                }
+            }
+        });
+    }
 
     window.addEventListener('keydown', (e) => {
       if (['ArrowLeft', 'ArrowDown', 'ArrowRight'].includes(e.code) && (typeof drumHeroState !== 'undefined') && drumHeroState.running) {

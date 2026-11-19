@@ -394,6 +394,7 @@
       try { if (typeof stopMetronomeGame === 'function') stopMetronomeGame(); } catch (e) {}
       try { if (typeof stopWaveformGame === 'function') stopWaveformGame(); } catch (e) {}
       try { if (typeof stopDynamicsTracer === 'function') stopDynamicsTracer(); } catch (e) {}
+      try { if (typeof stopDrumHeroGame === 'function') stopDrumHeroGame(); } catch (e) {}
     }
 
     window.app = {
@@ -455,6 +456,10 @@
           case 'dynamicsTracer':
             if (!this.currentUser) return renderLoginView(viewport);
             renderDynamicsTracerView(viewport);
+            break;
+          case 'drumHeroGame':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderDrumHeroGameView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -6725,6 +6730,10 @@
                         <button onclick="window.app.navigate('dynamicsTracer')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Minigame
                         </button>
+                      ` : item.id === 'item_drumkit30' ? `
+                        <button onclick="window.app.navigate('drumHeroGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Minigame
+                        </button>
                       ` : ''}
                       <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                           <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
@@ -7214,6 +7223,10 @@
                         </button>
                       ` : it.id === 'item_baton' ? `
                         <button onclick="window.app.navigate('dynamicsTracer')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
+                          Play
+                        </button>
+                      ` : it.id === 'item_drumkit30' ? `
+                        <button onclick="window.app.navigate('drumHeroGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
                           Play
                         </button>
                       ` : ''}
@@ -7995,9 +8008,298 @@
     }
 
     // ==========================================
+    // MINIGAME ARCADE: RHYTHM DROP (30-PIECE DRUMKIT)
+    // ==========================================
+    let drumHeroState = {
+        running: false,
+        streak: 0,
+        best: 0,
+        completed: false,
+        animFrame: null,
+        canvas: null,
+        ctx: null,
+        notes: [],
+        lastTime: 0,
+        spawnTimer: 0,
+        laneHitFeedback: [0, 0, 0], // Visual flash timer for Kick, Snare, Hi-Hat
+        speed: 3,
+        hitWindow: 40 // pixels
+    };
+
+    function stopDrumHeroGame() {
+        drumHeroState.running = false;
+        if (drumHeroState.animFrame) cancelAnimationFrame(drumHeroState.animFrame);
+    }
+
+    function renderDrumHeroGameView(container) {
+        if (!container) return;
+        
+        if (drumHeroState.completed) {
+            container.innerHTML = `
+              <div class="max-w-2xl mx-auto space-y-6">
+                <div class="flex items-center justify-between">
+                  <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+                  </button>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
+                  <div class="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-slate-900 text-4xl mx-auto mb-6 shadow-[0_0_20px_#10b981]">
+                    <i class="fa-solid fa-drum"></i>
+                  </div>
+                  <h2 class="text-3xl font-black text-emerald-400 mb-2">Groove Locked!</h2>
+                  <p class="text-slate-300 mb-6">Incredible rhythm! You kept a flawless 100-note streak on the highway and earned +15 Tokens!</p>
+                  <button onclick="startDrumHeroGame()" class="px-8 py-3 bg-sky-600 hover:bg-sky-500 text-white font-black rounded-xl text-sm transition-all shadow-md">
+                    Play Again
+                  </button>
+                </div>
+              </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+          <div class="max-w-3xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-sky-400 tracking-widest"><i class="fa-solid fa-drum"></i> Rhythm Drop</span>
+            </div>
+            
+            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+              <div class="flex items-center justify-between mb-4">
+                 <h2 class="text-2xl font-black text-sky-400">Rhythm Drop Highway</h2>
+                 <div class="text-right">
+                   <div class="text-[10px] font-black uppercase text-slate-500">Streak / Best</div>
+                   <div id="dh-streak" class="text-2xl font-black text-emerald-400">${drumHeroState.streak} / ${drumHeroState.best}</div>
+                 </div>
+              </div>
+              <div class="flex items-center justify-center gap-4 text-xs font-bold text-slate-400 mb-6">
+                 <div class="flex items-center gap-2"><span class="px-2 py-1 bg-indigo-500/20 border border-indigo-500 text-indigo-300 rounded">LEFT</span> Kick</div>
+                 <div class="flex items-center gap-2"><span class="px-2 py-1 bg-pink-500/20 border border-pink-500 text-pink-300 rounded">DOWN</span> Snare</div>
+                 <div class="flex items-center gap-2"><span class="px-2 py-1 bg-amber-500/20 border border-amber-500 text-amber-300 rounded">RIGHT</span> Hi-Hat</div>
+              </div>
+              
+              <div id="dh-game-area" class="relative w-full max-w-sm mx-auto h-[400px] bg-slate-950 rounded-2xl border-4 border-slate-800 overflow-hidden shadow-inner">
+                 <canvas id="dh-canvas" class="absolute inset-0 w-full h-full"></canvas>
+                 <div id="dh-start-overlay" class="absolute inset-0 bg-slate-900/80 flex items-center justify-center flex-col z-10">
+                    <button onclick="startDrumHeroGame()" class="px-8 py-4 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-black rounded-2xl text-lg shadow-[0_0_20px_rgba(14,165,233,0.5)] transition-all">
+                      Start Dropping <i class="fa-solid fa-play ml-2"></i>
+                    </button>
+                 </div>
+                 
+                 <!-- Mobile Touch Controls -->
+                 <div class="absolute bottom-2 w-full flex justify-between px-4 z-10 sm:hidden">
+                    <button class="w-16 h-16 rounded-full bg-indigo-600/50 border-2 border-indigo-400 text-white font-black" onmousedown="handleDrumHeroKey('ArrowLeft')" ontouchstart="event.preventDefault(); handleDrumHeroKey('ArrowLeft')">L</button>
+                    <button class="w-16 h-16 rounded-full bg-pink-600/50 border-2 border-pink-400 text-white font-black" onmousedown="handleDrumHeroKey('ArrowDown')" ontouchstart="event.preventDefault(); handleDrumHeroKey('ArrowDown')">D</button>
+                    <button class="w-16 h-16 rounded-full bg-amber-500/50 border-2 border-amber-400 text-white font-black" onmousedown="handleDrumHeroKey('ArrowRight')" ontouchstart="event.preventDefault(); handleDrumHeroKey('ArrowRight')">R</button>
+                 </div>
+              </div>
+            </div>
+          </div>
+        `;
+    }
+
+    function startDrumHeroGame() {
+        stopDrumHeroGame();
+        const canvas = document.getElementById('dh-canvas');
+        if (!canvas) return;
+        document.getElementById('dh-start-overlay').classList.add('hidden');
+        
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        
+        drumHeroState = {
+            running: true,
+            streak: 0,
+            best: drumHeroState.best || 0,
+            completed: false,
+            canvas: canvas,
+            ctx: canvas.getContext('2d'),
+            notes: [],
+            lastTime: performance.now(),
+            spawnTimer: 0,
+            laneHitFeedback: [0, 0, 0],
+            speed: 3.5,
+            hitWindow: 35
+        };
+
+        drumHeroState.animFrame = requestAnimationFrame(drumHeroLoop);
+    }
+
+    function drumHeroLoop(time) {
+        const st = drumHeroState;
+        if (!st.running) return;
+        
+        const delta = time - st.lastTime;
+        st.lastTime = time;
+        const ctx = st.ctx;
+        const w = st.canvas.width;
+        const h = st.canvas.height;
+        const targetY = h - 60;
+        
+        // Difficulty scaling
+        const diffMultiplier = 1 + (st.streak / 50);
+        const currentSpeed = st.speed * diffMultiplier;
+        const spawnInterval = Math.max(300, 1000 - (st.streak * 7));
+
+        st.spawnTimer += delta;
+        if (st.spawnTimer > spawnInterval) {
+            st.spawnTimer = 0;
+            const lane = Math.floor(Math.random() * 3);
+            st.notes.push({ lane: lane, y: -20, hit: false, missed: false });
+        }
+
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, w, h);
+
+        // Draw Lanes
+        const laneW = w / 3;
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(laneW, 0); ctx.lineTo(laneW, h);
+        ctx.moveTo(laneW * 2, 0); ctx.lineTo(laneW * 2, h);
+        ctx.stroke();
+
+        // Draw Target Zones & Feedback
+        const laneColors = ['#818cf8', '#f472b6', '#fbbf24']; // Kick, Snare, Hi-Hat
+        for (let i = 0; i < 3; i++) {
+            const cx = (i * laneW) + (laneW / 2);
+            // Feedback Flash
+            if (st.laneHitFeedback[i] > 0) {
+                ctx.fillStyle = laneColors[i];
+                ctx.globalAlpha = st.laneHitFeedback[i] / 150;
+                ctx.beginPath();
+                ctx.arc(cx, targetY, 25, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+                st.laneHitFeedback[i] -= delta;
+            }
+
+            // Target Rings
+            ctx.strokeStyle = laneColors[i];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(cx, targetY, 20, 0, Math.PI*2);
+            ctx.stroke();
+        }
+
+        // Update and Draw Notes
+        for (let i = st.notes.length - 1; i >= 0; i--) {
+            let note = st.notes[i];
+            if (note.hit) {
+                st.notes.splice(i, 1);
+                continue;
+            }
+            
+            note.y += currentSpeed * (delta / 16);
+            const cx = (note.lane * laneW) + (laneW / 2);
+
+            if (note.y > targetY + st.hitWindow && !note.missed) {
+                note.missed = true;
+                st.streak = 0;
+                playTonePitch(150, 0.15, 0.3, 'sawtooth');
+                const strEl = document.getElementById('dh-streak');
+                if (strEl) strEl.textContent = '0 / ' + st.best;
+                
+                // Red flash overlay for miss
+                ctx.fillStyle = 'rgba(225, 29, 72, 0.3)';
+                ctx.fillRect(0,0,w,h);
+            }
+
+            if (note.y > h + 30) {
+                st.notes.splice(i, 1);
+                continue;
+            }
+
+            // Draw Note
+            ctx.fillStyle = note.missed ? '#475569' : laneColors[note.lane];
+            ctx.beginPath();
+            ctx.arc(cx, note.y, 16, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        st.animFrame = requestAnimationFrame(drumHeroLoop);
+    }
+
+    function handleDrumHeroKey(code) {
+        const st = drumHeroState;
+        if (!st.running) return;
+
+        let lane = -1;
+        let audioType = 'hihat';
+        if (code === 'ArrowLeft') { lane = 0; audioType = 'kick'; }
+        if (code === 'ArrowDown') { lane = 1; audioType = 'snare'; }
+        if (code === 'ArrowRight') { lane = 2; audioType = 'hihat'; }
+        
+        if (lane === -1) return;
+
+        st.laneHitFeedback[lane] = 150; // trigger visual flash
+        
+        const h = st.canvas.height;
+        const targetY = h - 60;
+        
+        // Find closest note in this lane
+        let hitNote = null;
+        let minDiff = Infinity;
+        for (let i = 0; i < st.notes.length; i++) {
+            const n = st.notes[i];
+            if (n.lane === lane && !n.hit && !n.missed) {
+                const diff = Math.abs(n.y - targetY);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    hitNote = n;
+                }
+            }
+        }
+
+        if (hitNote && minDiff <= st.hitWindow) {
+            hitNote.hit = true;
+            st.streak++;
+            if (st.streak > st.best) st.best = st.streak;
+            playDrumSound(audioType);
+            
+            const strEl = document.getElementById('dh-streak');
+            if (strEl) strEl.textContent = st.streak + ' / ' + st.best;
+
+            if (st.streak >= 100) {
+                st.completed = true;
+                st.running = false;
+                addTokens(15);
+                renderDrumHeroGameView(document.getElementById('app-viewport'));
+            }
+        } else {
+            // Pressed when no note was in zone -> Break streak
+            st.streak = 0;
+            playTonePitch(150, 0.15, 0.3, 'sawtooth');
+            const strEl = document.getElementById('dh-streak');
+            if (strEl) strEl.textContent = '0 / ' + st.best;
+        }
+    }
+
+    // ==========================================
     // MINIGAME 5: 8-BEAT DRUM SEQUENCER & DICTATION LAB
     // ==========================================
-    // OVERALL STUDENT LEADERBOARD MARKUP
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' && longNoteState.running) {
+        e.preventDefault();
+        endLongNoteHold();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowLeft', 'ArrowDown', 'ArrowRight'].includes(e.code) && (typeof drumHeroState !== 'undefined') && drumHeroState.running) {
+        e.preventDefault();
+        if (!e.repeat) handleDrumHeroKey(e.code);
+      }
+    });
+
+    // ==========================================
+    // MINIGAME ARCADE: ANALOG POCKET SYNTHESIZER (WAVEFORM SCULPTOR)
     // ==========================================
     function renderLeaderboardMarkup() {
       const filters = window.leaderboardFilters || { timeframe: 'overall', classGroup: 'ALL' };

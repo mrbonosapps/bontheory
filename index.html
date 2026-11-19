@@ -4666,10 +4666,11 @@
                 st.lastHitCrossCount = closestCross;
                 playTonePitch(600, 0.1, 0.4, 'triangle'); // Success ding
                 
-                if (st.streak === 24 && !st.bonusAwarded) {
-                    st.bonusAwarded = true;
+                if (st.streak > 0 && st.streak % 10 === 0) {
                     addTokens(5);
-                    showAppModal('Perfect Timing!', 'You hit 24 perfect beats in a row and earned a +5 Token bonus!', true);
+                    setTimeout(() => playTonePitch(523.25, 0.1, 0.4, 'sine'), 100);
+                    setTimeout(() => playTonePitch(659.25, 0.1, 0.4, 'sine'), 200);
+                    setTimeout(() => playTonePitch(783.99, 0.2, 0.4, 'sine'), 300);
                 }
             }
         } else {
@@ -4691,7 +4692,7 @@
           
           <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl text-center relative overflow-hidden border border-slate-800">
              <h2 class="text-3xl font-black mb-2">Brass Pyramid Metronome</h2>
-             <p class="text-sm text-slate-400 mb-8 max-w-md mx-auto">Press Spacebar exactly when the pendulum crosses the center line. The tempo will shift randomly every 8 beats. Reach a streak of 24 for a +5 Token bonus!</p>
+             <p class="text-sm text-slate-400 mb-8 max-w-md mx-auto">Press Spacebar exactly when the pendulum crosses the center line. The tempo will shift randomly every 8 beats. Earn a +5 Token bonus for every 10 perfect beats!</p>
              
              <div class="flex justify-between items-end mb-4 px-4 sm:px-12">
                 <div class="text-left">

@@ -4753,27 +4753,500 @@
         }
     }
 
-    // Dummy state and functions for the missing minigames to prevent reference errors
-    let longNoteState = { running: false };
-    function beginLongNoteHold() {}
-    function endLongNoteHold() {}
+    // ==========================================
+    // RESTORED INTERACTIVE LABS & GAMES
+    // ==========================================
+    const pitchKeyboardKeys = [
+      { note: 'C4', freq: 261.63, type: 'white', left: null },
+      { note: 'C#4', freq: 277.18, type: 'black', left: '28px' },
+      { note: 'D4', freq: 293.66, type: 'white', left: null },
+      { note: 'D#4', freq: 311.13, type: 'black', left: '68px' },
+      { note: 'E4', freq: 329.63, type: 'white', left: null },
+      { note: 'F4', freq: 349.23, type: 'white', left: null },
+      { note: 'F#4', freq: 369.99, type: 'black', left: '148px' },
+      { note: 'G4', freq: 392.00, type: 'white', left: null },
+      { note: 'G#4', freq: 415.30, type: 'black', left: '188px' },
+      { note: 'A4', freq: 440.00, type: 'white', left: null },
+      { note: 'A#4', freq: 466.16, type: 'black', left: '228px' },
+      { note: 'B4', freq: 493.88, type: 'white', left: null },
+      { note: 'C5', freq: 523.25, type: 'white', left: null }
+    ];
+
+    // 1. Long Note Game (Hold Spacebar)
+    let longNoteState = { running: false, round: 1, totalRounds: 5, score: 0, targetNote: null, targetBeats: 2, holdStartTime: 0, isHolding: false, answered: false, lastCorrect: false, completed: false, bpm: 90 };
+    const longNotes = [{ id: 'minim', beats: 2, name: 'Minim (2 Beats)' }, { id: 'dottedMinim', beats: 3, name: 'Dotted Minim (3 Beats)' }, { id: 'semibreve', beats: 4, name: 'Semibreve (4 Beats)' }];
+    let lnOsc = null, lnGain = null;
+
+    function setupLongNoteRound() {
+      const note = longNotes[Math.floor(Math.random() * longNotes.length)];
+      longNoteState.targetNote = note;
+      longNoteState.answered = false;
+      longNoteState.isHolding = false;
+    }
+
     function mountEmbeddedLongNoteGame(target) {
-        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+      if (!target) return;
+      stopLongNoteGameLoop();
+      longNoteState = { running: true, round: 1, totalRounds: 5, score: 0, targetNote: null, targetBeats: 2, holdStartTime: 0, isHolding: false, answered: false, lastCorrect: false, completed: false, bpm: 90 };
+      setupLongNoteRound();
+      renderLongNoteGameUI(target);
     }
+
+    function beginLongNoteHold() {
+      const st = longNoteState;
+      if (!st.running || st.answered || st.completed || st.isHolding) return;
+      st.isHolding = true;
+      st.holdStartTime = performance.now();
+      const ctx = getAudioCtx();
+      if(ctx) {
+        lnOsc = ctx.createOscillator();
+        lnGain = ctx.createGain();
+        lnOsc.type = 'triangle';
+        lnOsc.frequency.value = 330;
+        lnGain.gain.setValueAtTime(0.001, ctx.currentTime);
+        lnGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+        lnOsc.connect(lnGain);
+        lnGain.connect(ctx.destination);
+        lnOsc.start();
+      }
+      renderLongNoteGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function endLongNoteHold() {
+      const st = longNoteState;
+      if (!st.running || st.answered || st.completed || !st.isHolding) return;
+      st.isHolding = false;
+      if (lnOsc && lnGain) {
+         const ctx = getAudioCtx();
+         lnGain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+         lnOsc.stop(ctx.currentTime + 0.06);
+         lnOsc = null; lnGain = null;
+      }
+
+      const holdDuration = performance.now() - st.holdStartTime;
+      const beatMs = 60000 / st.bpm;
+      const targetDuration = st.targetNote.beats * beatMs;
+      const tolerance = beatMs * 0.45; // 45% tolerance
+
+      st.answered = true;
+      if (Math.abs(holdDuration - targetDuration) < tolerance) {
+        st.lastCorrect = true;
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        st.lastCorrect = false;
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderLongNoteGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function stopLongNoteGameLoop() {
+      if(lnOsc) { try { lnOsc.stop(); } catch(e){} lnOsc = null; }
+      longNoteState.running = false;
+    }
+
+    function nextLongNoteRound() {
+      const st = longNoteState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupLongNoteRound();
+        renderLongNoteGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderLongNoteGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Duration Master!', `You held notes accurately ${st.score}/${st.totalRounds} times and earned +${st.score} Tokens!`, st.score >= 3);
+      }
+    }
+
+    function renderLongNoteGameUI(target) {
+      if (!target) return;
+      const st = longNoteState;
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-indigo-400">5-Round Challenge • Spacebar Hold</span>
+              <h3 class="text-xl font-black">Long Note Duration Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">Press and hold the Spacebar for the exact number of beats shown!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score}</span>
+            </div>
+          </div>
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
+              <button type="button" onclick="mountEmbeddedLongNoteGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : `
+            <div class="flex flex-col items-center justify-center space-y-4">
+               <div class="text-slate-300 ${st.isHolding ? 'scale-110 text-emerald-400' : ''} transition-transform">
+                 ${st.targetNote ? renderEngravedNoteDarkSVG(st.targetNote.id, 'w-16 h-24') : ''}
+               </div>
+               <div class="text-lg font-black text-amber-400">${st.targetNote ? st.targetNote.name : ''}</div>
+               
+               ${st.answered ? `
+                  <div class="p-4 rounded-2xl border w-full max-w-sm ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col items-center gap-2">
+                    <span class="text-sm font-bold">${st.lastCorrect ? '✓ Perfect Timing!' : '✗ Too early or too late.'}</span>
+                    <button type="button" onclick="nextLongNoteRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs">
+                      ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                    </button>
+                  </div>
+               ` : `
+                  <button type="button" onmousedown="beginLongNoteHold()" onmouseup="endLongNoteHold()" onmouseleave="endLongNoteHold()" ontouchstart="event.preventDefault(); beginLongNoteHold();" ontouchend="endLongNoteHold()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black rounded-2xl text-sm shadow-lg w-full max-w-sm">
+                    HOLD TO PLAY
+                  </button>
+               `}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // 2. Pitch Wave Game (Oscilloscope Sandbox)
+    let pitchWaveState = { freq: 440, vol: 0.2, osc: null, playing: false };
+
     function mountEmbeddedPitchWaveGame(target) {
-        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+      if (!target) return;
+      if (pitchWaveState.osc) { try{ pitchWaveState.osc.stop(); }catch(e){} }
+      pitchWaveState = { freq: 440, vol: 0.2, osc: null, playing: false };
+      renderPitchWaveUI(target);
     }
+
+    function togglePitchWaveAudio() {
+      const st = pitchWaveState;
+      if (st.playing) {
+        if (st.osc) { try{ st.osc.stop(); }catch(e){} st.osc = null; }
+        st.playing = false;
+      } else {
+        const ctx = getAudioCtx();
+        if (ctx) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = st.freq;
+          gain.gain.value = st.vol;
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          st.osc = osc;
+          st.playing = true;
+        }
+      }
+      renderPitchWaveUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function updatePitchWave(param, val) {
+      const st = pitchWaveState;
+      st[param] = Number(val);
+      if (st.playing && st.osc) {
+        if (param === 'freq') st.osc.frequency.setValueAtTime(st.freq, getAudioCtx().currentTime);
+      }
+      renderPitchWaveUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function renderPitchWaveUI(target) {
+      if (!target) return;
+      const st = pitchWaveState;
+      
+      const waveCount = Math.max(1, Math.round(st.freq / 50));
+      let path = `M 0 50`;
+      const step = 100 / waveCount;
+      const amp = st.vol * 150;
+      for (let i = 0; i < waveCount; i++) {
+         path += ` Q ${step*i + step*0.25} ${50 - amp}, ${step*i + step*0.5} 50 T ${step*(i+1)} 50`;
+      }
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">Interactive Visualizer</span>
+              <h3 class="text-xl font-black">Sound Wave Oscilloscope</h3>
+              <p class="text-xs text-slate-300 mt-1">Adjust the frequency (Hz) to see how the pitch and sound waves change!</p>
+            </div>
+            <button onclick="togglePitchWaveAudio()" class="px-5 py-2.5 rounded-xl text-xs font-black transition-all ${st.playing ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-slate-900'} shrink-0">
+              <i class="fa-solid ${st.playing ? 'fa-stop' : 'fa-play'} mr-1"></i> ${st.playing ? 'Stop Tone' : 'Play Tone'}
+            </button>
+          </div>
+
+          <div class="h-32 bg-slate-950 border-2 border-sky-900 rounded-2xl p-2 relative shadow-[0_0_15px_rgba(14,165,233,0.2)]">
+            <svg viewBox="0 0 100 100" class="w-full h-full" preserveAspectRatio="none">
+              <line x1="0" y1="50" x2="100" y2="50" stroke="#38bdf8" stroke-opacity="0.2" stroke-width="1" />
+              <path d="${path}" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round" />
+            </svg>
+          </div>
+
+          <div class="space-y-4 pt-2">
+            <div>
+              <div class="flex justify-between text-xs font-black text-slate-300 mb-2 uppercase tracking-wide">
+                <span>Frequency (Pitch)</span>
+                <span>${st.freq} Hz</span>
+              </div>
+              <input type="range" min="100" max="1000" step="10" value="${st.freq}" oninput="updatePitchWave('freq', this.value)" class="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-sky-400">
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. Melodic Contour Game (Steps & Leaps)
+    let contourState = { round: 1, totalRounds: 10, score: 0, target: null, answered: false, lastCorrect: false, completed: false };
+    const contourTypes = [
+      { id: 'step_up', name: 'Ascending Step', play: () => playMelodicInterval([261.63, 293.66]) },
+      { id: 'step_down', name: 'Descending Step', play: () => playMelodicInterval([440, 392]) },
+      { id: 'leap_up', name: 'Ascending Leap', play: () => playMelodicInterval([261.63, 392]) },
+      { id: 'leap_down', name: 'Descending Leap', play: () => playMelodicInterval([523.25, 329.63]) }
+    ];
+
+    function playMelodicInterval(freqs) {
+      playTonePitch(freqs[0], 0.4, 0.3);
+      setTimeout(() => playTonePitch(freqs[1], 0.4, 0.3), 500);
+    }
+
+    function setupContourRound() {
+      contourState.target = contourTypes[Math.floor(Math.random() * contourTypes.length)];
+      contourState.answered = false;
+    }
+
     function mountEmbeddedMelodicContourGame(target) {
-        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+      if (!target) return;
+      contourState = { round: 1, totalRounds: 10, score: 0, target: null, answered: false, lastCorrect: false, completed: false };
+      setupContourRound();
+      renderMelodicContourGameUI(target);
     }
+
+    function playContourMystery() {
+      if (contourState.target) contourState.target.play();
+    }
+
+    function guessContour(id) {
+      const st = contourState;
+      if (st.answered || st.completed) return;
+      st.answered = true;
+      st.lastCorrect = (st.target.id === id);
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 1000);
+      } else {
+        setTimeout(() => playTonePitch(155.56, 0.25, 0.3, 'sawtooth'), 1000);
+      }
+      renderMelodicContourGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextContourRound() {
+      const st = contourState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupContourRound();
+        renderMelodicContourGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderMelodicContourGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Contour Detective Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderMelodicContourGameUI(target) {
+      if (!target) return;
+      const st = contourState;
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">Melodic Contour Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the two notes and identify the melodic movement!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score}</span>
+            </div>
+          </div>
+          
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
+              <button type="button" onclick="mountEmbeddedMelodicContourGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : `
+            <div class="flex justify-center my-4">
+              <button onclick="playContourMystery()" class="px-8 py-4 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-900 font-black rounded-2xl text-sm shadow-lg">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Interval
+              </button>
+            </div>
+            
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border mb-4 ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. It was ${st.target.name}.`}</span>
+                <button type="button" onclick="nextContourRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 gap-3">
+              ${contourTypes.map(c => `
+                <button type="button" onclick="guessContour('${c.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-center transition-all ${
+                  st.answered && st.target.id === c.id ? 'border-emerald-400 bg-emerald-950/60 text-emerald-200' : 
+                  st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-600 bg-slate-800 hover:border-sky-400 hover:bg-slate-700'
+                }">
+                  <div class="font-black text-sm">${c.name}</div>
+                </button>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // 4. Pitch Keyboard
     function mountEmbeddedPitchKeyboard(target) {
-        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+      if (!target) return;
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="text-center">
+             <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">Interactive Simulator</span>
+             <h3 class="text-xl font-black">Playable Musical Alphabet</h3>
+             <p class="text-xs text-slate-300 mt-1 mb-4">Click the keys to hear the pitches A through G.</p>
+          </div>
+          <div class="relative flex justify-center h-48 w-max mx-auto bg-slate-800 p-2 rounded-xl shadow-lg">
+             <div class="relative flex">
+               ${pitchKeyboardKeys.filter(k => k.type === 'white').map(k => `
+                 <button class="w-12 h-full bg-white border border-slate-300 rounded-b-md text-slate-800 font-bold text-sm flex items-end justify-center pb-2 hover:bg-sky-50 active:bg-sky-200" onclick="playTonePitch(${k.freq})">${k.note.charAt(0)}</button>
+               `).join('')}
+               ${pitchKeyboardKeys.filter(k => k.type === 'black').map(k => `
+                 <button class="absolute top-0 w-8 h-28 bg-slate-900 border border-slate-950 rounded-b-sm text-white font-bold text-[10px] flex items-end justify-center pb-2 hover:bg-slate-700 active:bg-slate-600" style="left: ${k.left};" onclick="playTonePitch(${k.freq})">${k.note.substring(0,2)}</button>
+               `).join('')}
+             </div>
+          </div>
+        </div>
+      `;
     }
+
+    // 5. Treble Clef Game
     function mountEmbeddedTrebleClefGame(target) {
-        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+        mountEmbeddedStaffNotationGame(target);
     }
+
+    // 6. Ledger Line Game
+    let ledgerLineState = { round: 1, totalRounds: 10, score: 0, targetNote: null, answered: false, lastCorrect: false, completed: false };
+    const ledgerNotes = [
+      { id: 'C4', name: 'Middle C (C4)', y: 135, lines: [135], freq: 261.63 },
+      { id: 'A3', name: 'Low A (A3)', y: 150, lines: [135, 150], freq: 220.00 },
+      { id: 'A5', name: 'High A (A5)', y: 45, lines: [45], freq: 880.00 },
+      { id: 'C6', name: 'High C (C6)', y: 30, lines: [45, 30], freq: 1046.50 }
+    ];
+
+    function setupLedgerLineRound() {
+      ledgerLineState.targetNote = ledgerNotes[Math.floor(Math.random() * ledgerNotes.length)];
+      ledgerLineState.answered = false;
+    }
+
     function mountEmbeddedLedgerLineGame(target) {
-        if(target) target.innerHTML = '<div class="p-6 bg-slate-800 rounded-2xl text-center text-slate-400 mt-4">Interactive Lab coming soon.</div>';
+      if (!target) return;
+      ledgerLineState = { round: 1, totalRounds: 10, score: 0, targetNote: null, answered: false, lastCorrect: false, completed: false };
+      setupLedgerLineRound();
+      renderLedgerLineGameUI(target);
+    }
+
+    function guessLedgerLine(id) {
+      const st = ledgerLineState;
+      if (st.answered || st.completed) return;
+      st.answered = true;
+      st.lastCorrect = (st.targetNote.id === id);
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(st.targetNote.freq, 0.4, 0.35, 'triangle');
+        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 500);
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderLedgerLineGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextLedgerLineRound() {
+      const st = ledgerLineState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupLedgerLineRound();
+        renderLedgerLineGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderLedgerLineGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Ledger Line Master!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderLedgerLineGameUI(target) {
+      if (!target) return;
+      const st = ledgerLineState;
+      
+      let staffSvg = `
+        <svg viewBox="0 0 300 180" class="w-full max-w-sm mx-auto h-auto bg-slate-950 rounded-xl shadow-inner border border-slate-800">
+          <line x1="20" y1="60" x2="280" y2="60" stroke="#475569" stroke-width="1.5"/>
+          <line x1="20" y1="75" x2="280" y2="75" stroke="#475569" stroke-width="1.5"/>
+          <line x1="20" y1="90" x2="280" y2="90" stroke="#475569" stroke-width="1.5"/>
+          <line x1="20" y1="105" x2="280" y2="105" stroke="#475569" stroke-width="1.5"/>
+          <line x1="20" y1="120" x2="280" y2="120" stroke="#475569" stroke-width="1.5"/>
+          <text x="25" y="128" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+      `;
+      if (st.targetNote) {
+         st.targetNote.lines.forEach(y => {
+           staffSvg += `<line x1="130" y1="${y}" x2="170" y2="${y}" stroke="#fff" stroke-width="2"/>`;
+         });
+         staffSvg += `<ellipse cx="150" cy="${st.targetNote.y}" rx="10" ry="7" fill="#38bdf8" transform="rotate(-15 150 ${st.targetNote.y})"/>`;
+      }
+      staffSvg += `</svg>`;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black">Ledger Line Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">Identify the highlighted ledger line note!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score}</span>
+            </div>
+          </div>
+          
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
+              <button type="button" onclick="mountEmbeddedLedgerLineGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : `
+            <div class="flex justify-center my-4">${staffSvg}</div>
+            
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border mb-4 ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. It was ${st.targetNote.name}.`}</span>
+                <button type="button" onclick="nextLedgerLineRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 gap-3">
+              ${ledgerNotes.map(c => `
+                <button type="button" onclick="guessLedgerLine('${c.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-center transition-all ${
+                  st.answered && st.targetNote.id === c.id ? 'border-emerald-400 bg-emerald-950/60 text-emerald-200' : 
+                  st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-600 bg-slate-800 hover:border-sky-400 hover:bg-slate-700'
+                }">
+                  <div class="font-black text-sm">${c.name}</div>
+                </button>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
     }
 
     // Global Spacebar handler for rhythm games

@@ -393,6 +393,7 @@
       try { if (typeof stopDrumSequencerLoop === 'function') stopDrumSequencerLoop(); } catch (e) {}
       try { if (typeof stopMetronomeGame === 'function') stopMetronomeGame(); } catch (e) {}
       try { if (typeof stopWaveformGame === 'function') stopWaveformGame(); } catch (e) {}
+      try { if (typeof stopDynamicsTracer === 'function') stopDynamicsTracer(); } catch (e) {}
     }
 
     window.app = {
@@ -450,6 +451,10 @@
           case 'waveformGame':
             if (!this.currentUser) return renderLoginView(viewport);
             renderWaveformGameView(viewport);
+            break;
+          case 'dynamicsTracer':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderDynamicsTracerView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -6709,15 +6714,19 @@
                     ${isOwned ? `
                       <div class="space-y-2">
                         ${item.id === 'item_metronome' ? `
-                          <button onclick="window.app.navigate('metronomeGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-play"></i> Play Minigame
-                          </button>
-                        ` : item.id === 'item_synth' ? `
-                          <button onclick="window.app.navigate('waveformGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-play"></i> Play Minigame
-                          </button>
-                        ` : ''}
-                        <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
+                        <button onclick="window.app.navigate('metronomeGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Minigame
+                        </button>
+                      ` : item.id === 'item_synth' ? `
+                        <button onclick="window.app.navigate('waveformGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Minigame
+                        </button>
+                      ` : item.id === 'item_baton' ? `
+                        <button onclick="window.app.navigate('dynamicsTracer')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Minigame
+                        </button>
+                      ` : ''}
+                      <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                           <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
                           <span class="hidden group-hover:inline"><i class="fa-solid fa-rotate-left mr-1"></i> Trade Back (+${item.cost})</span>
                         </button>
@@ -7201,6 +7210,10 @@
                         </button>
                       ` : it.id === 'item_synth' ? `
                         <button onclick="window.app.navigate('waveformGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
+                          Play
+                        </button>
+                      ` : it.id === 'item_baton' ? `
+                        <button onclick="window.app.navigate('dynamicsTracer')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
                           Play
                         </button>
                       ` : ''}
@@ -7708,6 +7721,277 @@
           </div>
         </div>
       `;
+    }
+
+    // ==========================================
+    // MINIGAME ARCADE: DYNAMICS TRACER (MAESTRO BATON)
+    // ==========================================
+    let dynamicsTracerState = {
+        running: false,
+        streak: 0,
+        completed: false,
+        animFrame: null,
+        canvas: null,
+        ctx: null,
+        path: [],
+        playerY: 150,
+        isTracing: false,
+        framePhase: 0,
+        lastToneTime: 0
+    };
+
+    function stopDynamicsTracer() {
+        dynamicsTracerState.running = false;
+        if (dynamicsTracerState.animFrame) cancelAnimationFrame(dynamicsTracerState.animFrame);
+    }
+
+    function renderDynamicsTracerView(container) {
+        if (!container) return;
+        
+        if (dynamicsTracerState.completed) {
+            container.innerHTML = `
+              <div class="max-w-2xl mx-auto space-y-6">
+                <div class="flex items-center justify-between">
+                  <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+                  </button>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
+                  <div class="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-slate-900 text-4xl mx-auto mb-6 shadow-[0_0_20px_#10b981]">
+                    <i class="fa-solid fa-wand-sparkles"></i>
+                  </div>
+                  <h2 class="text-3xl font-black text-emerald-400 mb-2">Maestro Mastered!</h2>
+                  <p class="text-slate-300 mb-6">Incredible conducting! You maintained a perfect 200 streak through wild, escalating dynamics and earned +15 Tokens!</p>
+                  <button onclick="startDynamicsTracer()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-sm transition-all shadow-md">
+                    Play Again
+                  </button>
+                </div>
+              </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+          <div class="max-w-3xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-amber-500 tracking-widest"><i class="fa-solid fa-wand-sparkles"></i> Dynamics Tracer</span>
+            </div>
+            
+            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+              <div class="flex items-center justify-between mb-4">
+                 <h2 class="text-2xl font-black text-amber-400">Dynamics Tracer</h2>
+                 <div class="text-right">
+                   <div class="text-[10px] font-black uppercase text-slate-500">Streak</div>
+                   <div id="tracer-streak" class="text-2xl font-black text-emerald-400">${dynamicsTracerState.streak} / 200</div>
+                 </div>
+              </div>
+              <p class="text-sm text-slate-400 mb-6">Click and hold the glowing baton (or drag with your finger) to stay inside the moving dynamic path. As your streak grows, the music gets wilder! Maintain a streak of 200 to win +15 Tokens.</p>
+              
+              <div id="tracer-game-area" class="relative w-full h-[320px] bg-slate-950 rounded-2xl border-2 border-slate-700 overflow-hidden cursor-crosshair touch-none select-none">
+                 <canvas id="tracer-canvas" class="absolute inset-0 w-full h-full"></canvas>
+                 <div id="tracer-start-overlay" class="absolute inset-0 bg-slate-900/80 flex items-center justify-center flex-col">
+                    <button onclick="startDynamicsTracer()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-lg shadow-[0_0_20px_rgba(251,191,36,0.5)] transition-all">
+                      Start Conducting <i class="fa-solid fa-play ml-2"></i>
+                    </button>
+                 </div>
+              </div>
+            </div>
+          </div>
+        `;
+    }
+
+    function startDynamicsTracer() {
+        stopDynamicsTracer();
+        const canvas = document.getElementById('tracer-canvas');
+        if (!canvas) return;
+        document.getElementById('tracer-start-overlay').classList.add('hidden');
+        
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        
+        dynamicsTracerState = {
+            running: true,
+            streak: 0,
+            completed: false,
+            canvas: canvas,
+            ctx: canvas.getContext('2d'),
+            path: [],
+            playerY: canvas.height / 2,
+            isTracing: false,
+            framePhase: 0,
+            lastToneTime: 0
+        };
+
+        // Fill initial quiet path
+        for (let x = 0; x <= canvas.width + 20; x += 5) {
+            dynamicsTracerState.path.push({x: x, y: canvas.height / 2, halfW: 60});
+        }
+
+        // Input binding (Mouse + Touch)
+        const updatePlayerY = (e) => {
+            if (!dynamicsTracerState.running) return;
+            dynamicsTracerState.isTracing = true;
+            const rect = canvas.getBoundingClientRect();
+            let clientY = e.clientY;
+            if (e.touches && e.touches.length > 0) clientY = e.touches[0].clientY;
+            dynamicsTracerState.playerY = clientY - rect.top;
+        };
+        
+        canvas.onmousedown = (e) => { updatePlayerY(e); };
+        canvas.onmousemove = (e) => { if(dynamicsTracerState.isTracing || e.buttons === 1) updatePlayerY(e); };
+        canvas.onmouseup = () => dynamicsTracerState.isTracing = false;
+        canvas.onmouseleave = () => dynamicsTracerState.isTracing = false;
+        
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); updatePlayerY(e); }, {passive: false});
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); updatePlayerY(e); }, {passive: false});
+        canvas.addEventListener('touchend', () => dynamicsTracerState.isTracing = false);
+
+        dynamicsTracerState.animFrame = requestAnimationFrame(tracerLoop);
+    }
+    
+    function playTracerChord(isGood) {
+        try {
+            const ctx = getAudioCtx();
+            if (!ctx) return;
+            if (isGood) {
+               [261.63, 329.63, 392.00].forEach(f => playTonePitch(f, 0.2, 0.1, 'sine'));
+            } else {
+               [180, 205, 230].forEach(f => playTonePitch(f, 0.35, 0.2, 'sawtooth'));
+            }
+        } catch(e){}
+    }
+
+    function tracerLoop() {
+        const st = dynamicsTracerState;
+        if (!st.running) return;
+        
+        const w = st.canvas.width;
+        const h = st.canvas.height;
+        const ctx = st.ctx;
+        
+        // Difficulty strictly based on streak progress out of 200
+        const diff = Math.min(1, st.streak / 200); 
+        
+        // As it scales, speed dramatically increases and waveforms become erratic!
+        const speed = 4 + (diff * 8); 
+        st.framePhase += 0.02 + (diff * 0.08);
+        
+        // Move path left
+        for (let i = 0; i < st.path.length; i++) st.path[i].x -= speed;
+        
+        // Cleanup invisible segments
+        while(st.path.length > 0 && st.path[0].x < -20) st.path.shift();
+        
+        // Add new extreme segments to right edge
+        let lastX = st.path.length > 0 ? st.path[st.path.length-1].x : 0;
+        while(lastX < w + 20) {
+            lastX += 5;
+            
+            // Dramatic Rises & Drops based on scale
+            const yAmplitude = 30 + (diff * 85); 
+            const yWave = Math.sin(st.framePhase * 0.5) * yAmplitude + Math.sin(st.framePhase * 1.5) * (diff * 40);
+            const targetY = (h / 2) + yWave;
+            
+            // Width modulates rapidly, shrinking to make it harder
+            const wWave = Math.sin(st.framePhase * 0.8);
+            const targetHalfW = 75 - (diff * 45) + (wWave * 15); 
+            
+            st.path.push({x: lastX, y: targetY, halfW: Math.max(12, targetHalfW)});
+        }
+        
+        // Collision Detection at fixed Player X
+        const playerX = 120;
+        let currentSeg = st.path.find(p => p.x >= playerX) || st.path[0];
+        
+        let isInside = false;
+        if (st.isTracing) {
+            const upperY = currentSeg.y - currentSeg.halfW;
+            const lowerY = currentSeg.y + currentSeg.halfW;
+            if (st.playerY >= upperY && st.playerY <= lowerY) {
+                isInside = true;
+            }
+        }
+        
+        const now = performance.now();
+        if (isInside) {
+            if (now - st.lastToneTime > 120) { 
+                st.streak++;
+                st.lastToneTime = now;
+                const streakEl = document.getElementById('tracer-streak');
+                if (streakEl) streakEl.textContent = st.streak + ' / 200';
+                
+                if (st.streak % 10 === 0) playTracerChord(true); 
+                
+                if (st.streak >= 200) {
+                    st.running = false;
+                    st.completed = true;
+                    addTokens(15);
+                    renderDynamicsTracerView(document.getElementById('app-viewport'));
+                    return; 
+                }
+            }
+        } else if (st.isTracing) {
+            st.streak = 0;
+            const streakEl = document.getElementById('tracer-streak');
+            if (streakEl) streakEl.textContent = '0 / 200';
+            
+            if (now - st.lastToneTime > 300) {
+                playTracerChord(false);
+                st.lastToneTime = now;
+                
+                // Flash Red Error screen overlay
+                st.ctx.fillStyle = 'rgba(225, 29, 72, 0.35)';
+                st.ctx.fillRect(0,0,w,h);
+            }
+        }
+        
+        // Master Canvas Render
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, w, h);
+        
+        // Paint Path Boundaries
+        ctx.beginPath();
+        ctx.moveTo(st.path[0].x, st.path[0].y - st.path[0].halfW);
+        for(let i=1; i<st.path.length; i++) ctx.lineTo(st.path[i].x, st.path[i].y - st.path[i].halfW);
+        for(let i=st.path.length-1; i>=0; i--) ctx.lineTo(st.path[i].x, st.path[i].y + st.path[i].halfW);
+        ctx.closePath();
+        
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.15)'; 
+        ctx.fill();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Draw Center Target Line (faint)
+        ctx.beginPath();
+        ctx.moveTo(st.path[0].x, st.path[0].y);
+        for(let i=1; i<st.path.length; i++) ctx.lineTo(st.path[i].x, st.path[i].y);
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.25)';
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Draw Vertical Guide line
+        ctx.beginPath();
+        ctx.moveTo(playerX, 0);
+        ctx.lineTo(playerX, h);
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Render Player Baton
+        ctx.beginPath();
+        ctx.arc(playerX, st.playerY, 8, 0, Math.PI*2);
+        ctx.fillStyle = isInside ? '#10b981' : (st.isTracing ? '#e11d48' : '#94a3b8');
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        st.animFrame = requestAnimationFrame(tracerLoop);
     }
 
     // ==========================================

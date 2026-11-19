@@ -396,6 +396,7 @@
       try { if (typeof stopDynamicsTracer === 'function') stopDynamicsTracer(); } catch (e) {}
       try { if (typeof stopDrumHeroGame === 'function') stopDrumHeroGame(); } catch (e) {}
       try { if (typeof stopWrenchGame === 'function') stopWrenchGame(); } catch (e) {}
+      try { if (typeof stopGrooveLockGame === 'function') stopGrooveLockGame(); } catch (e) {}
     }
 
     window.app = {
@@ -465,6 +466,10 @@
           case 'wrenchGame':
             if (!this.currentUser) return renderLoginView(viewport);
             renderWrenchGameView(viewport);
+            break;
+          case 'grooveLockGame':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderGrooveLockGameView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -7234,8 +7239,16 @@
                         <button onclick="window.app.navigate('drumHeroGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Minigame
                         </button>
+                      ` : item.id === 'item_bass8' ? `
+                        <button onclick="window.app.navigate('grooveLockGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Minigame
+                        </button>
                       ` : item.id === 'item_wrench' ? `
                         <button onclick="window.app.navigate('wrenchGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Minigame
+                        </button>
+                      ` : item.id === 'item_bass8' ? `
+                        <button onclick="window.app.navigate('grooveLockGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Minigame
                         </button>
                       ` : ''}
@@ -7278,6 +7291,9 @@
       if (item.id === 'item_wrench') {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Playing the minigame...`, true);
         window.app.navigate('wrenchGame');
+      } else if (item.id === 'item_bass8') {
+        showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Playing the minigame...`, true);
+        window.app.navigate('grooveLockGame');
       } else {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
         renderShopView(document.getElementById('app-viewport'));
@@ -7731,12 +7747,12 @@
                         <button onclick="window.app.navigate('waveformGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
                           Play
                         </button>
-                      ` : it.id === 'item_baton' ? `
-                        <button onclick="window.app.navigate('dynamicsTracer')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
-                          Play
-                        </button>
                       ` : it.id === 'item_drumkit30' ? `
                         <button onclick="window.app.navigate('drumHeroGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
+                          Play
+                        </button>
+                      ` : it.id === 'item_bass8' ? `
+                        <button onclick="window.app.navigate('grooveLockGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
                           Play
                         </button>
                       ` : it.id === 'item_wrench' ? `
@@ -9173,7 +9189,7 @@
     });
 
     // ==========================================
-    // MINIGAME ARCADE: ANALOG POCKET SYNTHESIZER (WAVEFORM SCULPTOR)
+    // LEADERBOARD MARKUP & SYNC ENGINE
     // ==========================================
     function renderLeaderboardMarkup() {
       const filters = window.leaderboardFilters || { timeframe: 'overall', classGroup: 'ALL' };
@@ -9215,6 +9231,288 @@
           </div>
         </section>
       `;
+    }
+
+    // ==========================================
+    // MINIGAME ARCADE: THE GROOVE LOCK (8-STRING BASS)
+    // ==========================================
+    let grooveLockState = {
+        running: false,
+        round: 1, totalRounds: 10, score: 0,
+        pattern: [], 
+        placedTokens: [],
+        isPlaying: false,
+        answered: false,
+        lastCorrect: false,
+        completed: false,
+        playbackTimer: null
+    };
+
+    function generateGroovePattern() {
+        const numKicks = Math.floor(Math.random() * 3) + 2; // 2 to 4 kicks
+        const pattern = new Set();
+        pattern.add(0); // Always beat 1
+        while (pattern.size < numKicks) {
+            pattern.add(Math.floor(Math.random() * 8));
+        }
+        return Array.from(pattern).sort();
+    }
+
+    function initGrooveLockGame() {
+        stopGrooveLockGame();
+        grooveLockState = {
+            running: true, round: 1, totalRounds: 10, score: 0,
+            pattern: generateGroovePattern(),
+            placedTokens: [], isPlaying: false, answered: false, lastCorrect: false, completed: false,
+            playbackTimer: null
+        };
+        renderGrooveLockGameView(document.getElementById('app-viewport'));
+    }
+
+    function stopGrooveLockGame() {
+        if (grooveLockState.playbackTimer) clearInterval(grooveLockState.playbackTimer);
+        grooveLockState.running = false;
+        grooveLockState.isPlaying = false;
+    }
+
+    function nextGrooveLockRound() {
+        const st = grooveLockState;
+        if (st.round < st.totalRounds) {
+            st.round++;
+            st.pattern = generateGroovePattern();
+            st.placedTokens = [];
+            st.answered = false;
+            st.lastCorrect = false;
+            renderGrooveLockGameView(document.getElementById('app-viewport'));
+        } else {
+            st.completed = true;
+            renderGrooveLockGameView(document.getElementById('app-viewport'));
+            showAppModal('Groove Locked!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score*2} Tokens!`, st.score >= 5);
+        }
+    }
+
+    function playGrooveLoop() {
+        const st = grooveLockState;
+        if (st.isPlaying) return;
+        st.isPlaying = true;
+        renderGrooveLockGameView(document.getElementById('app-viewport'));
+        
+        let step = 0;
+        st.playbackTimer = setInterval(() => {
+            // Visual feedback
+            document.querySelectorAll('.groove-segment').forEach((el, idx) => {
+                if (idx === step) el.classList.add('bg-white/30');
+                else el.classList.remove('bg-white/30');
+            });
+            
+            // Audio
+            playDrumSound('hihat');
+            if (st.pattern.includes(step)) playDrumSound('kick');
+            // Snare on 2 and 4 (indices 2 and 6)
+            if (step === 2 || step === 6) playDrumSound('snare');
+            
+            step++;
+            if (step >= 8) {
+                clearInterval(st.playbackTimer);
+                st.playbackTimer = null;
+                setTimeout(() => {
+                    document.querySelectorAll('.groove-segment').forEach(el => el.classList.remove('bg-white/30'));
+                    st.isPlaying = false;
+                    renderGrooveLockGameView(document.getElementById('app-viewport'));
+                }, 300);
+            }
+        }, 300); // 300ms per 8th note = 100 BPM
+    }
+    
+    function handleGrooveDragStart(e) {
+        if (e && e.dataTransfer) {
+            e.dataTransfer.setData('text/plain', 'bassToken');
+            e.dataTransfer.effectAllowed = 'copy';
+        }
+    }
+    
+    function handleGrooveDrop(e, index) {
+        if (e) e.preventDefault();
+        const st = grooveLockState;
+        if (st.answered || st.completed || st.isPlaying) return;
+        
+        if (!st.placedTokens.includes(index)) {
+            st.placedTokens.push(index);
+            playTonePitch(87.31, 0.2, 0.4, 'sawtooth'); // Slap sound
+            renderGrooveLockGameView(document.getElementById('app-viewport'));
+        }
+    }
+    
+    function removeGrooveToken(index) {
+        const st = grooveLockState;
+        if (st.answered || st.completed || st.isPlaying) return;
+        st.placedTokens = st.placedTokens.filter(i => i !== index);
+        renderGrooveLockGameView(document.getElementById('app-viewport'));
+    }
+    
+    function checkGrooveLock() {
+        const st = grooveLockState;
+        if (st.answered || st.completed || st.isPlaying) return;
+        
+        const isCorrect = st.pattern.length === st.placedTokens.length && 
+                          st.pattern.every(val => st.placedTokens.includes(val));
+        
+        st.answered = true;
+        st.lastCorrect = isCorrect;
+        
+        if (isCorrect) {
+            st.score++;
+            addTokens(2);
+            playTonePitch(659.25, 0.2, 0.35, 'triangle');
+        } else {
+            playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+        }
+        renderGrooveLockGameView(document.getElementById('app-viewport'));
+    }
+
+    function renderGrooveLockGameView(container) {
+        if (!container) return;
+        const st = grooveLockState;
+        
+        if (!st.running && !st.completed) {
+            container.innerHTML = `
+              <div class="max-w-2xl mx-auto space-y-6">
+                <div class="flex items-center justify-between">
+                  <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+                  </button>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
+                  <div class="w-20 h-20 bg-indigo-500 rounded-full flex items-center justify-center text-slate-900 text-4xl mx-auto mb-6">
+                    <i class="fa-solid fa-guitar"></i>
+                  </div>
+                  <h2 class="text-3xl font-black mb-2">The Groove Lock</h2>
+                  <p class="text-slate-400 mb-8 max-w-md mx-auto">Listen to the drum loop and visualize the 4-beat radar. Drag your "Bass Slap" tokens onto the radar exactly where the Kick Drum hits to lock in the groove!</p>
+                  <button onclick="initGrooveLockGame()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-lg transition-all shadow-md">
+                    Start Grooving <i class="fa-solid fa-play ml-2"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+            return;
+        }
+
+        if (st.completed) {
+            container.innerHTML = `
+              <div class="max-w-2xl mx-auto space-y-6">
+                <div class="flex items-center justify-between">
+                  <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+                  </button>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
+                  <div class="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-slate-900 text-4xl mx-auto mb-6 shadow-[0_0_20px_#10b981]">
+                    <i class="fa-solid fa-guitar"></i>
+                  </div>
+                  <h2 class="text-3xl font-black text-emerald-400 mb-2">Groove Mastered!</h2>
+                  <p class="text-slate-300 mb-6">You locked in ${st.score} grooves perfectly and earned +${st.score*2} Tokens!</p>
+                  <button onclick="initGrooveLockGame()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-sm transition-all shadow-md">
+                    Play Again
+                  </button>
+                </div>
+              </div>
+            `;
+            return;
+        }
+
+        // Radar math
+        // 8 segments: angles 0, 45, 90, 135, 180, 225, 270, 315
+        const segments = [
+            { id: 0, label: '1',  deg: 0,   x: '50%', y: '10%' },
+            { id: 1, label: '&',  deg: 45,  x: '80%', y: '20%' },
+            { id: 2, label: '2',  deg: 90,  x: '90%', y: '50%' },
+            { id: 3, label: '&',  deg: 135, x: '80%', y: '80%' },
+            { id: 4, label: '3',  deg: 180, x: '50%', y: '90%' },
+            { id: 5, label: '&',  deg: 225, x: '20%', y: '80%' },
+            { id: 6, label: '4',  deg: 270, x: '10%', y: '50%' },
+            { id: 7, label: '&',  deg: 315, x: '20%', y: '20%' }
+        ];
+
+        container.innerHTML = `
+          <div class="max-w-4xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="stopGrooveLockGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-indigo-400 tracking-widest"><i class="fa-solid fa-compact-disc"></i> Radial Rhythm</span>
+            </div>
+            
+            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+              <div class="flex items-center justify-between mb-8">
+                 <h2 class="text-2xl font-black text-indigo-400">The Groove Lock</h2>
+                 <div class="flex gap-2">
+                     <span class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 font-black text-xs border border-slate-700">Round ${st.round} / ${st.totalRounds}</span>
+                     <span class="px-3 py-1.5 rounded-xl bg-emerald-900 text-emerald-300 font-black text-xs border border-emerald-700">Score: ${st.score}</span>
+                 </div>
+              </div>
+              
+              <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                 <div class="w-full md:w-1/3 flex flex-col items-center gap-6">
+                    <button onclick="playGrooveLoop()" ${st.isPlaying ? 'disabled' : ''} class="w-full py-4 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-900 font-black rounded-2xl text-sm shadow-lg transition-all ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
+                       <i class="fa-solid fa-volume-high mr-2"></i> Play Drum Loop
+                    </button>
+                    
+                    <div class="bg-indigo-950/50 p-6 rounded-2xl border border-indigo-500/30 text-center w-full">
+                       <h4 class="text-xs font-black uppercase text-slate-400 mb-4">Bass Slap Token</h4>
+                       <div draggable="${!st.answered}" ondragstart="handleGrooveDragStart(event)" class="w-16 h-16 bg-indigo-500 rounded-full border-4 border-indigo-300 mx-auto shadow-[0_0_15px_rgba(99,102,241,0.5)] flex flex-col items-center justify-center text-white ${!st.answered ? 'cursor-grab active:cursor-grabbing hover:scale-110 transition-transform' : 'opacity-50'}">
+                          <i class="fa-solid fa-hand-sparkles"></i>
+                       </div>
+                       <p class="text-[10px] text-slate-400 mt-4">Drag onto radar</p>
+                    </div>
+                 </div>
+
+                 <div class="relative w-64 h-64 sm:w-80 sm:h-80 rounded-full border-4 border-slate-700 bg-slate-950 mx-auto shadow-inner flex items-center justify-center">
+                    <div class="absolute inset-4 rounded-full border border-slate-800/50 pointer-events-none"></div>
+                    <div class="absolute inset-16 rounded-full border border-slate-800/50 pointer-events-none"></div>
+                    
+                    ${segments.map(s => {
+                        const hasToken = st.placedTokens.includes(s.id);
+                        let feedbackClasses = 'bg-slate-800 border-slate-600 text-slate-400';
+                        if (st.answered) {
+                            if (hasToken && st.pattern.includes(s.id)) feedbackClasses = 'bg-emerald-500 border-emerald-400 text-white';
+                            else if (hasToken && !st.pattern.includes(s.id)) feedbackClasses = 'bg-rose-500 border-rose-400 text-white';
+                            else if (!hasToken && st.pattern.includes(s.id)) feedbackClasses = 'bg-amber-500 border-amber-400 text-white opacity-50'; // missed kick
+                        } else if (hasToken) {
+                            feedbackClasses = 'bg-indigo-500 border-indigo-300 text-white shadow-[0_0_10px_rgba(99,102,241,0.6)] scale-110';
+                        }
+                        
+                        return `
+                        <div
+                           data-segment="${s.id}"
+                           ondragover="${!st.answered ? "event.preventDefault();" : ""}"
+                           ondrop="${!st.answered ? `handleGrooveDrop(event, ${s.id});` : ""}"
+                           onclick="${!st.answered && hasToken ? `removeGrooveToken(${s.id})` : ""}"
+                           class="groove-segment absolute w-12 h-12 -ml-6 -mt-6 rounded-full border-2 flex flex-col items-center justify-center font-black text-sm transition-all z-10 ${hasToken && !st.answered ? 'cursor-pointer' : ''} ${feedbackClasses}"
+                           style="left: ${s.x}; top: ${s.y};">
+                           ${s.label}
+                        </div>
+                        `;
+                    }).join('')}
+                 </div>
+              </div>
+              
+              <div class="mt-8 flex justify-center h-16">
+                 ${st.answered ? `
+                    <div class="p-4 rounded-2xl border w-full ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex items-center justify-between gap-3 max-w-lg">
+                      <span class="text-sm font-bold">${st.lastCorrect ? '✓ Locked in! (+2 Tokens)' : '✗ Not quite... listen to the kick drum!'}</span>
+                      <button onclick="nextGrooveLockRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                        ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                      </button>
+                    </div>
+                 ` : `
+                    <button onclick="checkGrooveLock()" class="px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black rounded-2xl text-lg shadow-lg transition-transform active:scale-95 ${st.placedTokens.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}" ${st.placedTokens.length === 0 ? 'disabled' : ''}>
+                       Lock In Groove <i class="fa-solid fa-check-circle ml-1"></i>
+                    </button>
+                 `}
+              </div>
+            </div>
+          </div>
+        `;
     }
 
     // ==========================================

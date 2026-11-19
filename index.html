@@ -392,6 +392,7 @@
       try { if (typeof stopLongNoteGameLoop === 'function') stopLongNoteGameLoop(); } catch (e) {}
       try { if (typeof stopDrumSequencerLoop === 'function') stopDrumSequencerLoop(); } catch (e) {}
       try { if (typeof stopMetronomeGame === 'function') stopMetronomeGame(); } catch (e) {}
+      try { if (typeof stopWaveformGame === 'function') stopWaveformGame(); } catch (e) {}
     }
 
     window.app = {
@@ -445,6 +446,10 @@
           case 'metronomeGame':
             if (!this.currentUser) return renderLoginView(viewport);
             renderMetronomeGameView(viewport);
+            break;
+          case 'waveformGame':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderWaveformGameView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -6707,6 +6712,10 @@
                           <button onclick="window.app.navigate('metronomeGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                             <i class="fa-solid fa-play"></i> Play Minigame
                           </button>
+                        ` : item.id === 'item_synth' ? `
+                          <button onclick="window.app.navigate('waveformGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play"></i> Play Minigame
+                          </button>
                         ` : ''}
                         <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                           <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
@@ -7190,6 +7199,10 @@
                         <button onclick="window.app.navigate('metronomeGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
                           Play
                         </button>
+                      ` : it.id === 'item_synth' ? `
+                        <button onclick="window.app.navigate('waveformGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
+                          Play
+                        </button>
                       ` : ''}
                     </div>
                   `).join('')}
@@ -7215,6 +7228,9 @@
     };
 
     function renderTeacherDash(container) {
+      if (!container) container = document.getElementById('app-viewport');
+      if (!container) return;
+
       let students = getDeduplicatedStudents();
       students.sort((a, b) => {
         if (teacherFilters.sortBy === 'tokens') {
@@ -7233,202 +7249,112 @@
         return matchClass && matchTeacher;
       });
 
+      const u = window.app.currentUser;
       const classOptions = ['ALL', '7A', '7B', '7C', '7D', '7E', '7F', '7G', '7H', '7I', '7J', '8A', '8B', '8C', '8D', '8E', '8F', '8G', '8H', '8I', '8J', 'Yr 9', 'Yr 10', 'Yr 11', 'Yr 12'];
 
       container.innerHTML = `
         <div class="space-y-6">
-          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-slate-800">
             <div>
-              <span class="text-xs font-black uppercase tracking-widest text-amber-400">Staff Markbook & Roster</span>
-              <h1 class="text-2xl sm:text-3xl font-black mt-1">Teacher Assessment & Progress Markbook</h1>
-              <p class="text-xs text-slate-300 mt-1">Track module completion checklists, confidential 15-question test scores, and student token balances.</p>
+              <span class="text-xs font-black uppercase tracking-widest text-indigo-400">Teacher Dashboard</span>
+              <h1 class="text-2xl sm:text-3xl font-black mt-1">Welcome, ${u.firstName} ${u.surname}</h1>
+              <p class="text-xs text-slate-400 mt-1">Manage student records, view assessment marks, and adjust token balances.</p>
             </div>
-            <button onclick="window.app.navigate('conceptsHub')" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-xs shadow shrink-0">
-              Preview Student Lessons
-            </button>
           </div>
 
-          <!-- Filter Bar -->
-          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex items-center gap-2">
-                <label class="text-xs font-black uppercase text-slate-500">Class:</label>
-                <select onchange="teacherFilters.classFilter = this.value; renderTeacherDash(document.getElementById('app-viewport'));" class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
-                  ${classOptions.map(c => `<option value="${c}" ${teacherFilters.classFilter === c ? 'selected' : ''}>${c === 'ALL' ? 'All Classes' : c}</option>`).join('')}
+          <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50">
+              <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-users text-indigo-600"></i> Student Markbook (${filteredStudents.length})
+              </h2>
+              <div class="flex flex-wrap items-center gap-2">
+                <select onchange="teacherFilters.classFilter = this.value; renderTeacherDash();" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                  ${classOptions.map(c => `<option value="${c}" ${teacherFilters.classFilter === c ? 'selected' : ''}>Class: ${c}</option>`).join('')}
                 </select>
-              </div>
-              <div class="flex items-center gap-2">
-                <label class="text-xs font-black uppercase text-slate-500">Teacher:</label>
-                <select onchange="teacherFilters.teacherFilter = this.value; renderTeacherDash(document.getElementById('app-viewport'));" class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option value="ALL" ${teacherFilters.teacherFilter === 'ALL' ? 'selected' : ''}>All Teachers</option>
-                  <option value="Mr B" ${teacherFilters.teacherFilter === 'Mr B' ? 'selected' : ''}>Mr B</option>
-                  <option value="Mr H" ${teacherFilters.teacherFilter === 'Mr H' ? 'selected' : ''}>Mr H</option>
-                  <option value="Mr T" ${teacherFilters.teacherFilter === 'Mr T' ? 'selected' : ''}>Mr T</option>
+                <select onchange="teacherFilters.teacherFilter = this.value; renderTeacherDash();" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="ALL" ${teacherFilters.teacherFilter === 'ALL' ? 'selected' : ''}>Teacher: All</option>
+                  <option value="Mr B" ${teacherFilters.teacherFilter === 'Mr B' ? 'selected' : ''}>Teacher: Mr B</option>
+                  <option value="Mr H" ${teacherFilters.teacherFilter === 'Mr H' ? 'selected' : ''}>Teacher: Mr H</option>
+                  <option value="Mr T" ${teacherFilters.teacherFilter === 'Mr T' ? 'selected' : ''}>Teacher: Mr T</option>
                 </select>
-              </div>
-              <div class="flex items-center gap-2">
-                <label class="text-xs font-black uppercase text-slate-500">Sort By:</label>
-                <select onchange="teacherFilters.sortBy = this.value; renderTeacherDash(document.getElementById('app-viewport'));" class="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option value="class" ${teacherFilters.sortBy === 'class' ? 'selected' : ''}>Class (A-Z)</option>
-                  <option value="tokens" ${teacherFilters.sortBy === 'tokens' ? 'selected' : ''}>Tokens Ranking (High-Low)</option>
-                  <option value="date" ${teacherFilters.sortBy === 'date' ? 'selected' : ''}>Latest Test Date</option>
+                <select onchange="teacherFilters.sortBy = this.value; renderTeacherDash();" class="px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="class" ${teacherFilters.sortBy === 'class' ? 'selected' : ''}>Sort: Class</option>
+                  <option value="tokens" ${teacherFilters.sortBy === 'tokens' ? 'selected' : ''}>Sort: Tokens</option>
+                  <option value="date" ${teacherFilters.sortBy === 'date' ? 'selected' : ''}>Sort: Recent Activity</option>
                 </select>
               </div>
             </div>
-            <span class="text-xs font-bold text-slate-500">Showing ${filteredStudents.length} of ${students.length} students</span>
-          </div>
-
-          <!-- Student Progress & Markbook Cards -->
-          ${filteredStudents.length === 0 ? `
-            <div class="bg-white rounded-3xl p-8 border border-slate-200 text-center text-xs text-slate-400">
-              No student records match the selected filters.
+            
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse min-w-[800px]">
+                <thead class="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Student Name</th>
+                    <th class="px-4 py-3">Class / Teacher</th>
+                    <th class="px-4 py-3 text-center">Tokens</th>
+                    <th class="px-4 py-3 text-center">Tests Taken</th>
+                    <th class="px-4 py-3">Latest Assessment</th>
+                    <th class="px-4 py-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-sm">
+                  ${filteredStudents.length === 0 ? `
+                    <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400 text-sm font-semibold">No students found for this filter.</td></tr>
+                  ` : filteredStudents.map(s => {
+                    const latest = (s.testHistory && s.testHistory.length > 0) ? s.testHistory[0] : null;
+                    return `
+                      <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-3 font-bold text-slate-800">
+                          <div class="flex items-center gap-2">
+                            ${renderAvatarSVG(s.avatar, 'w-8 h-8')}
+                            ${s.firstName} ${s.surname}
+                          </div>
+                        </td>
+                        <td class="px-4 py-3">
+                          <div class="text-xs font-black text-indigo-600">${s.class}</div>
+                          <div class="text-[10px] text-slate-500">${s.teacher || 'Mr B'}</div>
+                        </td>
+                        <td class="px-4 py-3 text-center font-black text-amber-600">
+                          <i class="fa-solid fa-coins text-amber-400 mr-1"></i>${(s.stats && s.stats.tokens) || 0}
+                        </td>
+                        <td class="px-4 py-3 text-center font-bold text-slate-600">
+                          ${(s.stats && s.stats.testsTaken) || 0}
+                        </td>
+                        <td class="px-4 py-3">
+                          ${latest ? `
+                            <div class="text-[11px] font-bold text-slate-700 truncate max-w-[200px]">${latest.concept}</div>
+                            <div class="text-[10px] text-slate-500">${latest.level} • <span class="${latest.percentage >= 50 ? 'text-emerald-600' : 'text-amber-600'} font-black">${latest.percentage}%</span></div>
+                          ` : `<span class="text-xs text-slate-400 italic">No tests taken</span>`}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                          <div class="flex items-center justify-center gap-2">
+                            <button onclick="openEditStudentModal('${s.key}')" class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 flex items-center justify-center transition-colors" title="Edit Student">
+                              <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="promptDeleteStudent('${s.key}', '${s.firstName} ${s.surname}')" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center transition-colors" title="Delete Student">
+                              <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
             </div>
-          ` : `
-            <div class="space-y-4">
-              ${filteredStudents.map(s => {
-                const completedLessons = Array.isArray(s.completedLessons) ? s.completedLessons : [];
-                const testHistory = Array.isArray(s.testHistory) ? s.testHistory : [];
-                const tokens = (s.stats && s.stats.tokens) || 0;
-
-                return `
-                  <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                    <!-- Student Header Row -->
-                    <div class="p-5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
-                      <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white font-black flex items-center justify-center text-sm shadow-sm">
-                          ${(s.firstName || 'S')[0]}${(s.surname || '')[0] || ''}
-                        </div>
-                        <div>
-                          <h3 class="font-black text-base text-slate-800">${s.firstName} ${s.surname}</h3>
-                          <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 font-semibold">
-                            <span class="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-bold">Class ${s.class}</span>
-                            <span>&bull; Teacher: <strong>${s.teacher || 'Mr B'}</strong></span>
-                            <span>&bull; <span class="text-amber-600 font-black"><i class="fa-solid fa-coins text-amber-400"></i> ${tokens} Tokens</span></span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <button onclick="openEditStudentModal('${s.key}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-xs transition-colors">
-                          <i class="fa-solid fa-pen mr-1"></i> Edit
-                        </button>
-                        <button onclick="openDeleteStudentModal('${s.key}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs transition-colors">
-                          <i class="fa-solid fa-trash mr-1"></i> Delete
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Two-Column Body: Module Checklist & Test Results -->
-                    <div class="p-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
-                      <!-- Left: 6-Concept Module Completion Checklist (7 cols) -->
-                      <div class="lg:col-span-7 space-y-3">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                          <i class="fa-solid fa-list-check text-indigo-600"></i> Module & Lesson Completion Checklist
-                        </h4>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          ${conceptsCurriculum.map(concept => {
-                            let totalLessonsInConcept = 0;
-                            let viewedCount = 0;
-                            concept.levels.forEach(lvl => {
-                              lvl.lessons.forEach(les => {
-                                totalLessonsInConcept++;
-                                const lKey = `${concept.id}_lvl${lvl.level}_les${les.lessonNum}`;
-                                if (completedLessons.includes(lKey)) viewedCount++;
-                              });
-                            });
-                            const isModuleComplete = totalLessonsInConcept > 0 && viewedCount >= totalLessonsInConcept;
-                            const isStarted = viewedCount > 0 && !isModuleComplete;
-
-                            return `
-                              <div class="p-3 rounded-2xl border ${isModuleComplete ? 'bg-emerald-50/70 border-emerald-200' : isStarted ? 'bg-amber-50/60 border-amber-200' : 'bg-slate-50 border-slate-200'} flex items-center justify-between gap-2">
-                                <div class="flex items-center gap-2.5 min-w-0">
-                                  <span class="w-6 h-6 rounded-lg flex items-center justify-center text-xs shrink-0 ${
-                                    isModuleComplete
-                                      ? 'bg-emerald-500 text-white'
-                                      : isStarted
-                                      ? 'bg-amber-400 text-slate-950'
-                                      : 'bg-white border border-slate-300 text-slate-300'
-                                  }">
-                                    <i class="fa-solid ${isModuleComplete ? 'fa-check' : isStarted ? 'fa-spinner' : 'fa-minus'}"></i>
-                                  </span>
-                                  <div class="truncate">
-                                    <div class="text-xs font-bold text-slate-800 truncate">${concept.title}</div>
-                                    <div class="text-[10px] font-semibold ${isModuleComplete ? 'text-emerald-700' : isStarted ? 'text-amber-700' : 'text-slate-400'}">
-                                      ${viewedCount} / ${totalLessonsInConcept} Lessons Viewed
-                                    </div>
-                                  </div>
-                                </div>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
-                                  isModuleComplete
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : isStarted
-                                    ? 'bg-amber-100 text-amber-800'
-                                    : 'bg-slate-200/70 text-slate-500'
-                                }">
-                                  ${isModuleComplete ? 'Done' : isStarted ? 'In Progress' : 'Not Started'}
-                                </span>
-                              </div>
-                            `;
-                          }).join('')}
-                        </div>
-                      </div>
-
-                      <!-- Right: Confidential 15-Question Test Results (5 cols) -->
-                      <div class="lg:col-span-5 space-y-3">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                          <i class="fa-solid fa-file-circle-check text-emerald-600"></i> 15-Question Level Test Results (${testHistory.length})
-                        </h4>
-                        ${testHistory.length === 0 ? `
-                          <div class="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-xs text-slate-400 text-center">
-                            No level tests submitted yet.
-                          </div>
-                        ` : `
-                          <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                            ${testHistory.map(t => `
-                              <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs">
-                                <div>
-                                  <div class="font-bold text-slate-800">${t.concept}</div>
-                                  <div class="text-[10px] text-slate-500">${t.level} &bull; ${t.date}</div>
-                                </div>
-                                <span class="px-2.5 py-1 rounded-xl font-black shrink-0 ${
-                                  t.percentage >= 80
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : t.percentage >= 50
-                                    ? 'bg-amber-100 text-amber-800'
-                                    : 'bg-rose-100 text-rose-800'
-                                }">
-                                  ${t.score}/${t.total} (${t.percentage}%)
-                                </span>
-                              </div>
-                            `).join('')}
-                          </div>
-                        `}
-                      </div>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          `}
-          
-          <!-- Unified Leaderboard View within Teacher Dashboard -->
-          <div class="mt-8">
-            ${renderLeaderboardMarkup()}
           </div>
         </div>
       `;
-      
-      // Hydrate leaderboard immediately after rendering the dashboard
-      refreshLeaderboardTableInPlace();
     }
 
     function openEditStudentModal(key) {
-      const all = getAllUserRecords();
-      const s = all[key];
+      const db = getAllUserRecords();
+      const s = db[key];
       if (!s) return;
       document.getElementById('edit-student-key').value = key;
-      document.getElementById('edit-student-firstname').value = s.firstName || '';
-      document.getElementById('edit-student-surname').value = s.surname || '';
-      document.getElementById('edit-student-class').value = s.class || '7A';
+      document.getElementById('edit-student-firstname').value = s.firstName;
+      document.getElementById('edit-student-surname').value = s.surname;
+      document.getElementById('edit-student-class').value = s.class;
       document.getElementById('edit-student-teacher').value = s.teacher || 'Mr B';
       document.getElementById('edit-student-tokens').value = (s.stats && s.stats.tokens) || 0;
       document.getElementById('edit-student-modal').classList.remove('hidden');
@@ -7440,37 +7366,33 @@
 
     function saveEditedStudent() {
       const key = document.getElementById('edit-student-key').value;
-      const all = getAllUserRecords();
-      const existing = all[key];
-      if (!existing) return;
+      const db = getAllUserRecords();
+      const s = db[key];
+      if (!s) return;
 
-      existing.firstName = document.getElementById('edit-student-firstname').value.trim() || existing.firstName;
-      existing.surname = document.getElementById('edit-student-surname').value.trim() || existing.surname;
-      existing.class = document.getElementById('edit-student-class').value;
-      existing.teacher = document.getElementById('edit-student-teacher').value;
-      if (!existing.stats) existing.stats = { tokens: 0, testsTaken: 0 };
-      existing.stats.tokens = Number(document.getElementById('edit-student-tokens').value) || 0;
+      s.firstName = document.getElementById('edit-student-firstname').value.trim();
+      s.surname = document.getElementById('edit-student-surname').value.trim();
+      s.class = document.getElementById('edit-student-class').value;
+      s.teacher = document.getElementById('edit-student-teacher').value;
+      if (!s.stats) s.stats = { tokens: 0, testsTaken: 0 };
+      s.stats.tokens = Number(document.getElementById('edit-student-tokens').value) || 0;
 
       try {
-        all[key] = existing;
-        localStorage.setItem('boncepts_users_db', JSON.stringify(all));
+        localStorage.setItem('boncepts_users_db', JSON.stringify(db));
       } catch (e) {}
-
       if (window.saveUserRecordToCloud) {
-        window.saveUserRecordToCloud(key, existing);
+        window.saveUserRecordToCloud(key, s);
       }
 
       closeEditStudentModal();
+      renderTeacherDash();
       updateGlobalLeaderboard();
-      renderTeacherDash(document.getElementById('app-viewport'));
+      refreshLeaderboardTableInPlace();
     }
 
-    function openDeleteStudentModal(key) {
-      const all = getAllUserRecords();
-      const s = all[key];
-      if (!s) return;
+    function promptDeleteStudent(key, name) {
       document.getElementById('delete-student-key').value = key;
-      document.getElementById('delete-student-name').textContent = `${s.firstName} ${s.surname}`;
+      document.getElementById('delete-student-name').textContent = name;
       document.getElementById('delete-student-modal').classList.remove('hidden');
     }
 
@@ -7480,21 +7402,316 @@
 
     function confirmDeleteStudent() {
       const key = document.getElementById('delete-student-key').value;
-      if (!key) return;
-      try {
-        const all = getAllUserRecords();
-        delete all[key];
-        localStorage.setItem('boncepts_users_db', JSON.stringify(all));
-      } catch (e) {}
-
-      if (window.cachedCloudUsers) delete window.cachedCloudUsers[key];
-      if (window.deleteUserRecordFromCloud) window.deleteUserRecordFromCloud(key);
-
+      const db = getAllUserRecords();
+      if (db[key]) {
+        delete db[key];
+        try {
+          localStorage.setItem('boncepts_users_db', JSON.stringify(db));
+        } catch (e) {}
+        if (window.deleteUserRecordFromCloud) {
+          window.deleteUserRecordFromCloud(key);
+        }
+      }
       closeDeleteStudentModal();
+      renderTeacherDash();
       updateGlobalLeaderboard();
-      renderTeacherDash(document.getElementById('app-viewport'));
+      refreshLeaderboardTableInPlace();
     }
 
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' && longNoteState.running) {
+        e.preventDefault();
+        endLongNoteHold();
+      }
+    });
+
+    // ==========================================
+    // MINIGAME ARCADE: ANALOG POCKET SYNTHESIZER (WAVEFORM SCULPTOR)
+    // ==========================================
+    let waveformGameState = { running: false };
+
+    const wfgWaves = ['sine', 'triangle', 'square', 'sawtooth'];
+    const wfgFreqs = [220, 330, 440, 550, 660, 880];
+    const wfgVols = [0.05, 0.1, 0.15, 0.2, 0.25];
+
+    function stopWaveformGame() {
+      const st = waveformGameState;
+      if (st.synthOsc) { try { st.synthOsc.stop(); st.synthOsc.disconnect(); } catch(e){} st.synthOsc = null; }
+      if (st.targetOsc) { try { st.targetOsc.stop(); st.targetOsc.disconnect(); } catch(e){} st.targetOsc = null; }
+    }
+
+    function setupWaveformRound() {
+      stopWaveformGame();
+      const st = waveformGameState;
+      st.target = {
+        wave: Math.floor(Math.random() * wfgWaves.length),
+        freq: Math.floor(Math.random() * wfgFreqs.length),
+        vol: Math.floor(Math.random() * wfgVols.length)
+      };
+      st.current = {
+        wave: Math.floor(Math.random() * wfgWaves.length),
+        freq: Math.floor(Math.random() * wfgFreqs.length),
+        vol: Math.floor(Math.random() * wfgVols.length)
+      };
+      if (st.current.wave === st.target.wave && st.current.freq === st.target.freq && st.current.vol === st.target.vol) {
+         st.current.wave = (st.current.wave + 1) % wfgWaves.length;
+      }
+    }
+
+    function startWaveformGameInit() {
+      waveformGameState = {
+        running: true, round: 1, totalRounds: 5, score: 0, completed: false,
+        target: { wave: 0, freq: 0, vol: 0 },
+        current: { wave: 0, freq: 0, vol: 0 },
+        synthOsc: null, targetOsc: null
+      };
+      setupWaveformRound();
+      renderWaveformGameView(document.getElementById('app-viewport'));
+    }
+
+    function playWaveformTone(isTarget, start) {
+       const st = waveformGameState;
+       stopWaveformGame(); // Prevent overlapping pulses
+       if (!start) return;
+
+       const cfg = isTarget ? st.target : st.current;
+       const ctx = getAudioCtx();
+       if (!ctx) return;
+
+       const osc = ctx.createOscillator();
+       const gain = ctx.createGain();
+       osc.type = wfgWaves[cfg.wave];
+       osc.frequency.value = wfgFreqs[cfg.freq];
+       gain.gain.value = wfgVols[cfg.vol];
+
+       osc.connect(gain);
+       gain.connect(ctx.destination);
+       osc.start();
+
+       if (isTarget) {
+          st.targetOsc = osc;
+       } else {
+          st.synthOsc = osc;
+       }
+    }
+
+    function updateWaveform(param, val) {
+       const st = waveformGameState;
+       st.current[param] = Number(val);
+       const svgContainer = document.getElementById('wf-current-svg');
+       if (svgContainer) {
+         svgContainer.innerHTML = generateWaveformSVG(st.current.wave, st.current.freq, st.current.vol, '#38bdf8');
+       }
+       if (param === 'wave') document.getElementById('wf-wave-val').textContent = wfgWaves[st.current.wave].toUpperCase();
+       if (param === 'freq') document.getElementById('wf-freq-val').textContent = wfgFreqs[st.current.freq] + ' Hz';
+       if (param === 'vol') document.getElementById('wf-vol-val').textContent = Math.round(wfgVols[st.current.vol]*400) + '%';
+    }
+
+    function checkWaveformMatch() {
+       const st = waveformGameState;
+       const isMatch = st.current.wave == st.target.wave && st.current.freq == st.target.freq && st.current.vol == st.target.vol;
+
+       if (isMatch) {
+         st.score++;
+         playTonePitch(659.25, 0.2, 0.35, 'triangle');
+         if (st.round < st.totalRounds) {
+           st.round++;
+           setupWaveformRound();
+         } else {
+           st.completed = true;
+           addTokens(st.score * 2);
+           showAppModal('Synth Master!', `You successfully sculpted ${st.score} waveforms and earned +${st.score*2} Tokens!`, true);
+         }
+       } else {
+         playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+         showAppModal('Not Quite a Match', 'Keep adjusting the sliders! The wave shape, pitch, and volume must exactly match the target.', false);
+       }
+       renderWaveformGameView(document.getElementById('app-viewport'));
+    }
+
+    function playWaveformTone(isTarget) {
+       const st = waveformGameState;
+       stopWaveformGame(); // Prevent overlapping pulses
+
+       const cfg = isTarget ? st.target : st.current;
+       const ctx = getAudioCtx();
+       if (!ctx) return;
+       const now = ctx.currentTime;
+
+       const osc = ctx.createOscillator();
+       const gain = ctx.createGain();
+       osc.type = wfgWaves[cfg.wave];
+       osc.frequency.setValueAtTime(wfgFreqs[cfg.freq], now);
+       
+       gain.gain.setValueAtTime(0.001, now);
+       gain.gain.linearRampToValueAtTime(wfgVols[cfg.vol], now + 0.05);
+       gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+
+       osc.connect(gain);
+       gain.connect(ctx.destination);
+       osc.start(now);
+       osc.stop(now + 1.6);
+
+       if (isTarget) {
+          st.targetOsc = osc;
+       } else {
+          st.synthOsc = osc;
+       }
+    }
+
+    function generateWaveformSVG(waveIdx, freqIdx, volIdx, color) {
+       const reps = freqIdx + 2; 
+       const amp = 0.2 + (volIdx * 0.2); 
+       const mid = 50;
+       const h = 40 * amp;
+
+       let d = `M 0 ${mid}`;
+       const stepX = 100 / reps;
+
+       for(let i=0; i<reps; i++) {
+         const startX = i * stepX;
+         const endX = (i+1) * stepX;
+         const qX = startX + (stepX/2);
+
+         if (waveIdx === 0) {
+           d += ` Q ${startX + stepX*0.25} ${mid - h}, ${qX} ${mid} T ${endX} ${mid}`;
+         } else if (waveIdx === 1) {
+           d += ` L ${startX + stepX*0.25} ${mid - h} L ${startX + stepX*0.75} ${mid + h} L ${endX} ${mid}`;
+         } else if (waveIdx === 2) {
+           d += ` L ${startX} ${mid - h} L ${qX} ${mid - h} L ${qX} ${mid + h} L ${endX} ${mid + h} L ${endX} ${mid}`;
+         } else if (waveIdx === 3) {
+           d += ` L ${endX} ${mid - h} L ${endX} ${mid + h}`;
+         }
+       }
+       if (waveIdx === 3) d += ` L 100 ${mid}`;
+
+       return `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md" preserveAspectRatio="none">
+         <line x1="0" y1="50" x2="100" y2="50" stroke="${color}" stroke-opacity="0.2" stroke-width="1" />
+         <path d="${d}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" />
+       </svg>`;
+    }
+
+    function renderWaveformGameView(container) {
+      if (!container) return;
+      const st = waveformGameState;
+
+      if (!st.running && !st.completed) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
+              <div class="text-fuchsia-400 text-5xl mb-4"><i class="fa-solid fa-sliders"></i></div>
+              <h2 class="text-3xl font-black mb-2">Waveform Sculptor</h2>
+              <p class="text-slate-400 mb-8 max-w-md mx-auto">Listen to the mystery tone and observe its target wave shape. Drag your <strong>Wave Shape</strong>, <strong>Pitch</strong>, and <strong>Volume</strong> sliders to perfectly match the target sound. Earn 2 tokens per round!</p>
+              <button onclick="startWaveformGameInit()" class="px-8 py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black rounded-2xl text-lg transition-all shadow-md">
+                Start Synthing <i class="fa-solid fa-play ml-2"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.completed) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
+              <div class="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-slate-900 text-4xl mx-auto mb-6 shadow-[0_0_20px_#10b981]">
+                <i class="fa-solid fa-sliders"></i>
+              </div>
+              <h2 class="text-3xl font-black text-emerald-400 mb-2">Waveform Sculptor Mastered!</h2>
+              <p class="text-slate-300 mb-6">You perfectly matched all ${st.totalRounds} target waveforms and earned +${st.score*2} Tokens!</p>
+              <button onclick="startWaveformGameInit()" class="px-8 py-3 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black rounded-xl text-sm transition-all shadow-md">
+                Play Again
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-fuchsia-500 tracking-widest"><i class="fa-solid fa-sliders"></i> Waveform Sculptor</span>
+          </div>
+
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+             <div class="flex items-center justify-between mb-6">
+               <h2 class="text-2xl sm:text-3xl font-black text-fuchsia-400">Analog Pocket Synth</h2>
+               <span class="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 font-black text-xs border border-slate-700">Round ${st.round} / ${st.totalRounds}</span>
+             </div>
+
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+               <div class="space-y-3">
+                 <div class="text-xs font-black text-slate-400 uppercase tracking-widest text-center">Target Waveform</div>
+                 <div class="h-32 bg-slate-950 border-2 border-slate-700 rounded-2xl p-2 relative">
+                   ${generateWaveformSVG(st.target.wave, st.target.freq, st.target.vol, '#f472b6')}
+                 </div>
+                 <button onclick="playWaveformTone(true)" class="w-full py-3 bg-fuchsia-600 hover:bg-fuchsia-500 active:scale-95 text-white font-black rounded-xl text-sm transition-all shadow-md">
+                   <i class="fa-solid fa-satellite-dish mr-2"></i> Play Target Tone
+                 </button>
+               </div>
+
+               <div class="space-y-3">
+                 <div class="text-xs font-black text-sky-400 uppercase tracking-widest text-center">Your Synth Output</div>
+                 <div id="wf-current-svg" class="h-32 bg-slate-950 border-2 border-sky-900 rounded-2xl p-2 relative shadow-[0_0_15px_rgba(14,165,233,0.2)]">
+                   ${generateWaveformSVG(st.current.wave, st.current.freq, st.current.vol, '#38bdf8')}
+                 </div>
+                 <button onclick="playWaveformTone(false)" class="w-full py-3 bg-sky-600 hover:bg-sky-500 active:scale-95 text-white font-black rounded-xl text-sm transition-all shadow-md">
+                   <i class="fa-solid fa-wave-square mr-2"></i> Play Your Synth
+                 </button>
+               </div>
+             </div>
+
+             <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-6">
+                <div>
+                  <div class="flex justify-between text-xs font-black text-slate-300 mb-2 uppercase tracking-wide">
+                    <span><i class="fa-solid fa-shapes mr-1"></i> Wave Shape (Timbre)</span>
+                    <span id="wf-wave-val">${wfgWaves[st.current.wave].toUpperCase()}</span>
+                  </div>
+                  <input type="range" id="wf-wave" min="0" max="3" step="1" value="${st.current.wave}" oninput="updateWaveform('wave', this.value)" class="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-sky-400">
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-black text-slate-300 mb-2 uppercase tracking-wide">
+                    <span><i class="fa-solid fa-wave-square mr-1"></i> Pitch (Frequency)</span>
+                    <span id="wf-freq-val">${wfgFreqs[st.current.freq]} Hz</span>
+                  </div>
+                  <input type="range" id="wf-freq" min="0" max="5" step="1" value="${st.current.freq}" oninput="updateWaveform('freq', this.value)" class="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-sky-400">
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs font-black text-slate-300 mb-2 uppercase tracking-wide">
+                    <span><i class="fa-solid fa-volume-high mr-1"></i> Volume (Amplitude)</span>
+                    <span id="wf-vol-val">${Math.round(wfgVols[st.current.vol]*400)}%</span>
+                  </div>
+                  <input type="range" id="wf-vol" min="0" max="4" step="1" value="${st.current.vol}" oninput="updateWaveform('vol', this.value)" class="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-sky-400">
+                </div>
+             </div>
+
+             <div class="mt-6 flex justify-center">
+               <button onclick="checkWaveformMatch()" class="px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-black rounded-2xl text-lg shadow-lg transition-transform active:scale-95">
+                 Lock In Match <i class="fa-solid fa-check-circle ml-1"></i>
+               </button>
+             </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME 5: 8-BEAT DRUM SEQUENCER & DICTATION LAB
     // ==========================================
     // OVERALL STUDENT LEADERBOARD MARKUP
     // ==========================================

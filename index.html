@@ -391,6 +391,7 @@
       try { if (typeof stopQuaverGameLoop === 'function') stopQuaverGameLoop(); } catch (e) {}
       try { if (typeof stopLongNoteGameLoop === 'function') stopLongNoteGameLoop(); } catch (e) {}
       try { if (typeof stopDrumSequencerLoop === 'function') stopDrumSequencerLoop(); } catch (e) {}
+      try { if (typeof stopMetronomeGame === 'function') stopMetronomeGame(); } catch (e) {}
     }
 
     window.app = {
@@ -440,6 +441,10 @@
             break;
           case 'shop':
             renderShopView(viewport);
+            break;
+          case 'metronomeGame':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderMetronomeGameView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -4552,325 +4557,191 @@
     }
 
     // ==========================================
-    // MINIGAME 4: LONG NOTE SUSTAIN SOUND MODULE
+    // MINIGAME ARCADE: BRASS PYRAMID METRONOME
     // ==========================================
-    let longNoteState = {
-      running: false,
-      speedIdx: 0,
-      speeds: [76, 92, 108, 124],
-      notes: [],
-      beatIdx: -4,
-      holding: false,
-      holdStartTime: 0,
-      noteSpans: [],
-      noteHeldMs: [],
-      continuousAcrossBoundary: [],
-      failedNoteIndices: [],
-      feedbackMsg: '',
-      intervalId: null,
-      completed: false
+    let metronomeGameState = {
+        running: false,
+        bpm: 60,
+        phase: 0,
+        streak: 0,
+        best: 0,
+        lastCrossCount: 0,
+        lastHitCrossCount: -1,
+        lastTime: 0,
+        bonusAwarded: false
     };
 
-    function stopLongNoteGameLoop() {
-      if (longNoteState.intervalId) clearInterval(longNoteState.intervalId);
-      longNoteState.intervalId = null;
-      longNoteState.running = false;
-      longNoteState.holding = false;
-      longNoteState.holdStartTime = 0;
+    function stopMetronomeGame() {
+        metronomeGameState.running = false;
     }
 
-    function buildLongNotePhrase() {
-      const options = [
-        { type: 'semibreve', beats: 4 },
-        { type: 'dottedMinim', beats: 3 },
-        { type: 'minim', beats: 2 },
-        { type: 'crotchet', beats: 1 }
-      ];
-      let phrase = [];
-      let remaining = 8;
-      
-      while (remaining > 0) {
-        const valid = options.filter(o => o.beats <= remaining);
-        const pick = valid[Math.floor(Math.random() * valid.length)];
-        phrase.push({ type: pick.type, beats: pick.beats });
-        remaining -= pick.beats;
-      }
-      
-      // Ensure at least one note is longer than 1 beat so it remains a sustain challenge
-      if (!phrase.some(n => n.beats > 1)) return buildLongNotePhrase();
-      return phrase;
+    function startMetronomeGame() {
+        stopMetronomeGame();
+        metronomeGameState = {
+            running: true,
+            bpm: 80,
+            phase: -Math.PI / 2, // Start left
+            streak: 0,
+            best: 0,
+            lastCrossCount: 0,
+            lastHitCrossCount: -1,
+            lastTime: performance.now(),
+            bonusAwarded: false
+        };
+        requestAnimationFrame(metronomeLoop);
+        renderMetronomeUIUpdates();
     }
 
-    function computeLongNoteSpans(notes) {
-      let cursor = 0;
-      return notes.map((n, idx) => {
-        const span = { idx, type: n.type, beats: n.beats, startBeat: cursor, endBeat: cursor + n.beats };
-        cursor += n.beats;
-        return span;
-      });
-    }
-
-    function recordLongNoteHoldSegment(endTimeMs) {
-      const st = longNoteState;
-      if (!st.holding || !st.holdStartTime) return;
-      const startMs = st.holdStartTime;
-      const resolvedEndMs = typeof endTimeMs === 'number' ? endTimeMs : performance.now();
-      st.holding = false;
-      st.holdStartTime = 0;
-      if (!st.running || !st.phraseStartTime) return;
-
-      const bpm = st.speeds[st.speedIdx];
-      const beatMs = 60000 / bpm;
-
-      st.noteSpans.forEach((span, idx) => {
-        const nStart = st.phraseStartTime + span.startBeat * beatMs;
-        const nEnd = st.phraseStartTime + span.endBeat * beatMs;
-        // Forgiving 260ms grace buffer before note starts and after note ends
-        const overlapStart = Math.max(startMs, nStart - 260);
-        const overlapEnd = Math.min(resolvedEndMs, nEnd + 260);
-        if (overlapEnd > overlapStart) {
-          st.noteHeldMs[idx] = (st.noteHeldMs[idx] || 0) + (overlapEnd - overlapStart);
-        }
-      });
-    }
-
-    function mountEmbeddedLongNoteGame(target) {
-      if (!target) return;
-      stopLongNoteGameLoop();
-      const notes = buildLongNotePhrase();
-      longNoteState = {
-        running: false,
-        speedIdx: 0,
-        speeds: [76, 92, 108, 124],
-        notes,
-        beatIdx: -4,
-        holding: false,
-        holdStartTime: 0,
-        phraseStartTime: 0,
-        noteSpans: computeLongNoteSpans(notes),
-        noteHeldMs: notes.map(() => 0),
-        continuousAcrossBoundary: notes.map(() => false),
-        failedNoteIndices: [],
-        feedbackMsg: '',
-        intervalId: null,
-        completed: false
-      };
-      renderLongNoteGameUI(target);
-    }
-
-    function startLongNoteSpeed() {
-      stopLongNoteGameLoop();
-      const bpm = longNoteState.speeds[longNoteState.speedIdx];
-      const ms = Math.round(60000 / bpm);
-      
-      // Generate a new mixed phrase UNLESS they are retrying a failed attempt
-      const notes = (longNoteState.failedNoteIndices && longNoteState.failedNoteIndices.length > 0)
-        ? longNoteState.notes
-        : buildLongNotePhrase();
+    function metronomeLoop(time) {
+        if (!metronomeGameState.running) return;
+        const st = metronomeGameState;
         
-      longNoteState.notes = notes;
-      longNoteState.noteSpans = computeLongNoteSpans(notes);
-      longNoteState.noteHeldMs = notes.map(() => 0);
-      longNoteState.continuousAcrossBoundary = notes.map(() => false);
-      longNoteState.failedNoteIndices = [];
-      longNoteState.feedbackMsg = '';
-      longNoteState.beatIdx = -5;
-      longNoteState.holding = false;
-      longNoteState.holdStartTime = 0;
-      longNoteState.phraseStartTime = 0;
-      longNoteState.running = true;
-
-      const step = () => {
-        longNoteState.beatIdx++;
-        const b = longNoteState.beatIdx;
-        const now = performance.now();
-
-        if (b < 0) {
-          playTonePitch(784, 0.06, 0.22, 'sine');
-        } else if (b < 8) {
-          if (b === 0) {
-            longNoteState.phraseStartTime = now;
-          }
-          playTonePitch(523.25, 0.06, 0.18, 'sine');
-
-          // Check if a new note starts on beat b while Spacebar was held continuously since well before this beat
-          const startingNoteIdx = longNoteState.noteSpans.findIndex(s => s.startBeat === b);
-          if (startingNoteIdx > 0 && longNoteState.holding && longNoteState.holdStartTime > 0) {
-            // Only flag if they held straight across without releasing for at least 380ms prior to the new note
-            if (now - longNoteState.holdStartTime > 380) {
-              longNoteState.continuousAcrossBoundary[startingNoteIdx] = true;
+        if (!st.lastTime) st.lastTime = time;
+        const delta = time - st.lastTime;
+        st.lastTime = time;
+        
+        st.phase += (delta / (60000 / st.bpm)) * Math.PI;
+        
+        const currentCross = Math.floor((st.phase + Math.PI/2) / Math.PI);
+        
+        if (currentCross > st.lastCrossCount) {
+            playTonePitch(800, 0.05, 0.3, 'square'); // Click sound
+            st.lastCrossCount = currentCross;
+            
+            // Tempo Shift every 8 beats
+            if (currentCross % 8 === 0 && currentCross > 0) {
+                st.bpm = Math.floor(Math.random() * (160 - 50 + 1)) + 50;
+                renderMetronomeTextUpdates();
             }
-          }
-
-          if (longNoteState.holding) {
-            playTonePitch(329.63, (ms / 1000) * 0.95, 0.28, 'triangle');
-          }
-        } else {
-          if (longNoteState.holding) {
-            recordLongNoteHoldSegment(now);
-          }
-          stopLongNoteGameLoop();
-
-          // Evaluate each note's sustained time with generous human tolerance
-          const failed = [];
-          longNoteState.noteSpans.forEach((span, idx) => {
-            const targetMs = span.beats * ms;
-            const heldMs = longNoteState.noteHeldMs[idx] || 0;
-            // Generous leniency: allow holding at least 55% of target duration (minus 220ms) and up to target + 1.35 beats
-            const minAllowed = Math.max(180, targetMs * 0.55 - 180);
-            const maxAllowed = targetMs + ms * 1.35;
-
-            if (longNoteState.continuousAcrossBoundary[idx] || heldMs < minAllowed || heldMs > maxAllowed) {
-              failed.push(idx);
+            
+            // Check for missed beat
+            if (currentCross - st.lastHitCrossCount > 1 && st.streak > 0) {
+                st.streak = 0;
+                playTonePitch(150, 0.15, 0.3, 'sawtooth');
+                renderMetronomeTextUpdates();
             }
-          });
-
-          longNoteState.failedNoteIndices = failed;
-
-          if (failed.length === 0) {
-            if (longNoteState.speedIdx < 3) {
-              longNoteState.speedIdx++;
-              longNoteState.feedbackMsg = `Great sustain! Advancing to Speed ${longNoteState.speedIdx + 1}...`;
-              renderLongNoteGameUI();
-              setTimeout(() => startLongNoteSpeed(), 700);
-              return;
-            } else {
-              longNoteState.completed = true;
-              addTokens(10);
-              showAppModal('Long Note Sustain Mastered!', 'You sustained Minims, Dotted Minims, and Semibreves cleanly across all 4 speeds (+10 Tokens)!', true);
-            }
-          } else {
-            longNoteState.feedbackMsg = 'Check the red-bordered note(s): hold for the full beat count and release briefly before the next note starts!';
-            playTonePitch(165, 0.2, 0.25, 'sawtooth');
-          }
         }
-        renderLongNoteGameUI();
-      };
-      step();
-      longNoteState.intervalId = setInterval(step, ms);
+        
+        const angle = 45 * Math.sin(st.phase);
+        const arm = document.getElementById('metronome-arm');
+        if (arm) arm.setAttribute('transform', `rotate(${angle} 50 90)`);
+        
+        requestAnimationFrame(metronomeLoop);
     }
 
-    function beginLongNoteHold() {
-      if (!longNoteState.running) return;
-      if (!longNoteState.holding) {
-        longNoteState.holding = true;
-        longNoteState.holdStartTime = performance.now();
-        playTonePitch(329.63, 0.4, 0.3, 'triangle');
-        renderLongNoteGameUI();
-      }
+    function handleMetronomeHit() {
+        const st = metronomeGameState;
+        if (!st.running) return;
+        
+        const angle = 45 * Math.sin(st.phase);
+        
+        if (Math.abs(angle) < 12) { // Tolerance in degrees
+            const closestCross = Math.round(st.phase / Math.PI);
+            if (st.lastHitCrossCount === closestCross) {
+                st.streak = 0;
+                playTonePitch(150, 0.15, 0.3, 'sawtooth'); // Mashed
+            } else {
+                st.streak++;
+                if (st.streak > st.best) st.best = st.streak;
+                st.lastHitCrossCount = closestCross;
+                playTonePitch(600, 0.1, 0.4, 'triangle'); // Success ding
+                
+                if (st.streak === 24 && !st.bonusAwarded) {
+                    st.bonusAwarded = true;
+                    addTokens(5);
+                    showAppModal('Perfect Timing!', 'You hit 24 perfect beats in a row and earned a +5 Token bonus!', true);
+                }
+            }
+        } else {
+            st.streak = 0;
+            playTonePitch(150, 0.15, 0.3, 'sawtooth'); // Miss ding
+        }
+        renderMetronomeTextUpdates();
     }
 
-    function endLongNoteHold() {
-      if (longNoteState.holding) {
-        recordLongNoteHoldSegment(performance.now());
-        renderLongNoteGameUI();
-      }
-    }
-
-    function renderLongNoteGameUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = longNoteState;
-      const bpm = st.speeds[st.speedIdx];
-      const activeSpanIdx = st.running && st.beatIdx >= 0 && st.beatIdx < 8
-        ? st.noteSpans.findIndex(s => st.beatIdx >= s.startBeat && st.beatIdx < s.endBeat)
-        : -1;
-      const statusBanner = st.running && st.beatIdx < 0
-        ? `Count-In: ${5 + st.beatIdx}`
-        : st.running
-        ? `Beat ${st.beatIdx + 1} of 8`
-        : 'Ready';
-
-      target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Long Note Sustain Synth Module</span>
-              <h3 class="text-xl font-black">8-Beat Sustain &amp; Hold Challenge</h3>
-              <p class="text-xs text-slate-300 mt-1">
-                <strong>Instructions:</strong> After the 4-beat count-in, press and <strong>HOLD Spacebar</strong> for the exact beats of each note, then <strong>RELEASE Spacebar</strong> before pressing again for the next note!
-              </p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-amber-400/15 border border-amber-400/40 text-xs font-black text-amber-300">
-                ${statusBanner}
-              </span>
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
-                Speed ${st.speedIdx + 1} / 4 (${bpm} BPM)
-              </span>
-            </div>
+    function renderMetronomeGameView(container) {
+      container.innerHTML = `
+        <div class="max-w-2xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <button onclick="window.app.navigate('conceptsHub')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Concepts of Music Menu
+            </button>
+            <span class="text-xs font-black uppercase text-amber-500 tracking-widest"><i class="fa-solid fa-stopwatch"></i> Pendulum Precision</span>
           </div>
-
-          ${st.feedbackMsg ? `
-            <div class="p-3.5 rounded-2xl ${st.failedNoteIndices.length > 0 ? 'bg-rose-950/70 border border-rose-500 text-rose-200' : 'bg-emerald-950/70 border border-emerald-500 text-emerald-200'} text-xs font-bold text-center">
-              ${st.feedbackMsg}
-            </div>
-          ` : ''}
-
-          <div class="grid grid-cols-1 sm:grid-cols-${st.notes.length} gap-3">
-            ${st.notes.map((n, idx) => {
-              const isCurrent = activeSpanIdx === idx;
-              const isFailed = st.failedNoteIndices.includes(idx);
-              const borderClass = isFailed
-                ? 'border-2 border-rose-500 bg-rose-950/40'
-                : isCurrent
-                ? 'border-2 border-amber-400 bg-indigo-950/80 scale-[1.02]'
-                : 'border border-slate-700 bg-slate-800';
-              const keycapClass = isCurrent && st.holding
-                ? 'bg-emerald-400 text-slate-950 border-emerald-300 translate-y-0.5'
-                : isCurrent
-                ? 'bg-amber-400 text-slate-950 border-amber-300'
-                : 'bg-slate-700 text-slate-300 border-slate-600';
-
-              return `
-                <div class="p-4 rounded-2xl ${borderClass} text-center flex flex-col justify-between transition-all">
-                  <div>
-                    <div class="text-amber-300">${renderEngravedNoteDarkSVG(n.type, 'w-12 h-16')}</div>
-                    <div class="font-black text-xs uppercase mt-1">${n.beats} ${n.beats === 1 ? 'Beat' : 'Beats'}</div>
-                  </div>
-                  <!-- Spacebar Keycap Image Below Each Note -->
-                  <div class="mt-3 pt-2 border-t border-slate-700/70">
-                    <div class="mx-auto w-full max-w-[140px] py-1.5 px-2 rounded-lg border-b-4 text-[10px] font-black uppercase tracking-widest transition-all ${keycapClass}">
-                      <i class="fa-solid fa-keyboard mr-1"></i> Spacebar
-                    </div>
-                  </div>
+          
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl text-center relative overflow-hidden border border-slate-800">
+             <h2 class="text-3xl font-black mb-2">Brass Pyramid Metronome</h2>
+             <p class="text-sm text-slate-400 mb-8 max-w-md mx-auto">Press Spacebar exactly when the pendulum crosses the center line. The tempo will shift randomly every 8 beats. Reach a streak of 24 for a +5 Token bonus!</p>
+             
+             <div class="flex justify-between items-end mb-4 px-4 sm:px-12">
+                <div class="text-left">
+                  <div class="text-[10px] font-black uppercase text-slate-500">Current Tempo</div>
+                  <div id="metro-bpm" class="text-2xl font-black text-amber-400">-- BPM</div>
                 </div>
-              `;
-            }).join('')}
-          </div>
+                <div class="text-right">
+                  <div class="text-[10px] font-black uppercase text-slate-500">Streak / Best</div>
+                  <div id="metro-streak" class="text-2xl font-black text-emerald-400">0 / 0</div>
+                </div>
+             </div>
 
-          ${st.completed ? `
-            <div class="p-5 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-2">
-              <div class="text-lg font-black text-emerald-300">All 4 Sustain Speeds Mastered (+10 Tokens)!</div>
-              <button type="button" onclick="mountEmbeddedLongNoteGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
-            </div>
-          ` : `
-            <div class="flex justify-center">
-              ${!st.running ? `
-                <button type="button" onclick="startLongNoteSpeed()" class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
-                  ${st.failedNoteIndices.length > 0 ? `Retry Speed ${st.speedIdx + 1} (${bpm} BPM)` : `Start Speed ${st.speedIdx + 1} (${bpm} BPM)`}
-                </button>
-              ` : `
-                <button type="button"
-                  onmousedown="beginLongNoteHold()"
-                  onmouseup="endLongNoteHold()"
-                  onmouseleave="endLongNoteHold()"
-                  ontouchstart="event.preventDefault(); beginLongNoteHold();"
-                  ontouchend="endLongNoteHold()"
-                  class="px-8 py-4 ${st.holding ? 'bg-emerald-500 text-slate-950 scale-95' : 'bg-indigo-600 text-white'} font-black rounded-2xl text-sm shadow-lg transition-all">
-                  ${st.holding ? 'SUSTAINING NOTE...' : 'PRESS & HOLD (SPACEBAR)'}
-                </button>
-              `}
-            </div>
-          `}
+             <div class="relative w-64 h-64 mx-auto bg-slate-800 rounded-t-full border-t-8 border-x-8 border-slate-700 flex items-end justify-center overflow-hidden">
+                <!-- Center glowing line -->
+                <div class="absolute w-1 h-full bg-emerald-500/30 left-1/2 -ml-[2px] bottom-0 shadow-[0_0_10px_#10b981]"></div>
+                <div class="absolute w-0.5 h-full bg-emerald-400 left-1/2 -ml-[1px] bottom-0"></div>
+
+                <svg viewBox="0 0 100 100" class="w-full h-full absolute bottom-0">
+                    <!-- Base pivot -->
+                    <circle cx="50" cy="90" r="5" fill="#cbd5e1" />
+                    <!-- Pendulum arm -->
+                    <g id="metronome-arm" transform="rotate(-45 50 90)">
+                        <line x1="50" y1="90" x2="50" y2="10" stroke="#fef08a" stroke-width="4" stroke-linecap="round"/>
+                        <rect x="42" y="30" width="16" height="12" fill="#fbbf24" rx="2" />
+                    </g>
+                </svg>
+             </div>
+
+             <div class="mt-8">
+               <button id="metro-start-btn" onclick="startMetronomeGame()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-lg shadow-lg transition-all w-full sm:w-auto">
+                 <i class="fa-solid fa-play mr-2"></i> Start Pendulum
+               </button>
+               <button id="metro-hit-btn" onmousedown="if(metronomeGameState.running) handleMetronomeHit();" ontouchstart="event.preventDefault(); if(metronomeGameState.running) handleMetronomeHit();" class="hidden px-8 py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black rounded-2xl text-lg shadow-lg transition-all w-full sm:w-auto">
+                 TAP (or Press SPACEBAR)
+               </button>
+             </div>
+          </div>
         </div>
       `;
     }
+    
+    function renderMetronomeTextUpdates() {
+        const b = document.getElementById('metro-bpm');
+        const s = document.getElementById('metro-streak');
+        if (b) b.textContent = metronomeGameState.bpm + ' BPM';
+        if (s) s.textContent = metronomeGameState.streak + ' / ' + metronomeGameState.best;
+    }
+    
+    function renderMetronomeUIUpdates() {
+        const startBtn = document.getElementById('metro-start-btn');
+        const hitBtn = document.getElementById('metro-hit-btn');
+        if (metronomeGameState.running) {
+            if (startBtn) startBtn.classList.add('hidden');
+            if (hitBtn) hitBtn.classList.remove('hidden');
+            renderMetronomeTextUpdates();
+        } else {
+            if (startBtn) startBtn.classList.remove('hidden');
+            if (hitBtn) hitBtn.classList.add('hidden');
+        }
+    }
+
+    // Dummy state and functions for the missing Long Note minigame to prevent reference errors
+    let longNoteState = { running: false };
+    function beginLongNoteHold() {}
+    function endLongNoteHold() {}
 
     // Global Spacebar handler for rhythm games
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
-        if (beatTapState.running || crotchetGameState.running || quaverGameState.running || longNoteState.running) {
+        if (beatTapState.running || crotchetGameState.running || quaverGameState.running || longNoteState.running || metronomeGameState.running) {
           e.preventDefault();
         }
         if (!e.repeat) {
@@ -4878,6 +4749,7 @@
           else if (crotchetGameState.running) handleCrotchetTap();
           else if (quaverGameState.running) handleQuaverTap();
           else if (longNoteState.running) beginLongNoteHold();
+          else if (metronomeGameState.running) handleMetronomeHit();
         }
       }
     });
@@ -6830,10 +6702,17 @@
                   </div>
                   <div class="mt-6 pt-4 border-t border-slate-100">
                     ${isOwned ? `
-                      <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
-                        <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
-                        <span class="hidden group-hover:inline"><i class="fa-solid fa-rotate-left mr-1"></i> Trade Back (+${item.cost})</span>
-                      </button>
+                      <div class="space-y-2">
+                        ${item.id === 'item_metronome' ? `
+                          <button onclick="window.app.navigate('metronomeGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play"></i> Play Minigame
+                          </button>
+                        ` : ''}
+                        <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
+                          <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
+                          <span class="hidden group-hover:inline"><i class="fa-solid fa-rotate-left mr-1"></i> Trade Back (+${item.cost})</span>
+                        </button>
+                      </div>
                     ` : `
                       <button onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''} class="w-full py-3 rounded-xl font-black text-xs transition-all ${canAfford ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md hover:shadow-lg' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}">
                         ${canAfford ? `<i class="fa-solid fa-cart-shopping mr-1.5"></i> Unlock for ${item.cost} Tokens` : `<i class="fa-solid fa-lock mr-1.5"></i> Need ${item.cost} Tokens`}
@@ -7303,10 +7182,15 @@
                       <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
                         <i class="fa-solid ${it.icon}"></i>
                       </div>
-                      <div>
+                      <div class="flex-1">
                         <div class="font-bold text-xs text-slate-800">${it.name}</div>
                         <div class="text-[10px] text-slate-400">${it.category}</div>
                       </div>
+                      ${it.id === 'item_metronome' ? `
+                        <button onclick="window.app.navigate('metronomeGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
+                          Play
+                        </button>
+                      ` : ''}
                     </div>
                   `).join('')}
                 </div>

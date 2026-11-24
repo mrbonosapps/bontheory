@@ -3914,7 +3914,7 @@
     };
 
     const articulationGameItems = [
-      { id: 'staccato', label: 'Staccato', desc: 'Short & Detached', box: {x: 90, y: 44, w: 20, h: 20} },
+      { id: 'staccato', label: 'Staccato', desc: 'Short & Detached', box: {x: 90, y: 74, w: 20, h: 17} },
       { id: 'accent', label: 'Accent', desc: 'Strong Emphasis', box: {x: 58, y: 24, w: 24, h: 16} },
       { id: 'tenuto', label: 'Tenuto', desc: 'Full Value / Stressed', box: {x: 395, y: 30, w: 30, h: 16} },
       { id: 'slur', label: 'Slur', desc: 'Smooth (Legato)', box: {x: 270, y: 92, w: 85, h: 25} },
@@ -3994,9 +3994,9 @@
           <!-- Staff Lines -->
           ${[30, 45, 60, 75, 90].map(y => `<line x1="20" y1="${y}" x2="480" y2="${y}" stroke="#475569" stroke-width="1.5"/>`).join('')}
           <!-- Bar Lines -->
-          ${[30, 150, 260, 370, 480].map(x => `<line x1="${x}" y1="30" x2="${x}" y2="90" stroke="#475569" stroke-width="1.5"/>`).join('')}
+          ${[20, 150, 260, 370, 480].map(x => `<line x1="${x}" y1="30" x2="${x}" y2="90" stroke="#475569" stroke-width="1.5"/>`).join('')}
           <!-- Treble Clef -->
-          <text x="35" y="98" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
+          <text x="20" y="98" font-size="85" font-family="serif" fill="#1e293b" font-weight="bold">&#119070;</text>
           
           <!-- Bar 1: Accent (C5), Staccato (A4), and Crotchet Rest -->
           <ellipse cx="70" cy="52.5" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 70 52.5)"/>
@@ -4005,7 +4005,7 @@
           
           <ellipse cx="100" cy="67.5" rx="10.5" ry="7.5" fill="#0f172a" transform="rotate(-15 100 67.5)"/>
           <line x1="109" y1="67.5" x2="109" y2="27.5" stroke="#0f172a" stroke-width="2"/>
-          <circle cx="100" cy="54" r="2.5" fill="#0f172a"/> <!-- Staccato -->
+          <circle cx="100" cy="82.5" r="2.8" fill="#0f172a"/> <!-- Staccato -->
           
           <path d="M 125,45 L 135,55 L 125,65 L 135,75 C 130,75 125,78 130,82" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/> <!-- Rest -->
 

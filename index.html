@@ -399,6 +399,7 @@
       try { if (typeof stopGrooveLockGame === 'function') stopGrooveLockGame(); } catch (e) {}
       try { if (typeof stopOrchestralBrassLab === 'function') stopOrchestralBrassLab(); } catch (e) {}
       try { if (typeof stopPercussionLab === 'function') stopPercussionLab(); } catch (e) {}
+      try { if (typeof stopEltonPianoGame === 'function') stopEltonPianoGame(); } catch (e) {}
     }
 
     window.app = {
@@ -472,6 +473,10 @@
           case 'grooveLockGame':
             if (!this.currentUser) return renderLoginView(viewport);
             renderGrooveLockGameView(viewport);
+            break;
+          case 'eltonPianoGame':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderEltonPianoGameView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -10548,6 +10553,10 @@
                         <button onclick="window.app.navigate('grooveLockGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Minigame
                         </button>
+                      ` : item.id === 'item_eltonpiano' ? `
+                        <button onclick="window.app.navigate('eltonPianoGame')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Minigame
+                        </button>
                       ` : ''}
                       <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                           <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
@@ -10591,6 +10600,9 @@
       } else if (item.id === 'item_bass8') {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Playing the minigame...`, true);
         window.app.navigate('grooveLockGame');
+      } else if (item.id === 'item_eltonpiano') {
+        showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Playing the minigame...`, true);
+        window.app.navigate('eltonPianoGame');
       } else {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
         renderShopView(document.getElementById('app-viewport'));
@@ -11054,6 +11066,10 @@
                         </button>
                       ` : it.id === 'item_wrench' ? `
                         <button onclick="window.app.navigate('wrenchGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
+                          Play
+                        </button>
+                      ` : it.id === 'item_eltonpiano' ? `
+                        <button onclick="window.app.navigate('eltonPianoGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[10px] shadow-sm hover:bg-amber-400 transition-colors">
                           Play
                         </button>
                       ` : ''}
@@ -12811,6 +12827,578 @@
           </div>
         `;
     }
+
+    // ==========================================
+    // MINIGAME ARCADE: ELTON JOHN'S PIANO (GOLDEN KEY DROP - TETRIS STYLE)
+    // ==========================================
+    const eltonPianoKeys = [
+      { id: 'C',  label: 'C',  isBlack: false, whiteIdx: 0, freq: 261.63 },
+      { id: 'C#', label: 'C#', isBlack: true,  seamIdx: 1,  freq: 277.18 },
+      { id: 'D',  label: 'D',  isBlack: false, whiteIdx: 1, freq: 293.66 },
+      { id: 'D#', label: 'D#', isBlack: true,  seamIdx: 2,  freq: 311.13 },
+      { id: 'E',  label: 'E',  isBlack: false, whiteIdx: 2, freq: 329.63 },
+      { id: 'F',  label: 'F',  isBlack: false, whiteIdx: 3, freq: 349.23 },
+      { id: 'F#', label: 'F#', isBlack: true,  seamIdx: 4,  freq: 369.99 },
+      { id: 'G',  label: 'G',  isBlack: false, whiteIdx: 4, freq: 392.00 },
+      { id: 'G#', label: 'G#', isBlack: true,  seamIdx: 5,  freq: 415.30 },
+      { id: 'A',  label: 'A',  isBlack: false, whiteIdx: 5, freq: 440.00 },
+      { id: 'A#', label: 'A#', isBlack: true,  seamIdx: 6,  freq: 466.16 },
+      { id: 'B',  label: 'B',  isBlack: false, whiteIdx: 6, freq: 493.88 }
+    ];
+
+    let eltonPianoState = {
+      running: false,
+      gameOver: false,
+      score: 0,
+      best: 0,
+      lives: 3,
+      tokensEarned: 0,
+      stage: 1, // 1: White keys (0-9), 2: + C# & F# (10-14), 3: All 12 keys (15+)
+      speed: 78, // px per second
+      fastDrop: false,
+      activeKeys: [],
+      fallingNote: null, // { targetKey, colIndex, y }
+      hiddenKeyLabels: [], // Key IDs whose letter labels have vanished
+      keyFlash: {}, // { keyId: { color, timer } }
+      particles: [],
+      bannerMsg: '',
+      bannerTimer: 0,
+      canvas: null,
+      ctx: null,
+      animFrame: null,
+      lastTime: 0
+    };
+
+    function getEltonActiveKeys(score) {
+      if (score < 10) {
+        return eltonPianoKeys.filter(k => !k.isBlack);
+      } else if (score < 15) {
+        return eltonPianoKeys.filter(k => !k.isBlack || k.id === 'C#' || k.id === 'F#');
+      } else {
+        return [...eltonPianoKeys];
+      }
+    }
+
+    function getEltonKeyCenterX(keyObj, canvasWidth) {
+      const whiteW = canvasWidth / 7;
+      return keyObj.isBlack ? keyObj.seamIdx * whiteW : (keyObj.whiteIdx + 0.5) * whiteW;
+    }
+
+    function stopEltonPianoGame() {
+      eltonPianoState.running = false;
+      eltonPianoState.fastDrop = false;
+      if (eltonPianoState.animFrame) {
+        cancelAnimationFrame(eltonPianoState.animFrame);
+        eltonPianoState.animFrame = null;
+      }
+    }
+
+    function spawnEltonNote() {
+      const st = eltonPianoState;
+      st.activeKeys = getEltonActiveKeys(st.score);
+
+      // Update stage & announce black key unlocks
+      const newStage = st.score < 10 ? 1 : (st.score < 15 ? 2 : 3);
+      if (newStage > st.stage) {
+        st.stage = newStage;
+        if (newStage === 2) {
+          st.bannerMsg = 'STAGE 2: C# & F# Black Keys Added!';
+          st.bannerTimer = 2600;
+        } else if (newStage === 3) {
+          st.bannerMsg = 'STAGE 3: Full Chromatic Keyboard Unlocked!';
+          st.bannerTimer = 2600;
+        }
+      }
+
+      // Bias slightly toward black notes right after unlocking them so players practice them
+      let targetKey;
+      if (st.stage >= 2 && Math.random() < 0.42) {
+        const blacks = st.activeKeys.filter(k => k.isBlack);
+        targetKey = blacks[Math.floor(Math.random() * blacks.length)];
+      } else {
+        targetKey = st.activeKeys[Math.floor(Math.random() * st.activeKeys.length)];
+      }
+
+      // Start the falling note near the middle (avoiding starting directly on the answer if possible)
+      let startCol = Math.floor(st.activeKeys.length / 2);
+      if (st.activeKeys[startCol].id === targetKey.id) {
+        startCol = (startCol + 2) % st.activeKeys.length;
+      }
+
+      st.fallingNote = {
+        targetKey,
+        colIndex: startCol,
+        y: 26
+      };
+      st.fastDrop = false;
+    }
+
+    function updateEltonHud() {
+      const st = eltonPianoState;
+      const scoreEl = document.getElementById('elton-score');
+      const stageEl = document.getElementById('elton-stage');
+      const speedEl = document.getElementById('elton-speed');
+      const livesEl = document.getElementById('elton-lives');
+
+      if (scoreEl) scoreEl.textContent = st.score;
+      if (stageEl) {
+        stageEl.textContent = st.stage === 1
+          ? `White Keys (${st.score}/10)`
+          : st.stage === 2
+          ? `White + C#, F# (${st.score}/15)`
+          : `All 12 Keys!`;
+      }
+      if (speedEl) speedEl.textContent = `${(st.speed / 78).toFixed(1)}x`;
+      if (livesEl) {
+        livesEl.innerHTML = Array.from({ length: 3 }, (_, i) =>
+          `<i class="fa-solid fa-heart ${i < st.lives ? 'text-rose-500' : 'text-slate-700'}"></i>`
+        ).join(' ');
+      }
+    }
+
+    function moveEltonNote(deltaCol) {
+      const st = eltonPianoState;
+      if (!st.running || !st.fallingNote) return;
+      const maxIdx = st.activeKeys.length - 1;
+      st.fallingNote.colIndex = Math.max(0, Math.min(maxIdx, st.fallingNote.colIndex + deltaCol));
+    }
+
+    function triggerEltonFastDrop(isDown) {
+      if (!eltonPianoState.running) return;
+      eltonPianoState.fastDrop = isDown;
+    }
+
+    function startEltonPianoGame() {
+      stopEltonPianoGame();
+      const canvas = document.getElementById('elton-canvas');
+      if (!canvas) return;
+      const overlay = document.getElementById('elton-start-overlay');
+      if (overlay) overlay.classList.add('hidden');
+
+      canvas.width = canvas.clientWidth || 640;
+      canvas.height = canvas.clientHeight || 420;
+
+      eltonPianoState = {
+        running: true,
+        gameOver: false,
+        score: 0,
+        best: eltonPianoState.best || 0,
+        lives: 3,
+        tokensEarned: 0,
+        stage: 1,
+        speed: 78,
+        fastDrop: false,
+        activeKeys: getEltonActiveKeys(0),
+        fallingNote: null,
+        hiddenKeyLabels: [],
+        keyFlash: {},
+        particles: [],
+        bannerMsg: 'STAGE 1: Guide 10 White Notes onto the Golden Piano!',
+        bannerTimer: 2200,
+        canvas,
+        ctx: canvas.getContext('2d'),
+        animFrame: null,
+        lastTime: performance.now()
+      };
+
+      spawnEltonNote();
+      updateEltonHud();
+      eltonPianoState.animFrame = requestAnimationFrame(eltonPianoLoop);
+    }
+
+    function eltonPianoLoop(now) {
+      const st = eltonPianoState;
+      if (!st.running) return;
+
+      const dtMs = Math.min(60, now - st.lastTime);
+      const dtSec = dtMs / 1000;
+      st.lastTime = now;
+
+      const canvas = st.canvas;
+      const ctx = st.ctx;
+      const w = canvas.width;
+      const h = canvas.height;
+      const kbHeight = 128;
+      const kbTop = h - kbHeight;
+      const whiteW = w / 7;
+      const blackW = whiteW * 0.58;
+      const blackH = kbHeight * 0.60;
+
+      // Update timers & particles
+      if (st.bannerTimer > 0) st.bannerTimer -= dtMs;
+      Object.keys(st.keyFlash).forEach(k => {
+        st.keyFlash[k].timer -= dtMs;
+        if (st.keyFlash[k].timer <= 0) delete st.keyFlash[k];
+      });
+      for (let i = st.particles.length - 1; i >= 0; i--) {
+        const p = st.particles[i];
+        p.x += p.vx * dtSec;
+        p.y += p.vy * dtSec;
+        p.vy += 320 * dtSec;
+        p.life -= dtMs;
+        if (p.life <= 0) st.particles.splice(i, 1);
+      }
+
+      // Update falling note
+      if (st.fallingNote) {
+        const dropMult = st.fastDrop ? 4.2 : 1;
+        st.fallingNote.y += st.speed * dropMult * dtSec;
+
+        const currentKey = st.activeKeys[st.fallingNote.colIndex];
+        const landY = kbTop - 22;
+
+        if (st.fallingNote.y >= landY) {
+          const isMatch = currentKey.id === st.fallingNote.targetKey.id;
+          const hitX = getEltonKeyCenterX(currentKey, w);
+
+          if (isMatch) {
+            st.score++;
+            if (st.score > st.best) st.best = st.score;
+            st.tokensEarned += 1;
+            addTokens(1);
+            // Smoothly ramp up speed with every correctly placed note
+            st.speed = Math.min(250, 78 + st.score * 6.5);
+            st.keyFlash[currentKey.id] = { color: '#10b981', timer: 320 };
+            playTonePitch(currentKey.freq, 0.45, 0.35, 'triangle');
+
+            // Every 3 correct answers, remove one letter label from the keyboard
+            if (st.score % 3 === 0) {
+              const visibleActive = st.activeKeys.filter(k => !st.hiddenKeyLabels.includes(k.id));
+              const visiblePool = visibleActive.length > 0
+                ? visibleActive
+                : eltonPianoKeys.filter(k => !st.hiddenKeyLabels.includes(k.id));
+              if (visiblePool.length > 0) {
+                const chosen = visiblePool[Math.floor(Math.random() * visiblePool.length)];
+                st.hiddenKeyLabels.push(chosen.id);
+                st.bannerMsg = `Memory Test! Key "${chosen.label}" label vanished!`;
+                st.bannerTimer = 2200;
+              }
+            }
+
+            // Golden sparkles
+            for (let s = 0; s < 14; s++) {
+              const ang = (Math.PI * 2 * s) / 14;
+              st.particles.push({
+                x: hitX,
+                y: kbTop,
+                vx: Math.cos(ang) * (60 + Math.random() * 110),
+                vy: -90 - Math.random() * 130,
+                life: 480 + Math.random() * 220,
+                color: s % 2 === 0 ? '#fde047' : '#34d399'
+              });
+            }
+          } else {
+            st.lives--;
+            st.keyFlash[currentKey.id] = { color: '#f43f5e', timer: 380 };
+            st.keyFlash[st.fallingNote.targetKey.id] = { color: '#38bdf8', timer: 550 };
+            st.bannerMsg = `Missed! ${st.fallingNote.targetKey.label} belonged on the ${st.fallingNote.targetKey.label} key!`;
+            st.bannerTimer = 1500;
+            playTonePitch(145, 0.25, 0.3, 'sawtooth');
+          }
+
+          updateEltonHud();
+
+          if (st.lives <= 0) {
+            st.running = false;
+            st.gameOver = true;
+            renderEltonPianoGameView(document.getElementById('app-viewport'));
+            return;
+          }
+
+          spawnEltonNote();
+          updateEltonHud();
+        }
+      }
+
+      // === RENDER CANVAS ===
+      // Background stage gradient
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, kbTop);
+      bgGrad.addColorStop(0, '#090d1f');
+      bgGrad.addColorStop(1, '#1e1b4b');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Subtle vertical lane grid lines
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.08)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 7; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * whiteW, 0);
+        ctx.lineTo(i * whiteW, kbTop);
+        ctx.stroke();
+      }
+
+      // Spotlight beam showing where the falling note is currently aligned
+      if (st.fallingNote) {
+        const alignedKey = st.activeKeys[st.fallingNote.colIndex];
+        const beamX = getEltonKeyCenterX(alignedKey, w);
+        const beamW = alignedKey.isBlack ? blackW : whiteW * 0.85;
+        const beamGrad = ctx.createLinearGradient(0, st.fallingNote.y, 0, kbTop);
+        beamGrad.addColorStop(0, 'rgba(253, 224, 71, 0.26)');
+        beamGrad.addColorStop(1, 'rgba(253, 224, 71, 0.06)');
+        ctx.fillStyle = beamGrad;
+        ctx.fillRect(beamX - beamW / 2, st.fallingNote.y, beamW, kbTop - st.fallingNote.y);
+      }
+
+      // Draw Golden Piano White Keys
+      const alignedKeyId = st.fallingNote ? st.activeKeys[st.fallingNote.colIndex].id : null;
+      eltonPianoKeys.filter(k => !k.isBlack).forEach(k => {
+        const x = k.whiteIdx * whiteW;
+        const flash = st.keyFlash[k.id];
+        const isAligned = alignedKeyId === k.id;
+
+        const keyGrad = ctx.createLinearGradient(x, kbTop, x, h);
+        if (flash) {
+          keyGrad.addColorStop(0, flash.color);
+          keyGrad.addColorStop(1, '#fef08a');
+        } else if (isAligned) {
+          keyGrad.addColorStop(0, '#fef9c3');
+          keyGrad.addColorStop(1, '#fbbf24');
+        } else {
+          keyGrad.addColorStop(0, '#fef3c7');
+          keyGrad.addColorStop(0.55, '#fcd34d');
+          keyGrad.addColorStop(1, '#d97706');
+        }
+
+        ctx.fillStyle = keyGrad;
+        ctx.fillRect(x + 1, kbTop, whiteW - 2, kbHeight - 2);
+
+        ctx.strokeStyle = isAligned ? '#ffffff' : '#92400e';
+        ctx.lineWidth = isAligned ? 3 : 1.5;
+        ctx.strokeRect(x + 1, kbTop, whiteW - 2, kbHeight - 2);
+
+        // Key letter label (hidden once vanished)
+        if (!st.hiddenKeyLabels.includes(k.id)) {
+          ctx.fillStyle = '#451a03';
+          ctx.font = '900 16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(k.label, x + whiteW / 2, h - 16);
+        }
+      });
+
+      // Draw Golden-Trimmed Black Keys
+      eltonPianoKeys.filter(k => k.isBlack).forEach(k => {
+        const cx = k.seamIdx * whiteW;
+        const x = cx - blackW / 2;
+        const isActive = st.activeKeys.some(ak => ak.id === k.id);
+        const flash = st.keyFlash[k.id];
+        const isAligned = alignedKeyId === k.id;
+
+        const bGrad = ctx.createLinearGradient(x, kbTop, x, kbTop + blackH);
+        if (flash) {
+          bGrad.addColorStop(0, flash.color);
+          bGrad.addColorStop(1, '#1e1b18');
+        } else if (isAligned) {
+          bGrad.addColorStop(0, '#78350f');
+          bGrad.addColorStop(1, '#451a03');
+        } else {
+          bGrad.addColorStop(0, '#292524');
+          bGrad.addColorStop(1, '#0c0a09');
+        }
+
+        ctx.fillStyle = bGrad;
+        ctx.fillRect(x, kbTop, blackW, blackH);
+
+        ctx.strokeStyle = isAligned ? '#fde047' : (isActive ? '#f59e0b' : '#44403c');
+        ctx.lineWidth = isAligned ? 2.5 : 1.5;
+        ctx.strokeRect(x, kbTop, blackW, blackH);
+
+        // Label on black keys (dimmed in Stage 1, bright when unlocked, hidden once vanished)
+        if (!st.hiddenKeyLabels.includes(k.id)) {
+          ctx.fillStyle = isActive ? '#fde047' : 'rgba(253, 224, 71, 0.25)';
+          ctx.font = '900 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(k.label, cx, kbTop + blackH - 12);
+        }
+      });
+
+      // Draw Falling Tetris-Style Note Block
+      if (st.fallingNote) {
+        const alignedKey = st.activeKeys[st.fallingNote.colIndex];
+        const nx = getEltonKeyCenterX(alignedKey, w);
+        const ny = st.fallingNote.y;
+        const isBlackTarget = st.fallingNote.targetKey.isBlack;
+        const boxW = 54;
+        const boxH = 44;
+
+        ctx.save();
+        ctx.shadowColor = isBlackTarget ? '#f472b6' : '#fbbf24';
+        ctx.shadowBlur = 16;
+
+        // Rounded block
+        ctx.fillStyle = isBlackTarget ? '#1e1b4b' : '#fbbf24';
+        ctx.strokeStyle = isBlackTarget ? '#f472b6' : '#fef9c3';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(nx - boxW / 2, ny - boxH / 2, boxW, boxH, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = isBlackTarget ? '#fdf2f8' : '#1e1b4b';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(st.fallingNote.targetKey.label, nx, ny + 1);
+        ctx.restore();
+      }
+
+      // Draw Sparkle Particles
+      st.particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / 700);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      // Draw Stage / Feedback Banner
+      if (st.bannerTimer > 0 && st.bannerMsg) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(w / 2 - 210, 12, 420, 34, 12);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#fde047';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(st.bannerMsg, w / 2, 29);
+        ctx.restore();
+      }
+
+      st.animFrame = requestAnimationFrame(eltonPianoLoop);
+    }
+
+    function renderEltonPianoGameView(container) {
+      if (!container) return;
+      const st = eltonPianoState;
+
+      if (st.gameOver) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-amber-500/50 space-y-4">
+              <div class="w-20 h-20 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-full flex items-center justify-center text-slate-950 text-4xl mx-auto shadow-[0_0_24px_rgba(251,191,36,0.5)]">
+                <i class="fa-solid fa-keyboard"></i>
+              </div>
+              <h2 class="text-3xl font-black text-amber-400">Encore Complete!</h2>
+              <p class="text-sm text-slate-300">
+                You landed <strong class="text-white">${st.score}</strong> falling notes on Elton John's Golden Piano (Best: <strong class="text-amber-300">${st.best}</strong>) and earned <strong class="text-emerald-400">+${st.tokensEarned} Tokens</strong>!
+              </p>
+              <div class="pt-2 flex flex-wrap justify-center gap-3">
+                <button onclick="eltonPianoState.gameOver = false; renderEltonPianoGameView(document.getElementById('app-viewport')); startEltonPianoGame();" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all">
+                  <i class="fa-solid fa-rotate-right mr-1.5"></i> Play Again
+                </button>
+                <button onclick="window.app.navigate('shop')" class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl text-sm border border-slate-700">
+                  Back to Shop
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-5">
+          <div class="flex items-center justify-between">
+            <button onclick="stopEltonPianoGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-amber-500 tracking-widest">
+              <i class="fa-solid fa-keyboard mr-1"></i> Elton John's Piano
+            </span>
+          </div>
+
+          <div class="bg-slate-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl border-2 border-amber-500/40 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h2 class="text-2xl font-black text-amber-400">Golden Key Drop</h2>
+                <p class="text-xs text-slate-300 mt-0.5">Use <strong>◀ ▶ Arrow Keys</strong> to guide falling letter notes onto the matching golden piano keys (<strong>▼</strong> to drop faster). Land 10 white notes to unlock black keys!</p>
+              </div>
+              <div class="flex items-center gap-3 shrink-0">
+                <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
+                  <div class="text-[9px] font-black uppercase text-slate-400">Score</div>
+                  <div id="elton-score" class="text-lg font-black text-amber-400">0</div>
+                </div>
+                <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
+                  <div class="text-[9px] font-black uppercase text-slate-400">Speed</div>
+                  <div id="elton-speed" class="text-lg font-black text-sky-400">1.0x</div>
+                </div>
+                <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
+                  <div class="text-[9px] font-black uppercase text-slate-400">Lives</div>
+                  <div id="elton-lives" class="text-sm font-black pt-0.5">
+                    <i class="fa-solid fa-heart text-rose-500"></i>
+                    <i class="fa-solid fa-heart text-rose-500"></i>
+                    <i class="fa-solid fa-heart text-rose-500"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs font-bold text-amber-200 px-1">
+              <span><i class="fa-solid fa-star text-amber-400 mr-1"></i> Stage: <strong id="elton-stage">White Keys (0/10)</strong></span>
+              <span class="text-emerald-400">+1 Token per correct note • 1 key label vanishes every 3 hits!</span>
+            </div>
+
+            <!-- Game Canvas -->
+            <div class="relative w-full h-[400px] sm:h-[430px] bg-slate-950 rounded-2xl border-2 border-amber-500/40 overflow-hidden shadow-inner">
+              <canvas id="elton-canvas" class="w-full h-full block"></canvas>
+              <div id="elton-start-overlay" class="absolute inset-0 bg-slate-950/85 flex flex-col items-center justify-center p-6 text-center space-y-4">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 flex items-center justify-center text-3xl shadow-lg">
+                  <i class="fa-solid fa-keyboard"></i>
+                </div>
+                <h3 class="text-2xl font-black text-amber-300">Ready to Play the Golden Piano?</h3>
+                <p class="text-xs text-slate-300 max-w-md leading-relaxed">
+                  Steer each falling note with <strong>Left / Right Arrow Keys</strong> (or the touch buttons below) onto its matching key for <strong>+1 Token</strong> each. Starts with <strong>10 white keys</strong>, then adds <strong>black keys</strong>—and every <strong>3 correct answers</strong>, a key letter disappears!
+                </p>
+                <button onclick="startEltonPianoGame()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-base shadow-[0_0_20px_rgba(251,191,36,0.45)] transition-all">
+                  <i class="fa-solid fa-play mr-2"></i> Start Golden Key Drop
+                </button>
+              </div>
+            </div>
+
+            <!-- On-Screen Touch / Click Arrow Controls -->
+            <div class="flex items-center justify-center gap-3 pt-1">
+              <button type="button" onmousedown="moveEltonNote(-1)" ontouchstart="event.preventDefault(); moveEltonNote(-1);" class="px-6 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-600 text-amber-300 font-black text-sm shadow">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Left
+              </button>
+              <button type="button" onmousedown="triggerEltonFastDrop(true)" onmouseup="triggerEltonFastDrop(false)" onmouseleave="triggerEltonFastDrop(false)" ontouchstart="event.preventDefault(); triggerEltonFastDrop(true);" ontouchend="triggerEltonFastDrop(false);" class="px-6 py-3 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 active:scale-95 border border-amber-400/60 text-amber-300 font-black text-sm shadow">
+                <i class="fa-solid fa-arrow-down mr-1"></i> Drop
+              </button>
+              <button type="button" onmousedown="moveEltonNote(1)" ontouchstart="event.preventDefault(); moveEltonNote(1);" class="px-6 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-600 text-amber-300 font-black text-sm shadow">
+                Right <i class="fa-solid fa-arrow-right ml-1"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (!eltonPianoState.running) return;
+      if (['ArrowLeft', 'ArrowRight', 'ArrowDown'].includes(e.code)) {
+        e.preventDefault();
+        if (e.code === 'ArrowLeft') moveEltonNote(-1);
+        else if (e.code === 'ArrowRight') moveEltonNote(1);
+        else if (e.code === 'ArrowDown') triggerEltonFastDrop(true);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'ArrowDown' && eltonPianoState.running) {
+        triggerEltonFastDrop(false);
+      }
+    });
 
     // ==========================================
     // APPLICATION BOOTSTRAP ON WINDOW LOAD

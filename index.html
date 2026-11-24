@@ -2977,7 +2977,7 @@
 
       const reedChoices = [
         { id: 'none', title: 'No Reed', sub: 'Air-Jet / Edge-Blown', badge: 'bg-teal-500/20 text-teal-300 border-teal-500/40', icon: 'fa-wind' },
-        { id: 'single', title: 'Single Reed', sub: '1 Cane Reed on Mouthpiece', badge: 'bg-sky-500/20 text-sky-300 border-sky-500/40', icon: 'fa-grip-lines-vertical' },
+        { id: 'single', title: 'Single Reed', sub: '1 Cane Reed on Mouthpiece', badge: 'bg-sky-500/20 text-sky-300 border-sky-500/40', iconHtml: `<svg viewBox="0 0 56 32" class="w-8 h-6" fill="none" aria-label="Single reed mouthpiece"><path d="M 5 16 Q 17 10, 30 8 L 49 8 L 49 20 L 29 20 L 5 18 Z" fill="#0f172a" stroke="#7dd3fc" stroke-width="1.3" stroke-linejoin="round"/><path d="M 6 19.2 L 43 20.4 L 43 23.4 L 6 20.6 Z" fill="#fbbf24" stroke="#b45309" stroke-width="0.9" stroke-linejoin="round"/><rect x="31" y="7.5" width="9" height="16.5" rx="1.5" fill="#cbd5e1" stroke="#475569" stroke-width="1"/><circle cx="33.8" cy="25.8" r="1.4" fill="#94a3b8"/><circle cx="37.6" cy="25.8" r="1.4" fill="#94a3b8"/></svg>` },
         { id: 'double', title: 'Double Reed', sub: '2 Reeds Bound Together', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40', icon: 'fa-pause' }
       ];
 
@@ -3038,7 +3038,7 @@
                 return `
                   <button type="button" onclick="handleReedGuess('${c.id}')" ${st.answered ? 'disabled' : ''} class="p-5 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-2 ${stateClasses}">
                     <span class="w-11 h-11 rounded-xl border flex items-center justify-center text-lg ${c.badge}">
-                      <i class="fa-solid ${c.icon}"></i>
+                      ${c.iconHtml ? c.iconHtml : `<i class="fa-solid ${c.icon}"></i>`}
                     </span>
                     <div class="font-black text-base text-white">${c.title}</div>
                     <div class="text-[11px] text-slate-400 font-semibold">${c.sub}</div>
@@ -5022,7 +5022,16 @@
                     <div class="p-5 rounded-3xl bg-sky-50 border-2 border-sky-200 space-y-2.5 shadow-sm">
                       <div class="flex items-center justify-between">
                         <span class="px-2.5 py-1 rounded-full bg-sky-600 text-white text-[10px] font-black uppercase">Single Reed</span>
-                        <i class="fa-solid fa-grip-lines-vertical text-sky-600 text-lg"></i>
+                        <svg viewBox="0 0 56 32" class="w-12 h-7 shrink-0" fill="none" aria-label="Single reed mouthpiece side view">
+                          <!-- Beak-shaped black mouthpiece -->
+                          <path d="M 5 16 Q 17 10, 30 8 L 49 8 L 49 20 L 29 20 L 5 18 Z" fill="#0f172a" stroke="#334155" stroke-width="1.3" stroke-linejoin="round"/>
+                          <!-- Cane reed attached to the bottom -->
+                          <path d="M 6 19.2 L 43 20.4 L 43 23.4 L 6 20.6 Z" fill="#f59e0b" stroke="#92400e" stroke-width="0.9" stroke-linejoin="round"/>
+                          <!-- Metal ligature & tightening screws -->
+                          <rect x="31" y="7.5" width="9" height="16.5" rx="1.5" fill="#cbd5e1" stroke="#475569" stroke-width="1"/>
+                          <circle cx="33.8" cy="25.8" r="1.4" fill="#64748b"/>
+                          <circle cx="37.6" cy="25.8" r="1.4" fill="#64748b"/>
+                        </svg>
                       </div>
                       <h4 class="font-black text-base text-sky-950">1 Cane Reed + Mouthpiece</h4>
                       <p class="text-xs text-slate-700 leading-relaxed">

@@ -397,6 +397,7 @@
       try { if (typeof stopDrumHeroGame === 'function') stopDrumHeroGame(); } catch (e) {}
       try { if (typeof stopWrenchGame === 'function') stopWrenchGame(); } catch (e) {}
       try { if (typeof stopGrooveLockGame === 'function') stopGrooveLockGame(); } catch (e) {}
+      try { if (typeof stopOrchestralBrassLab === 'function') stopOrchestralBrassLab(); } catch (e) {}
     }
 
     window.app = {
@@ -1212,6 +1213,1265 @@
           osc.stop(now + 2.6);
         });
       }
+    }
+
+    // --- ORCHESTRAL STRINGS SYNTHESIZER & INTERACTIVE LAB (TIMBRE LEVEL 2) ---
+    const orchestralStringsCatalog = [
+      {
+        id: 'violin',
+        name: 'Violin',
+        pitchRange: 'Highest Pitch (Soprano)',
+        size: 'Smallest (~35 cm body)',
+        howPlayed: 'Held under the chin on the left shoulder',
+        timbre: 'Bright, soaring, singing, and expressive',
+        badgeClass: 'bg-rose-500 text-white',
+        cardClass: 'border-rose-400/50 bg-rose-950/30 hover:border-rose-400',
+        accentText: 'text-rose-300',
+        svg: `<svg viewBox="0 0 64 96" class="w-10 h-14 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="6" x2="32" y2="82"/><path d="M22 36 C16 36, 15 48, 22 52 C14 57, 14 76, 32 76 C50 76, 50 57, 42 52 C49 48, 48 36, 42 36 C38 36, 36 39, 32 39 C28 39, 26 36, 22 36 Z" fill="currentColor" fill-opacity="0.18"/><circle cx="32" cy="8" r="3"/><line x1="27" y1="58" x2="37" y2="58"/><line x1="12" y1="66" x2="54" y2="42" stroke-width="2" stroke-dasharray="2 0"/></svg>`
+      },
+      {
+        id: 'viola',
+        name: 'Viola',
+        pitchRange: 'Mid-High Pitch (Alto)',
+        size: 'Slightly Larger (~41 cm body)',
+        howPlayed: 'Held under the chin like a violin',
+        timbre: 'Warm, mellow, rich, and velvety',
+        badgeClass: 'bg-amber-500 text-slate-950',
+        cardClass: 'border-amber-400/50 bg-amber-950/30 hover:border-amber-400',
+        accentText: 'text-amber-300',
+        svg: `<svg viewBox="0 0 64 96" class="w-11 h-16 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="6" x2="32" y2="84"/><path d="M20 34 C13 34, 12 48, 20 53 C11 59, 11 80, 32 80 C53 80, 53 59, 44 53 C52 48, 51 34, 44 34 C39 34, 36 37, 32 37 C28 37, 25 34, 20 34 Z" fill="currentColor" fill-opacity="0.18"/><circle cx="32" cy="8" r="3"/><line x1="26" y1="60" x2="38" y2="60"/></svg>`
+      },
+      {
+        id: 'cello',
+        name: 'Cello',
+        pitchRange: 'Mid-Low Pitch (Tenor/Baritone)',
+        size: 'Large (~76 cm body + endpin)',
+        howPlayed: 'Played seated, resting upright between the knees',
+        timbre: 'Deep, resonant, soulful, and voice-like',
+        badgeClass: 'bg-sky-500 text-slate-950',
+        cardClass: 'border-sky-400/50 bg-sky-950/30 hover:border-sky-400',
+        accentText: 'text-sky-300',
+        svg: `<svg viewBox="0 0 64 104" class="w-12 h-18 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="6" x2="32" y2="98"/><path d="M19 32 C11 32, 10 48, 19 54 C9 60, 9 84, 32 84 C55 84, 55 60, 45 54 C54 48, 53 32, 45 32 C39 32, 36 36, 32 36 C28 36, 25 32, 19 32 Z" fill="currentColor" fill-opacity="0.18"/><circle cx="32" cy="8" r="3.5"/><line x1="25" y1="62" x2="39" y2="62"/><line x1="32" y1="84" x2="32" y2="100" stroke-width="3"/></svg>`
+      },
+      {
+        id: 'doublebass',
+        name: 'Double Bass',
+        pitchRange: 'Lowest Pitch (Bass)',
+        size: 'Giant (~180 cm tall!)',
+        howPlayed: 'Played standing up or perched on a tall stool',
+        timbre: 'Rumbling, woody, booming, and powerful',
+        badgeClass: 'bg-indigo-500 text-white',
+        cardClass: 'border-indigo-400/50 bg-indigo-950/30 hover:border-indigo-400',
+        accentText: 'text-indigo-300',
+        svg: `<svg viewBox="0 0 64 112" class="w-14 h-20 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="4" x2="32" y2="106"/><path d="M20 28 C10 34, 9 50, 18 57 C7 64, 7 92, 32 92 C57 92, 57 64, 46 57 C55 50, 54 34, 44 28 C38 24, 35 30, 32 30 C29 30, 26 24, 20 28 Z" fill="currentColor" fill-opacity="0.18"/><circle cx="32" cy="7" r="4"/><line x1="24" y1="66" x2="40" y2="66"/><line x1="32" y1="92" x2="32" y2="108" stroke-width="3.5"/></svg>`
+      },
+      {
+        id: 'harp',
+        name: 'Concert Harp',
+        pitchRange: 'Wide Range (6.5 Octaves)',
+        size: 'Tall (~185 cm, 47 strings)',
+        howPlayed: 'Plucked with both hands; 7 foot pedals change pitch',
+        timbre: 'Shimmering, angelic, delicate, and cascading',
+        badgeClass: 'bg-yellow-400 text-slate-950',
+        cardClass: 'border-yellow-400/50 bg-yellow-950/30 hover:border-yellow-400',
+        accentText: 'text-yellow-300',
+        svg: `<svg viewBox="0 0 72 96" class="w-12 h-16 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 86 L58 86 L24 12 C38 10, 48 26, 56 20 L58 86" fill="currentColor" fill-opacity="0.15"/><line x1="24" y1="12" x2="14" y2="86" stroke-width="3.5"/><line x1="26" y1="24" x2="26" y2="86" stroke-width="1.5"/><line x1="34" y1="22" x2="34" y2="86" stroke-width="1.5"/><line x1="42" y1="24" x2="42" y2="86" stroke-width="1.5"/><line x1="50" y1="25" x2="50" y2="86" stroke-width="1.5"/></svg>`
+      }
+    ];
+
+    function playOrchestralString(id, technique = 'arco') {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      if (id === 'harp') {
+        const arp = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        arp.forEach((freq, idx) => {
+          const t = now + idx * 0.085;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.linearRampToValueAtTime(0.28, t + 0.01);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 1.3);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 1.35);
+        });
+        return;
+      }
+
+      const profiles = {
+        violin: { freq: 659.25, filterFreq: 2800, wave: 'sawtooth', vol: 0.24 },
+        viola: { freq: 329.63, filterFreq: 1650, wave: 'sawtooth', vol: 0.28 },
+        cello: { freq: 146.83, filterFreq: 950, wave: 'sawtooth', vol: 0.34 },
+        doublebass: { freq: 65.41, filterFreq: 380, wave: 'triangle', vol: 0.55 }
+      };
+      const prof = profiles[id] || profiles.violin;
+
+      if (technique === 'pizzicato') {
+        [prof.freq, prof.freq * 1.25, prof.freq * 1.5].forEach((f, idx) => {
+          const t = now + idx * 0.22;
+          const osc = ctx.createOscillator();
+          const filter = ctx.createBiquadFilter();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f * 1.03, t);
+          osc.frequency.exponentialRampToValueAtTime(f, t + 0.03);
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(prof.filterFreq, t);
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.linearRampToValueAtTime(prof.vol * 1.2, t + 0.006);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.26);
+        });
+        return;
+      }
+
+      if (technique === 'tremolo') {
+        for (let i = 0; i < 10; i++) {
+          const t = now + i * 0.085;
+          const osc = ctx.createOscillator();
+          const filter = ctx.createBiquadFilter();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(prof.freq, t);
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(prof.filterFreq, t);
+          gain.gain.setValueAtTime(0.001, t);
+          gain.gain.linearRampToValueAtTime(prof.vol, t + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.02, t + 0.08);
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.085);
+        }
+        return;
+      }
+
+      // Default: Arco (bowed with warm vibrato)
+      const osc = ctx.createOscillator();
+      const lfo = ctx.createOscillator();
+      const lfoGain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+
+      osc.type = prof.wave;
+      osc.frequency.setValueAtTime(prof.freq, now);
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(5.2, now);
+      lfoGain.gain.setValueAtTime(prof.freq * 0.008, now);
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(prof.filterFreq, now);
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(prof.vol, now + 0.18);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.25);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      lfo.start(now);
+      osc.stop(now + 1.3);
+      lfo.stop(now + 1.3);
+    }
+
+    let orchestralStringsState = { round: 1, totalRounds: 8, score: 0, target: null, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
+
+    function setupOrchestralStringsRound() {
+      orchestralStringsState.target = orchestralStringsCatalog[Math.floor(Math.random() * orchestralStringsCatalog.length)];
+      orchestralStringsState.answered = false;
+      orchestralStringsState.lastCorrect = false;
+      orchestralStringsState.audioPlayed = false;
+    }
+
+    function mountEmbeddedOrchestralStringsLab(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      orchestralStringsState = { round: 1, totalRounds: 8, score: 0, target: null, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
+      setupOrchestralStringsRound();
+      renderOrchestralStringsLabUI(target);
+    }
+
+    function playOrchestralStringsMystery() {
+      if (!orchestralStringsState.target) return;
+      orchestralStringsState.audioPlayed = true;
+      playOrchestralString(orchestralStringsState.target.id, 'arco');
+      renderOrchestralStringsLabUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function guessOrchestralString(instId) {
+      const st = orchestralStringsState;
+      if (st.answered || st.completed) return;
+      if (!st.audioPlayed) {
+        showAppModal('Listen First', 'Click "Play Mystery String Sound" before making your guess!', false);
+        return;
+      }
+      st.answered = true;
+      st.lastCorrect = (st.target.id === instId);
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderOrchestralStringsLabUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextOrchestralStringsRound() {
+      const st = orchestralStringsState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupOrchestralStringsRound();
+        renderOrchestralStringsLabUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderOrchestralStringsLabUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Orchestral Strings Detective Complete!', `You identified ${st.score}/${st.totalRounds} string instruments and earned +${st.score} Tokens!`, st.score >= 4);
+      }
+    }
+
+    function renderOrchestralStringsLabUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = orchestralStringsState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border border-slate-800 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-emerald-400">8-Round Listening Challenge • +1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black mt-1">Orchestral Strings Ear Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the pitch height and timbre, then click the matching string instrument!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">String Section Mastered!</h4>
+              <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedOrchestralStringsLab(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 8 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-emerald-950/90 to-indigo-950/90 border border-emerald-700/60">
+              <div class="text-center sm:text-left">
+                <span class="text-xs sm:text-sm font-black text-amber-300">${st.audioPlayed ? 'Which orchestral string instrument was that?' : 'Click Play to hear a mystery string instrument!'}</span>
+                <div class="text-[11px] text-slate-300 mt-0.5">Tip: Smaller strings sound higher; larger strings sound lower &amp; deeper!</div>
+              </div>
+              <button type="button" onclick="playOrchestralStringsMystery()" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow-lg shrink-0">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery String Sound
+              </button>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? `✓ Spot on (+1 Token)! That was the <strong>${st.target.name}</strong> (${st.target.pitchRange}).` : `✗ Not quite — that was the <strong>${st.target.name}</strong> (${st.target.timbre}).`}</span>
+                <button type="button" onclick="nextOrchestralStringsRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              ${orchestralStringsCatalog.map(inst => `
+                <button type="button" onclick="guessOrchestralString('${inst.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-between ${
+                  st.answered && inst.id === st.target.id
+                    ? 'border-emerald-400 bg-emerald-950/70 scale-[1.03] shadow-lg'
+                    : st.answered
+                    ? 'border-slate-800 bg-slate-800/40 opacity-40'
+                    : `${inst.cardClass} cursor-pointer active:scale-95`
+                }">
+                  <div class="${inst.accentText} mb-2">${inst.svg}</div>
+                  <div>
+                    <div class="font-black text-sm text-white">${inst.name}</div>
+                    <div class="text-[10px] font-bold text-slate-400 mt-0.5">${inst.pitchRange.split(' ')[0]}</div>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // --- ORCHESTRAL WOODWINDS SYNTHESIZER & INTERACTIVE LAB (TIMBRE LEVEL 2) ---
+    const orchestralWoodwindsCatalog = [
+      {
+        id: 'piccolo',
+        name: 'Piccolo',
+        pitchRange: 'Highest Pitch (Soprano+)',
+        reedType: 'No Reed (Edge-Blown)',
+        size: 'Tiny (~32 cm)',
+        timbre: 'Piercing, sparkling, bright, and bird-like',
+        cardClass: 'border-cyan-400/50 bg-cyan-950/30 hover:border-cyan-400',
+        accentText: 'text-cyan-300',
+        svg: `<svg viewBox="0 0 96 48" class="w-16 h-10 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="20" width="60" height="8" rx="4" fill="currentColor" fill-opacity="0.22"/><circle cx="28" cy="24" r="2" fill="currentColor"/><circle cx="42" cy="24" r="1.8" fill="currentColor"/><circle cx="50" cy="24" r="1.8" fill="currentColor"/><circle cx="58" cy="24" r="1.8" fill="currentColor"/><circle cx="66" cy="24" r="1.8" fill="currentColor"/></svg>`
+      },
+      {
+        id: 'flute',
+        name: 'Flute',
+        pitchRange: 'High Pitch (Soprano)',
+        reedType: 'No Reed (Edge-Blown)',
+        size: 'Medium (~67 cm)',
+        timbre: 'Airy, silvery, clear, and sweet',
+        cardClass: 'border-sky-400/50 bg-sky-950/30 hover:border-sky-400',
+        accentText: 'text-sky-300',
+        svg: `<svg viewBox="0 0 96 48" class="w-16 h-10 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="19" width="84" height="10" rx="5" fill="currentColor" fill-opacity="0.22"/><ellipse cx="18" cy="24" rx="3" ry="2" fill="currentColor"/><circle cx="34" cy="24" r="2.2" fill="currentColor"/><circle cx="44" cy="24" r="2.2" fill="currentColor"/><circle cx="54" cy="24" r="2.2" fill="currentColor"/><circle cx="64" cy="24" r="2.2" fill="currentColor"/><circle cx="74" cy="24" r="2.2" fill="currentColor"/></svg>`
+      },
+      {
+        id: 'oboe',
+        name: 'Oboe',
+        pitchRange: 'Mid-High Pitch (Soprano)',
+        reedType: 'Double Reed',
+        size: 'Medium (~65 cm)',
+        timbre: 'Reedy, nasal, expressive, and plaintive',
+        cardClass: 'border-amber-400/50 bg-amber-950/30 hover:border-amber-400',
+        accentText: 'text-amber-300',
+        svg: `<svg viewBox="0 0 64 104" class="w-10 h-16 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M30 8 L34 8 L33 18 L31 18 Z" fill="currentColor"/><path d="M29 18 L35 18 L38 82 L43 94 L21 94 L26 82 Z" fill="currentColor" fill-opacity="0.2"/><circle cx="32" cy="34" r="2" fill="currentColor"/><circle cx="32" cy="44" r="2" fill="currentColor"/><circle cx="32" cy="54" r="2" fill="currentColor"/><circle cx="32" cy="64" r="2" fill="currentColor"/><circle cx="32" cy="74" r="2" fill="currentColor"/></svg>`
+      },
+      {
+        id: 'clarinet',
+        name: 'Clarinet',
+        pitchRange: 'Mid Pitch (Alto/Soprano)',
+        reedType: 'Single Reed',
+        size: 'Medium (~66 cm)',
+        timbre: 'Warm, smooth, woody, and hollow',
+        cardClass: 'border-violet-400/50 bg-violet-950/30 hover:border-violet-400',
+        accentText: 'text-violet-300',
+        svg: `<svg viewBox="0 0 64 104" class="w-10 h-16 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M28 8 L36 12 L36 22 L28 22 Z" fill="currentColor" fill-opacity="0.35"/><rect x="27" y="22" width="10" height="60" fill="currentColor" fill-opacity="0.2"/><path d="M27 82 L37 82 L44 96 L20 96 Z" fill="currentColor" fill-opacity="0.28"/><circle cx="32" cy="36" r="2.2" fill="currentColor"/><circle cx="32" cy="48" r="2.2" fill="currentColor"/><circle cx="32" cy="60" r="2.2" fill="currentColor"/><circle cx="32" cy="72" r="2.2" fill="currentColor"/></svg>`
+      },
+      {
+        id: 'bassoon',
+        name: 'Bassoon',
+        pitchRange: 'Lowest Pitch (Bass)',
+        reedType: 'Double Reed',
+        size: 'Tall (~135 cm folded)',
+        timbre: 'Deep, woody, rich, and dry',
+        cardClass: 'border-rose-400/50 bg-rose-950/30 hover:border-rose-400',
+        accentText: 'text-rose-300',
+        svg: `<svg viewBox="0 0 72 112" class="w-12 h-18 mx-auto" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M46 28 C58 24, 62 34, 54 44" /><rect x="24" y="10" width="11" height="86" rx="4" fill="currentColor" fill-opacity="0.2"/><rect x="35" y="24" width="11" height="72" rx="4" fill="currentColor" fill-opacity="0.28"/><path d="M24 92 C24 104, 46 104, 46 92" fill="currentColor" fill-opacity="0.22"/><line x1="22" y1="12" x2="37" y2="12" stroke-width="3.5"/><circle cx="40" cy="48" r="2" fill="currentColor"/><circle cx="40" cy="60" r="2" fill="currentColor"/><circle cx="40" cy="72" r="2" fill="currentColor"/></svg>`
+      }
+    ];
+
+    function playOrchestralWoodwind(id) {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        // Reusable breath/air noise helper for woodwind realism
+        const addBreathNoise = (duration, centerFreq, qVal, peakGain, attack = 0.03) => {
+          const bufSize = Math.max(1, Math.floor(ctx.sampleRate * duration));
+          const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+          const noise = ctx.createBufferSource();
+          noise.buffer = buf;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(centerFreq, now);
+          filter.Q.setValueAtTime(qVal, now);
+          const nGain = ctx.createGain();
+          nGain.gain.setValueAtTime(0.0001, now);
+          nGain.gain.linearRampToValueAtTime(peakGain, now + attack);
+          nGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+          noise.connect(filter);
+          filter.connect(nGain);
+          nGain.connect(ctx.destination);
+          noise.start(now);
+          noise.stop(now + duration + 0.02);
+        };
+
+        // Delayed expressive vibrato helper (ramps in naturally after attack)
+        const attachDelayedVibrato = (targetFreqParam, rateHz, depthHz, delaySec, stopSec) => {
+          const lfo = ctx.createOscillator();
+          const lfoGain = ctx.createGain();
+          lfo.type = 'sine';
+          lfo.frequency.setValueAtTime(rateHz, now);
+          lfoGain.gain.setValueAtTime(0.0001, now);
+          lfoGain.gain.setValueAtTime(0.0001, now + delaySec);
+          lfoGain.gain.linearRampToValueAtTime(depthHz, now + delaySec + 0.35);
+          lfo.connect(lfoGain);
+          lfoGain.connect(targetFreqParam);
+          lfo.start(now);
+          lfo.stop(now + stopSec);
+        };
+
+        if (id === 'piccolo') {
+          // Piccolo (E6 = 1318.51 Hz): bright pure fundamental + shimmering 2nd harmonic + crisp air chiff
+          const dur = 1.25;
+          const real = new Float32Array([0, 1.0, 0.28, 0.08, 0.02]);
+          const imag = new Float32Array(real.length);
+          const wave = ctx.createPeriodicWave(real, imag);
+
+          const osc = ctx.createOscillator();
+          osc.setPeriodicWave(wave);
+          osc.frequency.setValueAtTime(1310, now);
+          osc.frequency.exponentialRampToValueAtTime(1318.51, now + 0.035);
+
+          const lp = ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.setValueAtTime(4800, now);
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(0.22, now + 0.045);
+          gain.gain.setValueAtTime(0.20, now + dur - 0.25);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+          osc.connect(lp);
+          lp.connect(gain);
+          gain.connect(ctx.destination);
+
+          attachDelayedVibrato(osc.frequency, 6.2, 9.5, 0.16, dur + 0.05);
+          addBreathNoise(0.11, 3400, 2.2, 0.06, 0.015); // crisp attack chiff
+          addBreathNoise(dur * 0.9, 2800, 1.8, 0.018, 0.08); // airy sustain
+
+          osc.start(now);
+          osc.stop(now + dur + 0.05);
+
+        } else if (id === 'flute') {
+          // Concert Flute (G5 = 783.99 Hz): warm airy fundamental + 2nd/3rd harmonics + realistic chiff & breath
+          const dur = 1.4;
+          const real = new Float32Array([0, 1.0, 0.36, 0.11, 0.03, 0.01]);
+          const imag = new Float32Array(real.length);
+          const wave = ctx.createPeriodicWave(real, imag);
+
+          const osc = ctx.createOscillator();
+          osc.setPeriodicWave(wave);
+          osc.frequency.setValueAtTime(777, now);
+          osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.055);
+
+          const lp = ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.setValueAtTime(2600, now);
+          lp.frequency.linearRampToValueAtTime(2100, now + dur);
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(0.30, now + 0.11);
+          gain.gain.setValueAtTime(0.28, now + dur - 0.3);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+          osc.connect(lp);
+          lp.connect(gain);
+          gain.connect(ctx.destination);
+
+          attachDelayedVibrato(osc.frequency, 5.4, 6.0, 0.22, dur + 0.05);
+          addBreathNoise(0.14, 1950, 2.0, 0.09, 0.02); // classic flute onset chiff
+          addBreathNoise(dur * 0.95, 1650, 1.4, 0.025, 0.12); // continuous silky air stream
+
+          osc.start(now);
+          osc.stop(now + dur + 0.05);
+
+        } else if (id === 'oboe') {
+          // Oboe (A4 = 440 Hz): double-reed nasal formant peaks (~1250 Hz & ~2750 Hz) + focused expressive vibrato
+          const dur = 1.4;
+          const osc = ctx.createOscillator();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(436, now);
+          osc.frequency.exponentialRampToValueAtTime(440, now + 0.04);
+
+          // Parallel double-reed formant resonators
+          const formant1 = ctx.createBiquadFilter();
+          formant1.type = 'bandpass';
+          formant1.frequency.setValueAtTime(1250, now);
+          formant1.Q.setValueAtTime(3.2, now);
+
+          const formant2 = ctx.createBiquadFilter();
+          formant2.type = 'bandpass';
+          formant2.frequency.setValueAtTime(2750, now);
+          formant2.Q.setValueAtTime(4.2, now);
+
+          const bodyLp = ctx.createBiquadFilter();
+          bodyLp.type = 'lowpass';
+          bodyLp.frequency.setValueAtTime(900, now);
+
+          const f1Gain = ctx.createGain(); f1Gain.gain.value = 0.72;
+          const f2Gain = ctx.createGain(); f2Gain.gain.value = 0.32;
+          const bodyGain = ctx.createGain(); bodyGain.gain.value = 0.18;
+
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.0001, now);
+          master.gain.linearRampToValueAtTime(0.45, now + 0.065);
+          master.gain.setValueAtTime(0.40, now + dur - 0.25);
+          master.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+          osc.connect(formant1); formant1.connect(f1Gain); f1Gain.connect(master);
+          osc.connect(formant2); formant2.connect(f2Gain); f2Gain.connect(master);
+          osc.connect(bodyLp); bodyLp.connect(bodyGain); bodyGain.connect(master);
+          master.connect(ctx.destination);
+
+          attachDelayedVibrato(osc.frequency, 5.8, 3.8, 0.20, dur + 0.05);
+          addBreathNoise(0.07, 1500, 3.0, 0.035, 0.01); // subtle double-reed articulation
+
+          osc.start(now);
+          osc.stop(now + dur + 0.05);
+
+        } else if (id === 'clarinet') {
+          // Clarinet (D4 = 293.66 Hz): cylindrical closed-pipe acoustics (strong odd harmonics, minimal even harmonics)
+          const dur = 1.4;
+          const real = new Float32Array([0, 1.0, 0.04, 0.68, 0.03, 0.36, 0.02, 0.16, 0.01, 0.07]);
+          const imag = new Float32Array(real.length);
+          const wave = ctx.createPeriodicWave(real, imag);
+
+          const osc = ctx.createOscillator();
+          osc.setPeriodicWave(wave);
+          osc.frequency.setValueAtTime(292, now);
+          osc.frequency.exponentialRampToValueAtTime(293.66, now + 0.03);
+
+          const lp = ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.setValueAtTime(1650, now);
+          lp.frequency.exponentialRampToValueAtTime(1050, now + 0.25);
+          lp.Q.setValueAtTime(1.2, now);
+
+          // Woody chalumeau warmth boost
+          const bodyPeak = ctx.createBiquadFilter();
+          bodyPeak.type = 'peaking';
+          bodyPeak.frequency.setValueAtTime(920, now);
+          bodyPeak.Q.setValueAtTime(2.0, now);
+          bodyPeak.gain.setValueAtTime(4.5, now);
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.linearRampToValueAtTime(0.36, now + 0.055);
+          gain.gain.setValueAtTime(0.33, now + dur - 0.28);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+          osc.connect(lp);
+          lp.connect(bodyPeak);
+          bodyPeak.connect(gain);
+          gain.connect(ctx.destination);
+
+          attachDelayedVibrato(osc.frequency, 4.9, 1.8, 0.30, dur + 0.05);
+          addBreathNoise(0.08, 1200, 2.5, 0.03, 0.01); // soft single-reed onset
+
+          osc.start(now);
+          osc.stop(now + dur + 0.05);
+
+        } else if (id === 'bassoon') {
+          // Bassoon (G2 = 98.00 Hz): deep woody double-reed formants (~480 Hz body & ~1150 Hz reed buzz)
+          const dur = 1.5;
+          const osc = ctx.createOscillator();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(96.8, now);
+          osc.frequency.exponentialRampToValueAtTime(98.00, now + 0.045);
+
+          // Fundamental reinforcement for warm low-end weight
+          const subOsc = ctx.createOscillator();
+          subOsc.type = 'triangle';
+          subOsc.frequency.setValueAtTime(98.00, now);
+          const subGain = ctx.createGain();
+          subGain.gain.value = 0.28;
+
+          const formant1 = ctx.createBiquadFilter();
+          formant1.type = 'bandpass';
+          formant1.frequency.setValueAtTime(480, now);
+          formant1.Q.setValueAtTime(2.8, now);
+
+          const formant2 = ctx.createBiquadFilter();
+          formant2.type = 'bandpass';
+          formant2.frequency.setValueAtTime(1150, now);
+          formant2.Q.setValueAtTime(3.6, now);
+
+          const f1Gain = ctx.createGain(); f1Gain.gain.value = 0.85;
+          const f2Gain = ctx.createGain(); f2Gain.gain.value = 0.35;
+
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.0001, now);
+          master.gain.linearRampToValueAtTime(0.55, now + 0.07);
+          master.gain.setValueAtTime(0.48, now + dur - 0.3);
+          master.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+          osc.connect(formant1); formant1.connect(f1Gain); f1Gain.connect(master);
+          osc.connect(formant2); formant2.connect(f2Gain); f2Gain.connect(master);
+          subOsc.connect(subGain); subGain.connect(master);
+          master.connect(ctx.destination);
+
+          attachDelayedVibrato(osc.frequency, 4.8, 1.2, 0.28, dur + 0.05);
+          addBreathNoise(0.08, 650, 2.5, 0.04, 0.015); // crisp wooden reed attack
+
+          osc.start(now);
+          subOsc.start(now);
+          osc.stop(now + dur + 0.05);
+          subOsc.stop(now + dur + 0.05);
+        }
+      } catch (e) {}
+    }
+
+    let orchestralWoodwindsState = { round: 1, totalRounds: 8, score: 0, target: null, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
+
+    function setupOrchestralWoodwindsRound() {
+      orchestralWoodwindsState.target = orchestralWoodwindsCatalog[Math.floor(Math.random() * orchestralWoodwindsCatalog.length)];
+      orchestralWoodwindsState.answered = false;
+      orchestralWoodwindsState.lastCorrect = false;
+      orchestralWoodwindsState.audioPlayed = false;
+    }
+
+    function mountEmbeddedOrchestralWoodwindsLab(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      orchestralWoodwindsState = { round: 1, totalRounds: 8, score: 0, target: null, answered: false, lastCorrect: false, completed: false, audioPlayed: false };
+      setupOrchestralWoodwindsRound();
+      renderOrchestralWoodwindsLabUI(target);
+    }
+
+    function playOrchestralWoodwindsMystery() {
+      if (!orchestralWoodwindsState.target) return;
+      orchestralWoodwindsState.audioPlayed = true;
+      playOrchestralWoodwind(orchestralWoodwindsState.target.id);
+      renderOrchestralWoodwindsLabUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function guessOrchestralWoodwind(instId) {
+      const st = orchestralWoodwindsState;
+      if (st.answered || st.completed) return;
+      if (!st.audioPlayed) {
+        showAppModal('Listen First', 'Click "Play Mystery Woodwind Sound" before making your guess!', false);
+        return;
+      }
+      st.answered = true;
+      st.lastCorrect = (st.target.id === instId);
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderOrchestralWoodwindsLabUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextOrchestralWoodwindsRound() {
+      const st = orchestralWoodwindsState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupOrchestralWoodwindsRound();
+        renderOrchestralWoodwindsLabUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderOrchestralWoodwindsLabUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Woodwind Ear Detective Complete!', `You identified ${st.score}/${st.totalRounds} woodwind instruments and earned +${st.score} Tokens!`, st.score >= 4);
+      }
+    }
+
+    function renderOrchestralWoodwindsLabUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = orchestralWoodwindsState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border border-slate-800 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-cyan-400">8-Round Listening Challenge • +1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black mt-1">Orchestral Woodwinds Ear Detective</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen carefully to the pitch and tone colour (airy, reedy, woody, or deep), then click the matching woodwind!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Woodwind Section Mastered!</h4>
+              <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedOrchestralWoodwindsLab(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 8 Rounds</button>
+            </div>
+          ` : `
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-cyan-950/90 to-violet-950/90 border border-cyan-700/60">
+              <div class="text-center sm:text-left">
+                <span class="text-xs sm:text-sm font-black text-amber-300">${st.audioPlayed ? 'Which orchestral woodwind was that?' : 'Click Play to hear a mystery woodwind instrument!'}</span>
+                <div class="text-[11px] text-slate-300 mt-0.5">Tip: Listen for airy vs. reedy vs. hollow woody tones!</div>
+              </div>
+              <button type="button" onclick="playOrchestralWoodwindsMystery()" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow-lg shrink-0">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Play Mystery Woodwind Sound
+              </button>
+            </div>
+
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span class="text-xs font-bold">${st.lastCorrect ? `✓ Spot on (+1 Token)! That was the <strong>${st.target.name}</strong> (${st.target.reedType}).` : `✗ Not quite — that was the <strong>${st.target.name}</strong> (${st.target.timbre}).`}</span>
+                <button type="button" onclick="nextOrchestralWoodwindsRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              ${orchestralWoodwindsCatalog.map(inst => `
+                <button type="button" onclick="guessOrchestralWoodwind('${inst.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-between ${
+                  st.answered && inst.id === st.target.id
+                    ? 'border-emerald-400 bg-emerald-950/70 scale-[1.03] shadow-lg'
+                    : st.answered
+                    ? 'border-slate-800 bg-slate-800/40 opacity-40'
+                    : `${inst.cardClass} cursor-pointer active:scale-95`
+                }">
+                  <div class="${inst.accentText} mb-2 h-16 flex items-center justify-center">${inst.svg}</div>
+                  <div>
+                    <div class="font-black text-sm text-white">${inst.name}</div>
+                    <div class="text-[10px] font-bold text-slate-400 mt-0.5">${inst.reedType.split(' ')[0]} ${inst.reedType.split(' ')[1] || ''}</div>
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // --- ORCHESTRAL BRASS SYNTHESIZER & 3-SECOND BELL DROP CHALLENGE (TIMBRE LEVEL 2) ---
+    function getRealisticBrassSVG(id, sizeClass = 'w-full h-24') {
+      if (id === 'trumpet') {
+        return `
+          <svg viewBox="0 0 180 80" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="brassGoldTpt" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#fef08a"/>
+                <stop offset="42%" stop-color="#eab308"/>
+                <stop offset="78%" stop-color="#b45309"/>
+                <stop offset="100%" stop-color="#fde047"/>
+              </linearGradient>
+              <radialGradient id="bellInnerTpt" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#451a03"/>
+                <stop offset="70%" stop-color="#92400e"/>
+                <stop offset="100%" stop-color="#facc15"/>
+              </radialGradient>
+            </defs>
+            <!-- Mouthpiece -->
+            <path d="M 8 34 L 18 37 L 18 43 L 8 46 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
+            <rect x="18" y="38.5" width="8" height="3" fill="#cbd5e1"/>
+            <!-- Main Leadpipe & Bell Flare -->
+            <path d="M 26 38 L 116 38 C 134 38, 148 24, 162 14 L 166 14 L 166 66 L 162 66 C 148 56, 134 44, 116 44 L 26 44 Z" fill="url(#brassGoldTpt)" stroke="#78350f" stroke-width="1.4" stroke-linejoin="round"/>
+            <!-- Bell Opening -->
+            <ellipse cx="164" cy="40" rx="6" ry="26" fill="url(#bellInnerTpt)" stroke="#fef08a" stroke-width="1.5"/>
+            <!-- Lower Tuning Slide Loop -->
+            <path d="M 52 44 L 52 57 C 52 62, 57 64, 64 64 L 108 64 C 115 64, 120 60, 120 55 L 120 44" stroke="url(#brassGoldTpt)" stroke-width="5.5" stroke-linecap="round"/>
+            <path d="M 52 44 L 52 57 C 52 62, 57 64, 64 64 L 108 64 C 115 64, 120 60, 120 55 L 120 44" stroke="#78350f" stroke-width="1" fill="none"/>
+            <!-- 3 Piston Valves -->
+            <rect x="74" y="25" width="7" height="32" rx="2" fill="url(#brassGoldTpt)" stroke="#78350f" stroke-width="1.2"/>
+            <rect x="84" y="25" width="7" height="32" rx="2" fill="url(#brassGoldTpt)" stroke="#78350f" stroke-width="1.2"/>
+            <rect x="94" y="25" width="7" height="32" rx="2" fill="url(#brassGoldTpt)" stroke="#78350f" stroke-width="1.2"/>
+            <!-- Valve Stems & Pearl Buttons -->
+            <line x1="77.5" y1="20" x2="77.5" y2="25" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="87.5" y1="20" x2="87.5" y2="25" stroke="#cbd5e1" stroke-width="2"/>
+            <line x1="97.5" y1="20" x2="97.5" y2="25" stroke="#cbd5e1" stroke-width="2"/>
+            <ellipse cx="77.5" cy="19" rx="3.5" ry="1.8" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.8"/>
+            <ellipse cx="87.5" cy="19" rx="3.5" ry="1.8" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.8"/>
+            <ellipse cx="97.5" cy="19" rx="3.5" ry="1.8" fill="#f8fafc" stroke="#94a3b8" stroke-width="0.8"/>
+            <!-- Finger Ring -->
+            <circle cx="106" cy="31" r="4.5" stroke="#eab308" stroke-width="2" fill="none"/>
+          </svg>
+        `;
+      }
+      if (id === 'frenchhorn') {
+        return `
+          <svg viewBox="0 0 150 110" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="brassGoldHorn" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fef08a"/>
+                <stop offset="45%" stop-color="#eab308"/>
+                <stop offset="80%" stop-color="#a16207"/>
+                <stop offset="100%" stop-color="#fde047"/>
+              </linearGradient>
+              <radialGradient id="bellInnerHorn" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#451a03"/>
+                <stop offset="68%" stop-color="#92400e"/>
+                <stop offset="100%" stop-color="#fde047"/>
+              </radialGradient>
+            </defs>
+            <!-- Mouthpiece & Leadpipe -->
+            <path d="M 12 46 L 19 48 L 18 52 L 11 51 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
+            <path d="M 18 50 C 28 50, 32 36, 44 26" stroke="url(#brassGoldHorn)" stroke-width="4.5" stroke-linecap="round"/>
+            <!-- Outer Coiled Brass Loop -->
+            <circle cx="68" cy="52" r="34" stroke="url(#brassGoldHorn)" stroke-width="7.5"/>
+            <circle cx="68" cy="52" r="34" stroke="#78350f" stroke-width="1.1"/>
+            <!-- Inner Coiled Loops -->
+            <circle cx="68" cy="52" r="24" stroke="url(#brassGoldHorn)" stroke-width="5.5"/>
+            <circle cx="68" cy="52" r="24" stroke="#78350f" stroke-width="0.9"/>
+            <!-- Rotary Valve Cluster -->
+            <rect x="52" y="45" width="32" height="14" rx="5" fill="#d97706" stroke="#78350f" stroke-width="1.2"/>
+            <circle cx="59" cy="52" r="4" fill="#fef08a" stroke="#78350f" stroke-width="1"/>
+            <circle cx="68" cy="52" r="4" fill="#fef08a" stroke="#78350f" stroke-width="1"/>
+            <circle cx="77" cy="52" r="4" fill="#fef08a" stroke="#78350f" stroke-width="1"/>
+            <!-- Sweeping Flared Bell -->
+            <path d="M 96 66 C 106 72, 118 68, 130 58 L 138 92 C 122 95, 102 90, 90 78 Z" fill="url(#brassGoldHorn)" stroke="#78350f" stroke-width="1.4" stroke-linejoin="round"/>
+            <ellipse cx="134" cy="75" rx="8" ry="18" transform="rotate(-14 134 75)" fill="url(#bellInnerHorn)" stroke="#fef08a" stroke-width="1.5"/>
+          </svg>
+        `;
+      }
+      if (id === 'trombone') {
+        return `
+          <svg viewBox="0 0 190 80" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="brassGoldTbn" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#fef08a"/>
+                <stop offset="45%" stop-color="#f59e0b"/>
+                <stop offset="80%" stop-color="#b45309"/>
+                <stop offset="100%" stop-color="#fde047"/>
+              </linearGradient>
+              <radialGradient id="bellInnerTbn" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#451a03"/>
+                <stop offset="72%" stop-color="#92400e"/>
+                <stop offset="100%" stop-color="#facc15"/>
+              </radialGradient>
+            </defs>
+            <!-- Rear Tuning Crook -->
+            <path d="M 52 24 L 22 24 C 12 24, 12 42, 22 42 L 52 42" stroke="url(#brassGoldTbn)" stroke-width="6" stroke-linecap="round"/>
+            <path d="M 52 24 L 22 24 C 12 24, 12 42, 22 42 L 52 42" stroke="#78350f" stroke-width="1"/>
+            <!-- Upper Bell Tube & Flared Bell -->
+            <path d="M 48 21 L 92 21 C 106 21, 114 12, 124 6 L 127 6 L 127 42 L 124 42 C 114 36, 106 27, 92 27 L 48 27 Z" fill="url(#brassGoldTbn)" stroke="#78350f" stroke-width="1.4" stroke-linejoin="round"/>
+            <ellipse cx="126" cy="24" rx="5.5" ry="18" fill="url(#bellInnerTbn)" stroke="#fef08a" stroke-width="1.4"/>
+            <!-- Mouthpiece -->
+            <path d="M 46 39 L 55 41 L 55 45 L 46 47 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
+            <!-- Long Telescoping U-Slide -->
+            <path d="M 55 43 L 166 43 C 178 43, 178 63, 166 63 L 64 63" stroke="url(#brassGoldTbn)" stroke-width="5.5" stroke-linecap="round"/>
+            <path d="M 55 43 L 166 43 C 178 43, 178 63, 166 63 L 64 63" stroke="#78350f" stroke-width="1"/>
+            <!-- Slide Braces -->
+            <line x1="66" y1="24" x2="66" y2="63" stroke="#d97706" stroke-width="3.5"/>
+            <line x1="88" y1="43" x2="88" y2="63" stroke="#d97706" stroke-width="3.5"/>
+            <line x1="150" y1="43" x2="150" y2="63" stroke="#cbd5e1" stroke-width="2.5"/>
+          </svg>
+        `;
+      }
+      // Tuba
+      return `
+        <svg viewBox="0 0 120 125" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+          <defs>
+            <linearGradient id="brassGoldTuba" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#b45309"/>
+              <stop offset="35%" stop-color="#fef08a"/>
+              <stop offset="68%" stop-color="#eab308"/>
+              <stop offset="100%" stop-color="#92400e"/>
+            </linearGradient>
+            <radialGradient id="bellInnerTuba" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#451a03"/>
+              <stop offset="65%" stop-color="#92400e"/>
+              <stop offset="100%" stop-color="#fde047"/>
+            </radialGradient>
+          </defs>
+          <!-- Massive Upward Flared Bell -->
+          <path d="M 38 44 C 34 30, 24 18, 18 12 L 82 12 C 76 18, 66 30, 62 44 Z" fill="url(#brassGoldTuba)" stroke="#78350f" stroke-width="1.5" stroke-linejoin="round"/>
+          <ellipse cx="50" cy="12" rx="32" ry="7.5" fill="url(#bellInnerTuba)" stroke="#fef08a" stroke-width="1.6"/>
+          <!-- Outer Giant Oval Body Coil -->
+          <path d="M 38 42 C 18 52, 16 112, 58 112 C 98 112, 102 64, 86 44 C 78 34, 62 36, 62 44" stroke="url(#brassGoldTuba)" stroke-width="14" stroke-linecap="round"/>
+          <path d="M 38 42 C 18 52, 16 112, 58 112 C 98 112, 102 64, 86 44 C 78 34, 62 36, 62 44" stroke="#78350f" stroke-width="1.3"/>
+          <!-- Inner Coil -->
+          <ellipse cx="58" cy="76" rx="20" ry="24" stroke="url(#brassGoldTuba)" stroke-width="7"/>
+          <ellipse cx="58" cy="76" rx="20" ry="24" stroke="#78350f" stroke-width="1"/>
+          <!-- 3 Front Piston Valves -->
+          <rect x="46" y="64" width="6" height="22" rx="2" fill="#facc15" stroke="#78350f" stroke-width="1"/>
+          <rect x="55" y="64" width="6" height="22" rx="2" fill="#facc15" stroke="#78350f" stroke-width="1"/>
+          <rect x="64" y="64" width="6" height="22" rx="2" fill="#facc15" stroke="#78350f" stroke-width="1"/>
+          <circle cx="49" cy="61" r="2.2" fill="#f8fafc" stroke="#64748b" stroke-width="0.8"/>
+          <circle cx="58" cy="61" r="2.2" fill="#f8fafc" stroke="#64748b" stroke-width="0.8"/>
+          <circle cx="67" cy="61" r="2.2" fill="#f8fafc" stroke="#64748b" stroke-width="0.8"/>
+          <!-- Leadpipe & Mouthpiece -->
+          <path d="M 88 58 C 102 58, 108 50, 106 42" stroke="#eab308" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M 103 42 L 109 42 L 107 35 L 105 35 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>
+        </svg>
+      `;
+    }
+
+    const orchestralBrassCatalog = [
+      {
+        id: 'trumpet',
+        name: 'Trumpet',
+        pitchRange: 'Highest Pitch (Soprano)',
+        mechanism: '3 Piston Valves',
+        timbre: 'Bright, heroic, brilliant, and fanfare-like',
+        bellHint: 'Right-hand flared bell',
+        accentText: 'text-amber-300',
+        cardClass: 'border-amber-400/50 bg-amber-950/30'
+      },
+      {
+        id: 'frenchhorn',
+        name: 'French Horn',
+        pitchRange: 'Mid-High Pitch (Alto/Tenor)',
+        mechanism: '3 Rotary Valves + Coiled Tubing',
+        timbre: 'Warm, noble, mellow, and majestic',
+        bellHint: 'Wide sweeping lower-right bell',
+        accentText: 'text-orange-300',
+        cardClass: 'border-orange-400/50 bg-orange-950/30'
+      },
+      {
+        id: 'trombone',
+        name: 'Trombone',
+        pitchRange: 'Mid-Low Pitch (Tenor/Bass)',
+        mechanism: 'Telescoping Slide (No Valves!)',
+        timbre: 'Bold, powerful, rich, and resonant',
+        bellHint: 'Upper-right flared bell',
+        accentText: 'text-yellow-300',
+        cardClass: 'border-yellow-400/50 bg-yellow-950/30'
+      },
+      {
+        id: 'tuba',
+        name: 'Tuba',
+        pitchRange: 'Lowest Pitch (Bass)',
+        mechanism: '3–4 Piston/Rotary Valves',
+        timbre: 'Massive, booming, deep, and warm',
+        bellHint: 'Giant upward-facing top bell',
+        accentText: 'text-rose-300',
+        cardClass: 'border-rose-400/50 bg-rose-950/30'
+      }
+    ];
+
+    function playOrchestralBrass(id) {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        const profiles = {
+          trumpet:    { freq: 466.16, startCutoff: 750,  peakCutoff: 3600, sustainCutoff: 2400, dur: 1.15, vol: 0.30, vibRate: 5.6, vibDepth: 3.2 },
+          frenchhorn: { freq: 174.61, startCutoff: 320,  peakCutoff: 1350, sustainCutoff: 900,  dur: 1.35, vol: 0.36, vibRate: 4.8, vibDepth: 1.3 },
+          trombone:   { freq: 116.54, startCutoff: 280,  peakCutoff: 1800, sustainCutoff: 1150, dur: 1.30, vol: 0.38, vibRate: 4.9, vibDepth: 1.0 },
+          tuba:       { freq: 58.27,  startCutoff: 140,  peakCutoff: 560,  sustainCutoff: 360,  dur: 1.45, vol: 0.52, vibRate: 4.2, vibDepth: 0.5 }
+        };
+        const p = profiles[id] || profiles.trumpet;
+
+        // Primary rich brass oscillator + slightly detuned unison for ensemble warmth
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        osc1.type = 'sawtooth';
+        osc2.type = 'sawtooth';
+
+        // Authentic lip-buzz pitch attack scoop
+        osc1.frequency.setValueAtTime(p.freq * 0.985, now);
+        osc1.frequency.exponentialRampToValueAtTime(p.freq, now + 0.04);
+        osc2.frequency.setValueAtTime(p.freq * 0.988, now);
+        osc2.frequency.exponentialRampToValueAtTime(p.freq * 1.003, now + 0.04);
+
+        // Fundamental warmth layer for horn/trombone/tuba
+        const subOsc = ctx.createOscillator();
+        subOsc.type = 'triangle';
+        subOsc.frequency.setValueAtTime(p.freq, now);
+        const subGain = ctx.createGain();
+        subGain.gain.value = id === 'trumpet' ? 0.12 : 0.35;
+
+        // Characteristic brass filter bloom ("bwaah")
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.Q.setValueAtTime(2.0, now);
+        filter.frequency.setValueAtTime(p.startCutoff, now);
+        filter.frequency.exponentialRampToValueAtTime(p.peakCutoff, now + 0.09);
+        filter.frequency.exponentialRampToValueAtTime(p.sustainCutoff, now + 0.35);
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(p.vol, now + 0.06);
+        gain.gain.setValueAtTime(p.vol * 0.88, now + p.dur - 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + p.dur);
+
+        // Subtle delayed brass vibrato
+        const lfo = ctx.createOscillator();
+        const lfoGain = ctx.createGain();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(p.vibRate, now);
+        lfoGain.gain.setValueAtTime(0.0001, now);
+        lfoGain.gain.setValueAtTime(0.0001, now + 0.22);
+        lfoGain.gain.linearRampToValueAtTime(p.vibDepth, now + 0.55);
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc1.frequency);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        subOsc.connect(subGain);
+        subGain.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now); osc2.start(now); subOsc.start(now); lfo.start(now);
+        osc1.stop(now + p.dur + 0.05);
+        osc2.stop(now + p.dur + 0.05);
+        subOsc.stop(now + p.dur + 0.05);
+        lfo.stop(now + p.dur + 0.05);
+      } catch (e) {}
+    }
+
+    let orchestralBrassState = {
+      running: false,
+      round: 0,
+      totalRounds: 8,
+      score: 0,
+      target: null,
+      timeLeftMs: 3000,
+      intervalId: null,
+      nextTimeoutId: null,
+      roundActive: false,
+      feedback: null, // { type: 'correct'|'wrong'|'timeout', msg: '' }
+      completed: false,
+      roundQueue: []
+    };
+
+    function stopOrchestralBrassLab() {
+      if (orchestralBrassState.intervalId) clearInterval(orchestralBrassState.intervalId);
+      if (orchestralBrassState.nextTimeoutId) clearTimeout(orchestralBrassState.nextTimeoutId);
+      orchestralBrassState.intervalId = null;
+      orchestralBrassState.nextTimeoutId = null;
+      orchestralBrassState.running = false;
+      orchestralBrassState.roundActive = false;
+    }
+
+    function mountEmbeddedOrchestralBrassLab(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      stopOrchestralBrassLab();
+      orchestralBrassState = {
+        running: false,
+        round: 0,
+        totalRounds: 8,
+        score: 0,
+        target: null,
+        timeLeftMs: 3000,
+        intervalId: null,
+        nextTimeoutId: null,
+        roundActive: false,
+        feedback: null,
+        completed: false,
+        roundQueue: []
+      };
+      renderOrchestralBrassLabUI(target);
+    }
+
+    function startOrchestralBrassChallenge() {
+      stopOrchestralBrassLab();
+      // Build balanced 8-note queue (each of the 4 brass instruments appears twice, shuffled)
+      const queue = [...orchestralBrassCatalog, ...orchestralBrassCatalog].sort(() => Math.random() - 0.5);
+      orchestralBrassState = {
+        running: true,
+        round: 0,
+        totalRounds: 8,
+        score: 0,
+        target: null,
+        timeLeftMs: 3000,
+        intervalId: null,
+        nextTimeoutId: null,
+        roundActive: false,
+        feedback: null,
+        completed: false,
+        roundQueue: queue
+      };
+      launchNextBrassNote();
+    }
+
+    function launchNextBrassNote() {
+      const st = orchestralBrassState;
+      if (st.intervalId) clearInterval(st.intervalId);
+      if (st.nextTimeoutId) clearTimeout(st.nextTimeoutId);
+
+      if (st.round >= st.totalRounds) {
+        st.running = false;
+        st.roundActive = false;
+        st.completed = true;
+        renderOrchestralBrassLabUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Brass Bell Drop Complete!', `You dropped ${st.score}/${st.totalRounds} notes into the right bells in time and earned +${st.score * 2} Tokens!`, st.score >= 4);
+        return;
+      }
+
+      st.round++;
+      st.target = st.roundQueue[st.round - 1];
+      st.timeLeftMs = 3000;
+      st.roundActive = true;
+      st.feedback = null;
+
+      playOrchestralBrass(st.target.id);
+      renderOrchestralBrassLabUI(document.getElementById('embedded-tool-container'));
+
+      const startTime = performance.now();
+      st.intervalId = setInterval(() => {
+        if (!st.running || !st.roundActive) {
+          clearInterval(st.intervalId);
+          return;
+        }
+        const elapsed = performance.now() - startTime;
+        st.timeLeftMs = Math.max(0, 3000 - elapsed);
+
+        const barEl = document.getElementById('brass-timer-bar');
+        const txtEl = document.getElementById('brass-timer-text');
+        if (barEl) {
+          const pct = (st.timeLeftMs / 3000) * 100;
+          barEl.style.width = `${pct}%`;
+          if (pct < 35) {
+            barEl.classList.remove('bg-amber-400');
+            barEl.classList.add('bg-rose-500');
+          }
+        }
+        if (txtEl) {
+          txtEl.textContent = `${(st.timeLeftMs / 1000).toFixed(1)}s`;
+        }
+
+        if (st.timeLeftMs <= 0) {
+          clearInterval(st.intervalId);
+          st.roundActive = false;
+          st.feedback = { type: 'timeout', msg: `⏱ Time's up! That note belonged in the ${st.target.name}'s bell.` };
+          playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+          renderOrchestralBrassLabUI(document.getElementById('embedded-tool-container'));
+          st.nextTimeoutId = setTimeout(launchNextBrassNote, 1300);
+        }
+      }, 50);
+    }
+
+    function handleBrassNoteDragStart(e) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', 'brassNote');
+        e.dataTransfer.effectAllowed = 'move';
+      }
+    }
+
+    function handleBrassBellDrop(e, instId) {
+      if (e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('ring-4', 'ring-amber-400', 'scale-[1.03]');
+      }
+      const st = orchestralBrassState;
+      if (!st.running || !st.roundActive || !st.target) return;
+
+      clearInterval(st.intervalId);
+      st.roundActive = false;
+
+      if (st.target.id === instId) {
+        st.score++;
+        addTokens(2);
+        st.feedback = { type: 'correct', msg: `✓ Bullseye into the ${st.target.name}'s bell! (+2 Tokens)` };
+        playTonePitch(659.25, 0.18, 0.35, 'triangle');
+        setTimeout(() => playTonePitch(880, 0.22, 0.35, 'triangle'), 120);
+      } else {
+        const picked = orchestralBrassCatalog.find(i => i.id === instId);
+        st.feedback = { type: 'wrong', msg: `✗ Oops! You dropped it in the ${picked ? picked.name : 'wrong'} bell — needed the ${st.target.name}!` };
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+
+      renderOrchestralBrassLabUI(document.getElementById('embedded-tool-container'));
+      st.nextTimeoutId = setTimeout(launchNextBrassNote, 1200);
+    }
+
+    function renderOrchestralBrassLabUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = orchestralBrassState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border border-slate-800 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">3-Second Speed Challenge • 8 Notes • +2 Tokens Each</span>
+              <h3 class="text-xl font-black mt-1">Brass Bell Drop Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag the glowing music note and drop it directly into the <strong>bell</strong> of the named brass instrument before the <strong>3-second</strong> timer runs out!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-amber-950 border border-amber-700 text-xs font-black text-amber-200">Note ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score * 2} Tokens)</span>
+            </div>
+          </div>
+
+          ${!st.running && !st.completed ? `
+            <div class="p-8 rounded-2xl bg-gradient-to-br from-amber-950/60 to-slate-800/80 border border-amber-500/40 text-center space-y-4">
+              <div class="w-16 h-16 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-3xl mx-auto shadow-lg">
+                <i class="fa-solid fa-stopwatch"></i>
+              </div>
+              <h4 class="text-xl font-black text-amber-300">Ready for the 3-Second Bell Drop?</h4>
+              <p class="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">You have <strong>3 seconds per note</strong> across <strong>8 notes</strong>. Grab the music note and drop it into the bell of the brass instrument called out on screen!</p>
+              <button type="button" onclick="startOrchestralBrassChallenge()" class="px-7 py-3.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all">
+                <i class="fa-solid fa-play mr-1.5"></i> Start 8-Note Challenge
+              </button>
+            </div>
+          ` : st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Brass Section Mastered!</h4>
+              <p class="text-xs text-slate-200">You landed <strong>${st.score} / ${st.totalRounds}</strong> notes in the right bells and earned <strong>+${st.score * 2} Tokens</strong>!</p>
+              <button type="button" onclick="startOrchestralBrassChallenge()" class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs">Play Another 8 Notes</button>
+            </div>
+          ` : `
+            <!-- Live Prompt, Countdown Bar & Draggable Music Note -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-950/90 via-slate-800 to-orange-950/90 border border-amber-500/40 space-y-4">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-center sm:text-left">
+                  <div class="text-[10px] font-black uppercase tracking-widest text-amber-300">Drop Note Into The Bell Of:</div>
+                  <div class="text-2xl sm:text-3xl font-black text-white mt-0.5">${st.target ? st.target.name : ''}</div>
+                </div>
+
+                <!-- Draggable Music Note Token -->
+                <div class="flex items-center gap-4">
+                  <div
+                    draggable="${st.roundActive}"
+                    ondragstart="handleBrassNoteDragStart(event)"
+                    class="px-5 py-3 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 border-2 border-white shadow-[0_0_20px_rgba(251,191,36,0.65)] flex items-center gap-2.5 select-none ${st.roundActive ? 'cursor-grab active:cursor-grabbing animate-bounce' : 'opacity-40'}">
+                    <i class="fa-solid fa-music text-2xl pointer-events-none"></i>
+                    <div class="text-left pointer-events-none">
+                      <div class="font-black text-xs leading-tight">DRAG NOTE</div>
+                      <div class="text-[10px] font-bold opacity-80">Drop in Bell!</div>
+                    </div>
+                  </div>
+                  <div class="text-right min-w-[54px]">
+                    <div class="text-[10px] font-black uppercase text-slate-400">Timer</div>
+                    <div id="brass-timer-text" class="text-2xl font-black ${st.timeLeftMs < 1050 ? 'text-rose-400' : 'text-amber-300'}">${(st.timeLeftMs / 1000).toFixed(1)}s</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden border border-slate-700">
+                <div id="brass-timer-bar" class="h-full ${st.timeLeftMs < 1050 ? 'bg-rose-500' : 'bg-amber-400'} transition-all duration-75" style="width: ${(st.timeLeftMs / 3000) * 100}%"></div>
+              </div>
+
+              ${st.feedback ? `
+                <div class="p-3 rounded-xl text-xs font-black text-center ${
+                  st.feedback.type === 'correct'
+                    ? 'bg-emerald-950/80 border border-emerald-500 text-emerald-200'
+                    : 'bg-rose-950/80 border border-rose-500 text-rose-200'
+                }">
+                  ${st.feedback.msg}
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- 4 Realistic Brass Instrument Bell Drop Targets -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              ${orchestralBrassCatalog.map(inst => `
+                <div
+                  ondragover="${st.roundActive ? "event.preventDefault(); this.classList.add('ring-4', 'ring-amber-400', 'scale-[1.03]');" : ""}"
+                  ondragleave="${st.roundActive ? "this.classList.remove('ring-4', 'ring-amber-400', 'scale-[1.03]');" : ""}"
+                  ondrop="${st.roundActive ? `handleBrassBellDrop(event, '${inst.id}')` : ""}"
+                  class="p-4 rounded-3xl border-2 transition-all flex flex-col items-center justify-between text-center relative ${
+                    st.feedback && inst.id === st.target.id
+                      ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_18px_rgba(52,211,153,0.4)]'
+                      : `${inst.cardClass} border-dashed hover:border-amber-400`
+                  }">
+                  <div class="text-[10px] font-black uppercase tracking-wider text-amber-300/90 mb-1 pointer-events-none">
+                    <i class="fa-solid fa-bullseye mr-1"></i> Drop in Bell
+                  </div>
+                  <div class="w-full h-28 flex items-center justify-center pointer-events-none">
+                    ${getRealisticBrassSVG(inst.id, 'w-full h-24')}
+                  </div>
+                  <div class="mt-2 pointer-events-none">
+                    <div class="font-black text-base text-white">${inst.name}</div>
+                    <div class="text-[10px] font-bold text-slate-400">${inst.bellHint}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
     }
 
     // --- DYNAMICS CHALLENGE GAME ---
@@ -2593,79 +3853,554 @@
               { q: 'Which instrument is best described as "wooden, dry, and hollow"?', options: ['Xylophone', 'Tubular Bells', 'Violin', 'Trumpet'], correct: 0 },
               { q: 'Which instrument produces a "resonant, ringing, and bright" chime?', options: ['Tubular Bells', 'Double Bass', 'Snare Drum', 'Bass Drum'], correct: 0 }
             ]
-          }
-        ]
-      },
-      {
-        id: 'texture',
-        title: 'Texture',
-        icon: 'fa-layer-group',
-        color: 'pink',
-        summary: 'Layers of sound—comparing Thin & Sparse textures against Thick & Dense musical arrangements.',
-        levels: [
+          },
           {
-            level: 1,
-            title: 'Level 1: Thick vs. Thin Texture & Layering',
+            level: 2,
+            title: 'Level 2: Instruments of the Orchestra',
             lessons: [
               {
                 lessonNum: 1,
-                title: 'Lesson 1: Thick vs. Thin Texture (Musical Layers)',
-                summary: 'Explore how adding or removing instrument layers changes a piece from Thin to Thick.',
-                toolType: 'textureLabGame',
+                title: 'Lesson 1: The Orchestral Strings',
+                summary: 'Meet the Violin, Viola, Cello, Double Bass, and Harp—explore their size, pitch range, seating, and expressive playing techniques.',
+                toolType: 'orchestralStringsLab',
                 contentHtml: `
-                  <p>In music, <strong>Texture</strong> describes how many layers of sound are heard at the same time and how thick or thin the overall sound feels. Just like weaving fabric, a piece with only one or two instruments sounds <strong>Thin &amp; Sparse</strong>, whereas a full band or orchestra playing many parts simultaneously sounds <strong>Thick &amp; Dense</strong>.</p>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div class="p-5 rounded-2xl bg-sky-50 border border-sky-200 space-y-2.5">
-                      <div class="flex items-center justify-between">
-                        <span class="font-black text-sm text-sky-950">Thin &amp; Sparse Texture</span>
-                        <span class="px-2.5 py-0.5 rounded-full bg-sky-200 text-sky-900 text-[10px] font-black uppercase">1–2 Layers</span>
+                  <!-- Colourful Hero Banner -->
+                  <div class="rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white shadow-md">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-amber-200 mb-2">Orchestral Family #1</span>
+                        <h3 class="text-xl sm:text-2xl font-black">Welcome to the String Family!</h3>
+                        <p class="text-xs sm:text-sm text-emerald-50 mt-1.5 leading-relaxed max-w-2xl">
+                          The <strong>String Section</strong> is the largest family in a symphony orchestra—making up more than half of the players! They sit right at the front of the stage around the conductor, creating everything from soaring melodies to deep, rumbling basslines.
+                        </p>
                       </div>
-                      <div class="bg-slate-900 p-3.5 rounded-xl space-y-2">
-                        <div class="h-2.5 rounded-full bg-emerald-400 w-full"></div>
-                        <div class="h-2.5 rounded-full bg-slate-700 w-1/3"></div>
-                        <div class="h-2.5 rounded-full bg-slate-700 w-1/4"></div>
+                      <div class="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/25">
+                        <div class="text-2xl font-black text-amber-300">Size = Pitch</div>
+                        <div class="text-[11px] font-bold text-emerald-50 mt-0.5">Smaller = Higher<br/>Larger = Lower</div>
                       </div>
-                      <p class="text-xs text-slate-600">Open, light, and airy—such as a solo singer accompanied by a single acoustic guitar.</p>
                     </div>
-                    <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 space-y-2.5">
-                      <div class="flex items-center justify-between">
-                        <span class="font-black text-sm text-rose-950">Thick &amp; Dense Texture</span>
-                        <span class="px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-900 text-[10px] font-black uppercase">4–5+ Layers</span>
-                      </div>
-                      <div class="bg-slate-900 p-3.5 rounded-xl space-y-2">
-                        <div class="h-2.5 rounded-full bg-cyan-400 w-full"></div>
-                        <div class="h-2.5 rounded-full bg-emerald-400 w-full"></div>
-                        <div class="h-2.5 rounded-full bg-amber-400 w-full"></div>
-                        <div class="h-2.5 rounded-full bg-pink-500 w-full"></div>
-                        <div class="h-2.5 rounded-full bg-indigo-500 w-full"></div>
-                      </div>
-                      <p class="text-xs text-slate-600">Full, rich, and powerful—such as bass, chords, percussion, melody, and high chimes playing together.</p>
+                  </div>
+
+                  <!-- Visual Size-to-Pitch Lineup -->
+                  <div class="space-y-3 pt-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <h4 class="font-black text-base text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-emerald-600"></i> From Highest to Lowest: Click Any Instrument to Hear It!
+                      </h4>
+                      <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Highest Pitch &rarr; Lowest Pitch</span>
                     </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+                      <!-- Violin -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-rose-50 to-white border-2 border-rose-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-black uppercase">Highest</span>
+                            <span class="text-[10px] font-bold text-rose-600">~35 cm</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-rose-600">
+                            <svg viewBox="0 0 64 96" class="w-10 h-14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="6" x2="32" y2="82"/><path d="M22 36 C16 36, 15 48, 22 52 C14 57, 14 76, 32 76 C50 76, 50 57, 42 52 C49 48, 48 36, 42 36 C38 36, 36 39, 32 39 C28 39, 26 36, 22 36 Z" fill="#fda4af" fill-opacity="0.45"/><circle cx="32" cy="8" r="3"/><line x1="27" y1="58" x2="37" y2="58"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-rose-950 text-center">Violin</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Held under the chin. Often carries the bright, soaring <strong>melody</strong>.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralString('violin', 'arco')" class="mt-3 w-full py-2 rounded-xl bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Violin
+                        </button>
+                      </div>
+
+                      <!-- Viola -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-amber-50 to-white border-2 border-amber-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black uppercase">Mid-High</span>
+                            <span class="text-[10px] font-bold text-amber-700">~41 cm</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-amber-600">
+                            <svg viewBox="0 0 64 96" class="w-12 h-16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="6" x2="32" y2="84"/><path d="M20 34 C13 34, 12 48, 20 53 C11 59, 11 80, 32 80 C53 80, 53 59, 44 53 C52 48, 51 34, 44 34 C39 34, 36 37, 32 37 C28 37, 25 34, 20 34 Z" fill="#fcd34d" fill-opacity="0.45"/><circle cx="32" cy="8" r="3"/><line x1="26" y1="60" x2="38" y2="60"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-amber-950 text-center">Viola</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Slightly larger than the violin with a <strong>warm, mellow, velvety</strong> alto tone.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralString('viola', 'arco')" class="mt-3 w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Viola
+                        </button>
+                      </div>
+
+                      <!-- Cello -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-sky-50 to-white border-2 border-sky-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-black uppercase">Mid-Low</span>
+                            <span class="text-[10px] font-bold text-sky-700">~76 cm</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-sky-600">
+                            <svg viewBox="0 0 64 104" class="w-14 h-20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="6" x2="32" y2="98"/><path d="M19 32 C11 32, 10 48, 19 54 C9 60, 9 84, 32 84 C55 84, 55 60, 45 54 C54 48, 53 32, 45 32 C39 32, 36 36, 32 36 C28 36, 25 32, 19 32 Z" fill="#7dd3fc" fill-opacity="0.45"/><circle cx="32" cy="8" r="3.5"/><line x1="25" y1="62" x2="39" y2="62"/><line x1="32" y1="84" x2="32" y2="100" stroke-width="3"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-sky-950 text-center">Cello</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Played seated between the knees on an <strong>endpin</strong>. Rich, soulful, singing voice.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralString('cello', 'arco')" class="mt-3 w-full py-2 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Cello
+                        </button>
+                      </div>
+
+                      <!-- Double Bass -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-indigo-50 to-white border-2 border-indigo-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase">Lowest</span>
+                            <span class="text-[10px] font-bold text-indigo-700">~180 cm</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-indigo-700">
+                            <svg viewBox="0 0 64 112" class="w-16 h-24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="32" y1="4" x2="32" y2="106"/><path d="M20 28 C10 34, 9 50, 18 57 C7 64, 7 92, 32 92 C57 92, 57 64, 46 57 C55 50, 54 34, 44 28 C38 24, 35 30, 32 30 C29 30, 26 24, 20 28 Z" fill="#a5b4fc" fill-opacity="0.45"/><circle cx="32" cy="7" r="4"/><line x1="24" y1="66" x2="40" y2="66"/><line x1="32" y1="92" x2="32" y2="108" stroke-width="3.5"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-indigo-950 text-center">Double Bass</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">The towering giant! Played standing or on a tall stool for a <strong>deep, woody</strong> foundation.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralString('doublebass', 'arco')" class="mt-3 w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Bass
+                        </button>
+                      </div>
+
+                      <!-- Concert Harp -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-yellow-50 to-white border-2 border-yellow-300 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-yellow-400 text-slate-950 text-[10px] font-black uppercase">Plucked</span>
+                            <span class="text-[10px] font-bold text-yellow-700">47 Strings</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-yellow-600">
+                            <svg viewBox="0 0 72 96" class="w-14 h-20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 86 L58 86 L24 12 C38 10, 48 26, 56 20 L58 86" fill="#fde047" fill-opacity="0.35"/><line x1="24" y1="12" x2="14" y2="86" stroke-width="3.5"/><line x1="26" y1="24" x2="26" y2="86" stroke-width="1.5"/><line x1="34" y1="22" x2="34" y2="86" stroke-width="1.5"/><line x1="42" y1="24" x2="42" y2="86" stroke-width="1.5"/><line x1="50" y1="25" x2="50" y2="86" stroke-width="1.5"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-yellow-950 text-center">Concert Harp</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">No bow! Plucked with fingers and uses <strong>7 foot pedals</strong> for a shimmering sound.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralString('harp')" class="mt-3 w-full py-2 rounded-xl bg-yellow-400 hover:bg-yellow-500 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Harp
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Expressive String Playing Techniques -->
+                  <div class="space-y-3 pt-2">
+                    <h4 class="font-black text-base text-slate-800 flex items-center gap-2">
+                      <i class="fa-solid fa-wand-magic-sparkles text-violet-600"></i> Expressive String Techniques (Click to Compare!)
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col justify-between space-y-2">
+                        <div>
+                          <div class="font-black text-sm text-emerald-900">1. Arco (Bowed)</div>
+                          <p class="text-xs text-slate-700 mt-1">Drawing a wooden bow strung with horsehair across the strings to produce a <strong>smooth, sustained, singing</strong> tone.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralString('violin', 'arco')" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs">
+                          <i class="fa-solid fa-play mr-1"></i> Hear Arco
+                        </button>
+                      </div>
+
+                      <div class="p-4 rounded-2xl bg-fuchsia-50 border border-fuchsia-200 flex flex-col justify-between space-y-2">
+                        <div>
+                          <div class="font-black text-sm text-fuchsia-900">2. Pizzicato (Plucked)</div>
+                          <p class="text-xs text-slate-700 mt-1">Plucking the strings with the fingertips instead of using the bow—creating a <strong>short, crisp, bouncy</strong> pop!</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralString('violin', 'pizzicato')" class="w-full py-2 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-black text-xs">
+                          <i class="fa-solid fa-play mr-1"></i> Hear Pizzicato
+                        </button>
+                      </div>
+
+                      <div class="p-4 rounded-2xl bg-violet-50 border border-violet-200 flex flex-col justify-between space-y-2">
+                        <div>
+                          <div class="font-black text-sm text-violet-900">3. Tremolo (Trembling)</div>
+                          <p class="text-xs text-slate-700 mt-1">Moving the bow rapidly back and forth on one note to create <strong>dramatic tension, suspense, and shimmer</strong>.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralString('violin', 'tremolo')" class="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-black text-xs">
+                          <i class="fa-solid fa-play mr-1"></i> Hear Tremolo
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Visual Stage Map of the Strings -->
+                  <div class="p-5 rounded-3xl bg-slate-900 text-white border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-black uppercase tracking-widest text-amber-400"><i class="fa-solid fa-map mr-1.5"></i> Where Do the Strings Sit?</span>
+                      <span class="text-[10px] font-bold text-slate-400">Front of the Symphony Orchestra</span>
+                    </div>
+                    <svg viewBox="0 0 420 145" class="w-full max-w-xl mx-auto h-auto">
+                      <!-- Stage Arc -->
+                      <path d="M 20 130 A 190 120 0 0 1 400 130" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="6 4"/>
+                      <!-- 1st Violins -->
+                      <rect x="28" y="82" width="88" height="36" rx="12" fill="#f43f5e" fill-opacity="0.85"/>
+                      <text x="72" y="104" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">1st Violins</text>
+                      <!-- 2nd Violins -->
+                      <rect x="76" y="34" width="88" height="36" rx="12" fill="#fb7185" fill-opacity="0.85"/>
+                      <text x="120" y="56" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">2nd Violins</text>
+                      <!-- Violas -->
+                      <rect x="174" y="22" width="76" height="36" rx="12" fill="#f59e0b" fill-opacity="0.9"/>
+                      <text x="212" y="44" fill="#0f172a" font-size="11" font-weight="bold" text-anchor="middle">Violas</text>
+                      <!-- Cellos -->
+                      <rect x="260" y="34" width="82" height="36" rx="12" fill="#0ea5e9" fill-opacity="0.9"/>
+                      <text x="301" y="56" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">Cellos</text>
+                      <!-- Double Basses -->
+                      <rect x="304" y="82" width="92" height="36" rx="12" fill="#6366f1" fill-opacity="0.9"/>
+                      <text x="350" y="104" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle">Double Basses</text>
+                      <!-- Harp -->
+                      <rect x="22" y="26" width="46" height="30" rx="10" fill="#facc15"/>
+                      <text x="45" y="45" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Harp</text>
+                      <!-- Conductor -->
+                      <circle cx="210" cy="118" r="18" fill="#10b981"/>
+                      <text x="210" y="122" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">Conductor</text>
+                    </svg>
                   </div>
                 `
               },
               {
                 lessonNum: 2,
-                title: 'Lesson 2: Gradual Changes in Texture',
-                summary: 'Learn how composers build tension or create relief by staggering the entry of instruments.',
-                toolType: 'staggeredTextureLab',
+                title: 'Lesson 2: The Orchestral Woodwinds',
+                summary: 'Explore the Piccolo, Flute, Oboe, Clarinet, and Bassoon—learn how air and reeds create their vibrant timbres.',
+                toolType: 'orchestralWoodwindsLab',
                 contentHtml: `
-                  <p>Texture does not always jump suddenly between thick and thin. Composers frequently change texture <strong>gradually</strong> by introducing or stripping instruments one by one over time. This technique is called <strong>progressive layering</strong>.</p>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div class="p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-2">
-                      <h4 class="font-black text-lg text-indigo-700">Gradual Thickening (Tension)</h4>
-                      <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
-                        <li>Begins with a solitary line, then adds harmony, rhythm, and lead lines step-by-step.</li>
-                        <li>Creates mounting suspense, urgency, anticipation, and grandeur.</li>
-                      </ul>
+                  <!-- Colourful Hero Banner -->
+                  <div class="rounded-3xl bg-gradient-to-r from-cyan-600 via-sky-600 to-indigo-600 p-6 text-white shadow-md">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-amber-200 mb-2">Orchestral Family #2</span>
+                        <h3 class="text-xl sm:text-2xl font-black">Welcome to the Woodwind Family!</h3>
+                        <p class="text-xs sm:text-sm text-cyan-50 mt-1.5 leading-relaxed max-w-2xl">
+                          Why are they called <strong>Woodwinds</strong> even though modern flutes are made of silver? Because historically they were all carved from wood—and every woodwind produces sound by blowing <strong>wind (air)</strong> into or across a tube! Musicians cover and uncover tone holes with keys to change the pitch.
+                        </p>
+                      </div>
+                      <div class="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/25">
+                        <div class="text-2xl font-black text-amber-300">Air + Tube</div>
+                        <div class="text-[11px] font-bold text-cyan-50 mt-0.5">Shorter Air Column = Higher<br/>Longer Air Column = Lower</div>
+                      </div>
                     </div>
-                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                      <h4 class="font-black text-lg text-slate-700">Gradual Thinning (Dissolving)</h4>
-                      <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
-                        <li>Instruments peel away layer by layer until only one whispering note or silence remains.</li>
-                        <li>Creates feelings of relief, isolation, vulnerability, or eerie calm.</li>
-                      </ul>
+                  </div>
+
+                  <!-- Visual Lineup: Highest to Lowest Woodwinds -->
+                  <div class="space-y-3 pt-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <h4 class="font-black text-base text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-wind text-cyan-600"></i> From Highest to Lowest: Click Any Woodwind to Hear It!
+                      </h4>
+                      <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Highest Pitch &rarr; Lowest Pitch</span>
                     </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+                      <!-- Piccolo -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-cyan-50 to-white border-2 border-cyan-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-cyan-500 text-white text-[10px] font-black uppercase">Highest</span>
+                            <span class="text-[10px] font-bold text-cyan-700">No Reed</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-cyan-600">
+                            <svg viewBox="0 0 96 48" class="w-16 h-10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="20" width="60" height="8" rx="4" fill="#67e8f9" fill-opacity="0.45"/><circle cx="28" cy="24" r="2" fill="currentColor"/><circle cx="42" cy="24" r="1.8" fill="currentColor"/><circle cx="50" cy="24" r="1.8" fill="currentColor"/><circle cx="58" cy="24" r="1.8" fill="currentColor"/><circle cx="66" cy="24" r="1.8" fill="currentColor"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-cyan-950 text-center">Piccolo</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Half the size of a flute! Plays an octave higher with a <strong>piercing, sparkling</strong> sparkle.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralWoodwind('piccolo')" class="mt-3 w-full py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Piccolo
+                        </button>
+                      </div>
+
+                      <!-- Flute -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-sky-50 to-white border-2 border-sky-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-sky-500 text-white text-[10px] font-black uppercase">High</span>
+                            <span class="text-[10px] font-bold text-sky-700">No Reed</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-sky-600">
+                            <svg viewBox="0 0 96 48" class="w-20 h-12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="19" width="84" height="10" rx="5" fill="#7dd3fc" fill-opacity="0.45"/><ellipse cx="18" cy="24" rx="3" ry="2" fill="currentColor"/><circle cx="34" cy="24" r="2.2" fill="currentColor"/><circle cx="44" cy="24" r="2.2" fill="currentColor"/><circle cx="54" cy="24" r="2.2" fill="currentColor"/><circle cx="64" cy="24" r="2.2" fill="currentColor"/><circle cx="74" cy="24" r="2.2" fill="currentColor"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-sky-950 text-center">Flute</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Held sideways! Air splits across the hole for an <strong>airy, silvery, clear</strong> melody.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralWoodwind('flute')" class="mt-3 w-full py-2 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Flute
+                        </button>
+                      </div>
+
+                      <!-- Oboe -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-amber-50 to-white border-2 border-amber-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black uppercase">Mid-High</span>
+                            <span class="text-[10px] font-bold text-amber-700">Double Reed</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-amber-600">
+                            <svg viewBox="0 0 64 104" class="w-12 h-20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M30 8 L34 8 L33 18 L31 18 Z" fill="currentColor"/><path d="M29 18 L35 18 L38 82 L43 94 L21 94 L26 82 Z" fill="#fcd34d" fill-opacity="0.45"/><circle cx="32" cy="34" r="2" fill="currentColor"/><circle cx="32" cy="44" r="2" fill="currentColor"/><circle cx="32" cy="54" r="2" fill="currentColor"/><circle cx="32" cy="64" r="2" fill="currentColor"/><circle cx="32" cy="74" r="2" fill="currentColor"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-amber-950 text-center">Oboe</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Tunes the whole orchestra to <strong>A</strong>! Has a penetrating, <strong>reedy, expressive</strong> tone.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralWoodwind('oboe')" class="mt-3 w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Oboe
+                        </button>
+                      </div>
+
+                      <!-- Clarinet -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-violet-50 to-white border-2 border-violet-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-violet-600 text-white text-[10px] font-black uppercase">Mid</span>
+                            <span class="text-[10px] font-bold text-violet-700">Single Reed</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-violet-600">
+                            <svg viewBox="0 0 64 104" class="w-12 h-20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M28 8 L36 12 L36 22 L28 22 Z" fill="#c4b5fd" fill-opacity="0.6"/><rect x="27" y="22" width="10" height="60" fill="#c4b5fd" fill-opacity="0.45"/><path d="M27 82 L37 82 L44 96 L20 96 Z" fill="#c4b5fd" fill-opacity="0.55"/><circle cx="32" cy="36" r="2.2" fill="currentColor"/><circle cx="32" cy="48" r="2.2" fill="currentColor"/><circle cx="32" cy="60" r="2.2" fill="currentColor"/><circle cx="32" cy="72" r="2.2" fill="currentColor"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-violet-950 text-center">Clarinet</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Wide pitch range! Famous for its <strong>warm, smooth, hollow, woody</strong> sound.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralWoodwind('clarinet')" class="mt-3 w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Clarinet
+                        </button>
+                      </div>
+
+                      <!-- Bassoon -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-rose-50 to-white border-2 border-rose-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase">Lowest</span>
+                            <span class="text-[10px] font-bold text-rose-700">Double Reed</span>
+                          </div>
+                          <div class="h-24 flex items-center justify-center text-rose-600">
+                            <svg viewBox="0 0 72 112" class="w-14 h-22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M46 28 C58 24, 62 34, 54 44" /><rect x="24" y="10" width="11" height="86" rx="4" fill="#fda4af" fill-opacity="0.45"/><rect x="35" y="24" width="11" height="72" rx="4" fill="#fda4af" fill-opacity="0.55"/><path d="M24 92 C24 104, 46 104, 46 92" fill="#fda4af" fill-opacity="0.4"/><line x1="22" y1="12" x2="37" y2="12" stroke-width="3.5"/><circle cx="40" cy="48" r="2" fill="currentColor"/><circle cx="40" cy="60" r="2" fill="currentColor"/><circle cx="40" cy="72" r="2" fill="currentColor"/></svg>
+                          </div>
+                          <h5 class="font-black text-base text-rose-950 text-center">Bassoon</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">2.5 metres of tubing folded in half! Plays <strong>deep, rich, woody</strong> basslines.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralWoodwind('bassoon')" class="mt-3 w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Bassoon
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- The 3 Woodwind Mouthpiece Types -->
+                  <div class="space-y-3 pt-2">
+                    <h4 class="font-black text-base text-slate-800 flex items-center gap-2">
+                      <i class="fa-solid fa-lungs text-sky-600"></i> How Woodwinds Make Sound: The 3 Mouthpiece Types
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div class="p-4 rounded-2xl bg-cyan-50 border border-cyan-200 space-y-2">
+                        <div class="flex items-center justify-between">
+                          <span class="font-black text-sm text-cyan-900">1. No Reed (Edge-Blown)</span>
+                          <span class="px-2 py-0.5 rounded-full bg-cyan-200 text-cyan-900 text-[10px] font-black">Flute &amp; Piccolo</span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed">The player blows a focused stream of air <strong>across the edge of an open hole</strong>—just like blowing across the top of a glass bottle!</p>
+                      </div>
+
+                      <div class="p-4 rounded-2xl bg-violet-50 border border-violet-200 space-y-2">
+                        <div class="flex items-center justify-between">
+                          <span class="font-black text-sm text-violet-900">2. Single Reed</span>
+                          <span class="px-2 py-0.5 rounded-full bg-violet-200 text-violet-900 text-[10px] font-black">Clarinet</span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed">A <strong>single thin strip of cane (reed)</strong> is clamped to a mouthpiece and vibrates rapidly when the player blows air past it.</p>
+                      </div>
+
+                      <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2">
+                        <div class="flex items-center justify-between">
+                          <span class="font-black text-sm text-amber-900">3. Double Reed</span>
+                          <span class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-black">Oboe &amp; Bassoon</span>
+                        </div>
+                        <p class="text-xs text-slate-700 leading-relaxed"><strong>Two thin pieces of cane</strong> are bound tightly together and vibrate against each other to produce a rich, buzzing, expressive timbre.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Visual Stage Map Highlighting Woodwinds -->
+                  <div class="p-5 rounded-3xl bg-slate-900 text-white border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-black uppercase tracking-widest text-cyan-400"><i class="fa-solid fa-map mr-1.5"></i> Where Do the Woodwinds Sit?</span>
+                      <span class="text-[10px] font-bold text-slate-400">Centre of the Symphony Orchestra (Behind the Strings)</span>
+                    </div>
+                    <svg viewBox="0 0 420 145" class="w-full max-w-xl mx-auto h-auto">
+                      <!-- Stage Arc -->
+                      <path d="M 20 130 A 190 120 0 0 1 400 130" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="6 4"/>
+                      <!-- Strings (Muted in front) -->
+                      <path d="M 38 118 Q 210 55 382 118" fill="none" stroke="#475569" stroke-width="22" stroke-linecap="round" opacity="0.45"/>
+                      <text x="210" y="96" fill="#94a3b8" font-size="10" font-weight="bold" text-anchor="middle">Strings (In Front)</text>
+                      <!-- Woodwinds Highlighted in Centre -->
+                      <rect x="98" y="42" width="106" height="32" rx="10" fill="#06b6d4"/>
+                      <text x="151" y="62" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Flutes &amp; Piccolo</text>
+
+                      <rect x="216" y="42" width="106" height="32" rx="10" fill="#f59e0b"/>
+                      <text x="269" y="62" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Oboes</text>
+
+                      <rect x="98" y="6" width="106" height="30" rx="10" fill="#8b5cf6"/>
+                      <text x="151" y="25" fill="#fff" font-size="10.5" font-weight="bold" text-anchor="middle">Clarinets</text>
+
+                      <rect x="216" y="6" width="106" height="30" rx="10" fill="#f43f5e"/>
+                      <text x="269" y="25" fill="#fff" font-size="10.5" font-weight="bold" text-anchor="middle">Bassoons</text>
+
+                      <!-- Conductor -->
+                      <circle cx="210" cy="122" r="16" fill="#10b981"/>
+                      <text x="210" y="125" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Conductor</text>
+                    </svg>
+                  </div>
+                `
+              },
+              {
+                lessonNum: 3,
+                title: 'Lesson 3: The Orchestral Brass',
+                summary: 'Discover the Trumpet, French Horn, Trombone, and Tuba—learn how buzzing lips, valves, slides, and flaring bells create bold brass timbres.',
+                toolType: 'orchestralBrassLab',
+                contentHtml: `
+                  <!-- Colourful Golden Brass Hero Banner -->
+                  <div class="rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 p-6 text-white shadow-md">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-yellow-100 mb-2">Orchestral Family #3</span>
+                        <h3 class="text-xl sm:text-2xl font-black">Welcome to the Brass Family!</h3>
+                        <p class="text-xs sm:text-sm text-amber-50 mt-1.5 leading-relaxed max-w-2xl">
+                          The <strong>Brass Section</strong> is the powerhouse of the orchestra! Made from gleaming coils of brass tubing ending in a wide flaring <strong>bell</strong>, every brass instrument makes sound when the player <strong>buzzes their lips</strong> into a cup-shaped or funnel-shaped mouthpiece.
+                        </p>
+                      </div>
+                      <div class="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/25">
+                        <div class="text-2xl font-black text-yellow-200">Buzz + Bell</div>
+                        <div class="text-[11px] font-bold text-amber-50 mt-0.5">Shorter Tubing = Higher<br/>Longer Tubing = Lower</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Realistic Brass Lineup: Highest to Lowest -->
+                  <div class="space-y-3 pt-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <h4 class="font-black text-base text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn text-amber-600"></i> From Highest to Lowest: Click Any Brass Instrument to Hear It!
+                      </h4>
+                      <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Highest Pitch &rarr; Lowest Pitch</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <!-- Trumpet -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-amber-50 to-white border-2 border-amber-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black uppercase">Highest</span>
+                            <span class="text-[10px] font-bold text-amber-700">3 Piston Valves</span>
+                          </div>
+                          <div class="h-28 flex items-center justify-center bg-slate-900/95 rounded-2xl p-2 mb-3">
+                            ${getRealisticBrassSVG('trumpet', 'w-full h-20')}
+                          </div>
+                          <h5 class="font-black text-base text-amber-950 text-center">Trumpet</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Smallest brass instrument! Known for its <strong>bright, heroic, brilliant</strong> fanfares.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralBrass('trumpet')" class="mt-3 w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Trumpet
+                        </button>
+                      </div>
+
+                      <!-- French Horn -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-orange-50 to-white border-2 border-orange-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-black uppercase">Mid-High</span>
+                            <span class="text-[10px] font-bold text-orange-700">Rotary Valves</span>
+                          </div>
+                          <div class="h-28 flex items-center justify-center bg-slate-900/95 rounded-2xl p-2 mb-3">
+                            ${getRealisticBrassSVG('frenchhorn', 'w-full h-24')}
+                          </div>
+                          <h5 class="font-black text-base text-orange-950 text-center">French Horn</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Over 3.5 metres of coiled brass! Players place a hand in the bell for a <strong>warm, noble, mellow</strong> sound.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralBrass('frenchhorn')" class="mt-3 w-full py-2 rounded-xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear French Horn
+                        </button>
+                      </div>
+
+                      <!-- Trombone -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-yellow-50 to-white border-2 border-yellow-300 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-yellow-400 text-slate-950 text-[10px] font-black uppercase">Mid-Low</span>
+                            <span class="text-[10px] font-bold text-yellow-800">Sliding Tube</span>
+                          </div>
+                          <div class="h-28 flex items-center justify-center bg-slate-900/95 rounded-2xl p-2 mb-3">
+                            ${getRealisticBrassSVG('trombone', 'w-full h-20')}
+                          </div>
+                          <h5 class="font-black text-base text-yellow-950 text-center">Trombone</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Uses a long telescoping <strong>slide</strong> instead of valves! Produces a <strong>bold, powerful</strong> tone and smooth glissandos.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralBrass('trombone')" class="mt-3 w-full py-2 rounded-xl bg-yellow-400 hover:bg-yellow-500 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Trombone
+                        </button>
+                      </div>
+
+                      <!-- Tuba -->
+                      <div class="rounded-3xl p-4 bg-gradient-to-b from-rose-50 to-white border-2 border-rose-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div class="flex items-center justify-between mb-2">
+                            <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase">Lowest</span>
+                            <span class="text-[10px] font-bold text-rose-700">Giant Bell</span>
+                          </div>
+                          <div class="h-28 flex items-center justify-center bg-slate-900/95 rounded-2xl p-2 mb-3">
+                            ${getRealisticBrassSVG('tuba', 'w-full h-24')}
+                          </div>
+                          <h5 class="font-black text-base text-rose-950 text-center">Tuba</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">The largest brass instrument (~5 metres of tubing)! Anchors the orchestra with a <strong>massive, booming</strong> bass.</p>
+                        </div>
+                        <button type="button" onclick="playOrchestralBrass('tuba')" class="mt-3 w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                          <i class="fa-solid fa-volume-high mr-1"></i> Hear Tuba
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- How Brass Instruments Change Pitch -->
+                  <div class="space-y-3 pt-2">
+                    <h4 class="font-black text-base text-slate-800 flex items-center gap-2">
+                      <i class="fa-solid fa-gears text-orange-600"></i> How Brass Instruments Change Pitch
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-1.5">
+                        <div class="font-black text-sm text-amber-900">1. Buzzing Lips (Embouchure)</div>
+                        <p class="text-xs text-slate-700 leading-relaxed">Tighter, faster lip vibrations produce higher pitches; looser, slower lip vibrations produce lower pitches.</p>
+                      </div>
+                      <div class="p-4 rounded-2xl bg-orange-50 border border-orange-200 space-y-1.5">
+                        <div class="font-black text-sm text-orange-900">2. Valves (Trumpet, Horn, Tuba)</div>
+                        <p class="text-xs text-slate-700 leading-relaxed">Pressing piston or rotary valves redirects air through extra loops of tubing to lower the pitch instantly.</p>
+                      </div>
+                      <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-1.5">
+                        <div class="font-black text-sm text-rose-900">3. Telescoping Slide (Trombone)</div>
+                        <p class="text-xs text-slate-700 leading-relaxed">Pushing the U-shaped slide further out lengthens the air column, making the note smoothly lower in pitch.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Orchestra Stage Map Highlighting Brass -->
+                  <div class="p-5 rounded-3xl bg-slate-900 text-white border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs font-black uppercase tracking-widest text-amber-400"><i class="fa-solid fa-map mr-1.5"></i> Where Do the Brass Sit?</span>
+                      <span class="text-[10px] font-bold text-slate-400">Back Row of the Orchestra (Powerful Projection)</span>
+                    </div>
+                    <svg viewBox="0 0 420 145" class="w-full max-w-xl mx-auto h-auto">
+                      <!-- Stage Arc -->
+                      <path d="M 20 130 A 190 120 0 0 1 400 130" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="6 4"/>
+                      <!-- Strings & Woodwinds (Muted) -->
+                      <path d="M 38 118 Q 210 55 382 118" fill="none" stroke="#475569" stroke-width="20" stroke-linecap="round" opacity="0.35"/>
+                      <text x="210" y="96" fill="#94a3b8" font-size="9.5" font-weight="bold" text-anchor="middle">Strings &amp; Woodwinds</text>
+                      <!-- Brass Highlighted Across the Back -->
+                      <rect x="44" y="28" width="84" height="32" rx="10" fill="#f97316"/>
+                      <text x="86" y="48" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">French Horns</text>
+
+                      <rect x="136" y="10" width="76" height="30" rx="10" fill="#f59e0b"/>
+                      <text x="174" y="29" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Trumpets</text>
+
+                      <rect x="220" y="10" width="82" height="30" rx="10" fill="#facc15"/>
+                      <text x="261" y="29" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Trombones</text>
+
+                      <rect x="310" y="28" width="66" height="32" rx="10" fill="#e11d48"/>
+                      <text x="343" y="48" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Tuba</text>
+
+                      <!-- Conductor -->
+                      <circle cx="210" cy="122" r="16" fill="#10b981"/>
+                      <text x="210" y="125" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Conductor</text>
+                    </svg>
                   </div>
                 `
               }
@@ -2679,13 +4414,13 @@
               { q: 'What happens to the texture when layers drop out leaving only 1 part playing?', options: ['The texture becomes thin and sparse', 'The texture becomes thick and dense', 'The tempo doubles', 'All notes become semibreves'], correct: 0 },
               { q: 'In the Texture Sound Lab, which layer provides the low sustained C2 rumble?', options: ['Deep Bass Drone', 'Sparkle Chime', 'Lead Melody', 'Arpeggio Motion'], correct: 0 },
               { q: 'Which layer in the Texture Sound Lab fills out the middle with a lush C major chord?', options: ['Warm Harmony Pad', 'Deep Bass Drone', 'Sparkle Chime', 'Crotchet Rest'], correct: 0 },
-              { q: 'Which layer adds pulsing 8th-note rhythmic movement in the Texture Sound Lab?', options: ['Arpeggio Motion', 'Deep Bass Drone', 'Warm Harmony Pad', 'Semibreve Rest'], correct: 0 },
-              { q: 'Which layer provides the high shimmering bell overtones at the top of the texture?', options: ['Sparkle Chime', 'Deep Bass Drone', 'Warm Harmony Pad', 'Arpeggio Motion'], correct: 0 },
-              { q: 'What is progressive layering in music?', options: ['Gradually changing the texture by introducing or stripping instruments one by one', 'Playing all instruments loudly at the same time', 'Keeping the texture exactly the same from start to finish', 'Only using a single instrument for the entire song'], correct: 0 },
-              { q: 'What effect does gradual thickening (adding layers) usually have on the listener?', options: ['It creates mounting suspense, urgency, and anticipation', 'It makes the music feel isolated and empty', 'It creates a feeling of total silence', 'It immediately stops the beat'], correct: 0 },
-              { q: 'What effect does gradual thinning (removing layers) usually create?', options: ['Feelings of relief, isolation, or eerie calm', 'Extreme chaos and loudness', 'A sudden fortissimo crash', 'An increase in tempo'], correct: 0 },
-              { q: 'If a piece starts with a solo bass line, then adds drums at bar 5, and chords at bar 9, what is happening to the texture?', options: ['It is gradually thickening', 'It is gradually thinning', 'It is remaining static', 'It is becoming monophonic'], correct: 0 },
-              { q: 'Which of the following is an example of gradual thinning?', options: ['A full band playing, then the drums stop, then the bass stops, leaving just a whispering vocal', 'A solo vocal joined suddenly by a full orchestra', 'A piano playing exactly the same chord for 10 minutes', 'All instruments crashing on the final beat'], correct: 0 }
+              { q: 'Which two orchestral woodwinds use a DOUBLE reed?', options: ['Oboe and Bassoon', 'Flute and Piccolo', 'Clarinet and Flute', 'Piccolo and Clarinet'], correct: 0 },
+              { q: 'Which woodwind instrument has 2.5 metres of tubing folded in half and plays the lowest woodwind pitches?', options: ['Bassoon', 'Oboe', 'Clarinet', 'Piccolo'], correct: 0 },
+              { q: 'How do all orchestral brass instruments initially create a sound vibration?', options: ['By buzzing the lips into a mouthpiece', 'By blowing across a wooden reed', 'By drawing a horsehair bow across strings', 'By striking a metal bar with a mallet'], correct: 0 },
+              { q: 'Which brass instrument is the smallest and plays the highest, brightest fanfares?', options: ['Trumpet', 'Trombone', 'French Horn', 'Tuba'], correct: 0 },
+              { q: 'Which orchestral brass instrument uses a long telescoping SLIDE instead of valves to change pitch?', options: ['Trombone', 'Trumpet', 'French Horn', 'Tuba'], correct: 0 },
+              { q: 'Which brass instrument has circular coiled tubing and is played with the musician’s hand inside the bell for a warm, noble tone?', options: ['French Horn', 'Trumpet', 'Trombone', 'Tuba'], correct: 0 },
+              { q: 'Which brass instrument is the largest, with an enormous upward-facing bell that produces the lowest booming bass pitches?', options: ['Tuba', 'Trumpet', 'French Horn', 'Trombone'], correct: 0 }
             ]
           }
         ]
@@ -3231,6 +4966,9 @@
       else if (lesson.toolType === 'soundProductionGame') mountEmbeddedSoundProductionGame(toolBox);
       else if (lesson.toolType === 'timbreAdjectiveGame') mountEmbeddedTimbreAdjectiveGame(toolBox);
       else if (lesson.toolType === 'timbreSoundboard') mountEmbeddedTimbreSoundboard(toolBox);
+      else if (lesson.toolType === 'orchestralStringsLab') mountEmbeddedOrchestralStringsLab(toolBox);
+      else if (lesson.toolType === 'orchestralWoodwindsLab') mountEmbeddedOrchestralWoodwindsLab(toolBox);
+      else if (lesson.toolType === 'orchestralBrassLab') mountEmbeddedOrchestralBrassLab(toolBox);
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
       else if (lesson.toolType === 'staggeredTextureLab') mountEmbeddedStaggeredTextureLab(toolBox);
       else if (lesson.toolType === 'repeatSignGame') mountEmbeddedRepeatSignGame(toolBox);
@@ -7666,7 +9404,7 @@
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Student Portal • Class ${u.class} (${u.teacher})</span>
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">Welcome back, ${u.firstName}!</h1>
                 <div class="mt-2 flex gap-2">
-                  <button onclick="window.app.navigate('avatarMaker')" class="text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg transition-colors border border-slate-200">
+                  <button onclick="window.app.navigate('avatarMaker')" class="text-[11px] font-black bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-3.5 py-1.5 rounded-lg transition-all shadow-sm hover:shadow active:scale-95">
                     <i class="fa-solid fa-user-astronaut mr-1"></i> Customize Avatar
                   </button>
                 </div>

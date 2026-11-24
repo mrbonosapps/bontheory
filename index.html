@@ -2474,6 +2474,298 @@
       `;
     }
 
+    // --- WOODWIND REEDS & MOUTHPIECES CLASSIFIER GAME (TIMBRE LEVEL 2, LESSON 4) ---
+    const woodwindReedPool = [
+      {
+        id: 'flute',
+        name: 'Concert Flute',
+        reed: 'none',
+        hint: 'Held sideways; air blows across an open lip-plate hole.',
+        fact: 'The Concert Flute has NO reed — sound is made by splitting a focused air stream against the sharp edge of the embouchure hole.',
+        freq: 587.33,
+        wave: 'sine',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><rect x="8" y="18" width="104" height="8" rx="4" fill="#cbd5e1" stroke="#475569" stroke-width="2"/><ellipse cx="26" cy="22" rx="4.5" ry="2.8" fill="#0f172a"/><circle cx="48" cy="22" r="2.8" fill="#94a3b8" stroke="#334155"/><circle cx="58" cy="22" r="2.8" fill="#94a3b8" stroke="#334155"/><circle cx="68" cy="22" r="2.8" fill="#94a3b8" stroke="#334155"/><circle cx="80" cy="22" r="2.8" fill="#94a3b8" stroke="#334155"/><circle cx="90" cy="22" r="2.8" fill="#94a3b8" stroke="#334155"/></svg>`
+      },
+      {
+        id: 'piccolo',
+        name: 'Piccolo',
+        reed: 'none',
+        hint: 'Half the size of a flute; plays the highest, brightest notes in the orchestra.',
+        fact: 'Just like its bigger sibling the flute, the Piccolo uses NO reed — it is an edge-blown air-jet instrument.',
+        freq: 1046.50,
+        wave: 'sine',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><rect x="26" y="19" width="68" height="6" rx="3" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/><ellipse cx="38" cy="22" rx="3.5" ry="2" fill="#f8fafc"/><circle cx="54" cy="22" r="2.2" fill="#e2e8f0"/><circle cx="63" cy="22" r="2.2" fill="#e2e8f0"/><circle cx="72" cy="22" r="2.2" fill="#e2e8f0"/><circle cx="81" cy="22" r="2.2" fill="#e2e8f0"/></svg>`
+      },
+      {
+        id: 'recorder',
+        name: 'Recorder',
+        reed: 'none',
+        hint: 'Has a whistle-like fipple mouthpiece with a labium window.',
+        fact: 'The Recorder has NO reed — its built-in windway directs air across a sharp wooden or plastic edge.',
+        freq: 659.25,
+        wave: 'triangle',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><path d="M12 18 L28 16 L106 18 L110 15 L110 29 L106 26 L28 28 L12 26 Z" fill="#d97706" stroke="#78350f" stroke-width="2"/><rect x="30" y="18" width="6" height="4" fill="#451a03"/><circle cx="48" cy="22" r="2.5" fill="#451a03"/><circle cx="58" cy="22" r="2.5" fill="#451a03"/><circle cx="68" cy="22" r="2.5" fill="#451a03"/><circle cx="78" cy="22" r="2.5" fill="#451a03"/><circle cx="88" cy="22" r="2.5" fill="#451a03"/></svg>`
+      },
+      {
+        id: 'clarinet',
+        name: 'Clarinet',
+        reed: 'single',
+        hint: 'Black cylindrical body with a beak-shaped mouthpiece and metal ligature.',
+        fact: 'The Clarinet uses a SINGLE cane reed clamped onto the flat side of its mouthpiece.',
+        freq: 329.63,
+        wave: 'square',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><path d="M10 20 L26 17 L94 17 L110 11 L110 33 L94 27 L26 27 L10 24 Z" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/><rect x="14" y="22" width="12" height="3" rx="1" fill="#f59e0b"/><line x1="22" y1="17" x2="22" y2="27" stroke="#e2e8f0" stroke-width="2"/><circle cx="44" cy="22" r="2.5" fill="#cbd5e1"/><circle cx="56" cy="22" r="2.5" fill="#cbd5e1"/><circle cx="68" cy="22" r="2.5" fill="#cbd5e1"/><circle cx="80" cy="22" r="2.5" fill="#cbd5e1"/></svg>`
+      },
+      {
+        id: 'bass_clarinet',
+        name: 'Bass Clarinet',
+        reed: 'single',
+        hint: 'Large, deep-voiced clarinet with a curved silver neck and upturned metal bell.',
+        fact: 'Just like the soprano clarinet, the Bass Clarinet uses a larger SINGLE reed on its mouthpiece.',
+        freq: 146.83,
+        wave: 'square',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><path d="M12 16 Q22 14 28 22 L86 22 Q98 22 104 10 L112 12 Q104 30 86 30 L28 30 Q20 30 14 22 Z" fill="#1e293b" stroke="#94a3b8" stroke-width="1.5"/><rect x="12" y="18" width="10" height="3" fill="#f59e0b"/><path d="M98 14 L112 10 L110 20 Z" fill="#cbd5e1"/></svg>`
+      },
+      {
+        id: 'alto_sax',
+        name: 'Alto Saxophone',
+        reed: 'single',
+        hint: 'Made of brass, yet belongs to the woodwind family because of its mouthpiece!',
+        fact: 'Even though its body is brass, the Alto Saxophone is a woodwind because it uses a SINGLE cane reed.',
+        freq: 392.00,
+        wave: 'sawtooth',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><path d="M16 14 L30 12 L42 28 Q58 38 78 30 L96 14 L106 20 L84 36 Q56 44 36 32 L26 18 Z" fill="#f59e0b" stroke="#b45309" stroke-width="2"/><rect x="12" y="13" width="10" height="4" rx="1" fill="#0f172a"/><rect x="13" y="16" width="8" height="2" fill="#fde68a"/></svg>`
+      },
+      {
+        id: 'tenor_sax',
+        name: 'Tenor Saxophone',
+        reed: 'single',
+        hint: 'Larger curved brass woodwind with a warm, soulful jazz tone.',
+        fact: 'All saxophones — including the Tenor Saxophone — produce sound with a SINGLE reed.',
+        freq: 246.94,
+        wave: 'sawtooth',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><path d="M12 12 Q22 10 28 18 L44 30 Q62 40 82 30 L100 10 L110 18 L88 36 Q60 44 38 34 L22 20 Z" fill="#eab308" stroke="#a16207" stroke-width="2"/><rect x="8" y="11" width="10" height="4" rx="1" fill="#0f172a"/><rect x="9" y="14" width="8" height="2" fill="#fef08a"/></svg>`
+      },
+      {
+        id: 'oboe',
+        name: 'Oboe',
+        reed: 'double',
+        hint: 'Tunes the entire orchestra with a clear, penetrating, slightly nasal tone.',
+        fact: 'The Oboe uses a tiny DOUBLE reed (two thin pieces of cane bound onto a metal staple) that vibrate against each other.',
+        freq: 440.00,
+        wave: 'sawtooth',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><polygon points="8,21 20,19 20,25 8,23" fill="#fbbf24" stroke="#b45309" stroke-width="1"/><rect x="20" y="19" width="8" height="6" fill="#e11d48"/><path d="M28 19 L98 17 L110 14 L110 30 L98 27 L28 25 Z" fill="#0f172a" stroke="#64748b" stroke-width="1.5"/><circle cx="48" cy="22" r="2" fill="#e2e8f0"/><circle cx="60" cy="22" r="2" fill="#e2e8f0"/><circle cx="72" cy="22" r="2" fill="#e2e8f0"/><circle cx="84" cy="22" r="2" fill="#e2e8f0"/></svg>`
+      },
+      {
+        id: 'cor_anglais',
+        name: 'Cor Anglais (English Horn)',
+        reed: 'double',
+        hint: 'Alto cousin of the oboe with a curved metal bocal and pear-shaped bell.',
+        fact: 'The Cor Anglais uses a DOUBLE reed placed on a curved metal tube called a bocal, giving it a rich, melancholic voice.',
+        freq: 349.23,
+        wave: 'sawtooth',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><polygon points="8,16 18,15 18,20 8,19" fill="#fbbf24"/><path d="M18 17 Q24 17 28 22" fill="none" stroke="#cbd5e1" stroke-width="2.5"/><rect x="28" y="19" width="66" height="6" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/><ellipse cx="102" cy="22" rx="10" ry="7" fill="#1e293b" stroke="#64748b" stroke-width="1.5"/></svg>`
+      },
+      {
+        id: 'bassoon',
+        name: 'Bassoon',
+        reed: 'double',
+        hint: 'Tall folded wooden body with a long curved silver bocal tube.',
+        fact: 'The Bassoon uses a larger DOUBLE reed attached to its curved metal bocal to create a deep, warm, woody sound.',
+        freq: 130.81,
+        wave: 'sawtooth',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><polygon points="10,14 20,12 20,17 10,16" fill="#fbbf24"/><path d="M20 14 Q32 10 38 20" fill="none" stroke="#cbd5e1" stroke-width="2.5"/><rect x="34" y="16" width="76" height="12" rx="4" fill="#7c2d12" stroke="#431407" stroke-width="2"/><rect x="104" y="16" width="6" height="12" fill="#f8fafc"/></svg>`
+      },
+      {
+        id: 'contrabassoon',
+        name: 'Contrabassoon',
+        reed: 'double',
+        hint: 'Massive double-folded bass woodwind that plays an octave lower than the bassoon.',
+        fact: 'The Contrabassoon uses the largest DOUBLE reed in the orchestra to produce earth-shaking low pitches.',
+        freq: 82.41,
+        wave: 'sawtooth',
+        svg: `<svg viewBox="0 0 120 44" class="w-28 h-12 mx-auto"><polygon points="8,12 18,10 18,16 8,15" fill="#fbbf24"/><path d="M18 13 Q28 8 34 18" fill="none" stroke="#cbd5e1" stroke-width="3"/><rect x="30" y="12" width="78" height="20" rx="5" fill="#581c0c" stroke="#270a03" stroke-width="2"/><line x1="34" y1="22" x2="104" y2="22" stroke="#9a3412" stroke-width="2"/></svg>`
+      }
+    ];
+
+    let woodwindReedState = {
+      round: 1,
+      totalRounds: 10,
+      score: 0,
+      queue: [],
+      current: null,
+      answered: false,
+      selectedReed: null,
+      lastCorrect: false,
+      completed: false
+    };
+
+    function playReedPreviewTone(inst) {
+      if (!inst) return;
+      try {
+        if (typeof playOrchestralWoodwind === 'function' && ['piccolo', 'flute', 'oboe', 'clarinet', 'bassoon'].includes(inst.id)) {
+          playOrchestralWoodwind(inst.id);
+          return;
+        }
+        playTonePitch(inst.freq || 440, 0.55, 0.28, inst.wave || 'triangle');
+      } catch (e) {}
+    }
+
+    function setupReedClassifierGame() {
+      const shuffled = [...woodwindReedPool].sort(() => Math.random() - 0.5);
+      woodwindReedState = {
+        round: 1,
+        totalRounds: 10,
+        score: 0,
+        queue: shuffled.slice(0, 10),
+        current: shuffled[0],
+        answered: false,
+        selectedReed: null,
+        lastCorrect: false,
+        completed: false
+      };
+    }
+
+    function handleReedGuess(reedType) {
+      const st = woodwindReedState;
+      if (st.answered || st.completed || !st.current) return;
+
+      st.answered = true;
+      st.selectedReed = reedType;
+      st.lastCorrect = (st.current.reed === reedType);
+
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderWoodwindReedGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextReedRound() {
+      const st = woodwindReedState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        st.current = st.queue[st.round - 1];
+        st.answered = false;
+        st.selectedReed = null;
+        st.lastCorrect = false;
+        renderWoodwindReedGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderWoodwindReedGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal(
+          'Reed Classifier Complete!',
+          `You classified ${st.score} / ${st.totalRounds} woodwind instruments correctly and earned +${st.score} Tokens!`,
+          st.score >= 5
+        );
+      }
+    }
+
+    function mountEmbeddedWoodwindReedsGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      setupReedClassifierGame();
+      renderWoodwindReedGameUI(target);
+    }
+
+    function renderWoodwindReedGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = woodwindReedState;
+      const cur = st.current;
+
+      const reedChoices = [
+        { id: 'none', title: 'No Reed', sub: 'Air-Jet / Edge-Blown', badge: 'bg-teal-500/20 text-teal-300 border-teal-500/40', icon: 'fa-wind' },
+        { id: 'single', title: 'Single Reed', sub: '1 Cane Reed on Mouthpiece', badge: 'bg-sky-500/20 text-sky-300 border-sky-500/40', icon: 'fa-grip-lines-vertical' },
+        { id: 'double', title: 'Double Reed', sub: '2 Reeds Bound Together', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40', icon: 'fa-pause' }
+      ];
+
+      const reedLabelMap = { none: 'No Reed', single: 'Single Reed', double: 'Double Reed' };
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border border-slate-800 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-teal-400">10-Round Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black mt-0.5">Woodwind Reed Classifier</h3>
+              <p class="text-xs text-slate-300 mt-1">Inspect and listen to each woodwind instrument, then choose whether it uses a <strong>Single Reed</strong>, <strong>Double Reed</strong>, or <strong>No Reed</strong>!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1.5 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <div class="w-14 h-14 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-2xl mx-auto shadow-lg">
+                <i class="fa-solid fa-award"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">Reed Classifier Mastered!</h4>
+              <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedWoodwindReedsGame(document.getElementById('embedded-tool-container'))" class="px-6 py-2.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black rounded-xl text-xs shadow">
+                Play Another 10 Rounds
+              </button>
+            </div>
+          ` : `
+            <!-- Instrument Prompt Card -->
+            <div class="bg-slate-800/90 border border-slate-700 rounded-3xl p-6 text-center space-y-3">
+              <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Identify the Mouthpiece Type</div>
+              <div class="py-2">${cur.svg}</div>
+              <div class="text-2xl sm:text-3xl font-black text-white">${cur.name}</div>
+              <p class="text-xs text-slate-300 max-w-md mx-auto">${cur.hint}</p>
+              <div class="pt-1">
+                <button type="button" onclick="playReedPreviewTone(woodwindReedState.current)" class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow">
+                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Instrument
+                </button>
+              </div>
+            </div>
+
+            <!-- 3 Reed Classification Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              ${reedChoices.map(c => {
+                let stateClasses = 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700 cursor-pointer';
+                if (st.answered) {
+                  if (c.id === cur.reed) {
+                    stateClasses = 'border-emerald-400 bg-emerald-950/70 shadow-[0_0_15px_rgba(52,211,153,0.35)] scale-[1.02]';
+                  } else if (c.id === st.selectedReed) {
+                    stateClasses = 'border-rose-500 bg-rose-950/70 opacity-90';
+                  } else {
+                    stateClasses = 'border-slate-800 bg-slate-800/50 opacity-40';
+                  }
+                }
+                return `
+                  <button type="button" onclick="handleReedGuess('${c.id}')" ${st.answered ? 'disabled' : ''} class="p-5 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-2 ${stateClasses}">
+                    <span class="w-11 h-11 rounded-xl border flex items-center justify-center text-lg ${c.badge}">
+                      <i class="fa-solid ${c.icon}"></i>
+                    </span>
+                    <div class="font-black text-base text-white">${c.title}</div>
+                    <div class="text-[11px] text-slate-400 font-semibold">${c.sub}</div>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Feedback Banner -->
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs leading-relaxed">
+                  <strong class="block text-sm mb-0.5">${st.lastCorrect ? '✓ Spot on! (+1 Token)' : `✗ Not quite — the ${cur.name} uses: ${reedLabelMap[cur.reed]}.`}</strong>
+                  <span>${cur.fact}</span>
+                </div>
+                <button type="button" onclick="nextReedRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0 shadow">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+          `}
+        </div>
+      `;
+    }
+
     // --- DYNAMICS CHALLENGE GAME ---
     let dynamicsChallengeState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
 
@@ -4050,7 +4342,7 @@
                       <text x="45" y="45" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Harp</text>
                       <!-- Conductor -->
                       <circle cx="210" cy="118" r="18" fill="#10b981"/>
-                      <text x="210" y="122" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">Conductor</text>
+                      <text x="210" y="122" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">Conductor</text>
                     </svg>
                   </div>
                 `
@@ -4239,35 +4531,35 @@
 
                       <!-- Conductor -->
                       <circle cx="210" cy="122" r="16" fill="#10b981"/>
-                      <text x="210" y="125" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Conductor</text>
+                      <text x="210" y="125" fill="#ffffff" font-size="8.5" font-weight="bold" text-anchor="middle">Conductor</text>
                     </svg>
                   </div>
                 `
               },
               {
                 lessonNum: 3,
-                title: 'Lesson 3: The Orchestral Brass',
-                summary: 'Discover the Trumpet, French Horn, Trombone, and Tuba—learn how buzzing lips, valves, slides, and flaring bells create bold brass timbres.',
+                title: 'Lesson 3: The Brass Family',
+                summary: 'Meet the Trumpet, French Horn, Trombone, and Tuba—learn how buzzing lips, valves, and slides create heroic brass timbres, then master the 3-Second Bell Drop!',
                 toolType: 'orchestralBrassLab',
                 contentHtml: `
-                  <!-- Colourful Golden Brass Hero Banner -->
-                  <div class="rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 p-6 text-white shadow-md">
+                  <!-- Colourful Gold/Amber Hero Banner -->
+                  <div class="rounded-3xl bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 p-6 text-white shadow-md">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
-                        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-yellow-100 mb-2">Orchestral Family #3</span>
+                        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-yellow-200 mb-2">Orchestral Family #3</span>
                         <h3 class="text-xl sm:text-2xl font-black">Welcome to the Brass Family!</h3>
                         <p class="text-xs sm:text-sm text-amber-50 mt-1.5 leading-relaxed max-w-2xl">
-                          The <strong>Brass Section</strong> is the powerhouse of the orchestra! Made from gleaming coils of brass tubing ending in a wide flaring <strong>bell</strong>, every brass instrument makes sound when the player <strong>buzzes their lips</strong> into a cup-shaped or funnel-shaped mouthpiece.
+                          The <strong>Brass Section</strong> brings power, brilliance, and heroic fanfare to the orchestra! Every brass instrument is made of coiled metal tubing ending in a wide flared <strong>bell</strong>, and all brass players start the sound the same way: by <strong>buzzing their lips</strong> into a cup- or funnel-shaped mouthpiece.
                         </p>
                       </div>
                       <div class="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/25">
                         <div class="text-2xl font-black text-yellow-200">Buzz + Bell</div>
-                        <div class="text-[11px] font-bold text-amber-50 mt-0.5">Shorter Tubing = Higher<br/>Longer Tubing = Lower</div>
+                        <div class="text-[11px] font-bold text-amber-50 mt-0.5">Shorter Tube = Higher<br/>Longer Tube = Lower</div>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Realistic Brass Lineup: Highest to Lowest -->
+                  <!-- Visual Lineup: Highest to Lowest Brass -->
                   <div class="space-y-3 pt-2">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                       <h4 class="font-black text-base text-slate-800 flex items-center gap-2">
@@ -4284,11 +4576,11 @@
                             <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black uppercase">Highest</span>
                             <span class="text-[10px] font-bold text-amber-700">3 Piston Valves</span>
                           </div>
-                          <div class="h-28 flex items-center justify-center bg-slate-900/95 rounded-2xl p-2 mb-3">
+                          <div class="h-24 flex items-center justify-center">
                             ${getRealisticBrassSVG('trumpet', 'w-full h-20')}
                           </div>
-                          <h5 class="font-black text-base text-amber-950 text-center">Trumpet</h5>
-                          <p class="text-[11px] text-slate-600 mt-1 text-center">Smallest brass instrument! Known for its <strong>bright, heroic, brilliant</strong> fanfares.</p>
+                          <h5 class="font-black text-base text-amber-950 text-center mt-1">Trumpet</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Smallest brass instrument with a <strong>bright, heroic, brilliant</strong> fanfare tone.</p>
                         </div>
                         <button type="button" onclick="playOrchestralBrass('trumpet')" class="mt-3 w-full py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
                           <i class="fa-solid fa-volume-high mr-1"></i> Hear Trumpet
@@ -4300,13 +4592,13 @@
                         <div>
                           <div class="flex items-center justify-between mb-2">
                             <span class="px-2.5 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-black uppercase">Mid-High</span>
-                            <span class="text-[10px] font-bold text-orange-700">Rotary Valves</span>
+                            <span class="text-[10px] font-bold text-orange-700">3 Rotary Valves</span>
                           </div>
-                          <div class="h-28 flex items-center justify-center bg-slate-900/95 rounded-2xl p-2 mb-3">
+                          <div class="h-24 flex items-center justify-center">
                             ${getRealisticBrassSVG('frenchhorn', 'w-full h-24')}
                           </div>
-                          <h5 class="font-black text-base text-orange-950 text-center">French Horn</h5>
-                          <p class="text-[11px] text-slate-600 mt-1 text-center">Over 3.5 metres of coiled brass! Players place a hand in the bell for a <strong>warm, noble, mellow</strong> sound.</p>
+                          <h5 class="font-black text-base text-orange-950 text-center mt-1">French Horn</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Circular coiled tubing! Played with a hand inside the bell for a <strong>warm, noble, mellow</strong> sound.</p>
                         </div>
                         <button type="button" onclick="playOrchestralBrass('frenchhorn')" class="mt-3 w-full py-2 rounded-xl bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
                           <i class="fa-solid fa-volume-high mr-1"></i> Hear French Horn
@@ -4317,16 +4609,16 @@
                       <div class="rounded-3xl p-4 bg-gradient-to-b from-yellow-50 to-white border-2 border-yellow-300 shadow-sm flex flex-col justify-between">
                         <div>
                           <div class="flex items-center justify-between mb-2">
-                            <span class="px-2.5 py-0.5 rounded-full bg-yellow-400 text-slate-950 text-[10px] font-black uppercase">Mid-Low</span>
-                            <span class="text-[10px] font-bold text-yellow-800">Sliding Tube</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-yellow-500 text-slate-950 text-[10px] font-black uppercase">Mid-Low</span>
+                            <span class="text-[10px] font-bold text-yellow-700">Telescoping Slide</span>
                           </div>
-                          <div class="h-28 flex items-center justify-center bg-slate-900/95 rounded-2xl p-2 mb-3">
+                          <div class="h-24 flex items-center justify-center">
                             ${getRealisticBrassSVG('trombone', 'w-full h-20')}
                           </div>
-                          <h5 class="font-black text-base text-yellow-950 text-center">Trombone</h5>
-                          <p class="text-[11px] text-slate-600 mt-1 text-center">Uses a long telescoping <strong>slide</strong> instead of valves! Produces a <strong>bold, powerful</strong> tone and smooth glissandos.</p>
+                          <h5 class="font-black text-base text-yellow-950 text-center mt-1">Trombone</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">Uses a long U-shaped <strong>slide</strong> instead of valves! Bold, rich, and capable of smooth glissandos.</p>
                         </div>
-                        <button type="button" onclick="playOrchestralBrass('trombone')" class="mt-3 w-full py-2 rounded-xl bg-yellow-400 hover:bg-yellow-500 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
+                        <button type="button" onclick="playOrchestralBrass('trombone')" class="mt-3 w-full py-2 rounded-xl bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
                           <i class="fa-solid fa-volume-high mr-1"></i> Hear Trombone
                         </button>
                       </div>
@@ -4338,11 +4630,11 @@
                             <span class="px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase">Lowest</span>
                             <span class="text-[10px] font-bold text-rose-700">Giant Bell</span>
                           </div>
-                          <div class="h-28 flex items-center justify-center bg-slate-900/95 rounded-2xl p-2 mb-3">
+                          <div class="h-24 flex items-center justify-center">
                             ${getRealisticBrassSVG('tuba', 'w-full h-24')}
                           </div>
-                          <h5 class="font-black text-base text-rose-950 text-center">Tuba</h5>
-                          <p class="text-[11px] text-slate-600 mt-1 text-center">The largest brass instrument (~5 metres of tubing)! Anchors the orchestra with a <strong>massive, booming</strong> bass.</p>
+                          <h5 class="font-black text-base text-rose-950 text-center mt-1">Tuba</h5>
+                          <p class="text-[11px] text-slate-600 mt-1 text-center">The massive heavyweight! Up to 5 metres of tubing for <strong>deep, booming, warm</strong> basslines.</p>
                         </div>
                         <button type="button" onclick="playOrchestralBrass('tuba')" class="mt-3 w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
                           <i class="fa-solid fa-volume-high mr-1"></i> Hear Tuba
@@ -4351,56 +4643,207 @@
                     </div>
                   </div>
 
-                  <!-- How Brass Instruments Change Pitch -->
-                  <div class="space-y-3 pt-2">
-                    <h4 class="font-black text-base text-slate-800 flex items-center gap-2">
-                      <i class="fa-solid fa-gears text-orange-600"></i> How Brass Instruments Change Pitch
-                    </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                      <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-1.5">
-                        <div class="font-black text-sm text-amber-900">1. Buzzing Lips (Embouchure)</div>
-                        <p class="text-xs text-slate-700 leading-relaxed">Tighter, faster lip vibrations produce higher pitches; looser, slower lip vibrations produce lower pitches.</p>
-                      </div>
-                      <div class="p-4 rounded-2xl bg-orange-50 border border-orange-200 space-y-1.5">
-                        <div class="font-black text-sm text-orange-900">2. Valves (Trumpet, Horn, Tuba)</div>
-                        <p class="text-xs text-slate-700 leading-relaxed">Pressing piston or rotary valves redirects air through extra loops of tubing to lower the pitch instantly.</p>
-                      </div>
-                      <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-1.5">
-                        <div class="font-black text-sm text-rose-900">3. Telescoping Slide (Trombone)</div>
-                        <p class="text-xs text-slate-700 leading-relaxed">Pushing the U-shaped slide further out lengthens the air column, making the note smoothly lower in pitch.</p>
-                      </div>
+                  <!-- How Brass Works -->
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-1.5">
+                      <div class="font-black text-sm text-amber-900"><i class="fa-solid fa-face-grimace mr-1 text-amber-600"></i> 1. Buzzing Lips</div>
+                      <p class="text-xs text-slate-700 leading-relaxed">Tighter lips buzz faster for <strong>higher notes</strong>; looser lips buzz slower for <strong>lower notes</strong>.</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-orange-50 border border-orange-200 space-y-1.5">
+                      <div class="font-black text-sm text-orange-900"><i class="fa-solid fa-sliders mr-1 text-orange-600"></i> 2. Valves &amp; Slides</div>
+                      <p class="text-xs text-slate-700 leading-relaxed">Pressing <strong>valves</strong> (or extending the trombone's <strong>slide</strong>) adds extra tubing length to lower the pitch.</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 space-y-1.5">
+                      <div class="font-black text-sm text-rose-900"><i class="fa-solid fa-volume-high mr-1 text-rose-600"></i> 3. The Flared Bell</div>
+                      <p class="text-xs text-slate-700 leading-relaxed">The wide metal <strong>bell</strong> amplifies the buzzed sound so it can soar over the entire orchestra—or hold a <strong>mute</strong> to change timbre!</p>
                     </div>
                   </div>
 
-                  <!-- Orchestra Stage Map Highlighting Brass -->
+                  <!-- Visual Stage Map Highlighting Brass -->
                   <div class="p-5 rounded-3xl bg-slate-900 text-white border border-slate-800 space-y-3">
                     <div class="flex items-center justify-between">
-                      <span class="text-xs font-black uppercase tracking-widest text-amber-400"><i class="fa-solid fa-map mr-1.5"></i> Where Do the Brass Sit?</span>
-                      <span class="text-[10px] font-bold text-slate-400">Back Row of the Orchestra (Powerful Projection)</span>
+                      <span class="text-xs font-black uppercase tracking-widest text-amber-400"><i class="fa-solid fa-map mr-1.5"></i> Where Does the Brass Section Sit?</span>
+                      <span class="text-[10px] font-bold text-slate-400">Back-Right &amp; Back-Left of the Orchestra</span>
                     </div>
                     <svg viewBox="0 0 420 145" class="w-full max-w-xl mx-auto h-auto">
-                      <!-- Stage Arc -->
                       <path d="M 20 130 A 190 120 0 0 1 400 130" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="6 4"/>
-                      <!-- Strings & Woodwinds (Muted) -->
                       <path d="M 38 118 Q 210 55 382 118" fill="none" stroke="#475569" stroke-width="20" stroke-linecap="round" opacity="0.35"/>
-                      <text x="210" y="96" fill="#94a3b8" font-size="9.5" font-weight="bold" text-anchor="middle">Strings &amp; Woodwinds</text>
-                      <!-- Brass Highlighted Across the Back -->
-                      <rect x="44" y="28" width="84" height="32" rx="10" fill="#f97316"/>
-                      <text x="86" y="48" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">French Horns</text>
-
-                      <rect x="136" y="10" width="76" height="30" rx="10" fill="#f59e0b"/>
-                      <text x="174" y="29" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Trumpets</text>
-
-                      <rect x="220" y="10" width="82" height="30" rx="10" fill="#facc15"/>
-                      <text x="261" y="29" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Trombones</text>
-
-                      <rect x="310" y="28" width="66" height="32" rx="10" fill="#e11d48"/>
-                      <text x="343" y="48" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Tuba</text>
-
+                      <text x="210" y="96" fill="#94a3b8" font-size="9.5" font-weight="bold" text-anchor="middle">Strings &amp; Woodwinds (In Front)</text>
+                      <!-- French Horns -->
+                      <rect x="26" y="24" width="96" height="32" rx="10" fill="#f97316"/>
+                      <text x="74" y="44" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">French Horns</text>
+                      <!-- Trumpets -->
+                      <rect x="148" y="8" width="90" height="32" rx="10" fill="#f59e0b"/>
+                      <text x="193" y="28" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Trumpets</text>
+                      <!-- Trombones -->
+                      <rect x="248" y="14" width="92" height="32" rx="10" fill="#eab308"/>
+                      <text x="294" y="34" fill="#0f172a" font-size="10" font-weight="bold" text-anchor="middle">Trombones</text>
+                      <!-- Tuba -->
+                      <rect x="348" y="34" width="54" height="32" rx="10" fill="#e11d48"/>
+                      <text x="375" y="54" fill="#fff" font-size="10" font-weight="bold" text-anchor="middle">Tuba</text>
                       <!-- Conductor -->
                       <circle cx="210" cy="122" r="16" fill="#10b981"/>
-                      <text x="210" y="125" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Conductor</text>
+                      <text x="210" y="125" fill="#ffffff" font-size="8.5" font-weight="bold" text-anchor="middle">Conductor</text>
                     </svg>
+                  </div>
+                `
+              },
+              {
+                lessonNum: 4,
+                title: 'Lesson 4: Woodwind Reeds & Mouthpieces',
+                summary: 'Discover how No Reed, Single Reed, and Double Reed mouthpieces create unique woodwind timbres—then classify 10 instruments!',
+                toolType: 'woodwindReedsGame',
+                contentHtml: `
+                  <!-- Colourful Teal-to-Sky Hero Banner -->
+                  <div class="rounded-3xl bg-gradient-to-r from-teal-600 via-emerald-600 to-sky-600 p-6 text-white shadow-md">
+                    <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-amber-200 mb-2">Woodwind Science • Sound Production</span>
+                    <h3 class="text-xl sm:text-2xl font-black">Single Reed, Double Reed, or No Reed?</h3>
+                    <p class="text-xs sm:text-sm text-teal-50 mt-1.5 leading-relaxed max-w-2xl">
+                      Every woodwind instrument creates vibrations using air, but <strong>how</strong> that air starts vibrating divides the family into <strong>three distinct mouthpiece types</strong>!
+                    </p>
+                  </div>
+
+                  <!-- 3 Mouthpiece Breakdown Cards -->
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <!-- NO REED -->
+                    <div class="p-5 rounded-3xl bg-teal-50 border-2 border-teal-200 space-y-2.5 shadow-sm">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 rounded-full bg-teal-600 text-white text-[10px] font-black uppercase">No Reed</span>
+                        <i class="fa-solid fa-wind text-teal-600 text-lg"></i>
+                      </div>
+                      <h4 class="font-black text-base text-teal-950">Air-Jet (Edge-Blown)</h4>
+                      <p class="text-xs text-slate-700 leading-relaxed">
+                        Air is blown across a sharp edge (just like blowing across the top of a glass bottle), splitting the air stream to create a pure, airy sound.
+                      </p>
+                      <div class="pt-2 border-t border-teal-200/70 text-[11px] font-bold text-teal-800">
+                        Examples: Flute, Piccolo, Recorder
+                      </div>
+                    </div>
+
+                    <!-- SINGLE REED -->
+                    <div class="p-5 rounded-3xl bg-sky-50 border-2 border-sky-200 space-y-2.5 shadow-sm">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 rounded-full bg-sky-600 text-white text-[10px] font-black uppercase">Single Reed</span>
+                        <i class="fa-solid fa-grip-lines-vertical text-sky-600 text-lg"></i>
+                      </div>
+                      <h4 class="font-black text-base text-sky-950">1 Cane Reed + Mouthpiece</h4>
+                      <p class="text-xs text-slate-700 leading-relaxed">
+                        A single thin strip of cane (the reed) is held against a beak-shaped mouthpiece with a metal clamp called a <strong>ligature</strong>. Blowing makes the reed buzz rapidly.
+                      </p>
+                      <div class="pt-2 border-t border-sky-200/70 text-[11px] font-bold text-sky-800">
+                        Examples: Clarinet, Bass Clarinet, Saxophones
+                      </div>
+                    </div>
+
+                    <!-- DOUBLE REED -->
+                    <div class="p-5 rounded-3xl bg-amber-50 border-2 border-amber-200 space-y-2.5 shadow-sm">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-1 rounded-full bg-amber-600 text-white text-[10px] font-black uppercase">Double Reed</span>
+                        <i class="fa-solid fa-pause text-amber-600 text-lg"></i>
+                      </div>
+                      <h4 class="font-black text-base text-amber-950">2 Reeds Bound Together</h4>
+                      <p class="text-xs text-slate-700 leading-relaxed">
+                        Two thin blades of cane are tied tightly together with no separate mouthpiece. Blowing forces the two reeds to vibrate directly against each other for a rich, reedy, nasal timbre.
+                      </p>
+                      <div class="pt-2 border-t border-amber-200/70 text-[11px] font-bold text-amber-800">
+                        Examples: Oboe, Cor Anglais, Bassoon, Contrabassoon
+                      </div>
+                    </div>
+                  </div>
+                `
+              }
+            ],
+            testQuestions: [
+              { q: 'Which orchestral string instrument is the smallest and plays the highest pitch?', options: ['Violin', 'Viola', 'Cello', 'Double Bass'], correct: 0 },
+              { q: 'Which string instrument is played seated between the knees resting on an endpin?', options: ['Cello', 'Violin', 'Viola', 'Double Bass'], correct: 0 },
+              { q: 'What is the Italian term for plucking a string instrument with the fingers instead of using the bow?', options: ['Pizzicato', 'Arco', 'Tremolo', 'Crescendo'], correct: 0 },
+              { q: 'Which orchestral string instrument has 47 strings and 7 foot pedals, and is played without a bow?', options: ['Concert Harp', 'Double Bass', 'Cello', 'Viola'], correct: 0 },
+              { q: 'How does the size of a string instrument affect its pitch?', options: ['Smaller instruments play higher pitches; larger instruments play lower pitches', 'Larger instruments always play higher pitches', 'Size only affects volume, not pitch', 'All string instruments play the exact same pitch'], correct: 0 },
+              { q: 'Which woodwind instrument is half the size of a flute and plays the highest notes in the orchestra?', options: ['Piccolo', 'Oboe', 'Clarinet', 'Bassoon'], correct: 0 },
+              { q: 'Which two orchestral woodwinds use a DOUBLE reed?', options: ['Oboe and Bassoon', 'Flute and Piccolo', 'Clarinet and Flute', 'Piccolo and Clarinet'], correct: 0 },
+              { q: 'Which woodwind instrument has 2.5 metres of tubing folded in half and plays the lowest woodwind pitches?', options: ['Bassoon', 'Oboe', 'Clarinet', 'Piccolo'], correct: 0 },
+              { q: 'How do all orchestral brass instruments initially create a sound vibration?', options: ['By buzzing the lips into a mouthpiece', 'By blowing across a wooden reed', 'By drawing a horsehair bow across strings', 'By striking a metal bar with a mallet'], correct: 0 },
+              { q: 'Which brass instrument is the smallest and plays the highest, brightest fanfares?', options: ['Trumpet', 'Trombone', 'French Horn', 'Tuba'], correct: 0 },
+              { q: 'Which orchestral brass instrument uses a long telescoping SLIDE instead of valves to change pitch?', options: ['Trombone', 'Trumpet', 'French Horn', 'Tuba'], correct: 0 },
+              { q: 'Which brass instrument has circular coiled tubing and is played with the musician’s hand inside the bell for a warm, noble tone?', options: ['French Horn', 'Trumpet', 'Trombone', 'Tuba'], correct: 0 },
+              { q: 'Which brass instrument is the largest, with an enormous upward-facing bell that produces the lowest booming bass pitches?', options: ['Tuba', 'Trumpet', 'French Horn', 'Trombone'], correct: 0 },
+              { q: 'Which woodwind instruments produce sound using NO reed (an edge-blown air-jet)?', options: ['Flute, Piccolo, and Recorder', 'Oboe and Bassoon', 'Clarinet and Saxophone', 'Cor Anglais and Contrabassoon'], correct: 0 },
+              { q: 'Which woodwind instruments use a SINGLE cane reed clamped to a mouthpiece?', options: ['Clarinet, Bass Clarinet, and Saxophones', 'Flute and Piccolo', 'Oboe and Bassoon', 'Trumpet and French Horn'], correct: 0 },
+              { q: 'How does a DOUBLE reed woodwind (like the Oboe or Bassoon) create sound?', options: ['Two thin pieces of cane bound together vibrate directly against each other', 'Air blows across an open hole with no reed', 'A metal valve buzzes inside a cup mouthpiece', 'A horsehair bow is drawn across a string'], correct: 0 }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'texture',
+        title: 'Texture',
+        icon: 'fa-layer-group',
+        color: 'pink',
+        summary: 'Layers of sound—comparing Thin & Sparse textures against Thick & Dense musical arrangements.',
+        levels: [
+          {
+            level: 1,
+            title: 'Level 1: Thick vs. Thin Texture & Layering',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Thick vs. Thin Texture (Musical Layers)',
+                summary: 'Explore how adding or removing instrument layers changes a piece from Thin to Thick.',
+                toolType: 'textureLabGame',
+                contentHtml: `
+                  <p>In music, <strong>Texture</strong> describes how many layers of sound are heard at the same time and how thick or thin the overall sound feels. Just like weaving fabric, a piece with only one or two instruments sounds <strong>Thin &amp; Sparse</strong>, whereas a full band or orchestra playing many parts simultaneously sounds <strong>Thick &amp; Dense</strong>.</p>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div class="p-5 rounded-2xl bg-sky-50 border border-sky-200 space-y-2.5">
+                      <div class="flex items-center justify-between">
+                        <span class="font-black text-sm text-sky-950">Thin &amp; Sparse Texture</span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-sky-200 text-sky-900 text-[10px] font-black uppercase">1–2 Layers</span>
+                      </div>
+                      <div class="bg-slate-900 p-3.5 rounded-xl space-y-2">
+                        <div class="h-2.5 rounded-full bg-emerald-400 w-full"></div>
+                        <div class="h-2.5 rounded-full bg-slate-700 w-1/3"></div>
+                        <div class="h-2.5 rounded-full bg-slate-700 w-1/4"></div>
+                      </div>
+                      <p class="text-xs text-slate-600">Open, light, and airy—such as a solo singer accompanied by a single acoustic guitar.</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 space-y-2.5">
+                      <div class="flex items-center justify-between">
+                        <span class="font-black text-sm text-rose-950">Thick &amp; Dense Texture</span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-rose-200 text-rose-900 text-[10px] font-black uppercase">4–5+ Layers</span>
+                      </div>
+                      <div class="bg-slate-900 p-3.5 rounded-xl space-y-2">
+                        <div class="h-2.5 rounded-full bg-cyan-400 w-full"></div>
+                        <div class="h-2.5 rounded-full bg-emerald-400 w-full"></div>
+                        <div class="h-2.5 rounded-full bg-amber-400 w-full"></div>
+                        <div class="h-2.5 rounded-full bg-pink-500 w-full"></div>
+                        <div class="h-2.5 rounded-full bg-indigo-500 w-full"></div>
+                      </div>
+                      <p class="text-xs text-slate-600">Full, rich, and powerful—such as bass, chords, percussion, melody, and high chimes playing together.</p>
+                    </div>
+                  </div>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Gradual Changes in Texture',
+                summary: 'Learn how composers build tension or create relief by staggering the entry of instruments.',
+                toolType: 'staggeredTextureLab',
+                contentHtml: `
+                  <p>Texture does not always jump suddenly between thick and thin. Composers frequently change texture <strong>gradually</strong> by introducing or stripping instruments one by one over time. This technique is called <strong>progressive layering</strong>.</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div class="p-5 rounded-2xl bg-indigo-50/50 border border-indigo-100 space-y-2">
+                      <h4 class="font-black text-lg text-indigo-700">Gradual Thickening (Tension)</h4>
+                      <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
+                        <li>Begins with a solitary line, then adds harmony, rhythm, and lead lines step-by-step.</li>
+                        <li>Creates mounting suspense, urgency, anticipation, and grandeur.</li>
+                      </ul>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <h4 class="font-black text-lg text-slate-700">Gradual Thinning (Dissolving)</h4>
+                      <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
+                        <li>Instruments peel away layer by layer until only one whispering note or silence remains.</li>
+                        <li>Creates feelings of relief, isolation, vulnerability, or eerie calm.</li>
+                      </ul>
+                    </div>
                   </div>
                 `
               }
@@ -4414,13 +4857,13 @@
               { q: 'What happens to the texture when layers drop out leaving only 1 part playing?', options: ['The texture becomes thin and sparse', 'The texture becomes thick and dense', 'The tempo doubles', 'All notes become semibreves'], correct: 0 },
               { q: 'In the Texture Sound Lab, which layer provides the low sustained C2 rumble?', options: ['Deep Bass Drone', 'Sparkle Chime', 'Lead Melody', 'Arpeggio Motion'], correct: 0 },
               { q: 'Which layer in the Texture Sound Lab fills out the middle with a lush C major chord?', options: ['Warm Harmony Pad', 'Deep Bass Drone', 'Sparkle Chime', 'Crotchet Rest'], correct: 0 },
-              { q: 'Which two orchestral woodwinds use a DOUBLE reed?', options: ['Oboe and Bassoon', 'Flute and Piccolo', 'Clarinet and Flute', 'Piccolo and Clarinet'], correct: 0 },
-              { q: 'Which woodwind instrument has 2.5 metres of tubing folded in half and plays the lowest woodwind pitches?', options: ['Bassoon', 'Oboe', 'Clarinet', 'Piccolo'], correct: 0 },
-              { q: 'How do all orchestral brass instruments initially create a sound vibration?', options: ['By buzzing the lips into a mouthpiece', 'By blowing across a wooden reed', 'By drawing a horsehair bow across strings', 'By striking a metal bar with a mallet'], correct: 0 },
-              { q: 'Which brass instrument is the smallest and plays the highest, brightest fanfares?', options: ['Trumpet', 'Trombone', 'French Horn', 'Tuba'], correct: 0 },
-              { q: 'Which orchestral brass instrument uses a long telescoping SLIDE instead of valves to change pitch?', options: ['Trombone', 'Trumpet', 'French Horn', 'Tuba'], correct: 0 },
-              { q: 'Which brass instrument has circular coiled tubing and is played with the musician’s hand inside the bell for a warm, noble tone?', options: ['French Horn', 'Trumpet', 'Trombone', 'Tuba'], correct: 0 },
-              { q: 'Which brass instrument is the largest, with an enormous upward-facing bell that produces the lowest booming bass pitches?', options: ['Tuba', 'Trumpet', 'French Horn', 'Trombone'], correct: 0 }
+              { q: 'Which layer adds pulsing 8th-note rhythmic movement in the Texture Sound Lab?', options: ['Arpeggio Motion', 'Deep Bass Drone', 'Warm Harmony Pad', 'Semibreve Rest'], correct: 0 },
+              { q: 'Which layer provides the high shimmering bell overtones at the top of the texture?', options: ['Sparkle Chime', 'Deep Bass Drone', 'Warm Harmony Pad', 'Arpeggio Motion'], correct: 0 },
+              { q: 'What is progressive layering in music?', options: ['Gradually changing the texture by introducing or stripping instruments one by one', 'Playing all instruments loudly at the same time', 'Keeping the texture exactly the same from start to finish', 'Only using a single instrument for the entire song'], correct: 0 },
+              { q: 'What effect does gradual thickening (adding layers) usually have on the listener?', options: ['It creates mounting suspense, urgency, and anticipation', 'It makes the music feel isolated and empty', 'It creates a feeling of total silence', 'It immediately stops the beat'], correct: 0 },
+              { q: 'What effect does gradual thinning (removing layers) usually create?', options: ['Feelings of relief, isolation, or eerie calm', 'Extreme chaos and loudness', 'A sudden fortissimo crash', 'An increase in tempo'], correct: 0 },
+              { q: 'If a piece starts with a solo bass line, then adds drums at bar 5, and chords at bar 9, what is happening to the texture?', options: ['It is gradually thickening', 'It is gradually thinning', 'It is remaining static', 'It is becoming monophonic'], correct: 0 },
+              { q: 'Which of the following is an example of gradual thinning?', options: ['A full band playing, then the drums stop, then the bass stops, leaving just a whispering vocal', 'A solo vocal joined suddenly by a full orchestra', 'A piano playing exactly the same chord for 10 minutes', 'All instruments crashing on the final beat'], correct: 0 }
             ]
           }
         ]
@@ -4969,6 +5412,7 @@
       else if (lesson.toolType === 'orchestralStringsLab') mountEmbeddedOrchestralStringsLab(toolBox);
       else if (lesson.toolType === 'orchestralWoodwindsLab') mountEmbeddedOrchestralWoodwindsLab(toolBox);
       else if (lesson.toolType === 'orchestralBrassLab') mountEmbeddedOrchestralBrassLab(toolBox);
+      else if (lesson.toolType === 'woodwindReedsGame') mountEmbeddedWoodwindReedsGame(toolBox);
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
       else if (lesson.toolType === 'staggeredTextureLab') mountEmbeddedStaggeredTextureLab(toolBox);
       else if (lesson.toolType === 'repeatSignGame') mountEmbeddedRepeatSignGame(toolBox);

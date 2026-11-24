@@ -398,6 +398,7 @@
       try { if (typeof stopWrenchGame === 'function') stopWrenchGame(); } catch (e) {}
       try { if (typeof stopGrooveLockGame === 'function') stopGrooveLockGame(); } catch (e) {}
       try { if (typeof stopOrchestralBrassLab === 'function') stopOrchestralBrassLab(); } catch (e) {}
+      try { if (typeof stopPercussionLab === 'function') stopPercussionLab(); } catch (e) {}
     }
 
     window.app = {
@@ -3064,6 +3065,705 @@
       `;
     }
 
+    // --- ORCHESTRAL & CLASSROOM PERCUSSION SYNTHESIZER & 3-SECOND DRAG-DROP CHALLENGE (TIMBRE LEVEL 2, LESSON 5) ---
+    function getRealisticPercussionSVG(id, sizeClass = 'w-24 h-20') {
+      if (id === 'drum') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="percDrumShell" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#991b1b"/>
+                <stop offset="35%" stop-color="#ef4444"/>
+                <stop offset="70%" stop-color="#dc2626"/>
+                <stop offset="100%" stop-color="#7f1d1d"/>
+              </linearGradient>
+              <linearGradient id="percDrumRim" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#94a3b8"/>
+                <stop offset="45%" stop-color="#f8fafc"/>
+                <stop offset="100%" stop-color="#64748b"/>
+              </linearGradient>
+            </defs>
+            <!-- Shell -->
+            <path d="M 22 36 L 22 72 C 22 83, 108 83, 108 72 L 108 36 Z" fill="url(#percDrumShell)" stroke="#450a0a" stroke-width="1.5"/>
+            <!-- Bottom Metal Hoop -->
+            <path d="M 20 68 C 20 79, 110 79, 110 68 L 110 74 C 110 85, 20 85, 20 74 Z" fill="url(#percDrumRim)" stroke="#475569" stroke-width="1.1"/>
+            <!-- Tension Rods & Lugs -->
+            ${[30, 48, 65, 82, 100].map(x => `<line x1="${x}" y1="42" x2="${x}" y2="75" stroke="#e2e8f0" stroke-width="2"/><rect x="${x-2.5}" y="53" width="5" height="9" rx="1.5" fill="#cbd5e1" stroke="#475569" stroke-width="0.8"/>`).join('')}
+            <!-- Top Drumhead & Rim -->
+            <ellipse cx="65" cy="36" rx="45" ry="13" fill="url(#percDrumRim)" stroke="#475569" stroke-width="1.4"/>
+            <ellipse cx="65" cy="35" rx="40" ry="10.5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+            <!-- Crossed Drumsticks -->
+            <line x1="20" y1="10" x2="72" y2="35" stroke="#d97706" stroke-width="3.2" stroke-linecap="round"/>
+            <circle cx="73" cy="35.5" r="3" fill="#fef3c7" stroke="#b45309" stroke-width="0.8"/>
+            <line x1="110" y1="10" x2="58" y2="35" stroke="#d97706" stroke-width="3.2" stroke-linecap="round"/>
+            <circle cx="57" cy="35.5" r="3" fill="#fef3c7" stroke="#b45309" stroke-width="0.8"/>
+          </svg>
+        `;
+      }
+      if (id === 'cymbal') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="percCymGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fef08a"/>
+                <stop offset="38%" stop-color="#eab308"/>
+                <stop offset="72%" stop-color="#ca8a04"/>
+                <stop offset="100%" stop-color="#fef9c3"/>
+              </linearGradient>
+            </defs>
+            <!-- Stand -->
+            <line x1="65" y1="44" x2="65" y2="88" stroke="#94a3b8" stroke-width="3.5"/>
+            <line x1="65" y1="74" x2="45" y2="90" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="65" y1="74" x2="85" y2="90" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Brass Cymbal Disc -->
+            <ellipse cx="65" cy="40" rx="54" ry="15" fill="url(#percCymGold)" stroke="#854d0e" stroke-width="1.6"/>
+            <!-- Tonal Grooves -->
+            <ellipse cx="65" cy="40" rx="42" ry="11" stroke="#a16207" stroke-width="0.9" stroke-opacity="0.55"/>
+            <ellipse cx="65" cy="40" rx="28" ry="7.2" stroke="#a16207" stroke-width="0.9" stroke-opacity="0.55"/>
+            <!-- Raised Bell Dome -->
+            <path d="M 51 38 C 53 24, 77 24, 79 38 C 72 41, 58 41, 51 38 Z" fill="url(#percCymGold)" stroke="#854d0e" stroke-width="1.3"/>
+            <circle cx="65" cy="30" r="2.5" fill="#475569"/>
+            <!-- Felt Mallet -->
+            <line x1="94" y1="10" x2="118" y2="28" stroke="#92400e" stroke-width="2.8" stroke-linecap="round"/>
+            <circle cx="91" cy="10" r="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+          </svg>
+        `;
+      }
+      if (id === 'woodblock') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="percWoodTop" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#b45309"/>
+                <stop offset="50%" stop-color="#f59e0b"/>
+                <stop offset="100%" stop-color="#92400e"/>
+              </linearGradient>
+              <linearGradient id="percWoodSide" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#d97706"/>
+                <stop offset="100%" stop-color="#78350f"/>
+              </linearGradient>
+            </defs>
+            <!-- Two-Tone Hollow Wood Block -->
+            <polygon points="18,44 96,28 112,38 34,54" fill="url(#percWoodTop)" stroke="#451a03" stroke-width="1.5" stroke-linejoin="round"/>
+            <polygon points="18,44 34,54 34,80 18,70" fill="#78350f" stroke="#451a03" stroke-width="1.5" stroke-linejoin="round"/>
+            <polygon points="34,54 112,38 112,64 34,80" fill="url(#percWoodSide)" stroke="#451a03" stroke-width="1.5" stroke-linejoin="round"/>
+            <!-- Sound Resonator Slit -->
+            <polygon points="44,61 102,49 102,55 44,67" fill="#270a03"/>
+            <!-- Wooden Beater -->
+            <line x1="28" y1="16" x2="84" y2="34" stroke="#b45309" stroke-width="3.2" stroke-linecap="round"/>
+            <circle cx="85" cy="34.5" r="5.5" fill="#d97706" stroke="#451a03" stroke-width="1.2"/>
+          </svg>
+        `;
+      }
+      if (id === 'castanets') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <radialGradient id="percCastWood" cx="38%" cy="32%" r="65%">
+                <stop offset="0%" stop-color="#b91c1c"/>
+                <stop offset="55%" stop-color="#7f1d1d"/>
+                <stop offset="100%" stop-color="#450a0a"/>
+              </radialGradient>
+            </defs>
+            <!-- Red Cord Loop -->
+            <path d="M 48 24 C 54 6, 76 6, 82 24" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+            <!-- Left Shell -->
+            <ellipse cx="44" cy="56" rx="22" ry="26" transform="rotate(-14 44 56)" fill="url(#percCastWood)" stroke="#270a03" stroke-width="1.6"/>
+            <path d="M 38 28 L 48 26 L 46 36 L 36 37 Z" fill="#7f1d1d" stroke="#270a03" stroke-width="1.2"/>
+            <!-- Right Shell -->
+            <ellipse cx="86" cy="56" rx="22" ry="26" transform="rotate(14 86 56)" fill="url(#percCastWood)" stroke="#270a03" stroke-width="1.6"/>
+            <path d="M 82 26 L 92 28 L 94 37 L 84 36 Z" fill="#7f1d1d" stroke="#270a03" stroke-width="1.2"/>
+            <!-- Specular Wood Highlights -->
+            <ellipse cx="37" cy="48" rx="5" ry="10" transform="rotate(-14 37 48)" fill="#fca5a5" fill-opacity="0.25"/>
+            <ellipse cx="79" cy="48" rx="5" ry="10" transform="rotate(14 79 48)" fill="#fca5a5" fill-opacity="0.25"/>
+          </svg>
+        `;
+      }
+      if (id === 'maraca') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <radialGradient id="percMaraca1" cx="35%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#fde047"/>
+                <stop offset="55%" stop-color="#f97316"/>
+                <stop offset="100%" stop-color="#c2410c"/>
+              </radialGradient>
+              <radialGradient id="percMaraca2" cx="35%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#67e8f9"/>
+                <stop offset="55%" stop-color="#0ea5e9"/>
+                <stop offset="100%" stop-color="#0369a1"/>
+              </radialGradient>
+            </defs>
+            <!-- Left Maraca -->
+            <g transform="rotate(-26 46 52)">
+              <rect x="41" y="54" width="10" height="32" rx="4" fill="#b45309" stroke="#451a03" stroke-width="1.4"/>
+              <ellipse cx="46" cy="34" rx="18" ry="23" fill="url(#percMaraca1)" stroke="#7c2d12" stroke-width="1.6"/>
+              <path d="M 29 34 Q 46 41 63 34" stroke="#fef08a" stroke-width="3" fill="none"/>
+              <path d="M 31 24 Q 46 30 61 24" stroke="#ef4444" stroke-width="2.5" fill="none"/>
+            </g>
+            <!-- Right Maraca -->
+            <g transform="rotate(26 84 52)">
+              <rect x="79" y="54" width="10" height="32" rx="4" fill="#b45309" stroke="#451a03" stroke-width="1.4"/>
+              <ellipse cx="84" cy="34" rx="18" ry="23" fill="url(#percMaraca2)" stroke="#0c4a6e" stroke-width="1.6"/>
+              <path d="M 67 34 Q 84 41 101 34" stroke="#fde047" stroke-width="3" fill="none"/>
+              <path d="M 69 24 Q 84 30 99 24" stroke="#f43f5e" stroke-width="2.5" fill="none"/>
+            </g>
+          </svg>
+        `;
+      }
+      if (id === 'tambourine') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="percTambWood" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fde68a"/>
+                <stop offset="50%" stop-color="#d97706"/>
+                <stop offset="100%" stop-color="#78350f"/>
+              </linearGradient>
+            </defs>
+            <!-- Wooden Hoop Rim -->
+            <circle cx="65" cy="48" r="38" fill="url(#percTambWood)" stroke="#451a03" stroke-width="2"/>
+            <!-- Skin Head -->
+            <circle cx="65" cy="48" r="29" fill="#fef3c7" stroke="#b45309" stroke-width="1.5"/>
+            <!-- Silver Metal Jingles Around Frame -->
+            ${[0, 52, 104, 156, 208, 260, 312].map(deg => {
+              const rad = deg * Math.PI / 180;
+              const cx = 65 + 33.5 * Math.cos(rad);
+              const cy = 48 + 33.5 * Math.sin(rad);
+              return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5" fill="#e2e8f0" stroke="#475569" stroke-width="1.1"/><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="2" fill="#94a3b8"/>`;
+            }).join('')}
+          </svg>
+        `;
+      }
+      if (id === 'sleighbells') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <!-- Wooden Handle -->
+            <rect x="16" y="42" width="42" height="12" rx="5" fill="#92400e" stroke="#451a03" stroke-width="1.5"/>
+            <!-- Leather Bell Strap Frame -->
+            <rect x="54" y="34" width="56" height="28" rx="10" fill="#7c2d12" stroke="#451a03" stroke-width="1.5"/>
+            <!-- Shimmering Silver Jingle Bells -->
+            ${[[66,34],[82,34],[98,34],[66,62],[82,62],[98,62],[110,48]].map(([x,y]) => `
+              <circle cx="${x}" cy="${y}" r="8.5" fill="#e2e8f0" stroke="#475569" stroke-width="1.3"/>
+              <line x1="${x-4}" y1="${y}" x2="${x+4}" y2="${y}" stroke="#334155" stroke-width="1.5"/>
+              <circle cx="${x-3}" cy="${y-3}" r="2" fill="#ffffff" fill-opacity="0.8"/>
+            `).join('')}
+          </svg>
+        `;
+      }
+      if (id === 'guiro') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="percGuiroWood" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#fde68a"/>
+                <stop offset="45%" stop-color="#d97706"/>
+                <stop offset="100%" stop-color="#78350f"/>
+              </linearGradient>
+            </defs>
+            <!-- Hollow Gourd Body -->
+            <path d="M 18 52 C 18 32, 48 26, 78 28 C 102 30, 114 38, 114 52 C 114 68, 96 76, 66 76 C 36 76, 18 68, 18 52 Z" fill="url(#percGuiroWood)" stroke="#451a03" stroke-width="1.6"/>
+            <!-- Carved Scraping Ridges -->
+            ${[34, 42, 50, 58, 66, 74, 82, 90, 98].map(x => `<line x1="${x}" y1="33" x2="${x}" y2="66" stroke="#451a03" stroke-width="2.2" stroke-linecap="round"/>`).join('')}
+            <!-- Wooden Scraper Stick -->
+            <line x1="36" y1="12" x2="108" y2="38" stroke="#92400e" stroke-width="4.5" stroke-linecap="round"/>
+            <line x1="36" y1="12" x2="108" y2="38" stroke="#fcd34d" stroke-width="1" stroke-linecap="round" stroke-opacity="0.6"/>
+          </svg>
+        `;
+      }
+      if (id === 'cabasa') {
+        return `
+          <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+            <defs>
+              <linearGradient id="percCabMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#94a3b8"/>
+                <stop offset="50%" stop-color="#f8fafc"/>
+                <stop offset="100%" stop-color="#64748b"/>
+              </linearGradient>
+            </defs>
+            <!-- Wooden Handle -->
+            <rect x="57" y="58" width="16" height="30" rx="6" fill="#92400e" stroke="#451a03" stroke-width="1.5"/>
+            <!-- Wooden End Caps -->
+            <rect x="34" y="14" width="62" height="9" rx="4" fill="#b45309" stroke="#451a03" stroke-width="1.4"/>
+            <rect x="34" y="51" width="62" height="9" rx="4" fill="#b45309" stroke="#451a03" stroke-width="1.4"/>
+            <!-- Ridged Steel Cylinder -->
+            <rect x="38" y="23" width="54" height="28" fill="url(#percCabMetal)" stroke="#475569" stroke-width="1.2"/>
+            <!-- Steel Ball-Chain Loops -->
+            ${[27, 33, 39, 45].map(y =>
+              [42, 50, 58, 66, 74, 82, 88].map(x => `<circle cx="${x}" cy="${y}" r="2.6" fill="#e2e8f0" stroke="#334155" stroke-width="0.9"/>`).join('')
+            ).join('')}
+          </svg>
+        `;
+      }
+      // Sandblocks
+      return `
+        <svg viewBox="0 0 130 96" class="${sizeClass} mx-auto drop-shadow-md" fill="none">
+          <!-- Bottom Wood Block + Sandpaper -->
+          <rect x="20" y="54" width="62" height="16" rx="3" fill="#d97706" stroke="#451a03" stroke-width="1.5"/>
+          <rect x="20" y="50" width="62" height="6" rx="1.5" fill="#78716c" stroke="#292524" stroke-width="1"/>
+          <rect x="40" y="70" width="22" height="11" rx="3" fill="#b45309" stroke="#451a03" stroke-width="1.4"/>
+          <!-- Top Wood Block + Sandpaper (Rubbing Across) -->
+          <rect x="48" y="26" width="62" height="16" rx="3" fill="#f59e0b" stroke="#451a03" stroke-width="1.5"/>
+          <rect x="48" y="40" width="62" height="6" rx="1.5" fill="#78716c" stroke="#292524" stroke-width="1"/>
+          <rect x="68" y="15" width="22" height="11" rx="3" fill="#b45309" stroke="#451a03" stroke-width="1.4"/>
+          <!-- Scrape Motion Arrows -->
+          <path d="M 32 32 L 42 32 M 35 28 L 31 32 L 35 36" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 98 62 L 88 62 M 95 58 L 99 62 L 95 66" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+    }
+
+    const orchestralPercussionCatalog = [
+      { id: 'drum', name: 'Snare Drum', method: 'hit', timbre: 'Crisp, snappy, and rhythmic', hint: 'Struck on the drumhead with wooden drumsticks.' },
+      { id: 'cymbal', name: 'Crash Cymbal', method: 'hit', timbre: 'Bright, crashing, metallic shimmer', hint: 'Struck with a mallet or clashed together.' },
+      { id: 'woodblock', name: 'Wood Blocks', method: 'hit', timbre: 'Hollow, dry, resonant knock', hint: 'Hollow hardwood block struck with a beater.' },
+      { id: 'castanets', name: 'Castanets', method: 'hit', timbre: 'Sharp, dry, rapid wooden clack', hint: 'Two concave shells clapped/struck together.' },
+      { id: 'maraca', name: 'Maracas', method: 'shake', timbre: 'Swishing, rhythmic bead rattle', hint: 'Hollow gourds filled with dried seeds.' },
+      { id: 'tambourine', name: 'Tambourine', method: 'shake', timbre: 'Bright, sparkling metal jingle', hint: 'Frame lined with pairs of metallic jingles.' },
+      { id: 'sleighbells', name: 'Sleigh Bells', method: 'shake', timbre: 'Festive, bright, ringing cluster', hint: 'Handle lined with jingling metal bells.' },
+      { id: 'guiro', name: 'Guiro', method: 'scrape', timbre: 'Raspy, notched wooden buzz', hint: 'Stick dragged across carved wooden ridges.' },
+      { id: 'cabasa', name: 'Cabasa', method: 'scrape', timbre: 'Metallic, textured bead-chain rasp', hint: 'Steel beads twisted & scraped across a ridged cylinder.' },
+      { id: 'sandblocks', name: 'Sandblocks', method: 'scrape', timbre: 'Gritty, swishing sandpaper brush', hint: 'Two sandpaper-lined blocks rubbed across each other.' }
+    ];
+
+    function playOrchestralPercussion(id) {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        const playNoiseBurst = (startOffset, dur, filterType, freq, qVal, peakGain, attack = 0.004) => {
+          const t = now + startOffset;
+          const bufSize = Math.max(1, Math.floor(ctx.sampleRate * dur));
+          const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+          const src = ctx.createBufferSource();
+          src.buffer = buf;
+          const flt = ctx.createBiquadFilter();
+          flt.type = filterType;
+          flt.frequency.setValueAtTime(freq, t);
+          if (qVal) flt.Q.setValueAtTime(qVal, t);
+          const g = ctx.createGain();
+          g.gain.setValueAtTime(0.0001, t);
+          g.gain.linearRampToValueAtTime(peakGain, t + attack);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          src.connect(flt);
+          flt.connect(g);
+          g.connect(ctx.destination);
+          src.start(t);
+          src.stop(t + dur + 0.02);
+        };
+
+        if (id === 'drum') {
+          // Crisp Snare Drum hit: membrane thump + snare wire rattle
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(215, now);
+          osc.frequency.exponentialRampToValueAtTime(118, now + 0.09);
+          g.gain.setValueAtTime(0.55, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+          osc.connect(g); g.connect(ctx.destination);
+          osc.start(now); osc.stop(now + 0.18);
+          playNoiseBurst(0, 0.24, 'highpass', 1350, 0.9, 0.55, 0.002);
+
+        } else if (id === 'cymbal') {
+          // Crash Cymbal: shimmering metallic inharmonic partials + bright noise tail
+          const partials = [311, 467, 633, 811, 1087, 1423, 1879];
+          const hp = ctx.createBiquadFilter();
+          hp.type = 'highpass';
+          hp.frequency.setValueAtTime(2900, now);
+          const master = ctx.createGain();
+          master.gain.setValueAtTime(0.001, now);
+          master.gain.linearRampToValueAtTime(0.28, now + 0.01);
+          master.gain.exponentialRampToValueAtTime(0.0005, now + 1.35);
+          hp.connect(master); master.connect(ctx.destination);
+          partials.forEach(f => {
+            const o = ctx.createOscillator();
+            o.type = 'square';
+            o.frequency.setValueAtTime(f, now);
+            o.connect(hp);
+            o.start(now); o.stop(now + 1.4);
+          });
+          playNoiseBurst(0, 1.3, 'highpass', 4200, 0.7, 0.32, 0.008);
+
+        } else if (id === 'woodblock') {
+          // Two-tone hollow Wood Block knocks
+          [0, 0.24].forEach((offset, idx) => {
+            const t = now + offset;
+            const freq = idx === 0 ? 860 : 1120;
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(freq * 1.06, t);
+            o.frequency.exponentialRampToValueAtTime(freq, t + 0.018);
+            g.gain.setValueAtTime(0.001, t);
+            g.gain.linearRampToValueAtTime(0.55, t + 0.003);
+            g.gain.exponentialRampToValueAtTime(0.0005, t + 0.085);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(t); o.stop(t + 0.095);
+            playNoiseBurst(offset, 0.03, 'bandpass', freq * 1.6, 5.5, 0.28, 0.001);
+          });
+
+        } else if (id === 'castanets') {
+          // Signature rapid Spanish Castanet clack-clack-CLACK
+          [0, 0.095, 0.21].forEach((offset, idx) => {
+            const t = now + offset;
+            const gainBoost = idx === 2 ? 0.58 : 0.42;
+            playNoiseBurst(offset, 0.032, 'bandpass', 2150, 4.5, gainBoost, 0.001);
+            playNoiseBurst(offset, 0.025, 'bandpass', 3200, 5.0, gainBoost * 0.65, 0.001);
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(1480, t);
+            g.gain.setValueAtTime(gainBoost * 0.45, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.028);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(t); o.stop(t + 0.032);
+          });
+
+        } else if (id === 'maraca') {
+          // Rhythmic double-shake Maracas ("chika-chika")
+          [0, 0.16, 0.34, 0.50].forEach((offset, idx) => {
+            const accent = idx % 2 === 0 ? 0.38 : 0.24;
+            playNoiseBurst(offset, 0.11, 'bandpass', 5600, 1.8, accent, 0.028);
+          });
+
+        } else if (id === 'tambourine') {
+          // Shaken Tambourine jingle bursts
+          [0, 0.18, 0.36].forEach((offset, idx) => {
+            const t = now + offset;
+            const dur = idx === 2 ? 0.38 : 0.15;
+            playNoiseBurst(offset, dur, 'highpass', 5800, 1.0, 0.26, 0.015);
+            [5200, 6750, 8250].forEach(f => {
+              const o = ctx.createOscillator();
+              const g = ctx.createGain();
+              o.type = 'sine';
+              o.frequency.setValueAtTime(f + (Math.random() * 140), t);
+              g.gain.setValueAtTime(0.0005, t);
+              g.gain.linearRampToValueAtTime(0.075, t + 0.015);
+              g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+              o.connect(g); g.connect(ctx.destination);
+              o.start(t); o.stop(t + dur + 0.02);
+            });
+          });
+
+        } else if (id === 'sleighbells') {
+          // Festive shaken Sleigh Bells cluster
+          [0, 0.18, 0.36].forEach((offset, idx) => {
+            const t = now + offset;
+            const dur = idx === 2 ? 0.42 : 0.16;
+            playNoiseBurst(offset, dur * 0.8, 'bandpass', 6800, 2.2, 0.18, 0.012);
+            [2630, 3480, 4690, 5980].forEach(f => {
+              const o = ctx.createOscillator();
+              const g = ctx.createGain();
+              o.type = 'sine';
+              o.frequency.setValueAtTime(f, t);
+              g.gain.setValueAtTime(0.0005, t);
+              g.gain.linearRampToValueAtTime(0.07, t + 0.01);
+              g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+              o.connect(g); g.connect(ctx.destination);
+              o.start(t); o.stop(t + dur + 0.02);
+            });
+          });
+
+        } else if (id === 'guiro') {
+          // Ridged wooden Guiro scrape (slow stroke up + quick stroke down)
+          for (let i = 0; i < 11; i++) {
+            playNoiseBurst(i * 0.022, 0.02, 'bandpass', 1450 + i * 45, 5.5, 0.34, 0.002);
+          }
+          for (let j = 0; j < 7; j++) {
+            playNoiseBurst(0.36 + j * 0.018, 0.018, 'bandpass', 1950 - j * 50, 5.5, 0.30, 0.002);
+          }
+
+        } else if (id === 'cabasa') {
+          // Metallic bead-chain Cabasa twist/scrape across steel ridges
+          for (let i = 0; i < 12; i++) {
+            playNoiseBurst(i * 0.018, 0.028, 'bandpass', 4600 + (i % 3) * 750, 3.0, 0.24, 0.004);
+          }
+          for (let j = 0; j < 10; j++) {
+            playNoiseBurst(0.34 + j * 0.018, 0.028, 'bandpass', 5400 + (j % 3) * 650, 3.0, 0.22, 0.004);
+          }
+
+        } else if (id === 'sandblocks') {
+          // Dry gritty Sandblocks swishing scrape
+          playNoiseBurst(0, 0.22, 'bandpass', 2450, 1.1, 0.34, 0.045);
+          playNoiseBurst(0.30, 0.22, 'bandpass', 2750, 1.1, 0.32, 0.045);
+        }
+      } catch (e) {}
+    }
+
+    let percussionLabState = {
+      running: false,
+      round: 0,
+      totalRounds: 10,
+      score: 0,
+      target: null,
+      timeLeftMs: 3000,
+      intervalId: null,
+      nextTimeoutId: null,
+      roundActive: false,
+      feedback: null,
+      completed: false,
+      roundQueue: []
+    };
+
+    function stopPercussionLab() {
+      if (percussionLabState.intervalId) clearInterval(percussionLabState.intervalId);
+      if (percussionLabState.nextTimeoutId) clearTimeout(percussionLabState.nextTimeoutId);
+      percussionLabState.intervalId = null;
+      percussionLabState.nextTimeoutId = null;
+      percussionLabState.running = false;
+      percussionLabState.roundActive = false;
+    }
+
+    function mountEmbeddedPercussionLab(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      stopPercussionLab();
+      percussionLabState = {
+        running: false,
+        round: 0,
+        totalRounds: 10,
+        score: 0,
+        target: null,
+        timeLeftMs: 3000,
+        intervalId: null,
+        nextTimeoutId: null,
+        roundActive: false,
+        feedback: null,
+        completed: false,
+        roundQueue: []
+      };
+      renderPercussionLabUI(target);
+    }
+
+    function startPercussionChallenge() {
+      stopPercussionLab();
+      const queue = [...orchestralPercussionCatalog].sort(() => Math.random() - 0.5);
+      percussionLabState = {
+        running: true,
+        round: 0,
+        totalRounds: queue.length,
+        score: 0,
+        target: null,
+        timeLeftMs: 3000,
+        intervalId: null,
+        nextTimeoutId: null,
+        roundActive: false,
+        feedback: null,
+        completed: false,
+        roundQueue: queue
+      };
+      launchNextPercussionRound();
+    }
+
+    function launchNextPercussionRound() {
+      const st = percussionLabState;
+      if (st.intervalId) clearInterval(st.intervalId);
+      if (st.nextTimeoutId) clearTimeout(st.nextTimeoutId);
+
+      if (st.round >= st.totalRounds) {
+        st.running = false;
+        st.roundActive = false;
+        st.completed = true;
+        renderPercussionLabUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Percussion Challenge Complete!', `You sorted ${st.score}/${st.totalRounds} percussion instruments in time and earned +${st.score * 2} Tokens!`, st.score >= 5);
+        return;
+      }
+
+      st.round++;
+      st.target = st.roundQueue[st.round - 1];
+      st.timeLeftMs = 3000;
+      st.roundActive = true;
+      st.feedback = null;
+
+      playOrchestralPercussion(st.target.id);
+      renderPercussionLabUI(document.getElementById('embedded-tool-container'));
+
+      const startTime = performance.now();
+      st.intervalId = setInterval(() => {
+        if (!st.running || !st.roundActive) {
+          clearInterval(st.intervalId);
+          return;
+        }
+        const elapsed = performance.now() - startTime;
+        st.timeLeftMs = Math.max(0, 3000 - elapsed);
+
+        const barEl = document.getElementById('perc-timer-bar');
+        const txtEl = document.getElementById('perc-timer-text');
+        if (barEl) {
+          const pct = (st.timeLeftMs / 3000) * 100;
+          barEl.style.width = `${pct}%`;
+          if (pct < 35) {
+            barEl.classList.remove('bg-emerald-400');
+            barEl.classList.add('bg-rose-500');
+          }
+        }
+        if (txtEl) {
+          txtEl.textContent = `${(st.timeLeftMs / 1000).toFixed(1)}s`;
+        }
+
+        if (st.timeLeftMs <= 0) {
+          clearInterval(st.intervalId);
+          st.roundActive = false;
+          const mLabel = st.target.method.toUpperCase();
+          st.feedback = { type: 'timeout', msg: `⏱ Time's up! The ${st.target.name} is played by: ${mLabel}.` };
+          playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+          renderPercussionLabUI(document.getElementById('embedded-tool-container'));
+          st.nextTimeoutId = setTimeout(launchNextPercussionRound, 1300);
+        }
+      }, 50);
+    }
+
+    function handlePercussionDragStart(e) {
+      if (e && e.dataTransfer) {
+        e.dataTransfer.setData('text/plain', 'percInst');
+        e.dataTransfer.effectAllowed = 'move';
+      }
+    }
+
+    function handlePercussionMethodDrop(e, methodId) {
+      if (e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('ring-4', 'ring-amber-400', 'scale-[1.03]');
+      }
+      const st = percussionLabState;
+      if (!st.running || !st.roundActive || !st.target) return;
+
+      clearInterval(st.intervalId);
+      st.roundActive = false;
+
+      const labelMap = { hit: 'HIT', shake: 'SHAKE', scrape: 'SCRAPE' };
+      if (st.target.method === methodId) {
+        st.score++;
+        addTokens(2);
+        st.feedback = { type: 'correct', msg: `✓ Spot on! The ${st.target.name} is ${labelMap[methodId]}! (+2 Tokens)` };
+        playTonePitch(659.25, 0.18, 0.35, 'triangle');
+        setTimeout(() => playTonePitch(880, 0.22, 0.35, 'triangle'), 120);
+      } else {
+        st.feedback = { type: 'wrong', msg: `✗ Not quite — the ${st.target.name} is played by ${labelMap[st.target.method]}!` };
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+
+      renderPercussionLabUI(document.getElementById('embedded-tool-container'));
+      st.nextTimeoutId = setTimeout(launchNextPercussionRound, 1250);
+    }
+
+    function renderPercussionLabUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = percussionLabState;
+
+      const methodZones = [
+        { id: 'hit', title: 'HIT', sub: 'Struck with sticks, mallets, or hands', icon: 'fa-hammer', zoneClass: 'border-rose-400/60 bg-rose-950/35 hover:border-rose-400', iconBg: 'bg-rose-500 text-white' },
+        { id: 'shake', title: 'SHAKE', sub: 'Shaken to rattle seeds or jingles', icon: 'fa-hand-sparkles', zoneClass: 'border-amber-400/60 bg-amber-950/35 hover:border-amber-400', iconBg: 'bg-amber-400 text-slate-950' },
+        { id: 'scrape', title: 'SCRAPE', sub: 'Rubbed or dragged across ridges', icon: 'fa-bars-staggered', zoneClass: 'border-cyan-400/60 bg-cyan-950/35 hover:border-cyan-400', iconBg: 'bg-cyan-400 text-slate-950' }
+      ];
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border border-slate-800 shadow-lg">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-emerald-400">3-Second Speed Challenge • 10 Instruments • +2 Tokens Each</span>
+              <h3 class="text-xl font-black mt-1">Hit, Shake, or Scrape? Percussion Sorter</h3>
+              <p class="text-xs text-slate-300 mt-1">Drag the percussion instrument and drop it into <strong>HIT</strong>, <strong>SHAKE</strong>, or <strong>SCRAPE</strong> before the <strong>3-second</strong> timer runs out!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score * 2} Tokens)</span>
+            </div>
+          </div>
+
+          ${!st.running && !st.completed ? `
+            <div class="p-8 rounded-2xl bg-gradient-to-br from-emerald-950/60 to-slate-800/80 border border-emerald-500/40 text-center space-y-4">
+              <div class="w-16 h-16 rounded-2xl bg-emerald-400 text-slate-950 flex items-center justify-center text-3xl mx-auto shadow-lg">
+                <i class="fa-solid fa-drum"></i>
+              </div>
+              <h4 class="text-xl font-black text-emerald-300">Ready for the 3-Second Percussion Challenge?</h4>
+              <p class="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">You have <strong>3 seconds per instrument</strong> across all <strong>10 percussion instruments</strong>. Drag each instrument card into the right playing method: <strong>Hit</strong>, <strong>Shake</strong>, or <strong>Scrape</strong>!</p>
+              <button type="button" onclick="startPercussionChallenge()" class="px-7 py-3.5 bg-emerald-400 hover:bg-emerald-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all">
+                <i class="fa-solid fa-play mr-1.5"></i> Start 10-Instrument Challenge
+              </button>
+            </div>
+          ` : st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Percussion Section Mastered!</h4>
+              <p class="text-xs text-slate-200">You sorted <strong>${st.score} / ${st.totalRounds}</strong> percussion instruments in time and earned <strong>+${st.score * 2} Tokens</strong>!</p>
+              <button type="button" onclick="startPercussionChallenge()" class="px-5 py-2.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+            </div>
+          ` : `
+            <!-- Live Countdown & Draggable Percussion Instrument Card -->
+            <div class="p-5 rounded-2xl bg-gradient-to-r from-slate-800 via-indigo-950/80 to-slate-800 border border-indigo-500/40 space-y-4">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <!-- Draggable Instrument Card -->
+                <div
+                  draggable="${st.roundActive}"
+                  ondragstart="handlePercussionDragStart(event)"
+                  class="flex items-center gap-4 px-5 py-3.5 rounded-2xl bg-slate-900 border-2 border-amber-400 shadow-[0_0_22px_rgba(251,191,36,0.35)] select-none ${st.roundActive ? 'cursor-grab active:cursor-grabbing hover:scale-[1.02] transition-transform' : 'opacity-50'}">
+                  <div class="w-20 h-16 flex items-center justify-center shrink-0 pointer-events-none">
+                    ${st.target ? getRealisticPercussionSVG(st.target.id, 'w-20 h-16') : ''}
+                  </div>
+                  <div class="text-left pointer-events-none">
+                    <div class="text-[10px] font-black uppercase tracking-widest text-amber-300"><i class="fa-solid fa-grip-vertical mr-1"></i> Drag This Instrument</div>
+                    <div class="text-xl sm:text-2xl font-black text-white leading-tight">${st.target ? st.target.name : ''}</div>
+                  </div>
+                </div>
+
+                <!-- Replay & Timer -->
+                <div class="flex items-center gap-4">
+                  <button type="button" onclick="if(percussionLabState.target) playOrchestralPercussion(percussionLabState.target.id)" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-300 font-black text-xs">
+                    <i class="fa-solid fa-volume-high mr-1"></i> Replay
+                  </button>
+                  <div class="text-right min-w-[58px]">
+                    <div class="text-[10px] font-black uppercase text-slate-400">Timer</div>
+                    <div id="perc-timer-text" class="text-2xl font-black ${st.timeLeftMs < 1050 ? 'text-rose-400' : 'text-emerald-300'}">${(st.timeLeftMs / 1000).toFixed(1)}s</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="w-full h-2.5 rounded-full bg-slate-950 overflow-hidden border border-slate-700">
+                <div id="perc-timer-bar" class="h-full ${st.timeLeftMs < 1050 ? 'bg-rose-500' : 'bg-emerald-400'} transition-all duration-75" style="width: ${(st.timeLeftMs / 3000) * 100}%"></div>
+              </div>
+
+              ${st.feedback ? `
+                <div class="p-3 rounded-xl text-xs font-black text-center ${
+                  st.feedback.type === 'correct'
+                    ? 'bg-emerald-950/80 border border-emerald-500 text-emerald-200'
+                    : 'bg-rose-950/80 border border-rose-500 text-rose-200'
+                }">
+                  ${st.feedback.msg}
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- 3 Drop Zones: HIT, SHAKE, SCRAPE -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              ${methodZones.map(z => `
+                <div
+                  ondragover="${st.roundActive ? "event.preventDefault(); this.classList.add('ring-4', 'ring-amber-400', 'scale-[1.03]');" : ""}"
+                  ondragleave="${st.roundActive ? "this.classList.remove('ring-4', 'ring-amber-400', 'scale-[1.03]');" : ""}"
+                  ondrop="${st.roundActive ? `handlePercussionMethodDrop(event, '${z.id}')` : ""}"
+                  class="p-6 rounded-3xl border-2 border-dashed transition-all flex flex-col items-center justify-center text-center min-h-[155px] ${
+                    st.feedback && st.target && z.id === st.target.method
+                      ? 'border-emerald-400 bg-emerald-950/60 shadow-[0_0_18px_rgba(52,211,153,0.4)]'
+                      : z.zoneClass
+                  }">
+                  <div class="w-12 h-12 rounded-2xl ${z.iconBg} flex items-center justify-center text-xl mb-3 shadow pointer-events-none">
+                    <i class="fa-solid ${z.icon}"></i>
+                  </div>
+                  <div class="text-xl font-black text-white tracking-wide pointer-events-none">${z.title}</div>
+                  <div class="text-[11px] text-slate-300 mt-1 pointer-events-none">${z.sub}</div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
     // --- DYNAMICS CHALLENGE GAME ---
     let dynamicsChallengeState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
 
@@ -5058,25 +5758,132 @@
                     </div>
                   </div>
                 `
+              },
+              {
+                lessonNum: 5,
+                title: 'Lesson 5: Percussion Instruments',
+                summary: 'Explore percussion instruments that are Hit, Shaken, and Scraped—listen to realistic sounds of drums, cymbals, maracas, guiro, cabasa & more, then beat the 3-second sorter!',
+                toolType: 'percussionLab',
+                contentHtml: `
+                  <!-- Colourful Hero Banner -->
+                  <div class="rounded-3xl bg-gradient-to-r from-rose-600 via-amber-500 to-cyan-600 p-6 text-white shadow-md">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-yellow-200 mb-2">Orchestral Family #4</span>
+                        <h3 class="text-xl sm:text-2xl font-black">Welcome to the Percussion Family!</h3>
+                        <p class="text-xs sm:text-sm text-amber-50 mt-1.5 leading-relaxed max-w-2xl">
+                          The <strong>Percussion Section</strong> is the rhythmic engine and colour-box of the orchestra! Any instrument that produces sound when you <strong>Hit</strong>, <strong>Shake</strong>, or <strong>Scrape</strong> it belongs to the percussion family.
+                        </p>
+                      </div>
+                      <div class="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/25">
+                        <div class="text-xl font-black text-yellow-200">Hit • Shake • Scrape</div>
+                        <div class="text-[11px] font-bold text-white/90 mt-0.5">3 Ways to Make<br/>Percussion Vibrate</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- SECTION 1: HIT INSTRUMENTS -->
+                  <div class="space-y-3 pt-3">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-black text-base text-rose-800 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-xl bg-rose-500 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-hammer"></i></span>
+                        1. Instruments You HIT (Struck)
+                      </h4>
+                      <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-rose-100 text-rose-700">Click to Hear</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                      ${['drum', 'cymbal', 'woodblock', 'castanets'].map(id => {
+                        const inst = orchestralPercussionCatalog.find(i => i.id === id);
+                        return `
+                          <div class="rounded-3xl p-4 bg-gradient-to-b from-rose-50 to-white border-2 border-rose-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                              <div class="h-24 flex items-center justify-center">${getRealisticPercussionSVG(inst.id, 'w-28 h-22')}</div>
+                              <h5 class="font-black text-base text-rose-950 text-center mt-1">${inst.name}</h5>
+                              <p class="text-[11px] text-slate-600 mt-1 text-center">${inst.hint}</p>
+                            </div>
+                            <button type="button" onclick="playOrchestralPercussion('${inst.id}')" class="mt-3 w-full py-2 rounded-xl bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                              <i class="fa-solid fa-volume-high mr-1"></i> Hear ${inst.name}
+                            </button>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
+
+                  <!-- SECTION 2: SHAKEN INSTRUMENTS -->
+                  <div class="space-y-3 pt-3">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-black text-base text-amber-800 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center text-xs"><i class="fa-solid fa-hand-sparkles"></i></span>
+                        2. Instruments You SHAKE
+                      </h4>
+                      <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">Click to Hear</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      ${['maraca', 'tambourine', 'sleighbells'].map(id => {
+                        const inst = orchestralPercussionCatalog.find(i => i.id === id);
+                        return `
+                          <div class="rounded-3xl p-4 bg-gradient-to-b from-amber-50 to-white border-2 border-amber-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                              <div class="h-24 flex items-center justify-center">${getRealisticPercussionSVG(inst.id, 'w-28 h-22')}</div>
+                              <h5 class="font-black text-base text-amber-950 text-center mt-1">${inst.name}</h5>
+                              <p class="text-[11px] text-slate-600 mt-1 text-center">${inst.hint}</p>
+                            </div>
+                            <button type="button" onclick="playOrchestralPercussion('${inst.id}')" class="mt-3 w-full py-2 rounded-xl bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition-all">
+                              <i class="fa-solid fa-volume-high mr-1"></i> Hear ${inst.name}
+                            </button>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
+
+                  <!-- SECTION 3: SCRAPED INSTRUMENTS -->
+                  <div class="space-y-3 pt-3">
+                    <div class="flex items-center justify-between">
+                      <h4 class="font-black text-base text-cyan-800 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-xl bg-cyan-500 text-white flex items-center justify-center text-xs"><i class="fa-solid fa-bars-staggered"></i></span>
+                        3. Instruments You SCRAPE
+                      </h4>
+                      <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-cyan-100 text-cyan-800">Click to Hear</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      ${['guiro', 'cabasa', 'sandblocks'].map(id => {
+                        const inst = orchestralPercussionCatalog.find(i => i.id === id);
+                        return `
+                          <div class="rounded-3xl p-4 bg-gradient-to-b from-cyan-50 to-white border-2 border-cyan-200 shadow-sm flex flex-col justify-between">
+                            <div>
+                              <div class="h-24 flex items-center justify-center">${getRealisticPercussionSVG(inst.id, 'w-28 h-22')}</div>
+                              <h5 class="font-black text-base text-cyan-950 text-center mt-1">${inst.name}</h5>
+                              <p class="text-[11px] text-slate-600 mt-1 text-center">${inst.hint}</p>
+                            </div>
+                            <button type="button" onclick="playOrchestralPercussion('${inst.id}')" class="mt-3 w-full py-2 rounded-xl bg-cyan-500 hover:bg-cyan-600 active:scale-95 text-white font-black text-xs shadow-sm transition-all">
+                              <i class="fa-solid fa-volume-high mr-1"></i> Hear ${inst.name}
+                            </button>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
+                `
               }
             ],
             testQuestions: [
-              { q: 'Which orchestral string instrument is the smallest and plays the highest pitch?', options: ['Violin', 'Viola', 'Cello', 'Double Bass'], correct: 0 },
-              { q: 'Which string instrument is played seated between the knees resting on an endpin?', options: ['Cello', 'Violin', 'Viola', 'Double Bass'], correct: 0 },
-              { q: 'What is the Italian term for plucking a string instrument with the fingers instead of using the bow?', options: ['Pizzicato', 'Arco', 'Tremolo', 'Crescendo'], correct: 0 },
-              { q: 'Which orchestral string instrument has 47 strings and 7 foot pedals, and is played without a bow?', options: ['Concert Harp', 'Double Bass', 'Cello', 'Viola'], correct: 0 },
-              { q: 'How does the size of a string instrument affect its pitch?', options: ['Smaller instruments play higher pitches; larger instruments play lower pitches', 'Larger instruments always play higher pitches', 'Size only affects volume, not pitch', 'All string instruments play the exact same pitch'], correct: 0 },
-              { q: 'Which woodwind instrument is half the size of a flute and plays the highest notes in the orchestra?', options: ['Piccolo', 'Oboe', 'Clarinet', 'Bassoon'], correct: 0 },
-              { q: 'Which two orchestral woodwinds use a DOUBLE reed?', options: ['Oboe and Bassoon', 'Flute and Piccolo', 'Clarinet and Flute', 'Piccolo and Clarinet'], correct: 0 },
-              { q: 'Which woodwind instrument has 2.5 metres of tubing folded in half and plays the lowest woodwind pitches?', options: ['Bassoon', 'Oboe', 'Clarinet', 'Piccolo'], correct: 0 },
-              { q: 'How do all orchestral brass instruments initially create a sound vibration?', options: ['By buzzing the lips into a mouthpiece', 'By blowing across a wooden reed', 'By drawing a horsehair bow across strings', 'By striking a metal bar with a mallet'], correct: 0 },
-              { q: 'Which brass instrument is the smallest and plays the highest, brightest fanfares?', options: ['Trumpet', 'Trombone', 'French Horn', 'Tuba'], correct: 0 },
-              { q: 'Which orchestral brass instrument uses a long telescoping SLIDE instead of valves to change pitch?', options: ['Trombone', 'Trumpet', 'French Horn', 'Tuba'], correct: 0 },
-              { q: 'Which brass instrument has circular coiled tubing and is played with the musician’s hand inside the bell for a warm, noble tone?', options: ['French Horn', 'Trumpet', 'Trombone', 'Tuba'], correct: 0 },
-              { q: 'Which brass instrument is the largest, with an enormous upward-facing bell that produces the lowest booming bass pitches?', options: ['Tuba', 'Trumpet', 'French Horn', 'Trombone'], correct: 0 },
+              { q: 'Which orchestral family is the largest in a symphony orchestra and sits right at the front of the stage?', options: ['The String Family', 'The Brass Family', 'The Percussion Family', 'The Woodwind Family'], correct: 0 },
+              { q: 'How does the size of a string instrument affect its pitch?', options: ['Smaller instruments produce higher pitches; larger instruments produce lower pitches', 'Larger instruments produce higher pitches; smaller instruments produce lower pitches', 'Size has no effect on pitch', 'Only the bow length affects pitch'], correct: 0 },
+              { q: 'What does the Italian string technique "Pizzicato" instruct the player to do?', options: ['Pluck the strings with the fingertips instead of using the bow', 'Draw the bow smoothly across the strings', 'Move the bow rapidly back and forth for a trembling effect', 'Tap the wooden body of the instrument'], correct: 0 },
+              { q: 'Which orchestral string instrument is played seated, resting upright between the knees on an endpin?', options: ['Cello', 'Violin', 'Viola', 'Concert Harp'], correct: 0 },
+              { q: 'Which woodwind instrument is half the size of a flute and plays the highest, brightest notes in the orchestra?', options: ['Piccolo', 'Bassoon', 'Clarinet', 'Oboe'], correct: 0 },
+              { q: 'Which woodwind instrument tunes the entire orchestra to the note A?', options: ['Oboe', 'Flute', 'Bassoon', 'Piccolo'], correct: 0 },
+              { q: 'How do ALL brass players start the sound on their instrument?', options: ['By buzzing their lips into a cup- or funnel-shaped mouthpiece', 'By blowing across an open edge hole', 'By vibrating a wooden reed', 'By striking the flared bell with a mallet'], correct: 0 },
+              { q: 'Which orchestral brass instrument uses a long U-shaped telescoping slide instead of valves?', options: ['Trombone', 'Trumpet', 'French Horn', 'Tuba'], correct: 0 },
+              { q: 'Which orchestral brass instrument is the largest and plays the lowest, deepest basslines?', options: ['Tuba', 'Trumpet', 'French Horn', 'Trombone'], correct: 0 },
               { q: 'Which woodwind instruments produce sound using NO reed (an edge-blown air-jet)?', options: ['Flute, Piccolo, and Recorder', 'Oboe and Bassoon', 'Clarinet and Saxophone', 'Cor Anglais and Contrabassoon'], correct: 0 },
               { q: 'Which woodwind instruments use a SINGLE cane reed clamped to a mouthpiece?', options: ['Clarinet, Bass Clarinet, and Saxophones', 'Flute and Piccolo', 'Oboe and Bassoon', 'Trumpet and French Horn'], correct: 0 },
-              { q: 'How does a DOUBLE reed woodwind (like the Oboe or Bassoon) create sound?', options: ['Two thin pieces of cane bound together vibrate directly against each other', 'Air blows across an open hole with no reed', 'A metal valve buzzes inside a cup mouthpiece', 'A horsehair bow is drawn across a string'], correct: 0 }
+              { q: 'How does a DOUBLE reed woodwind (like the Oboe or Bassoon) create sound?', options: ['Two thin pieces of cane bound together vibrate directly against each other', 'Air blows across an open hole with no reed', 'A metal valve buzzes inside a cup mouthpiece', 'A horsehair bow is drawn across a string'], correct: 0 },
+              { q: 'What are the three main ways percussion instruments are played to produce sound?', options: ['Hit, Shaken, or Scraped', 'Bowed, Plucked, or Blown', 'Buzzing, Sliding, or Pedalling', 'Valved, Reeded, or Keyed'], correct: 0 },
+              { q: 'Which group contains percussion instruments that are played by SCRAPING?', options: ['Guiro, Cabasa, and Sandblocks', 'Snare Drum, Cymbal, and Wood Blocks', 'Maracas, Tambourine, and Sleigh Bells', 'Trumpet, Trombone, and Tuba'], correct: 0 },
+              { q: 'Which percussion instruments are played by SHAKING to rattle seeds or metallic jingles?', options: ['Maracas, Tambourine, and Sleigh Bells', 'Guiro and Sandblocks', 'Wood Blocks and Castanets', 'Cymbal and Snare Drum'], correct: 0 }
             ]
           }
         ]
@@ -5720,6 +6527,7 @@
       else if (lesson.toolType === 'orchestralWoodwindsLab') mountEmbeddedOrchestralWoodwindsLab(toolBox);
       else if (lesson.toolType === 'orchestralBrassLab') mountEmbeddedOrchestralBrassLab(toolBox);
       else if (lesson.toolType === 'woodwindReedsGame') mountEmbeddedWoodwindReedsGame(toolBox);
+      else if (lesson.toolType === 'percussionLab') mountEmbeddedPercussionLab(toolBox);
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
       else if (lesson.toolType === 'staggeredTextureLab') mountEmbeddedStaggeredTextureLab(toolBox);
       else if (lesson.toolType === 'repeatSignGame') mountEmbeddedRepeatSignGame(toolBox);

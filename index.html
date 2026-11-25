@@ -401,6 +401,7 @@
       try { if (typeof stopPercussionLab === 'function') stopPercussionLab(); } catch (e) {}
       try { if (typeof stopEltonPianoGame === 'function') stopEltonPianoGame(); } catch (e) {}
       try { if (typeof stopCombophoneGame === 'function') stopCombophoneGame(); } catch (e) {}
+      try { if (typeof stopMjDanceGame === 'function') stopMjDanceGame(); } catch (e) {}
     }
 
     window.app = {
@@ -482,6 +483,10 @@
           case 'combophoneGame':
             if (!this.currentUser) return renderLoginView(viewport);
             renderCombophoneGameView(viewport);
+            break;
+          case 'mjDanceGame':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderMjDanceGameView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -10569,6 +10574,10 @@
                         <button onclick="window.app.navigate('combophoneGame')" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Comb-o-Phone
                         </button>
+                      ` : item.id === 'item_mjmic' ? `
+                        <button onclick="window.app.navigate('mjDanceGame')" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Let's Dance!
+                        </button>
                       ` : ''}
                       <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                           <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
@@ -10618,6 +10627,9 @@
       } else if (item.id === 'item_comb') {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Launching The Comb-o-Phone...`, true);
         window.app.navigate('combophoneGame');
+      } else if (item.id === 'item_mjmic') {
+        showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Hit the dancefloor for Let's Dance!`, true);
+        window.app.navigate('mjDanceGame');
       } else {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
         renderShopView(document.getElementById('app-viewport'));
@@ -11089,6 +11101,10 @@
                         </button>
                       ` : it.id === 'item_comb' ? `
                         <button onclick="window.app.navigate('combophoneGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-600 text-white font-black text-[10px] shadow-sm hover:bg-amber-500 transition-colors">
+                          Play
+                        </button>
+                      ` : it.id === 'item_mjmic' ? `
+                        <button onclick="window.app.navigate('mjDanceGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-rose-600 text-white font-black text-[10px] shadow-sm hover:bg-rose-500 transition-colors">
                           Play
                         </button>
                       ` : ''}
@@ -13915,6 +13931,609 @@
         </div>
       `;
     }
+
+    // ==========================================
+    // MINIGAME ARCADE: MICHAEL JACKSON'S MIC ("LET'S DANCE!")
+    // ==========================================
+    const mjDanceMoves = [
+      { code: 'ArrowUp',    label: 'UP',    moveName: 'Toe Stand!',   icon: 'fa-arrow-up',    color: 'from-rose-500 to-red-600',    ring: 'ring-rose-400',    freq: 554.37 },
+      { code: 'ArrowDown',  label: 'DOWN',  moveName: 'Hat Tilt!',    icon: 'fa-arrow-down',  color: 'from-amber-400 to-orange-500', ring: 'ring-amber-300',   freq: 369.99 },
+      { code: 'ArrowLeft',  label: 'LEFT',  moveName: 'Moonwalk!',    icon: 'fa-arrow-left',  color: 'from-sky-400 to-indigo-500',   ring: 'ring-sky-300',     freq: 440.00 },
+      { code: 'ArrowRight', label: 'RIGHT', moveName: 'Smooth Lean!', icon: 'fa-arrow-right', color: 'from-fuchsia-500 to-purple-600', ring: 'ring-fuchsia-400', freq: 493.88 }
+    ];
+
+    let mjDanceState = {
+      running: false,
+      completed: false,
+      round: 1,
+      totalRounds: 6,
+      phase: 'idle', // 'idle' | 'demo' | 'input' | 'success' | 'fail'
+      sequence: [],
+      playerInput: [],
+      pose: 'idle',
+      activeMoveCode: null,
+      bpm: 108,
+      tokensEarned: 0,
+      streak: 0,
+      musicMuted: false,
+      statusMsg: 'Watch MJ dance, then copy his moves with the Arrow Keys!',
+      musicIntervalId: null,
+      musicStep: 0,
+      timers: []
+    };
+
+    function clearMjDanceTimers() {
+      if (mjDanceState.timers && mjDanceState.timers.length) {
+        mjDanceState.timers.forEach(t => clearTimeout(t));
+      }
+      mjDanceState.timers = [];
+    }
+
+    function stopMjFunkMusic() {
+      if (mjDanceState.musicIntervalId) {
+        clearInterval(mjDanceState.musicIntervalId);
+        mjDanceState.musicIntervalId = null;
+      }
+    }
+
+    function stopMjDanceGame() {
+      clearMjDanceTimers();
+      stopMjFunkMusic();
+      mjDanceState.running = false;
+      mjDanceState.phase = 'idle';
+      mjDanceState.pose = 'idle';
+      mjDanceState.activeMoveCode = null;
+    }
+
+    // 80s Pop-Funk Synthesizer Groove (Billie Jean / Thriller-inspired F# minor bassline + crisp drums + synth stabs)
+    function playMjFunkBass(freq, dur = 0.18) {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const sub = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now);
+        sub.type = 'triangle';
+        sub.frequency.setValueAtTime(freq * 0.5, now);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1100, now);
+        filter.frequency.exponentialRampToValueAtTime(260, now + dur);
+        filter.Q.setValueAtTime(3.0, now);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.24, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+        osc.connect(filter);
+        sub.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now); sub.start(now);
+        osc.stop(now + dur + 0.02); sub.stop(now + dur + 0.02);
+      } catch (e) {}
+    }
+
+    function playMjFunkStab(freqs, dur = 0.22) {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        freqs.forEach(f => {
+          const osc = ctx.createOscillator();
+          const filter = ctx.createBiquadFilter();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(f, now);
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(1400, now);
+          filter.Q.setValueAtTime(1.5, now);
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(0.075, now + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + dur + 0.02);
+        });
+      } catch (e) {}
+    }
+
+    function startMjFunkMusic() {
+      stopMjFunkMusic();
+      const st = mjDanceState;
+      // Iconic 8-step 8th-note funk bassline in F# minor: F#2, C#2, E2, F#2, E2, C#2, B1, C#2
+      const bassPattern = [92.50, 69.30, 82.41, 92.50, 82.41, 69.30, 61.74, 69.30];
+      const eighthMs = Math.round(30000 / st.bpm);
+      st.musicStep = 0;
+
+      const tick = () => {
+        if (!st.running) return;
+        const step = st.musicStep % 16;
+        if (!st.musicMuted) {
+          // Crisp 80s Disco-Funk Drums
+          playDrumSound('hihat');
+          if (step % 4 === 0) playDrumSound('kick');
+          if (step % 4 === 2) playDrumSound('snare');
+
+          // Driving Synth Bassline
+          playMjFunkBass(bassPattern[step % 8], (eighthMs / 1000) * 0.85);
+
+          // Funky Brass/Synth Chord Stabs on Bar 1 Beat 1 & Bar 2 Beat 3
+          if (step === 0) playMjFunkStab([369.99, 440.00, 554.37], 0.24); // F#m
+          if (step === 6) playMjFunkStab([329.63, 415.30, 493.88], 0.16); // E
+          if (step === 10) playMjFunkStab([369.99, 440.00, 554.37], 0.22); // F#m
+        }
+        // Subtle floor tile pulse on the beat
+        const floorEl = document.getElementById('mj-disco-floor');
+        if (floorEl && step % 2 === 0) {
+          floorEl.classList.toggle('opacity-90');
+        }
+        st.musicStep++;
+      };
+
+      tick();
+      st.musicIntervalId = setInterval(tick, eighthMs);
+    }
+
+    function toggleMjMusicMute() {
+      mjDanceState.musicMuted = !mjDanceState.musicMuted;
+      renderMjDanceGameView(document.getElementById('app-viewport'));
+    }
+
+    function generateMjDanceSequence(roundNum) {
+      // Gradually gets trickier: Round 1 = 3 moves ... Round 6 = 8 moves
+      const length = Math.min(8, 2 + roundNum);
+      const seq = [];
+      for (let i = 0; i < length; i++) {
+        let pick = mjDanceMoves[Math.floor(Math.random() * mjDanceMoves.length)].code;
+        // Avoid 3 identical moves in a row so combos feel fun & dancy
+        if (i >= 2 && seq[i - 1] === pick && seq[i - 2] === pick) {
+          const alts = mjDanceMoves.filter(m => m.code !== pick);
+          pick = alts[Math.floor(Math.random() * alts.length)].code;
+        }
+        seq.push(pick);
+      }
+      return seq;
+    }
+
+    function startMjDanceGame() {
+      stopMjDanceGame();
+      mjDanceState = {
+        running: true,
+        completed: false,
+        round: 1,
+        totalRounds: 6,
+        phase: 'demo',
+        sequence: generateMjDanceSequence(1),
+        playerInput: [],
+        pose: 'idle',
+        activeMoveCode: null,
+        bpm: 108,
+        tokensEarned: 0,
+        streak: 0,
+        musicMuted: mjDanceState.musicMuted || false,
+        statusMsg: 'Round 1: Watch MJ bust a move!',
+        musicIntervalId: null,
+        musicStep: 0,
+        timers: []
+      };
+      startMjFunkMusic();
+      renderMjDanceGameView(document.getElementById('app-viewport'));
+      const t = setTimeout(() => playMjDemoSequence(), 600);
+      mjDanceState.timers.push(t);
+    }
+
+    function playMjDemoSequence() {
+      const st = mjDanceState;
+      if (!st.running || st.completed) return;
+      clearMjDanceTimers();
+      st.phase = 'demo';
+      st.playerInput = [];
+      st.pose = 'idle';
+      st.activeMoveCode = null;
+      st.statusMsg = `Round ${st.round}: Watch MJ's ${st.sequence.length}-move combo!`;
+      renderMjDanceGameView(document.getElementById('app-viewport'));
+
+      const stepMs = Math.round(60000 / st.bpm); // 1 dance move per beat
+
+      st.sequence.forEach((moveCode, idx) => {
+        const moveObj = mjDanceMoves.find(m => m.code === moveCode);
+        const t1 = setTimeout(() => {
+          if (!st.running) return;
+          st.pose = moveCode;
+          st.activeMoveCode = moveCode;
+          if (moveObj && !st.musicMuted) playTonePitch(moveObj.freq, 0.16, 0.25, 'triangle');
+          renderMjDanceGameView(document.getElementById('app-viewport'));
+        }, idx * stepMs + 200);
+
+        const t2 = setTimeout(() => {
+          if (!st.running) return;
+          st.activeMoveCode = null;
+          renderMjDanceGameView(document.getElementById('app-viewport'));
+        }, idx * stepMs + Math.round(stepMs * 0.72) + 200);
+
+        st.timers.push(t1, t2);
+      });
+
+      const endT = setTimeout(() => {
+        if (!st.running) return;
+        st.pose = 'idle';
+        st.activeMoveCode = null;
+        st.phase = 'input';
+        st.statusMsg = `YOUR TURN! Copy all ${st.sequence.length} moves using the Arrow Keys!`;
+        renderMjDanceGameView(document.getElementById('app-viewport'));
+      }, st.sequence.length * stepMs + 350);
+      st.timers.push(endT);
+    }
+
+    function handleMjMoveInput(moveCode) {
+      const st = mjDanceState;
+      if (!st.running || st.phase !== 'input' || st.completed) return;
+
+      const moveObj = mjDanceMoves.find(m => m.code === moveCode);
+      if (!moveObj) return;
+
+      st.pose = moveCode;
+      st.activeMoveCode = moveCode;
+      playTonePitch(moveObj.freq, 0.15, 0.28, 'triangle');
+
+      const expected = st.sequence[st.playerInput.length];
+      if (moveCode !== expected) {
+        st.phase = 'fail';
+        st.streak = 0;
+        st.statusMsg = `Oops! Wrong step — watch MJ show the combo again!`;
+        playTonePitch(155.56, 0.28, 0.3, 'sawtooth');
+        renderMjDanceGameView(document.getElementById('app-viewport'));
+        const retryT = setTimeout(() => {
+          if (st.running) playMjDemoSequence();
+        }, 1250);
+        st.timers.push(retryT);
+        return;
+      }
+
+      st.playerInput.push(moveCode);
+      st.streak++;
+      renderMjDanceGameView(document.getElementById('app-viewport'));
+
+      const clearFlashT = setTimeout(() => {
+        if (st.phase === 'input') {
+          st.activeMoveCode = null;
+          renderMjDanceGameView(document.getElementById('app-viewport'));
+        }
+      }, 220);
+      st.timers.push(clearFlashT);
+
+      if (st.playerInput.length === st.sequence.length) {
+        st.phase = 'success';
+        st.tokensEarned += 2;
+        addTokens(2);
+        st.statusMsg = `🕺 HEE-HEE! Round ${st.round} Nailed! (+2 Tokens)`;
+        playTonePitch(554.37, 0.14, 0.3, 'triangle');
+        setTimeout(() => playTonePitch(739.99, 0.25, 0.3, 'triangle'), 130);
+        renderMjDanceGameView(document.getElementById('app-viewport'));
+
+        const nextT = setTimeout(() => {
+          if (!st.running) return;
+          if (st.round < st.totalRounds) {
+            st.round++;
+            // Gradually speed up the funky tempo each round!
+            st.bpm = Math.min(134, 108 + (st.round - 1) * 5);
+            st.sequence = generateMjDanceSequence(st.round);
+            startMjFunkMusic(); // Restart groove at faster BPM
+            playMjDemoSequence();
+          } else {
+            // Victory!
+            stopMjFunkMusic();
+            st.running = false;
+            st.completed = true;
+            st.tokensEarned += 5;
+            addTokens(5);
+            playTonePitch(554.37, 0.16, 0.32, 'triangle');
+            setTimeout(() => playTonePitch(659.25, 0.16, 0.32, 'triangle'), 150);
+            setTimeout(() => playTonePitch(739.99, 0.35, 0.35, 'triangle'), 300);
+            renderMjDanceGameView(document.getElementById('app-viewport'));
+          }
+        }, 1350);
+        st.timers.push(nextT);
+      }
+    }
+
+    // Animated Michael Jackson Character SVG (Red Jacket, Black Pants, White Sequined Glove, Black Fedora)
+    function renderMjDancerSVG(pose = 'idle') {
+      let bodyTransform = '';
+      let leftArm = '<path d="M 80 100 L 56 128 L 64 148" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="64" cy="150" r="6" fill="#d9a066"/>';
+      let rightArm = '<path d="M 120 100 L 144 128 L 136 148" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="136" cy="150" r="7" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>';
+      let leftLeg = '<path d="M 88 158 L 82 212" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/><rect x="76" y="210" width="11" height="10" fill="#ffffff"/><ellipse cx="78" cy="224" rx="11" ry="5.5" fill="#020617"/>';
+      let rightLeg = '<path d="M 112 158 L 118 212" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/><rect x="113" y="210" width="11" height="10" fill="#ffffff"/><ellipse cx="122" cy="224" rx="11" ry="5.5" fill="#020617"/>';
+      let sparkle = '';
+
+      if (pose === 'ArrowUp') {
+        // Iconic Toe-Stand + White Gloved Hand High in the Air!
+        bodyTransform = 'translate(0, -10)';
+        leftArm = '<path d="M 80 102 L 62 126 L 78 142" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="80" cy="144" r="6" fill="#d9a066"/>';
+        rightArm = '<path d="M 120 100 L 142 66 L 148 34" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="149" cy="30" r="8" fill="#ffffff" stroke="#fde047" stroke-width="2.5"/>';
+        leftLeg = '<path d="M 90 158 L 88 214" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/><rect x="83" y="212" width="10" height="10" fill="#ffffff"/><path d="M 82 222 L 92 222 L 88 232 Z" fill="#020617"/>';
+        rightLeg = '<path d="M 110 158 L 112 214" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/><rect x="107" y="212" width="10" height="10" fill="#ffffff"/><path d="M 108 222 L 118 222 L 112 232 Z" fill="#020617"/>';
+        sparkle = '<path d="M 164 16 L 167 24 L 175 27 L 167 30 L 164 38 L 161 30 L 153 27 L 161 24 Z" fill="#fde047"/>';
+      } else if (pose === 'ArrowDown') {
+        // Cool Hat-Tilt Crouch!
+        bodyTransform = 'translate(0, 14)';
+        leftArm = '<path d="M 80 102 L 56 122 L 68 144" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="69" cy="146" r="6" fill="#d9a066"/>';
+        rightArm = '<path d="M 120 102 L 144 84 L 122 54" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="120" cy="52" r="8" fill="#ffffff" stroke="#fde047" stroke-width="2"/>';
+        leftLeg = '<path d="M 88 156 L 68 184 L 78 210" stroke="#0f172a" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><rect x="73" y="206" width="11" height="8" fill="#ffffff"/><ellipse cx="74" cy="218" rx="11" ry="5.5" fill="#020617"/>';
+        rightLeg = '<path d="M 112 156 L 132 184 L 122 210" stroke="#0f172a" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><rect x="117" y="206" width="11" height="8" fill="#ffffff"/><ellipse cx="126" cy="218" rx="11" ry="5.5" fill="#020617"/>';
+        sparkle = '<circle cx="120" cy="52" r="14" stroke="#fde047" stroke-width="2" stroke-dasharray="4 4"/>';
+      } else if (pose === 'ArrowLeft') {
+        // Moonwalk Glide Left!
+        bodyTransform = 'translate(-12, 0) rotate(-6 100 140)';
+        leftArm = '<path d="M 80 102 L 46 112 L 32 96" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="30" cy="94" r="6" fill="#d9a066"/>';
+        rightArm = '<path d="M 120 102 L 148 118 L 164 106" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="167" cy="104" r="8" fill="#ffffff" stroke="#38bdf8" stroke-width="2.5"/>';
+        leftLeg = '<path d="M 88 158 L 62 210" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/><rect x="57" y="206" width="11" height="10" fill="#ffffff"/><ellipse cx="56" cy="220" rx="12" ry="5.5" fill="#020617"/>';
+        rightLeg = '<path d="M 112 158 L 136 196 L 128 214" stroke="#0f172a" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><rect x="123" y="210" width="10" height="9" fill="#ffffff"/><path d="M 122 219 L 134 219 L 138 228 L 122 224 Z" fill="#020617"/>';
+        sparkle = '<path d="M 142 220 L 172 220 M 150 212 L 178 212" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.8"/>';
+      } else if (pose === 'ArrowRight') {
+        // Iconic Smooth Criminal Anti-Gravity Lean Right!
+        bodyTransform = 'translate(14, 2) rotate(16 100 220)';
+        leftArm = '<path d="M 80 102 L 64 134 L 74 152" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="74" cy="154" r="6" fill="#d9a066"/>';
+        rightArm = '<path d="M 120 102 L 154 96 L 166 78" stroke="#dc2626" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><circle cx="168" cy="75" r="8" fill="#ffffff" stroke="#f472b6" stroke-width="2.5"/>';
+        leftLeg = '<path d="M 90 158 L 88 214" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/><rect x="83" y="210" width="11" height="10" fill="#ffffff"/><ellipse cx="88" cy="224" rx="12" ry="5.5" fill="#020617"/>';
+        rightLeg = '<path d="M 110 158 L 114 214" stroke="#0f172a" stroke-width="13" stroke-linecap="round"/><rect x="109" y="210" width="11" height="10" fill="#ffffff"/><ellipse cx="116" cy="224" rx="12" ry="5.5" fill="#020617"/>';
+        sparkle = '<path d="M 176 58 L 179 65 L 186 68 L 179 71 L 176 78 L 173 71 L 166 68 L 173 65 Z" fill="#f472b6"/>';
+      }
+
+      return `
+        <svg viewBox="0 0 200 245" class="w-48 h-56 sm:w-52 sm:h-60 mx-auto drop-shadow-[0_10px_25px_rgba(225,29,72,0.35)] transition-transform duration-150" fill="none">
+          <!-- Stage Spotlight Cone -->
+          <polygon points="100,0 16,240 184,240" fill="url(#mjSpotGrad)" opacity="0.28"/>
+          <defs>
+            <linearGradient id="mjSpotGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#fef08a"/>
+              <stop offset="100%" stop-color="#f43f5e" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Glowing Disco Floor Shadow -->
+          <ellipse cx="100" cy="228" rx="64" ry="11" fill="#020617" stroke="#f43f5e" stroke-width="2" opacity="0.8"/>
+
+          <g transform="${bodyTransform}">
+            <!-- Black Pants & White Socks + Loafers -->
+            ${leftLeg}
+            ${rightLeg}
+            <!-- Arms (Right Hand has the Iconic Sparkling White Glove!) -->
+            ${leftArm}
+            ${rightArm}
+            <!-- Iconic Red Thriller Jacket -->
+            <path d="M 76 92 L 124 92 L 118 162 L 82 162 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="2" stroke-linejoin="round"/>
+            <!-- Black V-Panel & White Undershirt -->
+            <polygon points="91,92 109,92 100,136" fill="#f8fafc"/>
+            <path d="M 80 94 L 96 144 M 120 94 L 104 144" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+            <!-- Silver Belt Buckle -->
+            <rect x="82" y="152" width="36" height="8" rx="2" fill="#0f172a"/>
+            <rect x="95" y="153" width="10" height="6" rx="1" fill="#e2e8f0"/>
+            <!-- Head, Hair & Sunglasses -->
+            <rect x="94" y="80" width="12" height="14" rx="4" fill="#d9a066"/>
+            <ellipse cx="100" cy="67" rx="18" ry="20" fill="#d9a066" stroke="#9a6b3e" stroke-width="1.4"/>
+            <!-- Curly Black Hair -->
+            <path d="M 82 64 C 78 74, 80 86, 86 88 M 118 64 C 122 74, 120 86, 114 88" stroke="#0f172a" stroke-width="6" stroke-linecap="round"/>
+            <!-- Aviator Shades & Confident Smile -->
+            <rect x="86" y="61" width="12" height="8" rx="3" fill="#0f172a"/>
+            <rect x="102" y="61" width="12" height="8" rx="3" fill="#0f172a"/>
+            <line x1="98" y1="64" x2="102" y2="64" stroke="#cbd5e1" stroke-width="1.5"/>
+            <path d="M 93 76 Q 100 81 107 76" stroke="#451a03" stroke-width="2" stroke-linecap="round"/>
+            <!-- Iconic Black Fedora Hat with White Ribbon -->
+            <path d="M 70 54 Q 100 48 130 54 Q 100 60 70 54 Z" fill="#0f172a" stroke="#334155" stroke-width="1.2"/>
+            <path d="M 81 52 L 86 30 Q 100 26 114 30 L 119 52 Z" fill="#0f172a"/>
+            <rect x="82.5" y="45" width="35" height="4.5" rx="1" fill="#f8fafc"/>
+            ${sparkle}
+          </g>
+        </svg>
+      `;
+    }
+
+    function renderMjDanceGameView(container) {
+      if (!container) return;
+      const st = mjDanceState;
+
+      if (!st.running && !st.completed) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-rose-500 tracking-widest">
+                <i class="fa-solid fa-microphone-lines mr-1"></i> Michael Jackson's Mic
+              </span>
+            </div>
+            <div class="bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-rose-500/40 space-y-4">
+              ${renderMjDancerSVG('ArrowUp')}
+              <h2 class="text-3xl font-black text-rose-400">Let's Dance!</h2>
+              <p class="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                Groove to the funky 80s beat! Watch MJ perform his signature moves, then use the <strong>▲ ▼ ◀ ▶ Arrow Keys</strong> (or tap the dance pad) to copy the combo. Each round adds more moves and speeds up the funk! Earn <strong>+2 Tokens per round</strong> (+5 Bonus for finishing all 6 rounds)!
+              </p>
+              <button onclick="startMjDanceGame()" class="px-8 py-4 bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 active:scale-95 text-white font-black rounded-2xl text-base shadow-lg transition-all">
+                <i class="fa-solid fa-play mr-2"></i> Hit the Dancefloor!
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.completed) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-gradient-to-b from-slate-900 via-rose-950/60 to-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-amber-400 space-y-4">
+              <span class="inline-block px-3.5 py-1 rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-300 text-[11px] font-black uppercase tracking-widest">
+                <i class="fa-solid fa-crown mr-1"></i> King of Pop Encore (+5 Bonus Tokens!)
+              </span>
+              ${renderMjDancerSVG('ArrowRight')}
+              <h2 class="text-3xl font-black text-amber-300">Standing Ovation!</h2>
+              <p class="text-sm text-slate-200 max-w-md mx-auto">
+                You nailed all <strong>${st.totalRounds}</strong> escalating dance combos up to <strong>${st.bpm} BPM</strong>!
+              </p>
+              <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-950 border border-emerald-500 text-emerald-300 font-black text-sm">
+                <i class="fa-solid fa-coins text-amber-400"></i> Total Earned: +${st.tokensEarned} Tokens
+              </div>
+              <div class="pt-3 flex flex-wrap justify-center gap-3">
+                <button onclick="startMjDanceGame()" class="px-8 py-3.5 bg-rose-500 hover:bg-rose-400 text-white font-black rounded-2xl text-sm shadow-lg">
+                  <i class="fa-solid fa-rotate-right mr-1.5"></i> Dance Again
+                </button>
+                <button onclick="window.app.navigate('shop')" class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl text-sm border border-slate-700">
+                  Back to Shop
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const activeMoveObj = mjDanceMoves.find(m => m.code === st.pose);
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-5">
+          <div class="flex items-center justify-between">
+            <button onclick="stopMjDanceGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="toggleMjMusicMute()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-black text-xs border border-slate-700">
+                <i class="fa-solid ${st.musicMuted ? 'fa-volume-xmark' : 'fa-music'} mr-1"></i> ${st.musicMuted ? 'Unmute Funk' : 'Funk On'}
+              </button>
+              <span class="text-xs font-black uppercase text-rose-500 tracking-widest hidden sm:inline">
+                <i class="fa-solid fa-microphone-lines mr-1"></i> Let's Dance!
+              </span>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl border-2 border-rose-500/40 space-y-5">
+            <!-- Header & Stats -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h2 class="text-2xl font-black text-rose-400">Let's Dance!</h2>
+                <p class="text-xs text-slate-300 mt-0.5">Use <strong>▲ ▼ ◀ ▶ Arrow Keys</strong> (or tap the dance pad) to copy MJ's moves!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1.5 rounded-xl bg-rose-950 border border-rose-700 text-xs font-black text-rose-200">
+                  Round ${st.round}/${st.totalRounds}
+                </span>
+                <span class="px-3 py-1.5 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">
+                  ${st.bpm} BPM
+                </span>
+                <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                  +${st.tokensEarned} Tokens
+                </span>
+              </div>
+            </div>
+
+            <!-- Neon Disco Stage + Animated MJ Character -->
+            <div class="relative rounded-3xl bg-gradient-to-b from-slate-950 via-indigo-950/90 to-rose-950/60 border border-slate-800 p-4 text-center overflow-hidden">
+              <!-- Live Move Callout Badge -->
+              <div class="h-7 flex items-center justify-center mb-1">
+                ${activeMoveObj ? `
+                  <span class="px-4 py-1 rounded-full bg-gradient-to-r ${activeMoveObj.color} text-white text-xs font-black uppercase tracking-wider shadow-lg">
+                    <i class="fa-solid ${activeMoveObj.icon} mr-1"></i> ${activeMoveObj.moveName}
+                  </span>
+                ` : `
+                  <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                    ${st.phase === 'demo' ? '👀 Watch Carefully...' : '🕺 Your Turn to Groove!'}
+                  </span>
+                `}
+              </div>
+
+              ${renderMjDancerSVG(st.pose)}
+
+              <!-- Illuminated Disco Floor Strip -->
+              <div id="mj-disco-floor" class="grid grid-cols-6 gap-1.5 mt-2 opacity-75 transition-opacity">
+                <div class="h-2 rounded-full bg-rose-500"></div>
+                <div class="h-2 rounded-full bg-amber-400"></div>
+                <div class="h-2 rounded-full bg-fuchsia-500"></div>
+                <div class="h-2 rounded-full bg-sky-400"></div>
+                <div class="h-2 rounded-full bg-amber-400"></div>
+                <div class="h-2 rounded-full bg-rose-500"></div>
+              </div>
+            </div>
+
+            <!-- Combo Progress Dots & Status -->
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-center gap-2 flex-wrap">
+                ${st.sequence.map((code, idx) => {
+                  const m = mjDanceMoves.find(mv => mv.code === code);
+                  const isDone = idx < st.playerInput.length;
+                  const showArrow = isDone || (st.phase === 'demo' && st.activeMoveCode === code);
+                  return `
+                    <div class="w-9 h-9 rounded-xl border-2 flex items-center justify-center text-xs font-black transition-all ${
+                      isDone
+                        ? 'bg-emerald-500 border-emerald-300 text-slate-950 scale-105 shadow'
+                        : 'bg-slate-800 border-slate-700 text-slate-500'
+                    }">
+                      ${isDone ? `<i class="fa-solid ${m.icon}"></i>` : (idx + 1)}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="text-center text-xs sm:text-sm font-black py-2.5 px-4 rounded-xl border ${
+                st.phase === 'success'
+                  ? 'bg-emerald-950/70 border-emerald-500 text-emerald-300'
+                  : st.phase === 'fail'
+                  ? 'bg-rose-950/70 border-rose-500 text-rose-300'
+                  : 'bg-indigo-950/60 border-indigo-700/60 text-amber-300'
+              }">
+                ${st.statusMsg}
+              </div>
+            </div>
+
+            <!-- Interactive Arrow Dance Pad (Keyboard + Touch/Click) -->
+            <div class="grid grid-cols-4 gap-2.5 sm:gap-3 pt-1">
+              ${mjDanceMoves.map(m => {
+                const isLit = st.activeMoveCode === m.code;
+                return `
+                  <button
+                    type="button"
+                    onmousedown="handleMjMoveInput('${m.code}')"
+                    ontouchstart="event.preventDefault(); handleMjMoveInput('${m.code}');"
+                    ${st.phase !== 'input' ? 'disabled' : ''}
+                    class="p-3.5 sm:p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center gap-1 ${
+                      isLit
+                        ? `bg-gradient-to-b ${m.color} border-white text-white ring-4 ${m.ring} scale-105 shadow-lg`
+                        : st.phase === 'input'
+                        ? 'bg-slate-800 hover:bg-slate-700 border-slate-600 hover:border-amber-400 text-white active:scale-95 cursor-pointer'
+                        : 'bg-slate-800/60 border-slate-800 text-slate-500 cursor-wait'
+                    }">
+                    <i class="fa-solid ${m.icon} text-xl sm:text-2xl"></i>
+                    <span class="text-[10px] font-black uppercase tracking-wider">${m.moveName}</span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (!mjDanceState.running) return;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+        e.preventDefault();
+        if (!e.repeat && mjDanceState.phase === 'input') {
+          handleMjMoveInput(e.code);
+        }
+      }
+    });
 
     // ==========================================
     // APPLICATION BOOTSTRAP ON WINDOW LOAD

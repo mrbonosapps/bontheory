@@ -402,6 +402,7 @@
       try { if (typeof stopEltonPianoGame === 'function') stopEltonPianoGame(); } catch (e) {}
       try { if (typeof stopCombophoneGame === 'function') stopCombophoneGame(); } catch (e) {}
       try { if (typeof stopMjDanceGame === 'function') stopMjDanceGame(); } catch (e) {}
+      try { if (typeof stopSimpleMeterPulse === 'function') stopSimpleMeterPulse(); } catch (e) {}
     }
 
     window.app = {
@@ -4564,6 +4565,156 @@
               { q: 'What does a Quaver Rest look like?', options: ['The number 7', 'A squiggly Z and C', 'A solid black rectangle', 'A hollow circle'], correct: 0 },
               { q: 'How many beats of silence is a Quaver Rest worth?', options: ['1/2 beat', '1 beat', '2 beats', '4 beats'], correct: 0 }
             ]
+          },
+          {
+            level: 3,
+            title: 'Level 3: Time Signatures and Bars',
+            lessons: [
+              {
+                lessonNum: 1,
+                title: 'Lesson 1: Simple Time Signatures',
+                summary: 'Learn how 2/4, 3/4, and 4/4 time signatures organise beats into bars, listen to each accented pulse, and play the Meter Match Game.',
+                toolType: 'simpleTimeSigLab',
+                contentHtml: `
+                  <p><strong>Time signatures</strong> appear at the very start of a piece of music (right after the clef) and tell us how many beats are grouped inside each <strong>measure (bar)</strong>.</p>
+                  <ul class="list-disc pl-5 space-y-2 text-sm text-slate-700 marker:text-indigo-500">
+                    <li><strong>2/4 Time:</strong> 2 crotchet beats per bar (March feel: <strong>ONE</strong>-two).</li>
+                    <li><strong>3/4 Time:</strong> 3 crotchet beats per bar (Waltz feel: <strong>ONE</strong>-two-three).</li>
+                    <li><strong>4/4 Time:</strong> 4 crotchet beats per bar — also called <strong>Common Time</strong> (<strong>ONE</strong>-two-three-four).</li>
+                  </ul>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                    <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center gap-3">
+                      <div class="w-11 h-12 rounded-xl bg-indigo-600 text-white flex flex-col items-center justify-center font-black leading-none text-lg shrink-0 shadow-sm">
+                        <span>2</span><span class="border-t border-indigo-300/60 pt-0.5 mt-0.5">4</span>
+                      </div>
+                      <div>
+                        <div class="font-black text-xs text-indigo-950 uppercase">2/4 Duple Meter</div>
+                        <p class="text-[11px] text-slate-600 mt-0.5">2 crotchet beats per bar.</p>
+                      </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-center gap-3">
+                      <div class="w-11 h-12 rounded-xl bg-sky-600 text-white flex flex-col items-center justify-center font-black leading-none text-lg shrink-0 shadow-sm">
+                        <span>3</span><span class="border-t border-sky-300/60 pt-0.5 mt-0.5">4</span>
+                      </div>
+                      <div>
+                        <div class="font-black text-xs text-sky-950 uppercase">3/4 Triple Meter</div>
+                        <p class="text-[11px] text-slate-600 mt-0.5">3 crotchet beats per bar.</p>
+                      </div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-violet-50 border border-violet-200 flex items-center gap-3">
+                      <div class="w-11 h-12 rounded-xl bg-violet-600 text-white flex flex-col items-center justify-center font-black leading-none text-lg shrink-0 shadow-sm">
+                        <span>4</span><span class="border-t border-violet-300/60 pt-0.5 mt-0.5">4</span>
+                      </div>
+                      <div>
+                        <div class="font-black text-xs text-violet-950 uppercase">4/4 Common Time</div>
+                        <p class="text-[11px] text-slate-600 mt-0.5">4 crotchet beats per bar.</p>
+                      </div>
+                    </div>
+                  </div>
+                `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Bars and Barlines',
+                summary: 'Discover how Bars, Single Barlines, and Double Barlines divide music cleanly—then add barlines to create 3-bar rhythms!',
+                toolType: 'barlineBuilderGame',
+                contentHtml: `
+                  <p>Without vertical dividing lines, a long row of musical notes would be nearly impossible to read! Composers organise music into tidy, equal-sized boxes using <strong>Bars</strong>, <strong>Barlines</strong>, and <strong>Double Barlines</strong>.</p>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <div class="p-5 rounded-3xl bg-indigo-50 border-2 border-indigo-200 space-y-2 shadow-sm">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase">1. Bars (Measures)</span>
+                        <i class="fa-solid fa-table-columns text-indigo-600 text-lg"></i>
+                      </div>
+                      <h4 class="font-black text-base text-indigo-950">Equal Beat Containers</h4>
+                      <p class="text-xs text-slate-700 leading-relaxed">
+                        A <strong>Bar</strong> (or <strong>Measure</strong>) is the space between two barlines. Every bar must add up to the exact number of beats shown in the time signature (e.g., 2, 3, or 4 beats).
+                      </p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-amber-50 border-2 border-amber-200 space-y-2 shadow-sm">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black uppercase">2. Single Barline</span>
+                        <span class="font-black text-amber-700 text-xl leading-none">|</span>
+                      </div>
+                      <h4 class="font-black text-base text-amber-950">Divides One Bar From the Next</h4>
+                      <p class="text-xs text-slate-700 leading-relaxed">
+                        A <strong>Single Barline</strong> is a thin vertical line drawn across the staff to separate each bar. Beat 1—the strongest accent—always comes right after a barline!
+                      </p>
+                    </div>
+
+                    <div class="p-5 rounded-3xl bg-emerald-50 border-2 border-emerald-200 space-y-2 shadow-sm">
+                      <div class="flex items-center justify-between">
+                        <span class="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase">3. Double Barline</span>
+                        <span class="font-black text-emerald-700 text-xl leading-none">||</span>
+                      </div>
+                      <h4 class="font-black text-base text-emerald-950">Marks Sections &amp; The End</h4>
+                      <p class="text-xs text-slate-700 leading-relaxed">
+                        A <strong>Final Double Barline</strong> (one thin line + one thick line) sits at the very end of a piece to mean <em>"Finished!"</em> (Two thin lines mark the start of a new section.)
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Annotated Visual 3-Bar Diagram -->
+                  <div class="p-5 sm:p-6 rounded-3xl bg-slate-900 text-white border border-slate-800 mt-4 space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <span class="text-xs font-black uppercase tracking-widest text-amber-400"><i class="fa-solid fa-eye mr-1.5"></i> Visual Guide: A Complete 3-Bar Rhythm in 4/4 Time</span>
+                      <span class="text-[11px] font-bold text-slate-400">4 beats + 4 beats + 4 beats</span>
+                    </div>
+                    <svg viewBox="0 0 640 120" class="w-full h-auto bg-slate-950 rounded-2xl border border-slate-800">
+                      <!-- Single Rhythm Line -->
+                      <line x1="20" y1="62" x2="616" y2="62" stroke="#64748b" stroke-width="2"/>
+                      <!-- Time Signature 4/4 -->
+                      <text x="42" y="54" fill="#fbbf24" font-size="24" font-weight="900" text-anchor="middle">4</text>
+                      <text x="42" y="80" fill="#fbbf24" font-size="24" font-weight="900" text-anchor="middle">4</text>
+
+                      <!-- Bar 1: 4 Crotchets -->
+                      <text x="148" y="22" fill="#818cf8" font-size="11" font-weight="900" text-anchor="middle">BAR 1 (4 Beats)</text>
+                      ${[88, 128, 168, 208].map(x => `<line x1="${x+7}" y1="32" x2="${x+7}" y2="62" stroke="#f8fafc" stroke-width="2.5"/><ellipse cx="${x}" cy="62" rx="8" ry="5.5" transform="rotate(-20 ${x} 62)" fill="#f8fafc"/>`).join('')}
+
+                      <!-- Single Barline 1 -->
+                      <line x1="242" y1="32" x2="242" y2="92" stroke="#fbbf24" stroke-width="3"/>
+                      <text x="242" y="109" fill="#fbbf24" font-size="10" font-weight="900" text-anchor="middle">Barline</text>
+
+                      <!-- Bar 2: 2 Minims -->
+                      <text x="336" y="22" fill="#818cf8" font-size="11" font-weight="900" text-anchor="middle">BAR 2 (2 + 2 = 4)</text>
+                      ${[288, 378].map(x => `<line x1="${x+7}" y1="32" x2="${x+7}" y2="62" stroke="#f8fafc" stroke-width="2.5"/><ellipse cx="${x}" cy="62" rx="8" ry="5.5" transform="rotate(-20 ${x} 62)" fill="#020617" stroke="#f8fafc" stroke-width="2.5"/>`).join('')}
+
+                      <!-- Single Barline 2 -->
+                      <line x1="432" y1="32" x2="432" y2="92" stroke="#fbbf24" stroke-width="3"/>
+                      <text x="432" y="109" fill="#fbbf24" font-size="10" font-weight="900" text-anchor="middle">Barline</text>
+
+                      <!-- Bar 3: Semibreve -->
+                      <text x="518" y="22" fill="#818cf8" font-size="11" font-weight="900" text-anchor="middle">BAR 3 (4 Beats)</text>
+                      <ellipse cx="518" cy="62" rx="11" ry="7" fill="#020617" stroke="#f8fafc" stroke-width="3"/>
+
+                      <!-- Final Double Barline -->
+                      <line x1="606" y1="32" x2="606" y2="92" stroke="#34d399" stroke-width="2"/>
+                      <line x1="614" y1="32" x2="614" y2="92" stroke="#34d399" stroke-width="6"/>
+                      <text x="580" y="109" fill="#34d399" font-size="10" font-weight="900" text-anchor="middle">Double Barline (End)</text>
+                    </svg>
+                  </div>
+                `
+              }
+            ],
+            testQuestions: [
+              { q: 'What does a time signature tell a musician?', options: ['How many beats are in each bar (measure) and what type of note gets 1 beat', 'How loudly to play the piece', 'Which instrument should play the melody', 'How many sharps or flats are in the key'], correct: 0 },
+              { q: 'How many crotchet beats are in each bar of 2/4 time?', options: ['2 crotchet beats', '3 crotchet beats', '4 crotchet beats', '6 crotchet beats'], correct: 0 },
+              { q: 'How many crotchet beats are in each bar of 3/4 time?', options: ['3 crotchet beats', '2 crotchet beats', '4 crotchet beats', '1 crotchet beat'], correct: 0 },
+              { q: 'Which time signature is also known as "Common Time" and has 4 crotchet beats per bar?', options: ['4/4 Time', '2/4 Time', '3/4 Time', '6/8 Time'], correct: 0 },
+              { q: 'Which beat in a bar normally receives the strongest rhythmic accent?', options: ['Beat 1 (right after the barline)', 'The last beat of the bar', 'Every rest in the bar', 'Only quaver off-beats'], correct: 0 },
+              { q: 'What is a single barline?', options: ['A thin vertical line drawn across the staff to separate one bar from the next', 'A curved line connecting two notes of the same pitch', 'A horizontal beam connecting quavers', 'A wedge symbol for crescendo'], correct: 0 },
+              { q: 'What is a Bar (Measure) in sheet music?', options: ['The space between two barlines that holds one complete group of beats', 'The metal frame of a xylophone', 'A 4-beat hollow notehead', 'The top number of a clef'], correct: 0 },
+              { q: 'What does a Final Double Barline (one thin line followed by one thick line) indicate?', options: ['The very end of the piece of music', 'Repeat from the beginning', 'Play twice as fast', 'Switch to 3/4 time'], correct: 0 },
+              { q: 'In 3/4 time, which combination of notes fills ONE complete bar?', options: ['One minim (2 beats) + one crotchet (1 beat)', 'One semibreve (4 beats)', 'Two minims (2 + 2 beats)', 'Two crotchets (1 + 1 beats)'], correct: 0 },
+              { q: 'In 4/4 time, how many total beats are contained in a 3-bar rhythm?', options: ['12 beats (4 + 4 + 4)', '9 beats (3 + 3 + 3)', '6 beats (2 + 2 + 2)', '8 beats (4 + 4)'], correct: 0 },
+              { q: 'In 2/4 time, how many single barlines are needed to separate a 3-bar rhythm (not counting the final double barline)?', options: ['2 single barlines', '3 single barlines', '1 single barline', '4 single barlines'], correct: 0 },
+              { q: 'Which single note completely fills one full bar of 3/4 time?', options: ['A dotted minim (3 beats)', 'A minim (2 beats)', 'A semibreve (4 beats)', 'A crotchet (1 beat)'], correct: 0 },
+              { q: 'Which single note completely fills one full bar of 4/4 time?', options: ['A semibreve (4 beats)', 'A dotted minim (3 beats)', 'A minim (2 beats)', 'Paired quavers (1 beat)'], correct: 0 },
+              { q: 'Which dance style is most famously associated with the "ONE-two-three" feel of 3/4 time?', options: ['A Waltz', 'A Military March', 'A Crotchet Rest', 'A Fermata'], correct: 0 },
+              { q: 'In 2/4 time, which single note fills one complete bar?', options: ['A minim (2 beats)', 'A semibreve (4 beats)', 'A dotted minim (3 beats)', 'A single quaver (1/2 beat)'], correct: 0 }
+            ]
           }
         ]
       },
@@ -6526,6 +6677,8 @@
       else if (lesson.toolType === 'stemDirectionGame') mountEmbeddedStemDirectionGame(toolBox);
       else if (lesson.toolType === 'quaverBuilderGame') mountEmbeddedQuaverBuilderGame(toolBox);
       else if (lesson.toolType === 'restMatcherGame') mountEmbeddedRestMatcherGame(toolBox);
+      else if (lesson.toolType === 'simpleTimeSigLab') mountEmbeddedSimpleTimeSigLab(toolBox);
+      else if (lesson.toolType === 'barlineBuilderGame') mountEmbeddedBarlineBuilderGame(toolBox);
       else if (lesson.toolType === 'pitchWaveGame') mountEmbeddedPitchWaveGame(toolBox);
       else if (lesson.toolType === 'melodicContourGame') mountEmbeddedMelodicContourGame(toolBox);
       else if (lesson.toolType === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolBox);
@@ -6866,338 +7019,6 @@
                   </div>
                 `).join('')}
               </div>
-            </div>
-          `}
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // MINIGAME: QUAVER BUILDER CHALLENGE (DRAG & DROP)
-    // ==========================================
-    let quaverBuilderState = {
-      round: 1, totalRounds: 10, score: 0,
-      target: null, answered: false, lastCorrect: false, completed: false, roundStartTime: 0
-    };
-
-    const quaverBuilderTargets = [
-      { id: 'single_up', type: 'single', stem: 'up', correct: 'tail_right', desc: 'Single note with stem UP.' },
-      { id: 'single_down', type: 'single', stem: 'down', correct: 'tail_right', desc: 'Single note with stem DOWN.' },
-      { id: 'pair_up', type: 'pair', stem: 'up', correct: 'beam', desc: 'Two adjacent notes with stems UP.' },
-      { id: 'pair_down', type: 'pair', stem: 'down', correct: 'beam', desc: 'Two adjacent notes with stems DOWN.' }
-    ];
-
-    function setupQuaverBuilderRound() {
-      const randIdx = Math.floor(Math.random() * quaverBuilderTargets.length);
-      quaverBuilderState.target = quaverBuilderTargets[randIdx];
-      quaverBuilderState.answered = false;
-      quaverBuilderState.lastCorrect = false;
-      quaverBuilderState.roundStartTime = performance.now();
-    }
-
-    function mountEmbeddedQuaverBuilderGame(target) {
-      if (!target) return;
-      quaverBuilderState = { round: 1, totalRounds: 10, score: 0, target: null, answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
-      setupQuaverBuilderRound();
-      renderQuaverBuilderGameUI(target);
-    }
-
-    function handleQuaverToolDragStart(e, toolType) {
-      if (e && e.dataTransfer) {
-        e.dataTransfer.setData('text/plain', toolType);
-        e.dataTransfer.effectAllowed = 'copy';
-      }
-    }
-
-    function handleQuaverToolDrop(event) {
-      if (event) event.preventDefault();
-      const st = quaverBuilderState;
-      if (st.answered || st.completed) return;
-      if (performance.now() - st.roundStartTime < 800) return; // debounce
-      
-      let droppedTool = null;
-      if (event && event.dataTransfer) {
-        droppedTool = event.dataTransfer.getData('text/plain');
-      }
-      if (!droppedTool) return;
-      
-      st.answered = true;
-      st.lastCorrect = (st.target.correct === droppedTool);
-      
-      if (st.lastCorrect) {
-        st.score++;
-        addTokens(1);
-        playTonePitch(659.25, 0.2, 0.35, 'triangle');
-      } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-      }
-      renderQuaverBuilderGameUI(document.getElementById('embedded-tool-container'));
-    }
-
-    function nextQuaverBuilderRound() {
-      const st = quaverBuilderState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        setupQuaverBuilderRound();
-        renderQuaverBuilderGameUI(document.getElementById('embedded-tool-container'));
-      } else {
-        st.completed = true;
-        renderQuaverBuilderGameUI(document.getElementById('embedded-tool-container'));
-        showAppModal('Quaver Builder Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
-      }
-    }
-
-    function renderQuaverBuilderGameUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = quaverBuilderState;
-
-      // Generate the base SVG without tails/beams
-      let baseSvg = '';
-      if (st.target) {
-        if (st.target.type === 'single') {
-          if (st.target.stem === 'up') {
-            baseSvg = `<ellipse cx="70" cy="70" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 70 70)"/><line x1="78" y1="70" x2="78" y2="25" stroke="#0f172a" stroke-width="2"/>`;
-            if (st.answered && st.lastCorrect) baseSvg += `<path d="M78 25 C87 30, 92 42, 86 54 C87 42, 81 36, 78 36" fill="#0f172a"/>`; // Right Tail
-          } else {
-            baseSvg = `<ellipse cx="70" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 70 30)"/><line x1="62" y1="30" x2="62" y2="75" stroke="#0f172a" stroke-width="2"/>`;
-            if (st.answered && st.lastCorrect) baseSvg += `<path d="M62 75 C71 70, 76 58, 70 46 C71 58, 65 64, 62 64" fill="#0f172a"/>`; // Right Tail (upwards)
-          }
-        } else {
-          if (st.target.stem === 'up') {
-            baseSvg = `
-              <ellipse cx="50" cy="70" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 50 70)"/><line x1="58" y1="70" x2="58" y2="25" stroke="#0f172a" stroke-width="2"/>
-              <ellipse cx="90" cy="70" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 90 70)"/><line x1="98" y1="70" x2="98" y2="25" stroke="#0f172a" stroke-width="2"/>
-            `;
-            if (st.answered && st.lastCorrect) baseSvg += `<polygon points="58,20 98,20 98,27 58,27" fill="#0f172a"/>`; // Beam
-          } else {
-            baseSvg = `
-              <ellipse cx="50" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 50 30)"/><line x1="42" y1="30" x2="42" y2="75" stroke="#0f172a" stroke-width="2"/>
-              <ellipse cx="90" cy="30" rx="9" ry="6" fill="#0f172a" transform="rotate(-15 90 30)"/><line x1="82" y1="30" x2="82" y2="75" stroke="#0f172a" stroke-width="2"/>
-            `;
-            if (st.answered && st.lastCorrect) baseSvg += `<polygon points="42,75 82,75 82,68 42,68" fill="#0f172a"/>`; // Beam
-          }
-        }
-      }
-
-      target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • Drag &amp; Drop</span>
-              <h3 class="text-xl font-black">Quaver Constructor</h3>
-              <p class="text-xs text-slate-300 mt-1">Drag the correct part (Left Tail, Right Tail, or Beam) onto the incomplete notes!</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
-            </div>
-          </div>
-
-          ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Quaver Constructor Complete!</h4>
-              <p class="text-xs text-slate-200">You completed <strong>${st.score} / ${st.totalRounds}</strong> notations correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedQuaverBuilderGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
-            </div>
-          ` : `
-            <div class="flex flex-col md:flex-row gap-6">
-              
-              <!-- Draggable Options -->
-              <div class="flex-1 space-y-3">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center">Drag a part:</div>
-                <div class="grid grid-cols-3 gap-2">
-                  <div draggable="${!st.answered}" ondragstart="handleQuaverToolDragStart(event, 'tail_left')" class="p-3 bg-slate-800 border-2 border-slate-600 rounded-2xl text-center ${!st.answered ? 'cursor-grab hover:border-amber-400' : 'opacity-50'}">
-                    <svg viewBox="0 0 40 40" class="w-10 h-10 mx-auto stroke-amber-400"><path d="M35 10 C20 15, 10 30, 15 40" fill="none" stroke-width="4"/></svg>
-                    <div class="text-[9px] font-bold text-slate-300 mt-2 uppercase">Left Tail</div>
-                  </div>
-                  <div draggable="${!st.answered}" ondragstart="handleQuaverToolDragStart(event, 'tail_right')" class="p-3 bg-slate-800 border-2 border-slate-600 rounded-2xl text-center ${!st.answered ? 'cursor-grab hover:border-amber-400' : 'opacity-50'}">
-                    <svg viewBox="0 0 40 40" class="w-10 h-10 mx-auto stroke-amber-400"><path d="M5 10 C20 15, 30 30, 25 40" fill="none" stroke-width="4"/></svg>
-                    <div class="text-[9px] font-bold text-slate-300 mt-2 uppercase">Right Tail</div>
-                  </div>
-                  <div draggable="${!st.answered}" ondragstart="handleQuaverToolDragStart(event, 'beam')" class="p-3 bg-slate-800 border-2 border-slate-600 rounded-2xl text-center ${!st.answered ? 'cursor-grab hover:border-amber-400' : 'opacity-50'}">
-                    <div class="w-full h-3 bg-amber-400 mt-3.5 mb-3.5 rounded-sm"></div>
-                    <div class="text-[9px] font-bold text-slate-300 mt-2 uppercase">Beam</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Drop Zone -->
-              <div class="flex-1">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 text-center mb-3">Drop onto note:</div>
-                <div 
-                  ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-indigo-950');" : ""}"
-                  ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950');" : ""}"
-                  ondrop="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-indigo-950'); handleQuaverToolDrop(event);" : ""}"
-                  class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[160px] transition-colors relative overflow-hidden">
-                  
-                  <div class="text-xs font-bold text-slate-500 absolute top-4 uppercase tracking-widest">${st.target.desc}</div>
-                  <svg viewBox="0 0 140 100" class="w-32 h-24 mt-6">
-                    ${baseSvg}
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            ${st.answered ? `
-              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. ${st.target.type === 'pair' ? 'Pairs need a beam!' : 'Single tails ALWAYS go on the right side!'}`}</span>
-                <button type="button" onclick="nextQuaverBuilderRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                </button>
-              </div>
-            ` : ''}
-          `}
-        </div>
-      `;
-    }
-
-    // ==========================================
-    // REST MATCHER GAME (DURATION LEVEL 2)
-    // ==========================================
-    let restMatcherState = {
-      round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0
-    };
-
-    const restMatcherTargets = [
-      { id: 'qm', req: 'quaverRest', name: 'Quaver Value', beats: '½ Beat', html: () => `<div class="text-slate-200">${renderEngravedNoteDarkSVG('singleQuaver', 'w-16 h-24')}</div>` },
-      { id: 'cm1', req: 'rest', name: 'Crotchet Value', beats: '1 Beat', html: () => `<div class="text-slate-200">${renderEngravedNoteDarkSVG('crotchet', 'w-16 h-24')}</div>` },
-      { id: 'cm2', req: 'rest', name: 'Paired Quavers', beats: '1 Beat', html: () => `<div class="text-slate-200">${renderEngravedNoteDarkSVG('quavers', 'w-20 h-24')}</div>` },
-      { id: 'mm1', req: 'minimRest', name: 'Minim Value', beats: '2 Beats', html: () => `<div class="text-slate-200">${renderEngravedNoteDarkSVG('minim', 'w-16 h-24')}</div>` },
-      { id: 'mm2', req: 'minimRest', name: 'Two Crotchets', beats: '2 Beats', html: () => `<div class="flex items-center gap-2 text-slate-200">${renderEngravedNoteDarkSVG('crotchet', 'w-12 h-16')}<span class="text-3xl font-black text-slate-400">+</span>${renderEngravedNoteDarkSVG('crotchet', 'w-12 h-16')}</div>` },
-      { id: 'sm1', req: 'semibreveRest', name: 'Semibreve Value', beats: '4 Beats', html: () => `<div class="text-slate-200">${renderEngravedNoteDarkSVG('semibreve', 'w-20 h-24')}</div>` },
-      { id: 'sm2', req: 'semibreveRest', name: 'Two Minims', beats: '4 Beats', html: () => `<div class="flex items-center gap-2 text-slate-200">${renderEngravedNoteDarkSVG('minim', 'w-12 h-16')}<span class="text-3xl font-black text-slate-400">+</span>${renderEngravedNoteDarkSVG('minim', 'w-12 h-16')}</div>` }
-    ];
-
-    const restMatcherDraggables = [
-      { id: 'quaverRest', name: 'Quaver Rest', beats: '½ Beat' },
-      { id: 'rest', name: 'Crotchet Rest', beats: '1 Beat' },
-      { id: 'minimRest', name: 'Minim Rest', beats: '2 Beats' },
-      { id: 'semibreveRest', name: 'Semibreve Rest', beats: '4 Beats' }
-    ];
-
-    function setupRestMatcherRound() {
-      const target = restMatcherTargets[Math.floor(Math.random() * restMatcherTargets.length)];
-      restMatcherState.target = target;
-      restMatcherState.options = [...restMatcherDraggables].sort(() => Math.random() - 0.5);
-      restMatcherState.answered = false;
-      restMatcherState.lastCorrect = false;
-      restMatcherState.roundStartTime = performance.now();
-    }
-
-    function mountEmbeddedRestMatcherGame(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      restMatcherState = { round: 1, totalRounds: 10, score: 0, target: null, options: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
-      setupRestMatcherRound();
-      renderRestMatcherGameUI(target);
-    }
-
-    function handleRestDragStart(e, restId) {
-      if (e && e.dataTransfer) {
-        e.dataTransfer.setData('text/plain', restId);
-        e.dataTransfer.effectAllowed = 'copy';
-      }
-    }
-
-    function handleRestDrop(event) {
-      if (event) {
-        event.preventDefault();
-        event.currentTarget.classList.remove('border-amber-400', 'bg-slate-700');
-      }
-      const st = restMatcherState;
-      if (st.answered || st.completed) return;
-      if (performance.now() - st.roundStartTime < 800) return;
-      
-      let droppedRestId = null;
-      if (event && event.dataTransfer) {
-        droppedRestId = event.dataTransfer.getData('text/plain');
-      }
-      if (!droppedRestId) return;
-
-      st.answered = true;
-      st.lastCorrect = (st.target.req === droppedRestId);
-      
-      if (st.lastCorrect) {
-        st.score++;
-        addTokens(1);
-        playTonePitch(659.25, 0.2, 0.35, 'triangle');
-      } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-      }
-      renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
-    }
-
-    function nextRestMatcherRound() {
-      const st = restMatcherState;
-      if (st.round < st.totalRounds) {
-        st.round++;
-        setupRestMatcherRound();
-        renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
-      } else {
-        st.completed = true;
-        renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
-        showAppModal('Rest Matcher Complete!', `You matched ${st.score}/${st.totalRounds} equations correctly and earned +${st.score} Tokens!`, st.score >= 5);
-      }
-    }
-
-    function renderRestMatcherGameUI(target) {
-      if (!target) target = document.getElementById('embedded-tool-container');
-      if (!target) return;
-      const st = restMatcherState;
-
-      target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • Drag &amp; Drop</span>
-              <h3 class="text-xl font-black">Rest Matcher Game</h3>
-              <p class="text-xs text-slate-300 mt-1">Drag the correct rest symbol from below and drop it onto the matching note!</p>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
-            </div>
-          </div>
-
-          ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
-              <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedRestMatcherGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
-            </div>
-          ` : `
-            <div class="flex justify-center my-6">
-              <div 
-                ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-slate-700');" : ""}"
-                ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-slate-700');" : ""}"
-                ondrop="${!st.answered ? "handleRestDrop(event)" : ""}"
-                class="min-w-[8rem] px-6 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-slate-200 shadow-inner transition-colors ${!st.answered ? 'hover:border-amber-400' : 'opacity-50'}">
-                ${st.target.html()}
-              </div>
-            </div>
-
-            ${st.answered ? `
-              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. That note requires a <strong>${restMatcherDraggables.find(d=>d.id===st.target.req).name}</strong>.`}</span>
-                <button type="button" onclick="nextRestMatcherRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
-                </button>
-              </div>
-            ` : ''}
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              ${st.options.map(opt => `
-                <div draggable="${!st.answered}" ondragstart="handleRestDragStart(event, '${opt.id}')"
-                  class="p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center ${
-                  st.answered && opt.id === st.target.req ? 'border-emerald-400 bg-emerald-950/60' : 
-                  st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700 cursor-grab active:cursor-grabbing'
-                }">
-                  <div class="text-slate-300 pointer-events-none mb-2">${renderEngravedNoteDarkSVG(opt.id, 'w-12 h-16')}</div>
-                  <div class="font-black text-sm text-white pointer-events-none">${opt.name}</div>
-                  <div class="text-[10px] font-bold text-slate-400 mt-0.5 pointer-events-none">${opt.beats}</div>
-                </div>
-              `).join('')}
             </div>
           `}
         </div>
@@ -15263,18 +15084,409 @@
       renderRestMatcherGameUI(document.getElementById('embedded-tool-container'));
     }
 
-    function renderRestMatcherGameUI(target) {
+    // ==========================================
+    // DURATION LEVEL 3: LESSON 1 — SIMPLE TIME SIGNATURES & METER MATCH GAME
+    // ==========================================
+    const meterMatchPatterns = [
+      { meter: '2/4', beats: 2, notes: ['crotchet', 'crotchet'], hint: '2 Crotchet beats in the bar' },
+      { meter: '2/4', beats: 2, notes: ['minim'], hint: '1 Minim = 2 beats in the bar' },
+      { meter: '2/4', beats: 2, notes: ['quavers', 'crotchet'], hint: 'Paired Quavers (1) + Crotchet (1)' },
+      { meter: '2/4', beats: 2, notes: ['crotchet', 'rest'], hint: 'Crotchet (1) + Crotchet Rest (1)' },
+      { meter: '2/4', beats: 2, notes: ['quavers', 'quavers'], hint: 'Two sets of Paired Quavers (1 + 1)' },
+      { meter: '3/4', beats: 3, notes: ['crotchet', 'crotchet', 'crotchet'], hint: '3 Crotchet beats in the bar' },
+      { meter: '3/4', beats: 3, notes: ['minim', 'crotchet'], hint: 'Minim (2) + Crotchet (1)' },
+      { meter: '3/4', beats: 3, notes: ['dottedMinim'], hint: '1 Dotted Minim = 3 beats in the bar' },
+      { meter: '3/4', beats: 3, notes: ['crotchet', 'quavers', 'crotchet'], hint: 'Crotchet (1) + Quavers (1) + Crotchet (1)' },
+      { meter: '3/4', beats: 3, notes: ['minim', 'rest'], hint: 'Minim (2) + Crotchet Rest (1)' },
+      { meter: '4/4', beats: 4, notes: ['crotchet', 'crotchet', 'crotchet', 'crotchet'], hint: '4 Crotchet beats in the bar' },
+      { meter: '4/4', beats: 4, notes: ['minim', 'minim'], hint: 'Minim (2) + Minim (2)' },
+      { meter: '4/4', beats: 4, notes: ['semibreve'], hint: '1 Semibreve = 4 beats in the bar' },
+      { meter: '4/4', beats: 4, notes: ['dottedMinim', 'crotchet'], hint: 'Dotted Minim (3) + Crotchet (1)' },
+      { meter: '4/4', beats: 4, notes: ['crotchet', 'quavers', 'minim'], hint: 'Crotchet (1) + Quavers (1) + Minim (2)' }
+    ];
+
+    let simpleMeterState = {
+      pulseMeter: null,
+      pulseBeat: 0,
+      pulseIntervalId: null,
+      round: 1,
+      totalRounds: 10,
+      score: 0,
+      streak: 0,
+      best: 0,
+      queue: [],
+      current: null,
+      answered: false,
+      lastCorrect: false,
+      selectedMeter: null,
+      completed: false
+    };
+
+    function stopSimpleMeterPulse() {
+      if (simpleMeterState.pulseIntervalId) {
+        clearInterval(simpleMeterState.pulseIntervalId);
+        simpleMeterState.pulseIntervalId = null;
+      }
+      simpleMeterState.pulseMeter = null;
+      simpleMeterState.pulseBeat = 0;
+    }
+
+    function startSimpleMeterPulse(beatsPerBar) {
+      stopSimpleMeterPulse();
+      simpleMeterState.pulseMeter = beatsPerBar;
+      simpleMeterState.pulseBeat = 0;
+
+      const tick = () => {
+        simpleMeterState.pulseBeat = (simpleMeterState.pulseBeat % beatsPerBar) + 1;
+        const isAccent = simpleMeterState.pulseBeat === 1;
+        playTonePitch(isAccent ? 880 : 523.25, 0.08, isAccent ? 0.35 : 0.2, 'triangle');
+        updateSimplePulseDotsUI();
+      };
+      tick();
+      simpleMeterState.pulseIntervalId = setInterval(tick, 540);
+      renderSimpleTimeSigLabUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function updateSimplePulseDotsUI() {
+      const st = simpleMeterState;
+      const dotsWrap = document.getElementById('simple-pulse-dots');
+      if (!dotsWrap || !st.pulseMeter) return;
+      dotsWrap.innerHTML = Array.from({ length: st.pulseMeter }, (_, i) => {
+        const b = i + 1;
+        const isActive = st.pulseBeat === b;
+        return `
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm border-2 transition-all ${
+            isActive
+              ? (b === 1 ? 'bg-amber-400 border-amber-200 text-slate-950 scale-110 shadow-md' : 'bg-indigo-500 border-indigo-300 text-white scale-105')
+              : 'bg-slate-200 border-slate-300 text-slate-500'
+          }">${b}</div>
+        `;
+      }).join('');
+    }
+
+    function playMeterMatchBarAudio(notes) {
+      if (!Array.isArray(notes)) return;
+      let offsetMs = 0;
+      const beatMs = 480;
+      notes.forEach(n => {
+        const t = offsetMs;
+        if (n === 'crotchet') {
+          setTimeout(() => playTonePitch(523.25, 0.18, 0.32, 'triangle'), t);
+          offsetMs += beatMs;
+        } else if (n === 'rest') {
+          offsetMs += beatMs;
+        } else if (n === 'quavers') {
+          setTimeout(() => playTonePitch(523.25, 0.12, 0.3, 'triangle'), t);
+          setTimeout(() => playTonePitch(587.33, 0.12, 0.3, 'triangle'), t + beatMs / 2);
+          offsetMs += beatMs;
+        } else if (n === 'minim') {
+          setTimeout(() => playTonePitch(523.25, 0.72, 0.32, 'triangle'), t);
+          offsetMs += beatMs * 2;
+        } else if (n === 'dottedMinim') {
+          setTimeout(() => playTonePitch(523.25, 1.15, 0.32, 'triangle'), t);
+          offsetMs += beatMs * 3;
+        } else if (n === 'semibreve') {
+          setTimeout(() => playTonePitch(523.25, 1.55, 0.32, 'triangle'), t);
+          offsetMs += beatMs * 4;
+        }
+      });
+    }
+
+    function mountEmbeddedSimpleTimeSigLab(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      const st = restMatcherState;
+      stopSimpleMeterPulse();
+      const shuffled = [...meterMatchPatterns].sort(() => Math.random() - 0.5).slice(0, 10);
+      simpleMeterState = {
+        pulseMeter: null,
+        pulseBeat: 0,
+        pulseIntervalId: null,
+        round: 1,
+        totalRounds: 10,
+        score: 0,
+        streak: 0,
+        best: simpleMeterState.best || 0,
+        queue: shuffled,
+        current: shuffled[0],
+        answered: false,
+        lastCorrect: false,
+        selectedMeter: null,
+        completed: false
+      };
+      renderSimpleTimeSigLabUI(target);
+    }
+
+    function guessSimpleMeter(meterStr) {
+      const st = simpleMeterState;
+      if (st.answered || st.completed || !st.current) return;
+      st.answered = true;
+      st.selectedMeter = meterStr;
+      st.lastCorrect = (st.current.meter === meterStr);
+
+      if (st.lastCorrect) {
+        st.score++;
+        st.streak++;
+        if (st.streak > st.best) st.best = st.streak;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        st.streak = 0;
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderSimpleTimeSigLabUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextSimpleMeterRound() {
+      const st = simpleMeterState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        st.current = st.queue[st.round - 1];
+        st.answered = false;
+        st.selectedMeter = null;
+        st.lastCorrect = false;
+        renderSimpleTimeSigLabUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderSimpleTimeSigLabUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Meter Match Complete!', `You identified ${st.score}/${st.totalRounds} time signatures correctly and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderSimpleTimeSigLabUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = simpleMeterState;
+      const cur = st.current;
 
       target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+        <div class="space-y-6">
+          <!-- PART 1: LISTEN TO THE PULSE -->
+          <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-sm text-center space-y-4">
+            <h3 class="text-xl font-black text-slate-800">Listen to the Pulse</h3>
+            <div class="flex flex-wrap items-center justify-center gap-2.5">
+              ${[2, 3, 4].map(m => `
+                <button type="button" onclick="startSimpleMeterPulse(${m})" class="px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all shadow-sm ${
+                  st.pulseMeter === m ? 'bg-indigo-700 text-white ring-4 ring-indigo-200' : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }">${m}/4 Pulse</button>
+              `).join('')}
+              <button type="button" onclick="stopSimpleMeterPulse(); renderSimpleTimeSigLabUI(document.getElementById('embedded-tool-container'));" class="px-5 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-xs sm:text-sm transition-all">
+                Stop
+              </button>
+            </div>
+            <div id="simple-pulse-dots" class="flex items-center justify-center gap-3 min-h-[42px]">
+              ${st.pulseMeter ? '' : '<p class="text-xs sm:text-sm text-slate-500 font-medium">Click a meter above to hear the rhythmic accent pulse.</p>'}
+            </div>
+          </div>
+
+          <!-- PART 2: METER MATCH GAME -->
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="text-2xl font-black text-slate-900">Meter Match Game</h3>
+                <p class="text-xs text-slate-500">Round ${st.round} / ${st.totalRounds} • +1 Token per correct answer</p>
+              </div>
+              <div class="flex items-center gap-3 text-sm font-black">
+                <span class="text-amber-600">Streak: ${st.streak}</span>
+                <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] uppercase tracking-wider">Identify Time Signature</span>
+                <span class="text-emerald-600">Best: ${st.best}</span>
+              </div>
+            </div>
+
+            ${st.completed ? `
+              <div class="p-6 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-center space-y-3">
+                <h4 class="text-xl font-black text-emerald-800">Meter Match Complete!</h4>
+                <p class="text-xs text-slate-600">You matched <strong>${st.score} / ${st.totalRounds}</strong> rhythms and earned <strong>+${st.score} Tokens</strong>!</p>
+                <button type="button" onclick="mountEmbeddedSimpleTimeSigLab(document.getElementById('embedded-tool-container'))" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-xs shadow">Play Again</button>
+              </div>
+            ` : `
+              <div class="bg-slate-50 rounded-3xl p-6 border border-slate-200 text-center space-y-4">
+                <h4 class="text-lg sm:text-xl font-black text-slate-800">Which time signature matches this rhythm?</h4>
+
+                <!-- Dark Rhythm Bar Display -->
+                <div class="bg-slate-950 rounded-2xl py-6 px-4 max-w-xl mx-auto relative flex items-center justify-center gap-4 sm:gap-7 shadow-inner border border-slate-800">
+                  <div class="absolute inset-x-8 top-1/2 h-0.5 bg-slate-700 pointer-events-none"></div>
+                  ${cur.notes.map(n => `
+                    <div class="relative z-10 text-white">${renderEngravedNoteDarkSVG(n, 'w-12 h-16')}</div>
+                  `).join('')}
+                </div>
+
+                <div class="flex items-center justify-center gap-3">
+                  <button type="button" onclick="playMeterMatchBarAudio(simpleMeterState.current.notes)" class="px-4 py-2 rounded-xl bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-black text-xs transition-all">
+                    <i class="fa-solid fa-volume-high mr-1"></i> Hear Bar
+                  </button>
+                  ${st.answered ? `<span class="text-xs font-bold text-slate-500">${cur.hint}</span>` : ''}
+                </div>
+
+                <!-- 2/4, 3/4, 4/4 Answer Buttons -->
+                <div class="flex items-center justify-center gap-3 pt-2">
+                  ${['2/4', '3/4', '4/4'].map(m => {
+                    let cls = 'bg-white hover:bg-indigo-50 border-slate-200 hover:border-indigo-400 text-slate-800 shadow-sm';
+                    if (st.answered) {
+                      if (m === cur.meter) cls = 'bg-emerald-500 border-emerald-600 text-white shadow-md scale-105';
+                      else if (m === st.selectedMeter) cls = 'bg-rose-500 border-rose-600 text-white';
+                      else cls = 'bg-slate-100 border-slate-200 text-slate-400 opacity-60';
+                    }
+                    return `
+                      <button type="button" onclick="guessSimpleMeter('${m}')" ${st.answered ? 'disabled' : ''} class="w-20 h-14 rounded-2xl border-2 font-black text-lg transition-all ${cls}">
+                        ${m}
+                      </button>
+                    `;
+                  }).join('')}
+                </div>
+
+                ${st.answered ? `
+                  <div class="p-3.5 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-rose-50 border-rose-300 text-rose-800'} flex flex-col sm:flex-row items-center justify-between gap-3 max-w-xl mx-auto">
+                    <span class="text-xs font-bold">${st.lastCorrect ? `✓ Correct (+1 Token)! That bar adds up to ${cur.beats} beats (${cur.meter}).` : `✗ Not quite — that bar adds up to ${cur.beats} beats, so it's ${cur.meter}!`}</span>
+                    <button type="button" onclick="nextSimpleMeterRound()" class="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 font-black rounded-xl text-xs shrink-0">
+                      ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                    </button>
+                  </div>
+                ` : ''}
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+      if (st.pulseMeter) updateSimplePulseDotsUI();
+    }
+
+    // ==========================================
+    // DURATION LEVEL 3: LESSON 2 — ADD THE BARLINES! (3-BAR RHYTHM BUILDER GAME)
+    // ==========================================
+    const barlinePuzzlePool = [
+      // 2/4 Time (2 beats per bar, 3 bars = 6 beats)
+      { id: 'b2_1', meter: '2/4', beatsPerBar: 2, notes: ['crotchet', 'crotchet', 'minim', 'quavers', 'crotchet'], correctSlots: [1, 2] },
+      { id: 'b2_2', meter: '2/4', beatsPerBar: 2, notes: ['minim', 'crotchet', 'rest', 'quavers', 'quavers'], correctSlots: [0, 2] },
+      { id: 'b2_3', meter: '2/4', beatsPerBar: 2, notes: ['quavers', 'crotchet', 'crotchet', 'crotchet', 'minim'], correctSlots: [1, 3] },
+      { id: 'b2_4', meter: '2/4', beatsPerBar: 2, notes: ['crotchet', 'rest', 'minim', 'crotchet', 'quavers'], correctSlots: [1, 2] },
+      // 3/4 Time (3 beats per bar, 3 bars = 9 beats)
+      { id: 'b3_1', meter: '3/4', beatsPerBar: 3, notes: ['crotchet', 'crotchet', 'crotchet', 'minim', 'crotchet', 'dottedMinim'], correctSlots: [2, 4] },
+      { id: 'b3_2', meter: '3/4', beatsPerBar: 3, notes: ['dottedMinim', 'crotchet', 'quavers', 'crotchet', 'minim', 'rest'], correctSlots: [0, 3] },
+      { id: 'b3_3', meter: '3/4', beatsPerBar: 3, notes: ['minim', 'quavers', 'crotchet', 'rest', 'crotchet', 'dottedMinim'], correctSlots: [1, 4] },
+      { id: 'b3_4', meter: '3/4', beatsPerBar: 3, notes: ['crotchet', 'minim', 'quavers', 'quavers', 'crotchet', 'crotchet', 'minim'], correctSlots: [1, 4] },
+      // 4/4 Time (4 beats per bar, 3 bars = 12 beats)
+      { id: 'b4_1', meter: '4/4', beatsPerBar: 4, notes: ['crotchet', 'crotchet', 'minim', 'semibreve', 'quavers', 'crotchet', 'minim'], correctSlots: [2, 3] },
+      { id: 'b4_2', meter: '4/4', beatsPerBar: 4, notes: ['minim', 'minim', 'dottedMinim', 'crotchet', 'crotchet', 'quavers', 'rest', 'crotchet'], correctSlots: [1, 3] },
+      { id: 'b4_3', meter: '4/4', beatsPerBar: 4, notes: ['semibreve', 'crotchet', 'minim', 'crotchet', 'minim', 'quavers', 'crotchet'], correctSlots: [0, 3] },
+      { id: 'b4_4', meter: '4/4', beatsPerBar: 4, notes: ['dottedMinim', 'rest', 'minim', 'minim', 'crotchet', 'quavers', 'minim'], correctSlots: [1, 3] }
+    ];
+
+    let barlineGameState = {
+      round: 1,
+      totalRounds: 10,
+      score: 0,
+      streak: 0,
+      best: 0,
+      queue: [],
+      current: null,
+      placedSlots: [],
+      answered: false,
+      lastCorrect: false,
+      completed: false
+    };
+
+    function mountEmbeddedBarlineBuilderGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const shuffled = [...barlinePuzzlePool].sort(() => Math.random() - 0.5).slice(0, 10);
+      barlineGameState = {
+        round: 1,
+        totalRounds: 10,
+        score: 0,
+        streak: 0,
+        best: barlineGameState.best || 0,
+        queue: shuffled,
+        current: shuffled[0],
+        placedSlots: [],
+        answered: false,
+        lastCorrect: false,
+        completed: false
+      };
+      renderBarlineBuilderGameUI(target);
+    }
+
+    function toggleBarlineSlot(slotIdx) {
+      const st = barlineGameState;
+      if (st.answered || st.completed) return;
+      const pos = st.placedSlots.indexOf(slotIdx);
+      if (pos >= 0) {
+        st.placedSlots.splice(pos, 1);
+        playTonePitch(330, 0.06, 0.2, 'sine');
+      } else {
+        st.placedSlots.push(slotIdx);
+        st.placedSlots.sort((a, b) => a - b);
+        playTonePitch(660, 0.06, 0.24, 'triangle');
+      }
+      renderBarlineBuilderGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function clearBarlineSlots() {
+      if (barlineGameState.answered || barlineGameState.completed) return;
+      barlineGameState.placedSlots = [];
+      renderBarlineBuilderGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function checkBarlineAnswer() {
+      const st = barlineGameState;
+      if (st.answered || st.completed || !st.current) return;
+      if (st.placedSlots.length === 0) {
+        showAppModal('Add Barlines First', `Click the vertical gaps between the notes to add 2 single barlines and create 3 bars of ${st.current.meter} time!`, false);
+        return;
+      }
+
+      const expected = st.current.correctSlots;
+      const isRight =
+        st.placedSlots.length === expected.length &&
+        st.placedSlots.every((val, i) => val === expected[i]);
+
+      st.answered = true;
+      st.lastCorrect = isRight;
+
+      if (isRight) {
+        st.score++;
+        st.streak++;
+        if (st.streak > st.best) st.best = st.streak;
+        addTokens(1);
+        playTonePitch(523.25, 0.14, 0.3, 'triangle');
+        setTimeout(() => playTonePitch(659.25, 0.16, 0.32, 'triangle'), 120);
+        setTimeout(() => playTonePitch(783.99, 0.24, 0.32, 'triangle'), 240);
+      } else {
+        st.streak = 0;
+        playTonePitch(155.56, 0.28, 0.3, 'sawtooth');
+      }
+      renderBarlineBuilderGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextBarlineRound() {
+      const st = barlineGameState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        st.current = st.queue[st.round - 1];
+        st.placedSlots = [];
+        st.answered = false;
+        st.lastCorrect = false;
+        renderBarlineBuilderGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderBarlineBuilderGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Barline Builder Complete!', `You built ${st.score}/${st.totalRounds} accurate 3-bar rhythms and earned +${st.score} Tokens!`, st.score >= 5);
+      }
+    }
+
+    function renderBarlineBuilderGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = barlineGameState;
+      const cur = st.current;
+      const [topNum, botNum] = cur ? cur.meter.split('/') : ['4', '4'];
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800 shadow-lg">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • Drag &amp; Drop</span>
-              <h3 class="text-xl font-black">Rest Matcher Game</h3>
-              <p class="text-xs text-slate-300 mt-1">Drag the correct rest symbol from below and drop it onto the matching note!</p>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">10-Round Challenge • 1 Token Per Correct Rhythm</span>
+              <h3 class="text-xl font-black mt-0.5">Add the Barlines! (3-Bar Rhythm Builder)</h3>
+              <p class="text-xs text-slate-300 mt-1">Click the dashed vertical gaps between the notes to place <strong>2 single barlines</strong> so every bar matches the <strong>${cur.meter}</strong> time signature!</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
@@ -15284,43 +15496,123 @@
 
           ${st.completed ? `
             <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
-              <p class="text-xs text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedRestMatcherGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+              <div class="w-14 h-14 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-2xl mx-auto shadow-lg">
+                <i class="fa-solid fa-check-double"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">Barline Builder Mastered!</h4>
+              <p class="text-xs text-slate-200">You divided <strong>${st.score} / ${st.totalRounds}</strong> 3-bar rhythms accurately and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedBarlineBuilderGame(document.getElementById('embedded-tool-container'))" class="px-6 py-2.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black rounded-xl text-xs shadow">
+                Play Another 10 Rounds
+              </button>
             </div>
           ` : `
-            <div class="flex justify-center my-6">
-              <div 
-                ondragover="${!st.answered ? "event.preventDefault(); this.classList.add('border-amber-400', 'bg-slate-700');" : ""}"
-                ondragleave="${!st.answered ? "this.classList.remove('border-amber-400', 'bg-slate-700');" : ""}"
-                ondrop="${!st.answered ? "handleRestDrop(event)" : ""}"
-                class="min-w-[8rem] px-6 h-32 rounded-3xl bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-center text-slate-200 shadow-inner transition-colors ${!st.answered ? 'hover:border-amber-400' : 'opacity-50'}">
-                ${st.target.html()}
+            <!-- Target Meter Banner -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-12 rounded-xl bg-amber-400 text-slate-950 flex flex-col items-center justify-center font-black leading-none text-lg shadow">
+                  <span>${topNum}</span><span class="border-t border-slate-900/30 pt-0.5 mt-0.5">${botNum}</span>
+                </div>
+                <div>
+                  <div class="text-xs sm:text-sm font-black text-white">Target: 3 Bars in ${cur.meter} Time</div>
+                  <div class="text-[11px] text-amber-300 font-bold">Count ${cur.beatsPerBar} crotchet beats per bar • Barlines placed: ${st.placedSlots.length} / 2</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-black text-amber-300">Streak: ${st.streak}</span>
+                <button type="button" onclick="playMeterMatchBarAudio(barlineGameState.current.notes)" class="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-xs shadow">
+                  <i class="fa-solid fa-volume-high mr-1"></i> Hear Rhythm
+                </button>
               </div>
             </div>
 
-            ${st.answered ? `
-              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Incorrect. That note requires a <strong>${st.target.name} Rest</strong> (${st.target.beats}).`}</span>
-                <button type="button" onclick="nextRestMatcherRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+            <!-- Interactive Rhythm Staff with Clickable Barline Slots -->
+            <div class="bg-slate-950 rounded-3xl p-5 sm:p-7 border-2 border-slate-800 shadow-inner overflow-x-auto">
+              <div class="relative flex items-center justify-center min-w-max mx-auto py-3 px-2 gap-1 sm:gap-1.5">
+                <!-- Continuous Staff Line -->
+                <div class="absolute left-3 right-3 top-1/2 h-0.5 bg-slate-700 pointer-events-none"></div>
+
+                <!-- Time Signature at Start -->
+                <div class="relative z-10 flex flex-col items-center justify-center font-black text-amber-400 text-2xl sm:text-3xl leading-none pr-3 mr-1 border-r-2 border-slate-700 select-none">
+                  <span>${topNum}</span>
+                  <span>${botNum}</span>
+                </div>
+
+                <!-- Alternating Notes & Clickable Barline Gaps -->
+                ${cur.notes.map((noteType, idx) => {
+                  const hasNext = idx < cur.notes.length - 1;
+                  const isPlaced = st.placedSlots.includes(idx);
+                  const isCorrectSlot = cur.correctSlots.includes(idx);
+
+                  let slotVisual = '';
+                  if (st.answered) {
+                    if (isPlaced && isCorrectSlot) {
+                      slotVisual = `<div class="w-1.5 h-20 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]"></div>`;
+                    } else if (isPlaced && !isCorrectSlot) {
+                      slotVisual = `<div class="w-1.5 h-20 rounded-full bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.9)]"></div>`;
+                    } else if (!isPlaced && isCorrectSlot) {
+                      slotVisual = `<div class="w-1.5 h-20 rounded-full border-2 border-dashed border-emerald-400 bg-emerald-500/20"></div>`;
+                    } else {
+                      slotVisual = `<div class="w-0.5 h-12 bg-transparent"></div>`;
+                    }
+                  } else if (isPlaced) {
+                    slotVisual = `<div class="w-1.5 h-20 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.85)] transition-all"></div>`;
+                  } else {
+                    slotVisual = `<div class="w-0.5 h-16 border-l-2 border-dashed border-slate-600 group-hover:border-amber-400 group-hover:h-20 transition-all"></div>`;
+                  }
+
+                  return `
+                    <div class="relative z-10 flex flex-col items-center justify-center px-1 sm:px-1.5 text-white select-none">
+                      ${renderEngravedNoteDarkSVG(noteType, 'w-11 h-16 sm:w-12 sm:h-16')}
+                    </div>
+                    ${hasNext ? `
+                      <button
+                        type="button"
+                        onclick="toggleBarlineSlot(${idx})"
+                        ${st.answered ? 'disabled' : ''}
+                        title="${isPlaced ? 'Remove Barline' : 'Add Barline Here'}"
+                        class="relative z-20 group w-7 sm:w-8 h-24 rounded-xl flex items-center justify-center transition-all ${
+                          st.answered ? 'cursor-default' : 'hover:bg-amber-400/15 cursor-pointer active:scale-95'
+                        }">
+                        ${slotVisual}
+                      </button>
+                    ` : ''}
+                  `;
+                }).join('')}
+
+                <!-- Final Double Barline (Thin + Thick) -->
+                <div class="relative z-10 flex items-center gap-1.5 pl-3 ml-1 select-none" title="Final Double Barline">
+                  <div class="w-0.5 h-20 bg-emerald-400 rounded-full"></div>
+                  <div class="w-2 h-20 bg-emerald-400 rounded-sm"></div>
+                </div>
+              </div>
+
+              <div class="text-center text-[11px] font-bold text-slate-400 mt-2">
+                Tip: Click any dashed line between notes to add or remove a <span class="text-amber-300">Single Barline</span>. The green <span class="text-emerald-400">Final Double Barline</span> marks the end of Bar 3!
+              </div>
+            </div>
+
+            <!-- Action Controls or Feedback -->
+            ${!st.answered ? `
+              <div class="flex flex-wrap items-center justify-center gap-3">
+                <button type="button" onclick="checkBarlineAnswer()" class="px-7 py-3.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-lg transition-all">
+                  <i class="fa-solid fa-check mr-1.5"></i> Check Barlines (+1 Token)
+                </button>
+                <button type="button" onclick="clearBarlineSlots()" class="px-5 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs transition-all">
+                  <i class="fa-solid fa-eraser mr-1"></i> Clear Barlines
+                </button>
+              </div>
+            ` : `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs leading-relaxed font-bold">
+                  ${st.lastCorrect
+                    ? `✓ Spot on (+1 Token)! Every bar adds up to exactly ${cur.beatsPerBar} crotchet beats in ${cur.meter} time.`
+                    : `✗ Not quite! In ${cur.meter} time, each bar must total exactly ${cur.beatsPerBar} beats. The correct barline positions are shown in emerald green above!`}
+                </div>
+                <button type="button" onclick="nextBarlineRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0 shadow">
                   ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
                 </button>
               </div>
-            ` : ''}
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              ${st.options.map(opt => `
-                <div draggable="${!st.answered}" ondragstart="handleRestDragStart(event, '${opt.id}')"
-                  class="p-4 rounded-2xl border-2 text-center transition-all flex flex-col items-center justify-center ${
-                  st.answered && opt.id === st.target.id ? 'border-emerald-400 bg-emerald-950/60' : 
-                  st.answered ? 'border-slate-700 bg-slate-800 opacity-50' : 'border-slate-700 bg-slate-800 hover:border-amber-400 hover:bg-slate-700 cursor-grab active:cursor-grabbing'
-                }">
-                  <div class="text-slate-300 pointer-events-none mb-2">${renderEngravedNoteDarkSVG(opt.id, 'w-12 h-16')}</div>
-                  <div class="font-black text-sm text-white pointer-events-none">${opt.name} Rest</div>
-                  <div class="text-[10px] font-bold text-slate-400 mt-0.5 pointer-events-none">${opt.beats}</div>
-                </div>
-              `).join('')}
-            </div>
+            `}
           `}
         </div>
       `;

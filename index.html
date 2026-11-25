@@ -167,9 +167,15 @@
             <option value="Mr T">Mr T</option>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Tokens (Adjust Balance)</label>
-          <input type="number" id="edit-student-tokens" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Tokens Left</label>
+            <input type="number" id="edit-student-tokens" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1 uppercase">Overall Tokens</label>
+            <input type="number" id="edit-student-overall-tokens" class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
         </div>
       </div>
       <div class="mt-6 flex items-center justify-end gap-2">
@@ -297,6 +303,9 @@
             if (remoteMe && remoteMe.stats && typeof remoteMe.stats.tokens === 'number') {
               if (window.state && window.state.stats) {
                 window.state.stats.tokens = remoteMe.stats.tokens;
+                if (typeof remoteMe.stats.overallTokensOffset === 'number') {
+                  window.state.stats.overallTokensOffset = remoteMe.stats.overallTokensOffset;
+                }
               }
               if (Array.isArray(remoteMe.completedLessons) && window.state) {
                 window.state.completedLessons = remoteMe.completedLessons;
@@ -676,8 +685,7 @@
       'avatar_headwear_top_hat': 50
     };
 
-    function getStudentOverallTokens(student) {
-      const tokensLeft = (student && student.stats && Number(student.stats.tokens)) || 0;
+    function getStudentSpentTokens(student) {
       const inv = (student && Array.isArray(student.inventory)) ? student.inventory : [];
       let spent = 0;
       inv.forEach(itemId => {
@@ -688,7 +696,14 @@
           spent += avatarUpgradeCosts[itemId];
         }
       });
-      return tokensLeft + spent;
+      return spent;
+    }
+
+    function getStudentOverallTokens(student) {
+      const tokensLeft = (student && student.stats && Number(student.stats.tokens)) || 0;
+      const spent = getStudentSpentTokens(student);
+      const offset = (student && student.stats && Number(student.stats.overallTokensOffset)) || 0;
+      return Math.max(0, tokensLeft + spent + offset);
     }
 
     function refreshLeaderboardTableInPlace() {
@@ -10591,6 +10606,7 @@
       if (!window.state) {
         window.state = { stats: { tokens: 0, testsTaken: 0 }, inventory: [], testHistory: [], completedLessons: [] };
       }
+      const isTeacher = Boolean(window.app.currentUser && window.app.currentUser.role === 'teacher');
       const toks = (window.state.stats && window.state.stats.tokens) || 0;
       const inv = window.state.inventory || [];
       
@@ -10611,15 +10627,21 @@
             <div class="relative z-10">
               <span class="text-xs font-black uppercase tracking-widest text-amber-300">Classroom Rewards</span>
               <h1 class="text-2xl sm:text-4xl font-black mt-1">Music Gear Shop</h1>
-              <p class="text-xs sm:text-sm text-fuchsia-100 mt-2 max-w-lg">Spend your hard-earned tokens on exclusive virtual gear and legendary musical relics.</p>
+              <p class="text-xs sm:text-sm text-fuchsia-100 mt-2 max-w-lg">${isTeacher ? 'Teacher Mode Active: All shop minigames are unlocked for free classroom demonstration and preview!' : 'Spend your hard-earned tokens on exclusive virtual gear and legendary musical relics.'}</p>
               <div class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-fuchsia-900/40 border border-fuchsia-300/30 text-fuchsia-100 text-[11px] font-black uppercase tracking-wider shadow-sm">
-                <i class="fa-solid fa-gamepad text-amber-300"></i> Most items now feature a bonus minigame!
+                <i class="fa-solid fa-gamepad text-amber-300"></i> ${isTeacher ? 'Teacher Free Access — Play Any Minigame Instantly!' : 'Most items now feature a bonus minigame!'}
               </div>
             </div>
             <div class="flex flex-wrap items-center gap-3 shrink-0 relative z-10 mt-2 sm:mt-0">
-              <span class="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-black text-sm shadow-md">
-                <i class="fa-solid fa-coins mr-1.5"></i> ${toks} Tokens
-              </span>
+              ${isTeacher ? `
+                <span class="px-5 py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-black text-sm shadow-md">
+                  <i class="fa-solid fa-unlock-keyhole mr-1.5"></i> Teacher Free Access
+                </span>
+              ` : `
+                <span class="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-black text-sm shadow-md">
+                  <i class="fa-solid fa-coins mr-1.5"></i> ${toks} Tokens
+                </span>
+              `}
               <button onclick="openCurrentPortal()" class="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white font-black rounded-xl text-sm border border-white/30 shadow-md transition-colors">
                 Back to Dashboard
               </button>
@@ -10629,20 +10651,21 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             ${shopCatalog.map((item, idx) => {
               const isOwned = inv.includes(item.id);
+              const hasAccess = isOwned || isTeacher;
               const canAfford = toks >= item.cost;
               const theme = colorThemes[idx % colorThemes.length];
               return `
-                <div class="bg-white rounded-3xl p-5 border-2 ${isOwned ? 'border-emerald-400 bg-emerald-50/40' : 'border-slate-100 ' + theme.border} flex flex-col justify-between h-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div class="bg-white rounded-3xl p-5 border-2 ${hasAccess ? 'border-emerald-400 bg-emerald-50/40' : 'border-slate-100 ' + theme.border} flex flex-col justify-between h-full shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                   <div>
-                    <div class="w-14 h-14 rounded-2xl ${isOwned ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : theme.bg + ' ' + theme.text} flex items-center justify-center text-2xl mb-4 transition-colors">
+                    <div class="w-14 h-14 rounded-2xl ${hasAccess ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : theme.bg + ' ' + theme.text} flex items-center justify-center text-2xl mb-4 transition-colors">
                       <i class="fa-solid ${item.icon}"></i>
                     </div>
-                    <div class="text-[10px] font-black uppercase tracking-widest ${isOwned ? 'text-emerald-600' : theme.text} mb-1.5">${item.category}</div>
+                    <div class="text-[10px] font-black uppercase tracking-widest ${hasAccess ? 'text-emerald-600' : theme.text} mb-1.5">${item.category}</div>
                     <h3 class="font-black text-slate-800 leading-tight mb-2 text-lg">${item.name}</h3>
                     <p class="text-xs text-slate-500 leading-relaxed">${item.desc}</p>
                   </div>
                   <div class="mt-6 pt-4 border-t border-slate-100">
-                    ${isOwned ? `
+                    ${hasAccess ? `
                       <div class="space-y-2">
                         ${item.id === 'item_metronome' ? `
                         <button onclick="window.app.navigate('metronomeGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
@@ -10668,10 +10691,6 @@
                         <button onclick="window.app.navigate('wrenchGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Minigame
                         </button>
-                      ` : item.id === 'item_bass8' ? `
-                        <button onclick="window.app.navigate('grooveLockGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
-                          <i class="fa-solid fa-play"></i> Play Minigame
-                        </button>
                       ` : item.id === 'item_eltonpiano' ? `
                         <button onclick="window.app.navigate('eltonPianoGame')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Minigame
@@ -10689,10 +10708,16 @@
                           <i class="fa-solid fa-bolt"></i> Play Fretboard Shred!
                         </button>
                       ` : ''}
-                      <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
+                      ${isTeacher ? `
+                        <div class="w-full py-2.5 rounded-xl bg-emerald-100 text-emerald-800 font-black text-xs text-center border border-emerald-200">
+                          <i class="fa-solid fa-unlock mr-1"></i> Teacher Free Access (${item.cost} Tokens)
+                        </div>
+                      ` : `
+                        <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                           <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
                           <span class="hidden group-hover:inline"><i class="fa-solid fa-rotate-left mr-1"></i> Trade Back (+${item.cost})</span>
                         </button>
+                      `}
                       </div>
                     ` : `
                       <button onclick="buyShopItem('${item.id}')" ${!canAfford ? 'disabled' : ''} class="w-full py-3 rounded-xl font-black text-xs transition-all ${canAfford ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md hover:shadow-lg' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}">
@@ -11306,6 +11331,18 @@
 
     function renderTeacherDash(container) {
       const students = getDeduplicatedStudents().sort((a, b) => (a.surname || '').localeCompare(b.surname || ''));
+      const teacherMinigames = [
+        { route: 'metronomeGame',  name: 'Brass Metronome',    icon: 'fa-stopwatch',           cls: 'bg-indigo-600 hover:bg-indigo-500 text-white' },
+        { route: 'dynamicsTracer', name: 'Instrument Ninja',   icon: 'fa-wand-sparkles',       cls: 'bg-amber-400 hover:bg-amber-300 text-slate-950' },
+        { route: 'waveformGame',   name: 'Waveform Sculptor',  icon: 'fa-sliders',             cls: 'bg-sky-600 hover:bg-sky-500 text-white' },
+        { route: 'grooveLockGame', name: 'The Groove Lock',    icon: 'fa-guitar',              cls: 'bg-violet-600 hover:bg-violet-500 text-white' },
+        { route: 'combophoneGame', name: 'The Comb-o-Phone',   icon: 'fa-wand-magic-sparkles', cls: 'bg-amber-600 hover:bg-amber-500 text-white' },
+        { route: 'wrenchGame',     name: "Mr B's Tuner",       icon: 'fa-wrench',              cls: 'bg-slate-700 hover:bg-slate-600 text-white' },
+        { route: 'mjDanceGame',    name: "MJ Let's Dance!",    icon: 'fa-microphone-lines',    cls: 'bg-rose-600 hover:bg-rose-500 text-white' },
+        { route: 'drumHeroGame',   name: 'Drum Hero',          icon: 'fa-drum',                cls: 'bg-pink-600 hover:bg-pink-500 text-white' },
+        { route: 'eltonPianoGame', name: 'Golden Key Drop',    icon: 'fa-keyboard',            cls: 'bg-yellow-400 hover:bg-yellow-300 text-slate-950' },
+        { route: 'evhGuitarGame',  name: 'EVH Fretboard Shred',icon: 'fa-bolt',                cls: 'bg-red-600 hover:bg-red-500 text-white' }
+      ];
       container.innerHTML = `
         <div class="space-y-6">
           <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -11325,6 +11362,28 @@
           </div>
 
           <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                  <i class="fa-solid fa-gamepad text-indigo-600"></i> Teacher Minigames Arcade (Free Access)
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">Launch any rewards-shop minigame instantly for classroom demos—no tokens required.</p>
+              </div>
+              <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase">
+                <i class="fa-solid fa-unlock mr-1"></i> All 10 Unlocked
+              </span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              ${teacherMinigames.map(g => `
+                <button onclick="window.app.navigate('${g.route}')" class="px-3 py-3 rounded-2xl font-black text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${g.cls}">
+                  <i class="fa-solid ${g.icon}"></i>
+                  <span class="truncate">${g.name}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
             <h2 class="text-lg font-black text-slate-800">Enrolled Students (${students.length})</h2>
             <div class="overflow-x-auto rounded-2xl border border-slate-100">
               <table class="w-full text-left border-collapse text-xs">
@@ -11333,20 +11392,22 @@
                     <th class="px-4 py-3">Student</th>
                     <th class="px-4 py-3">Class</th>
                     <th class="px-4 py-3">Teacher</th>
-                    <th class="px-4 py-3">Tokens</th>
+                    <th class="px-4 py-3">Tokens Left</th>
+                    <th class="px-4 py-3">Overall Tokens</th>
                     <th class="px-4 py-3">Tests Taken</th>
                     <th class="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   ${students.length === 0 ? `
-                    <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">No student records yet.</td></tr>
+                    <tr><td colspan="7" class="px-4 py-8 text-center text-slate-400">No student records yet.</td></tr>
                   ` : students.map(s => `
                     <tr class="hover:bg-slate-50">
                       <td class="px-4 py-3 font-bold text-slate-800">${s.firstName} ${s.surname}</td>
                       <td class="px-4 py-3">${s.class || '-'}</td>
                       <td class="px-4 py-3">${s.teacher || '-'}</td>
-                      <td class="px-4 py-3 font-black text-amber-600">${(s.stats && s.stats.tokens) || 0}</td>
+                      <td class="px-4 py-3 font-bold text-slate-600">${(s.stats && s.stats.tokens) || 0}</td>
+                      <td class="px-4 py-3 font-black text-amber-600">${getStudentOverallTokens(s)}</td>
                       <td class="px-4 py-3">${(s.testHistory && s.testHistory.length) || 0}</td>
                       <td class="px-4 py-3 text-right space-x-1.5">
                         <button onclick="openEditStudentModal('${s.key}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold">Edit</button>
@@ -11375,6 +11436,7 @@
       document.getElementById('edit-student-class').value = s.class || '7A';
       document.getElementById('edit-student-teacher').value = s.teacher || 'Mr B';
       document.getElementById('edit-student-tokens').value = (s.stats && s.stats.tokens) || 0;
+      document.getElementById('edit-student-overall-tokens').value = getStudentOverallTokens(s);
       document.getElementById('edit-student-modal').classList.remove('hidden');
     }
 
@@ -11392,7 +11454,11 @@
       db[key].class = document.getElementById('edit-student-class').value;
       db[key].teacher = document.getElementById('edit-student-teacher').value;
       if (!db[key].stats) db[key].stats = { tokens: 0, testsTaken: 0 };
-      db[key].stats.tokens = Number(document.getElementById('edit-student-tokens').value) || 0;
+      const newTokensLeft = Math.max(0, Number(document.getElementById('edit-student-tokens').value) || 0);
+      const desiredOverall = Math.max(0, Number(document.getElementById('edit-student-overall-tokens').value) || 0);
+      const spent = getStudentSpentTokens(db[key]);
+      db[key].stats.tokens = newTokensLeft;
+      db[key].stats.overallTokensOffset = desiredOverall - (newTokensLeft + spent);
       try { localStorage.setItem('boncepts_users_db', JSON.stringify(db)); } catch (e) {}
       if (window.saveUserRecordToCloud) window.saveUserRecordToCloud(key, db[key]);
       closeEditStudentModal();

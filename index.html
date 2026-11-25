@@ -898,7 +898,7 @@
     const shopCatalog = [
       { id: 'item_headphones', name: 'Studio Monitor Headphones', category: 'Studio Gear', cost: 50, icon: 'fa-headphones', desc: 'Closed-back reference headphones for crisp rhythm and pitch dictation.' },
       { id: 'item_metronome', name: 'Brass Pyramid Metronome', category: 'Rhythm Tool', cost: 75, icon: 'fa-stopwatch', desc: 'Classic mechanical pendulum metronome for rock-solid tempo control.' },
-      { id: 'item_baton', name: 'Maestro Conductor Baton', category: 'Leadership', cost: 100, icon: 'fa-wand-sparkles', desc: 'Balanced cork-handle baton for leading dynamics and tempo.' },
+      { id: 'item_baton', name: 'Maestro Conductor Baton', category: 'Leadership', cost: 500, icon: 'fa-wand-sparkles', desc: 'Balanced cork-handle baton for leading dynamics and tempo.' },
       { id: 'item_synth', name: 'Analog Pocket Synthesizer', category: 'Instrument', cost: 125, icon: 'fa-sliders', desc: 'Portable waveform generator with sawtooth, square, and triangle oscillators.' },
       { id: 'item_bass8', name: '8-String Bass Guitar', category: 'Instrument', cost: 150, icon: 'fa-guitar', desc: 'Extended range bass for deep, rumbling harmonic textures.' },
       { id: 'item_guitar', name: 'Custom Sunburst Strat', category: 'Instrument', cost: 175, icon: 'fa-guitar', desc: 'Stage-ready electric guitar with bright, cutting timbre.' },
@@ -12079,6 +12079,1734 @@
         }
       }
     });
+
+    // ==========================================
+    // MINIGAME ARCADE: ANALOG POCKET SYNTHESIZER (WAVEFORM SCULPTOR)
+    // ==========================================
+    const waveformTypes = [
+      { id: 'sine',     name: 'Sine Wave',     desc: 'Pure, smooth & flute-like',      color: '#38bdf8' },
+      { id: 'triangle', name: 'Triangle Wave', desc: 'Soft, warm & mellow',            color: '#34d399' },
+      { id: 'square',   name: 'Square Wave',   desc: 'Hollow, retro 8-bit chiptune',   color: '#fbbf24' },
+      { id: 'sawtooth', name: 'Sawtooth Wave', desc: 'Bright, buzzy & brassy',         color: '#f472b6' }
+    ];
+
+    let waveformGameState = {
+      running: false,
+      round: 1,
+      totalRounds: 8,
+      score: 0,
+      tokensEarned: 0,
+      targetWave: 'sine',
+      targetFreq: 330,
+      selectedWave: 'sine',
+      answered: false,
+      lastCorrect: false,
+      completed: false,
+      audioPlayed: false
+    };
+
+    function stopWaveformGame() {
+      waveformGameState.running = false;
+    }
+
+    function setupWaveformRound() {
+      const freqs = [261.63, 293.66, 329.63, 392.00, 440.00];
+      waveformGameState.targetWave = waveformTypes[Math.floor(Math.random() * waveformTypes.length)].id;
+      waveformGameState.targetFreq = freqs[Math.floor(Math.random() * freqs.length)];
+      waveformGameState.answered = false;
+      waveformGameState.lastCorrect = false;
+      waveformGameState.audioPlayed = false;
+    }
+
+    function playWaveformMystery() {
+      waveformGameState.audioPlayed = true;
+      playTonePitch(waveformGameState.targetFreq, 0.75, 0.25, waveformGameState.targetWave);
+      renderWaveformGameView(document.getElementById('app-viewport'));
+    }
+
+    function previewWaveformChoice(waveId) {
+      waveformGameState.selectedWave = waveId;
+      playTonePitch(waveformGameState.targetFreq, 0.45, 0.22, waveId);
+      renderWaveformGameView(document.getElementById('app-viewport'));
+    }
+
+    function submitWaveformGuess() {
+      const st = waveformGameState;
+      if (st.answered || st.completed) return;
+      if (!st.audioPlayed) {
+        showAppModal('Listen First', 'Click "Hear Mystery Synth Wave" before locking in your answer!', false);
+        return;
+      }
+      st.answered = true;
+      st.lastCorrect = (st.selectedWave === st.targetWave);
+      if (st.lastCorrect) {
+        st.score++;
+        st.tokensEarned += 2;
+        addTokens(2);
+        playTonePitch(659.25, 0.16, 0.3, 'triangle');
+        setTimeout(() => playTonePitch(880, 0.22, 0.3, 'triangle'), 120);
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderWaveformGameView(document.getElementById('app-viewport'));
+    }
+
+    function nextWaveformRound() {
+      const st = waveformGameState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupWaveformRound();
+      } else {
+        st.completed = true;
+      }
+      renderWaveformGameView(document.getElementById('app-viewport'));
+    }
+
+    function buildWaveformSvgPath(waveId) {
+      if (waveId === 'sine')     return 'M 0 50 Q 25 10, 50 50 T 100 50 T 150 50 T 200 50';
+      if (waveId === 'triangle') return 'M 0 50 L 25 14 L 75 86 L 125 14 L 175 86 L 200 50';
+      if (waveId === 'square')   return 'M 0 50 L 0 18 L 50 18 L 50 82 L 100 82 L 100 18 L 150 18 L 150 82 L 200 82 L 200 50';
+      return 'M 0 82 L 50 18 L 50 82 L 100 18 L 100 82 L 150 18 L 150 82 L 200 18';
+    }
+
+    function renderWaveformGameView(container) {
+      if (!container) return;
+      if (!waveformGameState.running && !waveformGameState.completed) {
+        waveformGameState = {
+          running: true, round: 1, totalRounds: 8, score: 0, tokensEarned: 0,
+          targetWave: 'sine', targetFreq: 330, selectedWave: 'sine',
+          answered: false, lastCorrect: false, completed: false, audioPlayed: false
+        };
+        setupWaveformRound();
+      }
+      const st = waveformGameState;
+      const activeObj = waveformTypes.find(w => w.id === st.selectedWave) || waveformTypes[0];
+      const targetObj = waveformTypes.find(w => w.id === st.targetWave) || waveformTypes[0];
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <button onclick="stopWaveformGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-indigo-600 tracking-widest">
+              <i class="fa-solid fa-sliders mr-1"></i> Analog Pocket Synthesizer
+            </span>
+          </div>
+
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border-2 border-indigo-500/40 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">8-Round Synth Ear Lab • +2 Tokens Per Match</span>
+                <h2 class="text-2xl font-black mt-0.5">Waveform Sculptor</h2>
+                <p class="text-xs text-slate-300 mt-1">Hear the mystery synthesizer oscillator, audition the 4 waveforms, and lock in the exact match!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1.5 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+                <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">+${st.tokensEarned} Tokens</span>
+              </div>
+            </div>
+
+            ${st.completed ? `
+              <div class="p-8 rounded-2xl bg-emerald-950/60 border-2 border-emerald-500 text-center space-y-4">
+                <div class="text-5xl text-emerald-400"><i class="fa-solid fa-sliders"></i></div>
+                <h3 class="text-2xl font-black text-emerald-300">Synth Patch Master!</h3>
+                <p class="text-sm text-slate-200">You sculpted <strong>${st.score} / ${st.totalRounds}</strong> waveforms accurately and earned <strong>+${st.tokensEarned} Tokens</strong>!</p>
+                <button onclick="waveformGameState.running=false; waveformGameState.completed=false; renderWaveformGameView(document.getElementById('app-viewport'))" class="px-7 py-3 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                  Play Another 8 Rounds
+                </button>
+              </div>
+            ` : `
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
+                <div class="text-center sm:text-left">
+                  <div class="text-xs font-black text-amber-300">${st.audioPlayed ? 'Now select the matching waveform below!' : 'Step 1: Listen to the mystery oscillator!'}</div>
+                  <div class="text-[11px] text-slate-400 mt-0.5">Tip: Compare smooth Sine vs. hollow Square vs. buzzy Sawtooth.</div>
+                </div>
+                <button onclick="playWaveformMystery()" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow-lg shrink-0">
+                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Mystery Synth Wave
+                </button>
+              </div>
+
+              <!-- Live Oscilloscope Preview -->
+              <div class="bg-slate-950 rounded-2xl p-4 border-2 border-slate-800 space-y-2">
+                <div class="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-400">
+                  <span>Your Selected Oscillator</span>
+                  <span style="color:${activeObj.color}">${activeObj.name}</span>
+                </div>
+                <svg viewBox="0 0 200 100" class="w-full h-24" preserveAspectRatio="none">
+                  <line x1="0" y1="50" x2="200" y2="50" stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>
+                  <path d="${buildWaveformSvgPath(st.selectedWave)}" fill="none" stroke="${activeObj.color}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+                </svg>
+              </div>
+
+              <!-- 4 Oscillator Selector Pads -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                ${waveformTypes.map(w => `
+                  <button onclick="previewWaveformChoice('${w.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-left transition-all ${
+                    st.answered && w.id === st.targetWave
+                      ? 'border-emerald-400 bg-emerald-950/70'
+                      : st.selectedWave === w.id
+                      ? 'border-amber-400 bg-indigo-900/80 scale-[1.02]'
+                      : 'border-slate-700 bg-slate-800 hover:border-slate-500'
+                  }">
+                    <svg viewBox="0 0 200 100" class="w-full h-10 mb-2"><path d="${buildWaveformSvgPath(w.id)}" fill="none" stroke="${w.color}" stroke-width="6" stroke-linejoin="round"/></svg>
+                    <div class="font-black text-xs text-white">${w.name}</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">${w.desc}</div>
+                  </button>
+                `).join('')}
+              </div>
+
+              ${!st.answered ? `
+                <div class="text-center">
+                  <button onclick="submitWaveformGuess()" class="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
+                    <i class="fa-solid fa-check mr-1.5"></i> Lock In ${activeObj.name}
+                  </button>
+                </div>
+              ` : `
+                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="text-xs font-bold">${st.lastCorrect ? `✓ Exact match (+2 Tokens)! That was a ${targetObj.name}.` : `✗ Not quite — the mystery oscillator was a ${targetObj.name} (${targetObj.desc}).`}</span>
+                  <button onclick="nextWaveformRound()" class="px-5 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                    ${st.round < st.totalRounds ? 'Next Round →' : 'See Results'}
+                  </button>
+                </div>
+              `}
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME ARCADE: 30-PIECE DRUMKIT (DRUM HERO RHYTHM DROP)
+    // ==========================================
+    let drumHeroState = {
+      running: false,
+      gameOver: false,
+      rafId: null,
+      score: 0,
+      streak: 0,
+      tokensEarned: 0,
+      lives: 5,
+      notes: [],
+      lastSpawn: 0,
+      lastFrame: 0,
+      speed: 2.6,
+      flashLane: [0, 0, 0],
+      feedback: 'Hit A (Kick), S (Snare), D (Hi-Hat) as notes cross the glowing bar!'
+    };
+
+    function stopDrumHeroGame() {
+      drumHeroState.running = false;
+      if (drumHeroState.rafId) {
+        cancelAnimationFrame(drumHeroState.rafId);
+        drumHeroState.rafId = null;
+      }
+    }
+
+    function startDrumHeroGame() {
+      stopDrumHeroGame();
+      drumHeroState = {
+        running: true,
+        gameOver: false,
+        rafId: null,
+        score: 0,
+        streak: 0,
+        tokensEarned: 0,
+        lives: 5,
+        notes: [],
+        lastSpawn: performance.now(),
+        lastFrame: performance.now(),
+        speed: 2.6,
+        flashLane: [0, 0, 0],
+        feedback: 'Hit A (Kick), S (Snare), D (Hi-Hat) or tap the pads!'
+      };
+      renderDrumHeroGameView(document.getElementById('app-viewport'));
+    }
+
+    function hitDrumHeroLane(laneIdx) {
+      const st = drumHeroState;
+      if (!st.running || st.gameOver) return;
+      const sounds = ['kick', 'snare', 'hihat'];
+      playDrumSound(sounds[laneIdx]);
+      st.flashLane[laneIdx] = 1;
+
+      const hitY = 300;
+      let hitIdx = -1;
+      let bestDist = 48;
+      st.notes.forEach((n, idx) => {
+        if (n.lane === laneIdx && !n.hit) {
+          const d = Math.abs(n.y - hitY);
+          if (d < bestDist) {
+            bestDist = d;
+            hitIdx = idx;
+          }
+        }
+      });
+
+      if (hitIdx >= 0) {
+        st.notes[hitIdx].hit = true;
+        st.notes.splice(hitIdx, 1);
+        st.score++;
+        st.streak++;
+        st.speed = Math.min(6.2, 2.6 + st.score * 0.06);
+        if (st.score % 5 === 0) {
+          st.tokensEarned += 1;
+          addTokens(1);
+          st.feedback = `🔥 ${st.score} Hits! +1 Token Earned!`;
+        } else {
+          st.feedback = bestDist < 18 ? '⚡ PERFECT HIT!' : '✓ GOOD HIT!';
+        }
+      } else {
+        st.streak = 0;
+        st.feedback = '✗ Early / Empty lane!';
+      }
+      updateDrumHeroHUD();
+    }
+
+    function updateDrumHeroHUD() {
+      const st = drumHeroState;
+      const sc = document.getElementById('dh-score');
+      const sr = document.getElementById('dh-streak');
+      const lv = document.getElementById('dh-lives');
+      const tk = document.getElementById('dh-tokens');
+      const fb = document.getElementById('dh-feedback');
+      if (sc) sc.textContent = st.score;
+      if (sr) sr.textContent = st.streak;
+      if (lv) lv.textContent = '❤️'.repeat(Math.max(0, st.lives)) + '🖤'.repeat(Math.max(0, 5 - st.lives));
+      if (tk) tk.textContent = `+${st.tokensEarned}`;
+      if (fb) fb.textContent = st.feedback;
+    }
+
+    function initDrumHeroCanvas() {
+      const canvas = document.getElementById('drum-hero-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const st = drumHeroState;
+      canvas.width = 480;
+      canvas.height = 360;
+
+      const laneColors = ['#f43f5e', '#fbbf24', '#38bdf8'];
+      const laneLabels = ['KICK (A)', 'SNARE (S)', 'HI-HAT (D)'];
+      const hitY = 300;
+
+      const loop = (now) => {
+        if (!st.running) return;
+        const dt = Math.min(2, (now - st.lastFrame) / 16.67);
+        st.lastFrame = now;
+
+        const spawnMs = Math.max(360, 760 - st.score * 9);
+        if (now - st.lastSpawn > spawnMs) {
+          st.notes.push({ lane: Math.floor(Math.random() * 3), y: -20, hit: false });
+          st.lastSpawn = now;
+        }
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const colW = canvas.width / 3;
+        for (let i = 0; i < 3; i++) {
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(30,41,59,0.55)' : 'rgba(15,23,42,0.55)';
+          ctx.fillRect(i * colW, 0, colW, canvas.height);
+
+          if (st.flashLane[i] > 0) {
+            ctx.fillStyle = `rgba(255,255,255,${st.flashLane[i] * 0.2})`;
+            ctx.fillRect(i * colW, 0, colW, canvas.height);
+            st.flashLane[i] = Math.max(0, st.flashLane[i] - 0.1 * dt);
+          }
+
+          // Target ring
+          ctx.beginPath();
+          ctx.arc(i * colW + colW / 2, hitY, 24, 0, Math.PI * 2);
+          ctx.strokeStyle = laneColors[i];
+          ctx.lineWidth = 4;
+          ctx.stroke();
+
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '900 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(laneLabels[i], i * colW + colW / 2, 344);
+        }
+
+        // Hit line
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, hitY);
+        ctx.lineTo(canvas.width, hitY);
+        ctx.stroke();
+
+        // Update notes
+        for (let i = st.notes.length - 1; i >= 0; i--) {
+          const n = st.notes[i];
+          n.y += st.speed * dt;
+          const cx = n.lane * colW + colW / 2;
+
+          ctx.beginPath();
+          ctx.arc(cx, n.y, 18, 0, Math.PI * 2);
+          ctx.fillStyle = laneColors[n.lane];
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+
+          if (n.y > canvas.height + 20) {
+            st.notes.splice(i, 1);
+            st.lives--;
+            st.streak = 0;
+            st.feedback = '✗ Missed a drum beat! (-1 ❤️)';
+            updateDrumHeroHUD();
+            if (st.lives <= 0) {
+              st.gameOver = true;
+              st.running = false;
+              stopDrumHeroGame();
+              renderDrumHeroGameView(document.getElementById('app-viewport'));
+              return;
+            }
+          }
+        }
+
+        st.rafId = requestAnimationFrame(loop);
+      };
+
+      st.rafId = requestAnimationFrame(loop);
+    }
+
+    function renderDrumHeroGameView(container) {
+      if (!container) return;
+      const st = drumHeroState;
+
+      if (!st.running && !st.gameOver) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-rose-500 tracking-widest"><i class="fa-solid fa-drum mr-1"></i> 30-Piece Drumkit</span>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-rose-500/40 space-y-5">
+              <div class="w-20 h-20 bg-rose-500/20 border-2 border-rose-400 rounded-full flex items-center justify-center text-rose-400 text-4xl mx-auto">
+                <i class="fa-solid fa-drum"></i>
+              </div>
+              <h2 class="text-3xl font-black text-amber-400">Drum Hero: Rhythm Drop</h2>
+              <p class="text-sm text-slate-300 max-w-md mx-auto">Use <strong>A / S / D</strong> (or <strong>← / ↓ / →</strong> or tap the pads) to smash Kick, Snare, and Hi-Hat beats as they cross the target line! Earn <strong>+1 Token</strong> every 5 hits.</p>
+              <button onclick="startDrumHeroGame()" class="px-8 py-4 bg-rose-500 hover:bg-rose-400 text-white font-black rounded-2xl text-base shadow-lg">
+                <i class="fa-solid fa-play mr-2"></i> Start Drum Solo!
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.gameOver) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-rose-500/50 space-y-4">
+              <h2 class="text-3xl font-black text-amber-400">Drum Solo Finished!</h2>
+              <p class="text-sm text-slate-300">You smashed <strong class="text-white">${st.score}</strong> drum beats and earned <strong class="text-emerald-400">+${st.tokensEarned} Tokens</strong>!</p>
+              <button onclick="startDrumHeroGame()" class="px-8 py-3.5 bg-rose-500 hover:bg-rose-400 text-white font-black rounded-2xl text-sm shadow-lg">Play Again</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="max-w-2xl mx-auto space-y-4">
+          <div class="flex items-center justify-between">
+            <button onclick="stopDrumHeroGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-rose-500 tracking-widest"><i class="fa-solid fa-drum mr-1"></i> Drum Hero</span>
+          </div>
+          <div class="bg-slate-900 rounded-3xl p-5 text-white shadow-xl border-2 border-rose-500/40 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-black">
+              <span id="dh-lives">❤️❤️❤️❤️❤️</span>
+              <span class="px-3 py-1 rounded-xl bg-slate-800 text-amber-300">Hits: <span id="dh-score">0</span></span>
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 text-indigo-200">Streak: <span id="dh-streak">0</span></span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 text-emerald-300">Tokens: <span id="dh-tokens">+0</span></span>
+            </div>
+            <div class="rounded-2xl overflow-hidden border-2 border-slate-700 bg-slate-950">
+              <canvas id="drum-hero-canvas" class="w-full h-auto block"></canvas>
+            </div>
+            <div id="dh-feedback" class="text-center text-xs font-black text-amber-300">${st.feedback}</div>
+            <div class="grid grid-cols-3 gap-3">
+              <button onmousedown="hitDrumHeroLane(0)" ontouchstart="event.preventDefault(); hitDrumHeroLane(0)" class="py-4 rounded-2xl bg-rose-600 hover:bg-rose-500 active:scale-95 font-black text-xs shadow-lg">KICK (A / ←)</button>
+              <button onmousedown="hitDrumHeroLane(1)" ontouchstart="event.preventDefault(); hitDrumHeroLane(1)" class="py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs shadow-lg">SNARE (S / ↓)</button>
+              <button onmousedown="hitDrumHeroLane(2)" ontouchstart="event.preventDefault(); hitDrumHeroLane(2)" class="py-4 rounded-2xl bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-black text-xs shadow-lg">HI-HAT (D / →)</button>
+            </div>
+          </div>
+        </div>
+      `;
+      initDrumHeroCanvas();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (!drumHeroState.running || e.repeat) return;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft')  { e.preventDefault(); hitDrumHeroLane(0); }
+      if (e.code === 'KeyS' || e.code === 'ArrowDown')  { e.preventDefault(); hitDrumHeroLane(1); }
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') { e.preventDefault(); hitDrumHeroLane(2); }
+    });
+
+    // ==========================================
+    // MINIGAME ARCADE: 8-STRING BASS GUITAR (THE GROOVE LOCK)
+    // ==========================================
+    let grooveLockState = {
+      running: false,
+      round: 1,
+      totalRounds: 6,
+      score: 0,
+      tokensEarned: 0,
+      targetPattern: [1, 0, 1, 0, 1, 0, 0, 1],
+      playerPattern: [0, 0, 0, 0, 0, 0, 0, 0],
+      isPlaying: false,
+      answered: false,
+      lastCorrect: false,
+      completed: false,
+      audioPlayed: false,
+      timers: []
+    };
+
+    function stopGrooveLockGame() {
+      grooveLockState.running = false;
+      grooveLockState.isPlaying = false;
+      if (grooveLockState.timers) grooveLockState.timers.forEach(t => clearTimeout(t));
+      grooveLockState.timers = [];
+    }
+
+    function setupGrooveLockRound() {
+      const patterns = [
+        [1, 0, 0, 1, 1, 0, 1, 0],
+        [1, 0, 1, 0, 0, 1, 1, 0],
+        [1, 1, 0, 0, 1, 0, 1, 0],
+        [1, 0, 1, 1, 0, 1, 0, 0],
+        [1, 0, 0, 1, 0, 1, 0, 1],
+        [1, 1, 0, 1, 0, 0, 1, 0]
+      ];
+      grooveLockState.targetPattern = patterns[(grooveLockState.round - 1) % patterns.length];
+      grooveLockState.playerPattern = [0, 0, 0, 0, 0, 0, 0, 0];
+      grooveLockState.answered = false;
+      grooveLockState.lastCorrect = false;
+      grooveLockState.audioPlayed = false;
+    }
+
+    function playGrooveLockBassPattern(pat) {
+      const st = grooveLockState;
+      if (st.isPlaying) return;
+      st.isPlaying = true;
+      st.audioPlayed = true;
+      const bassFreqs = [65.41, 73.42, 82.41, 98.00, 65.41, 82.41, 98.00, 110.00];
+      pat.forEach((on, idx) => {
+        const t = setTimeout(() => {
+          playDrumSound('hihat');
+          if (on) playTonePitch(bassFreqs[idx], 0.22, 0.45, 'sawtooth');
+        }, idx * 240);
+        st.timers.push(t);
+      });
+      st.timers.push(setTimeout(() => {
+        st.isPlaying = false;
+      }, pat.length * 240 + 120));
+    }
+
+    function toggleGrooveLockStep(idx) {
+      const st = grooveLockState;
+      if (st.answered || st.completed) return;
+      st.playerPattern[idx] = st.playerPattern[idx] ? 0 : 1;
+      if (st.playerPattern[idx]) playTonePitch(82.41, 0.16, 0.4, 'sawtooth');
+      renderGrooveLockGameView(document.getElementById('app-viewport'));
+    }
+
+    function checkGrooveLockPattern() {
+      const st = grooveLockState;
+      if (st.answered || st.completed) return;
+      if (!st.audioPlayed) {
+        showAppModal('Listen First', 'Click "Hear Bass Groove" before checking your lock!', false);
+        return;
+      }
+      st.answered = true;
+      st.lastCorrect = st.targetPattern.every((v, i) => v === st.playerPattern[i]);
+      if (st.lastCorrect) {
+        st.score++;
+        st.tokensEarned += 2;
+        addTokens(2);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        playTonePitch(130, 0.28, 0.35, 'sawtooth');
+      }
+      renderGrooveLockGameView(document.getElementById('app-viewport'));
+    }
+
+    function nextGrooveLockRound() {
+      const st = grooveLockState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupGrooveLockRound();
+      } else {
+        st.completed = true;
+      }
+      renderGrooveLockGameView(document.getElementById('app-viewport'));
+    }
+
+    function renderGrooveLockGameView(container) {
+      if (!container) return;
+      if (!grooveLockState.running && !grooveLockState.completed) {
+        grooveLockState = {
+          running: true, round: 1, totalRounds: 6, score: 0, tokensEarned: 0,
+          targetPattern: [], playerPattern: [0,0,0,0,0,0,0,0],
+          isPlaying: false, answered: false, lastCorrect: false, completed: false, audioPlayed: false, timers: []
+        };
+        setupGrooveLockRound();
+      }
+      const st = grooveLockState;
+      const labels = ['1', '&', '2', '&', '3', '&', '4', '&'];
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <button onclick="stopGrooveLockGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-indigo-600 tracking-widest"><i class="fa-solid fa-guitar mr-1"></i> 8-String Bass Guitar</span>
+          </div>
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border-2 border-indigo-500/40 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">6-Round Bass Ear Challenge • +2 Tokens / Groove</span>
+                <h2 class="text-2xl font-black mt-0.5">The Groove Lock</h2>
+                <p class="text-xs text-slate-300 mt-1">Listen to the funky 8-step bassline, then toggle the exact beats on the fretboard sequencer to lock in the groove!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1.5 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+                <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">+${st.tokensEarned} Tokens</span>
+              </div>
+            </div>
+
+            ${st.completed ? `
+              <div class="p-8 rounded-2xl bg-emerald-950/60 border-2 border-emerald-500 text-center space-y-4">
+                <h3 class="text-2xl font-black text-emerald-300">Groove Master!</h3>
+                <p class="text-sm text-slate-200">You locked in <strong>${st.score} / ${st.totalRounds}</strong> bass grooves and earned <strong>+${st.tokensEarned} Tokens</strong>!</p>
+                <button onclick="grooveLockState.running=false; grooveLockState.completed=false; renderGrooveLockGameView(document.getElementById('app-viewport'))" class="px-7 py-3 bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg">Play Again</button>
+              </div>
+            ` : `
+              <div class="flex flex-wrap items-center justify-center gap-3">
+                <button onclick="playGrooveLockBassPattern(grooveLockState.targetPattern)" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Bass Groove
+                </button>
+                <button onclick="playGrooveLockBassPattern(grooveLockState.playerPattern)" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-black rounded-2xl text-xs">
+                  <i class="fa-solid fa-play mr-1.5"></i> Preview My Beats
+                </button>
+              </div>
+
+              <div class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                ${st.playerPattern.map((val, idx) => {
+                  const isTarget = st.targetPattern[idx] === 1;
+                  let cls = val ? 'bg-indigo-500 border-indigo-300 text-white shadow-lg scale-105' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-amber-400';
+                  if (st.answered) {
+                    if (val && isTarget) cls = 'bg-emerald-500 border-emerald-300 text-slate-950';
+                    else if (!val && isTarget) cls = 'bg-amber-500/30 border-amber-400 text-amber-200';
+                    else if (val && !isTarget) cls = 'bg-rose-600 border-rose-400 text-white';
+                  }
+                  return `
+                    <button onclick="toggleGrooveLockStep(${idx})" ${st.answered ? 'disabled' : ''} class="h-20 rounded-2xl border-2 font-black text-sm flex flex-col items-center justify-center gap-1 transition-all ${cls}">
+                      <span>${labels[idx]}</span>
+                      <span class="text-[10px] uppercase">${val ? 'BASS' : '—'}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+
+              ${!st.answered ? `
+                <div class="text-center">
+                  <button onclick="checkGrooveLockPattern()" class="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
+                    Lock In Groove (+2 Tokens)
+                  </button>
+                </div>
+              ` : `
+                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="text-xs font-bold">${st.lastCorrect ? '✓ Tight pocket! (+2 Tokens)' : '✗ Slightly off — amber boxes show the beats you missed.'}</span>
+                  <button onclick="nextGrooveLockRound()" class="px-5 py-2 bg-white text-slate-950 font-black rounded-xl text-xs shrink-0">
+                    ${st.round < st.totalRounds ? 'Next Groove →' : 'Finish'}
+                  </button>
+                </div>
+              `}
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME ARCADE: MR B'S WRENCH (PRECISION PITCH TUNER)
+    // ==========================================
+    let wrenchGameState = {
+      running: false,
+      round: 1,
+      totalRounds: 6,
+      score: 0,
+      tokensEarned: 0,
+      targetFreq: 440,
+      targetName: 'A4',
+      offsetSteps: 0, // -5 to +5 (0 is perfectly in tune)
+      answered: false,
+      lastCorrect: false,
+      completed: false
+    };
+
+    function stopWrenchGame() {
+      wrenchGameState.running = false;
+    }
+
+    function setupWrenchRound() {
+      const notes = [
+        { name: 'C4', freq: 261.63 }, { name: 'D4', freq: 293.66 },
+        { name: 'E4', freq: 329.63 }, { name: 'G4', freq: 392.00 },
+        { name: 'A4', freq: 440.00 }, { name: 'B4', freq: 493.88 }
+      ];
+      const pick = notes[(wrenchGameState.round - 1) % notes.length];
+      wrenchGameState.targetName = pick.name;
+      wrenchGameState.targetFreq = pick.freq;
+      let off = 0;
+      while (off === 0) off = Math.floor(Math.random() * 9) - 4; // -4..+4 excluding 0
+      wrenchGameState.offsetSteps = off;
+      wrenchGameState.answered = false;
+      wrenchGameState.lastCorrect = false;
+    }
+
+    function getWrenchCurrentFreq() {
+      return wrenchGameState.targetFreq * Math.pow(2, (wrenchGameState.offsetSteps * 45) / 1200);
+    }
+
+    function turnWrench(delta) {
+      const st = wrenchGameState;
+      if (st.answered || st.completed) return;
+      st.offsetSteps = Math.max(-5, Math.min(5, st.offsetSteps + delta));
+      playTonePitch(getWrenchCurrentFreq(), 0.45, 0.3, 'triangle');
+      renderWrenchGameView(document.getElementById('app-viewport'));
+    }
+
+    function checkWrenchTuning() {
+      const st = wrenchGameState;
+      if (st.answered || st.completed) return;
+      st.answered = true;
+      st.lastCorrect = (st.offsetSteps === 0);
+      if (st.lastCorrect) {
+        st.score++;
+        st.tokensEarned += 2;
+        addTokens(2);
+        playTonePitch(st.targetFreq, 0.35, 0.35, 'triangle');
+        setTimeout(() => playTonePitch(st.targetFreq * 1.5, 0.35, 0.3, 'triangle'), 160);
+      } else {
+        playTonePitch(155.56, 0.3, 0.3, 'sawtooth');
+      }
+      renderWrenchGameView(document.getElementById('app-viewport'));
+    }
+
+    function nextWrenchRound() {
+      const st = wrenchGameState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupWrenchRound();
+      } else {
+        st.completed = true;
+      }
+      renderWrenchGameView(document.getElementById('app-viewport'));
+    }
+
+    function renderWrenchGameView(container) {
+      if (!container) return;
+      if (!wrenchGameState.running && !wrenchGameState.completed) {
+        wrenchGameState = {
+          running: true, round: 1, totalRounds: 6, score: 0, tokensEarned: 0,
+          targetFreq: 440, targetName: 'A4', offsetSteps: -3,
+          answered: false, lastCorrect: false, completed: false
+        };
+        setupWrenchRound();
+      }
+      const st = wrenchGameState;
+      const wrenchAngle = st.offsetSteps * 18;
+
+      container.innerHTML = `
+        <div class="max-w-2xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <button onclick="stopWrenchGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-slate-600 tracking-widest"><i class="fa-solid fa-wrench mr-1"></i> Mr B's Wrench</span>
+          </div>
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border-2 border-slate-700 space-y-6 text-center">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4 text-left">
+              <div>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">6-Round Pitch Tuning • +2 Tokens Each</span>
+                <h2 class="text-2xl font-black mt-0.5">Mr B's Precision Tuner</h2>
+                <p class="text-xs text-slate-300 mt-1">Compare the Reference Pitch with your String, then turn Mr B's Wrench until they match perfectly!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+                <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">+${st.tokensEarned} Tokens</span>
+              </div>
+            </div>
+
+            ${st.completed ? `
+              <div class="p-8 rounded-2xl bg-emerald-950/60 border-2 border-emerald-500 space-y-4">
+                <h3 class="text-2xl font-black text-emerald-300">Master Luthier!</h3>
+                <p class="text-sm text-slate-200">You tuned <strong>${st.score} / ${st.totalRounds}</strong> strings perfectly and earned <strong>+${st.tokensEarned} Tokens</strong>!</p>
+                <button onclick="wrenchGameState.running=false; wrenchGameState.completed=false; renderWrenchGameView(document.getElementById('app-viewport'))" class="px-7 py-3 bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg">Tune Again</button>
+              </div>
+            ` : `
+              <div class="flex justify-center py-2">
+                <div class="w-28 h-28 rounded-full bg-slate-800 border-4 border-slate-600 flex items-center justify-center text-5xl text-slate-200 transition-transform duration-200 shadow-inner" style="transform: rotate(${wrenchAngle}deg);">
+                  <i class="fa-solid fa-wrench"></i>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap justify-center gap-3">
+                <button onclick="playTonePitch(wrenchGameState.targetFreq, 0.65, 0.32, 'triangle')" class="px-5 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                  <i class="fa-solid fa-bullseye mr-1.5"></i> Hear Reference (${st.targetName})
+                </button>
+                <button onclick="playTonePitch(getWrenchCurrentFreq(), 0.65, 0.32, 'triangle')" class="px-5 py-3 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Your String
+                </button>
+              </div>
+
+              <div class="flex justify-center gap-4">
+                <button onclick="turnWrench(-1)" ${st.answered ? 'disabled' : ''} class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 rounded-2xl font-black text-xs active:scale-95">
+                  <i class="fa-solid fa-rotate-left mr-1.5 text-sky-400"></i> Loosen (Lower Pitch)
+                </button>
+                <button onclick="turnWrench(1)" ${st.answered ? 'disabled' : ''} class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 rounded-2xl font-black text-xs active:scale-95">
+                  Tighten (Higher Pitch) <i class="fa-solid fa-rotate-right ml-1.5 text-amber-400"></i>
+                </button>
+              </div>
+
+              ${!st.answered ? `
+                <button onclick="checkWrenchTuning()" class="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
+                  <i class="fa-solid fa-check mr-1.5"></i> Lock In Tuning (+2 Tokens)
+                </button>
+              ` : `
+                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot-on in tune! (+2 Tokens)' : `✗ Off by ${Math.abs(st.offsetSteps)} notch(es) (${st.offsetSteps > 0 ? 'too sharp' : 'too flat'}).`}</span>
+                  <button onclick="nextWrenchRound()" class="px-5 py-2 bg-white text-slate-950 font-black rounded-xl text-xs shrink-0">
+                    ${st.round < st.totalRounds ? 'Next String →' : 'Finish'}
+                  </button>
+                </div>
+              `}
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME ARCADE: ELTON JOHN'S PIANO (GOLDEN KEY DROP - TETRIS STYLE)
+    // ==========================================
+    const eltonPianoKeys = [
+      { id: 0,  label: 'C',  isBlack: false, freq: 261.63, whiteIdx: 0 },
+      { id: 1,  label: 'C#', isBlack: true,  freq: 277.18, whiteIdx: 0.68 },
+      { id: 2,  label: 'D',  isBlack: false, freq: 293.66, whiteIdx: 1 },
+      { id: 3,  label: 'D#', isBlack: true,  freq: 311.13, whiteIdx: 1.68 },
+      { id: 4,  label: 'E',  isBlack: false, freq: 329.63, whiteIdx: 2 },
+      { id: 5,  label: 'F',  isBlack: false, freq: 349.23, whiteIdx: 3 },
+      { id: 6,  label: 'F#', isBlack: true,  freq: 369.99, whiteIdx: 3.68 },
+      { id: 7,  label: 'G',  isBlack: false, freq: 392.00, whiteIdx: 4 },
+      { id: 8,  label: 'G#', isBlack: true,  freq: 415.30, whiteIdx: 4.68 },
+      { id: 9,  label: 'A',  isBlack: false, freq: 440.00, whiteIdx: 5 },
+      { id: 10, label: 'A#', isBlack: true,  freq: 466.16, whiteIdx: 5.68 },
+      { id: 11, label: 'B',  isBlack: false, freq: 493.88, whiteIdx: 6 }
+    ];
+
+    let eltonPianoState = {
+      running: false,
+      gameOver: false,
+      rafId: null,
+      resizeHandler: null,
+      score: 0,
+      tokensEarned: 0,
+      lives: 3,
+      stage: 1,
+      speed: 1.35,
+      softDrop: false,
+      hiddenLabels: [],
+      falling: null, // { targetId, colIdx, y }
+      sparkles: [],
+      bannerMsg: '',
+      bannerTimer: 0,
+      lastFrame: 0
+    };
+
+    function stopEltonPianoGame() {
+      eltonPianoState.running = false;
+      eltonPianoState.softDrop = false;
+      if (eltonPianoState.rafId) {
+        cancelAnimationFrame(eltonPianoState.rafId);
+        eltonPianoState.rafId = null;
+      }
+      if (eltonPianoState.resizeHandler) {
+        window.removeEventListener('resize', eltonPianoState.resizeHandler);
+        eltonPianoState.resizeHandler = null;
+      }
+    }
+
+    function getEltonActiveKeyPool() {
+      if (eltonPianoState.score < 10) return [0, 2, 4, 5, 7, 9, 11]; // White notes only
+      if (eltonPianoState.score < 15) return [0, 1, 2, 4, 5, 6, 7, 9, 11]; // Add C# and F#
+      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // All 12 chromatic keys
+    }
+
+    function spawnEltonFallingNote() {
+      const pool = getEltonActiveKeyPool();
+      const targetId = pool[Math.floor(Math.random() * pool.length)];
+      const startCol = Math.floor(pool.length / 2);
+      eltonPianoState.falling = { targetId, poolPos: startCol, y: 24 };
+    }
+
+    function moveEltonFallingNote(dir) {
+      const st = eltonPianoState;
+      if (!st.running || !st.falling) return;
+      const pool = getEltonActiveKeyPool();
+      st.falling.poolPos = Math.max(0, Math.min(pool.length - 1, st.falling.poolPos + dir));
+    }
+
+    function startEltonPianoGame() {
+      stopEltonPianoGame();
+      eltonPianoState = {
+        running: true,
+        gameOver: false,
+        rafId: null,
+        resizeHandler: null,
+        score: 0,
+        tokensEarned: 0,
+        lives: 3,
+        stage: 1,
+        speed: 1.35,
+        softDrop: false,
+        hiddenLabels: [],
+        falling: null,
+        sparkles: [],
+        bannerMsg: 'STAGE 1: WHITE KEYS ONLY!',
+        bannerTimer: 100,
+        lastFrame: performance.now()
+      };
+      spawnEltonFallingNote();
+      renderEltonPianoGameView(document.getElementById('app-viewport'));
+    }
+
+    function updateEltonHUD() {
+      const st = eltonPianoState;
+      const sc = document.getElementById('ep-score');
+      const tk = document.getElementById('ep-tokens');
+      const lv = document.getElementById('ep-lives');
+      const sg = document.getElementById('ep-stage');
+      if (sc) sc.textContent = st.score;
+      if (tk) tk.textContent = `+${st.tokensEarned}`;
+      if (lv) lv.textContent = '❤️'.repeat(Math.max(0, st.lives)) + '🖤'.repeat(Math.max(0, 3 - st.lives));
+      if (sg) sg.textContent = st.stage === 1 ? 'Stage 1: White Keys' : st.stage === 2 ? 'Stage 2: +C# & F#' : 'Stage 3: Full Chromatic!';
+    }
+
+    function initEltonPianoCanvas() {
+      const canvas = document.getElementById('elton-piano-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const st = eltonPianoState;
+
+      const resize = () => {
+        const w = Math.max(300, Math.floor(canvas.parentElement.getBoundingClientRect().width));
+        canvas.width = w;
+        canvas.height = 420;
+      };
+      resize();
+      st.resizeHandler = resize;
+      window.addEventListener('resize', resize);
+
+      const getKeyCenterX = (keyId, w) => {
+        const keyObj = eltonPianoKeys[keyId];
+        const whiteW = w / 7;
+        if (!keyObj.isBlack) return (keyObj.whiteIdx + 0.5) * whiteW;
+        return (keyObj.whiteIdx + 0.32) * whiteW;
+      };
+
+      const loop = (now) => {
+        if (!st.running) return;
+        const w = canvas.width;
+        const h = canvas.height;
+        const kbTop = h - 125;
+        const whiteW = w / 7;
+        const dt = Math.min(2.2, (now - st.lastFrame) / 16.67);
+        st.lastFrame = now;
+
+        // Concert Dark Background
+        const bg = ctx.createLinearGradient(0, 0, 0, kbTop);
+        bg.addColorStop(0, '#090d1f');
+        bg.addColorStop(1, '#1e1b4b');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, w, h);
+
+        const pool = getEltonActiveKeyPool();
+        const curKeyId = pool[st.falling.poolPos] ?? pool[0];
+        const curX = getKeyCenterX(curKeyId, w);
+
+        // Spotlight vertical beam for current column
+        const beamGrad = ctx.createLinearGradient(0, 0, 0, kbTop);
+        beamGrad.addColorStop(0, 'rgba(251, 191, 36, 0.04)');
+        beamGrad.addColorStop(1, 'rgba(251, 191, 36, 0.24)');
+        ctx.fillStyle = beamGrad;
+        ctx.fillRect(curX - 24, 0, 48, kbTop);
+
+        // Move falling note
+        const dropMult = st.softDrop ? 4.2 : 1;
+        st.falling.y += st.speed * dropMult * dt;
+
+        // Draw Golden Piano White Keys
+        const whites = eltonPianoKeys.filter(k => !k.isBlack);
+        whites.forEach((k, idx) => {
+          const kx = idx * whiteW;
+          const isHovered = (curKeyId === k.id);
+          const kg = ctx.createLinearGradient(0, kbTop, 0, h);
+          kg.addColorStop(0, isHovered ? '#fef9c3' : '#fef08a');
+          kg.addColorStop(0.6, isHovered ? '#fde047' : '#eab308');
+          kg.addColorStop(1, '#a16207');
+          ctx.fillStyle = kg;
+          ctx.fillRect(kx + 1, kbTop, whiteW - 2, h - kbTop);
+          ctx.strokeStyle = '#78350f';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(kx + 1, kbTop, whiteW - 2, h - kbTop);
+
+          if (!st.hiddenLabels.includes(k.id)) {
+            ctx.fillStyle = '#451a03';
+            ctx.font = '900 15px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(k.label, kx + whiteW / 2, h - 18);
+          }
+        });
+
+        // Draw Black Keys (if unlocked or decorative)
+        const blacks = eltonPianoKeys.filter(k => k.isBlack);
+        blacks.forEach(k => {
+          const unlocked = pool.includes(k.id);
+          const bx = k.whiteIdx * whiteW;
+          const bw = whiteW * 0.62;
+          const bh = 74;
+          const isHovered = (curKeyId === k.id);
+          ctx.fillStyle = !unlocked ? '#292524' : (isHovered ? '#b45309' : '#1c1917');
+          ctx.fillRect(bx, kbTop, bw, bh);
+          ctx.strokeStyle = isHovered ? '#fef08a' : '#78350f';
+          ctx.lineWidth = isHovered ? 2.5 : 1.5;
+          ctx.strokeRect(bx, kbTop, bw, bh);
+
+          if (unlocked && !st.hiddenLabels.includes(k.id)) {
+            ctx.fillStyle = '#fde68a';
+            ctx.font = '900 11px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(k.label, bx + bw / 2, kbTop + bh - 12);
+          }
+        });
+
+        // Draw Falling Golden Note Block
+        const targetObj = eltonPianoKeys[st.falling.targetId];
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(curX - 24, st.falling.y - 22, 48, 44, 12);
+        ctx.fillStyle = targetObj.isBlack ? '#1e293b' : '#f59e0b';
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#fef08a';
+        ctx.stroke();
+
+        ctx.fillStyle = targetObj.isBlack ? '#fde047' : '#0f172a';
+        ctx.font = '900 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(targetObj.label, curX, st.falling.y);
+        ctx.restore();
+
+        // Check landing on keyboard
+        if (st.falling.y + 22 >= kbTop) {
+          if (curKeyId === st.falling.targetId) {
+            st.score++;
+            st.tokensEarned += 1;
+            addTokens(1);
+            st.speed = Math.min(4.8, 1.35 + st.score * 0.11);
+            playTonePitch(targetObj.freq, 0.32, 0.36, 'triangle');
+
+            // Sparkle burst
+            for (let s = 0; s < 14; s++) {
+              const a = Math.random() * Math.PI * 2;
+              st.sparkles.push({ x: curX, y: kbTop, vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2 - 1.5, alpha: 1 });
+            }
+
+            // Stage progression
+            if (st.score === 10) {
+              st.stage = 2;
+              st.bannerMsg = 'STAGE 2: BLACK KEYS C# & F# ADDED!';
+              st.bannerTimer = 120;
+            } else if (st.score === 15) {
+              st.stage = 3;
+              st.bannerMsg = 'STAGE 3: ALL 12 CHROMATIC KEYS UNLOCKED!';
+              st.bannerTimer = 120;
+            }
+
+            // Vanishing key label every 3 correct answers!
+            if (st.score % 3 === 0) {
+              const visiblePool = getEltonActiveKeyPool().filter(id => !st.hiddenLabels.includes(id));
+              if (visiblePool.length > 0) {
+                const hideId = visiblePool[Math.floor(Math.random() * visiblePool.length)];
+                st.hiddenLabels.push(hideId);
+                st.bannerMsg = `MEMORY TEST: "${eltonPianoKeys[hideId].label}" LABEL VANISHED!`;
+                st.bannerTimer = 110;
+              }
+            }
+          } else {
+            st.lives--;
+            playTonePitch(135, 0.3, 0.35, 'sawtooth');
+            st.bannerMsg = `OOPS! ${targetObj.label} landed on ${eltonPianoKeys[curKeyId].label}! (-1 ❤️)`;
+            st.bannerTimer = 90;
+            if (st.lives <= 0) {
+              st.gameOver = true;
+              st.running = false;
+              stopEltonPianoGame();
+              renderEltonPianoGameView(document.getElementById('app-viewport'));
+              return;
+            }
+          }
+          updateEltonHUD();
+          spawnEltonFallingNote();
+        }
+
+        // Update sparkles
+        for (let i = st.sparkles.length - 1; i >= 0; i--) {
+          const sp = st.sparkles[i];
+          sp.x += sp.vx * dt;
+          sp.y += sp.vy * dt;
+          sp.alpha -= 0.03 * dt;
+          if (sp.alpha <= 0) { st.sparkles.splice(i, 1); continue; }
+          ctx.fillStyle = `rgba(254, 240, 138, ${sp.alpha})`;
+          ctx.beginPath();
+          ctx.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Banner overlay
+        if (st.bannerTimer > 0) {
+          st.bannerTimer -= dt;
+          ctx.save();
+          ctx.globalAlpha = Math.min(1, st.bannerTimer / 20);
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          ctx.fillRect(0, 62, w, 40);
+          ctx.fillStyle = '#fde047';
+          ctx.font = '900 13px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(st.bannerMsg, w / 2, 82);
+          ctx.restore();
+        }
+
+        st.rafId = requestAnimationFrame(loop);
+      };
+
+      st.rafId = requestAnimationFrame(loop);
+    }
+
+    function renderEltonPianoGameView(container) {
+      if (!container) return;
+      const st = eltonPianoState;
+
+      if (!st.running && !st.gameOver) {
+        container.innerHTML = `
+          <div class="max-w-3xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-amber-500 tracking-widest"><i class="fa-solid fa-keyboard mr-1"></i> Elton John's Piano</span>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-amber-400/50 space-y-5">
+              <div class="w-20 h-20 bg-gradient-to-tr from-amber-500 to-yellow-200 rounded-full flex items-center justify-center text-slate-950 text-4xl mx-auto shadow-lg">
+                <i class="fa-solid fa-keyboard"></i>
+              </div>
+              <h2 class="text-3xl font-black text-amber-400">Golden Key Drop</h2>
+              <p class="text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
+                Guide falling letter notes onto the matching keys of Elton John's <strong>Golden Piano</strong> using <strong>◀ ▶ Arrow Keys</strong> (hold <strong>▼</strong> to drop faster)! Starts with white keys, unlocks black keys after 10 hits, speeds up, and vanishes a key label every 3 hits! <strong>+1 Token per correct note!</strong>
+              </p>
+              <button onclick="startEltonPianoGame()" class="px-8 py-4 bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 font-black rounded-2xl text-base shadow-lg">
+                <i class="fa-solid fa-play mr-2"></i> Start Golden Key Drop!
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.gameOver) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-amber-400/60 space-y-4">
+              <h2 class="text-3xl font-black text-amber-400">Standing Ovation!</h2>
+              <p class="text-sm text-slate-300">You landed <strong class="text-white">${st.score}</strong> golden notes and earned <strong class="text-emerald-400">+${st.tokensEarned} Tokens</strong>!</p>
+              <button onclick="startEltonPianoGame()" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg">Play Again</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-4">
+          <div class="flex items-center justify-between">
+            <button onclick="stopEltonPianoGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-amber-500 tracking-widest"><i class="fa-solid fa-keyboard mr-1"></i> Golden Key Drop</span>
+          </div>
+          <div class="bg-slate-900 rounded-3xl p-5 text-white shadow-xl border-2 border-amber-400/40 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-black">
+              <span id="ep-stage" class="px-3 py-1 rounded-xl bg-amber-400/20 border border-amber-400/40 text-amber-300">Stage 1: White Keys</span>
+              <span id="ep-lives">❤️❤️❤️</span>
+              <span class="px-3 py-1 rounded-xl bg-slate-800 text-amber-300">Notes: <span id="ep-score">0</span></span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 text-emerald-300">Tokens: <span id="ep-tokens">+0</span></span>
+            </div>
+            <div class="rounded-2xl overflow-hidden border-2 border-amber-500/40 bg-slate-950">
+              <canvas id="elton-piano-canvas" class="w-full h-auto block"></canvas>
+            </div>
+            <div class="grid grid-cols-3 gap-3 max-w-md mx-auto">
+              <button onclick="moveEltonFallingNote(-1)" class="py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 font-black text-sm active:scale-95">◀ Left</button>
+              <button onmousedown="eltonPianoState.softDrop=true" onmouseup="eltonPianoState.softDrop=false" onmouseleave="eltonPianoState.softDrop=false" ontouchstart="event.preventDefault(); eltonPianoState.softDrop=true" ontouchend="eltonPianoState.softDrop=false" class="py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-sm active:scale-95">▼ Drop</button>
+              <button onclick="moveEltonFallingNote(1)" class="py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 font-black text-sm active:scale-95">Right ▶</button>
+            </div>
+          </div>
+        </div>
+      `;
+      initEltonPianoCanvas();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (!eltonPianoState.running) return;
+      if (e.code === 'ArrowLeft')  { e.preventDefault(); moveEltonFallingNote(-1); }
+      if (e.code === 'ArrowRight') { e.preventDefault(); moveEltonFallingNote(1); }
+      if (e.code === 'ArrowDown')  { e.preventDefault(); eltonPianoState.softDrop = true; }
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'ArrowDown' && eltonPianoState.running) eltonPianoState.softDrop = false;
+    });
+
+    // ==========================================
+    // MINIGAME ARCADE: MR H'S VINTAGE COMB (THE COMB-O-PHONE)
+    // ==========================================
+    const combTeethScale = [
+      { idx: 0, note: 'C', freq: 261.63, h: 118 },
+      { idx: 1, note: 'D', freq: 293.66, h: 108 },
+      { idx: 2, note: 'E', freq: 329.63, h: 98 },
+      { idx: 3, note: 'F', freq: 349.23, h: 90 },
+      { idx: 4, note: 'G', freq: 392.00, h: 82 },
+      { idx: 5, note: 'A', freq: 440.00, h: 74 },
+      { idx: 6, note: 'B', freq: 493.88, h: 66 }
+    ];
+
+    const combHairStageNames = [
+      'Shiny Bald Head',
+      'Stage 1: Peach Fuzz',
+      'Stage 2: Distinguished Sideburns',
+      'Stage 3: Classic Side-Part',
+      'Stage 4: 80s Rockstar Mullet',
+      'Stage 5: Immaculate Maestro Pompadour!'
+    ];
+
+    let combophoneState = {
+      running: false,
+      round: 1,
+      totalRounds: 5,
+      hairStage: 0,
+      mistakes: 0,
+      tokensEarned: 0,
+      sequence: [],
+      playerInput: [],
+      isPlayingDemo: false,
+      activeTooth: -1,
+      statusMsg: 'Click "Hear Melody" then pluck the matching comb teeth!',
+      completed: false,
+      timers: []
+    };
+
+    function stopCombophoneGame() {
+      combophoneState.running = false;
+      combophoneState.isPlayingDemo = false;
+      if (combophoneState.timers) combophoneState.timers.forEach(t => clearTimeout(t));
+      combophoneState.timers = [];
+    }
+
+    function playCombToothSound(freq) {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now);
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(freq * 2.2, now);
+        filter.Q.setValueAtTime(4.5, now);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.35, now + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+        osc.start(now); osc.stop(now + 0.3);
+      } catch (e) {}
+    }
+
+    function setupCombophoneRound() {
+      const len = Math.min(6, 2 + combophoneState.round); // 3, 4, 5, 6, 6 notes
+      combophoneState.sequence = Array.from({ length: len }, () => Math.floor(Math.random() * combTeethScale.length));
+      combophoneState.playerInput = [];
+      combophoneState.statusMsg = `Round ${combophoneState.round}: Listen to the ${len}-note comb melody!`;
+    }
+
+    function playCombophoneMelody() {
+      const st = combophoneState;
+      if (st.isPlayingDemo || st.completed) return;
+      st.isPlayingDemo = true;
+      st.playerInput = [];
+      st.statusMsg = 'Listening to Mr H’s Vintage Comb...';
+      renderCombophoneGameView(document.getElementById('app-viewport'));
+
+      st.sequence.forEach((toothIdx, i) => {
+        const t = setTimeout(() => {
+          st.activeTooth = toothIdx;
+          playCombToothSound(combTeethScale[toothIdx].freq);
+          renderCombophoneGameView(document.getElementById('app-viewport'));
+        }, i * 480);
+        st.timers.push(t);
+      });
+
+      st.timers.push(setTimeout(() => {
+        st.activeTooth = -1;
+        st.isPlayingDemo = false;
+        st.statusMsg = `Your turn! Pluck the ${st.sequence.length} comb teeth in order.`;
+        renderCombophoneGameView(document.getElementById('app-viewport'));
+      }, st.sequence.length * 480 + 180));
+    }
+
+    function pluckCombTooth(toothIdx) {
+      const st = combophoneState;
+      if (!st.running || st.isPlayingDemo || st.completed) return;
+      playCombToothSound(combTeethScale[toothIdx].freq);
+      st.activeTooth = toothIdx;
+      const step = st.playerInput.length;
+
+      if (st.sequence[step] === toothIdx) {
+        st.playerInput.push(toothIdx);
+        if (st.playerInput.length === st.sequence.length) {
+          st.hairStage = Math.min(5, st.hairStage + 1);
+          st.tokensEarned += 2;
+          addTokens(2);
+          st.statusMsg = `✨ Hair Grew! Unlocked: ${combHairStageNames[st.hairStage]} (+2 Tokens)`;
+          if (st.round < st.totalRounds) {
+            st.round++;
+            st.timers.push(setTimeout(() => {
+              setupCombophoneRound();
+              renderCombophoneGameView(document.getElementById('app-viewport'));
+              playCombophoneMelody();
+            }, 950));
+          } else {
+            if (st.mistakes === 0) {
+              st.tokensEarned += 5;
+              addTokens(5);
+            }
+            st.completed = true;
+          }
+        }
+      } else {
+        st.mistakes++;
+        st.playerInput = [];
+        playTonePitch(145, 0.25, 0.3, 'sawtooth');
+        st.statusMsg = '✗ Wrong tooth! Click "Hear Melody" to try again.';
+      }
+      renderCombophoneGameView(document.getElementById('app-viewport'));
+      setTimeout(() => {
+        if (combophoneState.activeTooth === toothIdx) {
+          combophoneState.activeTooth = -1;
+          if (!combophoneState.isPlayingDemo && combophoneState.running) {
+            renderCombophoneGameView(document.getElementById('app-viewport'));
+          }
+        }
+      }, 180);
+    }
+
+    function renderCombHeadSVG(stage) {
+      return `
+        <svg viewBox="0 0 180 180" class="w-40 h-40 mx-auto drop-shadow-lg">
+          <!-- Back Mullet Layer (Stage 4+) -->
+          ${stage >= 4 ? `<path d="M 42 88 L 30 158 Q 90 170 150 158 L 138 88 Z" fill="#78350f"/>` : ''}
+          <!-- Head -->
+          <ellipse cx="90" cy="100" rx="46" ry="54" fill="#fde68a" stroke="#d97706" stroke-width="2.5"/>
+          <!-- Shiny Bald Glint (Stage 0) -->
+          ${stage === 0 ? `<ellipse cx="72" cy="64" rx="12" ry="6" transform="rotate(-25 72 64)" fill="#ffffff" opacity="0.8"/>` : ''}
+          <!-- Stage 1: Peach Fuzz -->
+          ${stage === 1 ? `<path d="M 55 56 Q 90 42 125 56" stroke="#92400e" stroke-width="3" stroke-dasharray="3 4" fill="none"/>` : ''}
+          <!-- Stage 2+: Distinguished Sideburns -->
+          ${stage >= 2 ? `<rect x="42" y="82" width="10" height="32" rx="4" fill="#78350f"/><rect x="128" y="82" width="10" height="32" rx="4" fill="#78350f"/>` : ''}
+          <!-- Stage 3: Classic Side-Part -->
+          ${stage === 3 ? `<path d="M 44 82 C 44 40, 136 40, 136 82 C 118 64, 68 64, 44 82 Z" fill="#78350f"/>` : ''}
+          <!-- Stage 4: 80s Rockstar Mullet Top -->
+          ${stage === 4 ? `<path d="M 42 84 C 36 32, 144 32, 138 84 Q 90 60 42 84 Z" fill="#92400e"/>` : ''}
+          <!-- Stage 5: Immaculate Maestro Pompadour -->
+          ${stage >= 5 ? `<path d="M 42 84 C 30 18, 128 6, 146 54 C 150 72, 140 84, 136 84 C 116 62, 68 62, 42 84 Z" fill="#78350f" stroke="#451a03" stroke-width="2"/><path d="M 62 34 Q 96 22 124 44" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.65"/>` : ''}
+          <!-- Face -->
+          <circle cx="74" cy="102" r="4.5" fill="#1e293b"/>
+          <circle cx="106" cy="102" r="4.5" fill="#1e293b"/>
+          <path d="M 74 126 Q 90 ${stage >= 3 ? 139 : 132} 106 126" stroke="#1e293b" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        </svg>
+      `;
+    }
+
+    function renderCombophoneGameView(container) {
+      if (!container) return;
+      if (!combophoneState.running && !combophoneState.completed) {
+        combophoneState = {
+          running: true, round: 1, totalRounds: 5, hairStage: 0, mistakes: 0, tokensEarned: 0,
+          sequence: [], playerInput: [], isPlayingDemo: false, activeTooth: -1,
+          statusMsg: 'Click "Hear Melody" then pluck the matching comb teeth!', completed: false, timers: []
+        };
+        setupCombophoneRound();
+      }
+      const st = combophoneState;
+      const ratingTitle = st.mistakes === 0 ? 'Immaculate Poise — 10/10! (+5 Flawless Bonus)' : st.mistakes <= 2 ? 'Mozart’s Concert Wig — 9/10!' : '80s Glam Rock Legend — 8/10!';
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-6">
+          <div class="flex items-center justify-between">
+            <button onclick="stopCombophoneGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-amber-600 tracking-widest"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Mr H's Vintage Comb</span>
+          </div>
+
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border-2 border-amber-500/40 space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">5-Stage Hair Growth • +2 Tokens Per Round</span>
+                <h2 class="text-2xl font-black mt-0.5">The Comb-o-Phone</h2>
+                <p class="text-xs text-slate-300 mt-1">Echo back each melody on Mr H's musical tortoise-shell comb to grow a glorious hairstyle!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1 rounded-xl bg-amber-950 border border-amber-700 text-xs font-black text-amber-200">Round ${st.round} / ${st.totalRounds}</span>
+                <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">+${st.tokensEarned} Tokens</span>
+              </div>
+            </div>
+
+            <!-- Bald-to-Pompadour Head Preview -->
+            <div class="text-center space-y-2">
+              ${renderCombHeadSVG(st.hairStage)}
+              <div class="text-sm font-black text-amber-300">${combHairStageNames[st.hairStage]}</div>
+            </div>
+
+            ${st.completed ? `
+              <div class="p-6 rounded-2xl bg-emerald-950/70 border-2 border-emerald-400 text-center space-y-3">
+                <div class="text-xs font-black uppercase tracking-widest text-amber-300">Hair Style Rating</div>
+                <h3 class="text-2xl font-black text-emerald-300">${ratingTitle}</h3>
+                <p class="text-xs text-slate-200">Total Earned: <strong>+${st.tokensEarned} Tokens</strong>!</p>
+                <button onclick="combophoneState.running=false; combophoneState.completed=false; renderCombophoneGameView(document.getElementById('app-viewport'))" class="px-7 py-3 bg-amber-400 text-slate-950 font-black rounded-2xl text-xs shadow-lg">Style Another Head</button>
+              </div>
+            ` : `
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-amber-950/40 border border-amber-500/30">
+                <span class="text-xs font-black text-amber-200">${st.statusMsg}</span>
+                <button onclick="playCombophoneMelody()" ${st.isPlayingDemo ? 'disabled' : ''} class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs shadow shrink-0 ${st.isPlayingDemo ? 'opacity-50' : ''}">
+                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Melody
+                </button>
+              </div>
+
+              <!-- Tortoise-Shell Musical Comb -->
+              <div class="bg-slate-950 p-5 rounded-3xl border border-amber-700/50">
+                <div class="h-8 rounded-t-2xl bg-gradient-to-r from-amber-900 via-amber-700 to-amber-900 border-2 border-amber-500 flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-amber-200 shadow">
+                  Mr H's Vintage Tortoise-Shell Comb-o-Phone
+                </div>
+                <div class="grid grid-cols-7 gap-2 pt-1 items-start">
+                  ${combTeethScale.map(t => `
+                    <button onclick="pluckCombTooth(${t.idx})" style="height:${t.h}px" class="rounded-b-xl border-2 font-black text-sm flex items-end justify-center pb-2 transition-all ${
+                      st.activeTooth === t.idx
+                        ? 'bg-amber-300 border-white text-slate-950 scale-105 shadow-[0_0_16px_rgba(251,191,36,0.8)]'
+                        : 'bg-gradient-to-b from-amber-700 to-amber-900 border-amber-600 text-amber-100 hover:from-amber-500 hover:to-amber-700'
+                    }">
+                      ${t.note}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // MINIGAME ARCADE: MICHAEL JACKSON'S MIC (LET'S DANCE!)
+    // ==========================================
+    const mjMoves = [
+      { code: 'ArrowUp',    name: 'Toe Stand!',   icon: '▲', color: 'bg-amber-400 text-slate-950',  freq: 523.25 },
+      { code: 'ArrowDown',  name: 'Hat Tilt!',    icon: '▼', color: 'bg-rose-500 text-white',       freq: 392.00 },
+      { code: 'ArrowLeft',  name: 'Moonwalk!',    icon: '◀', color: 'bg-sky-400 text-slate-950',    freq: 440.00 },
+      { code: 'ArrowRight', name: 'Smooth Lean!', icon: '▶', color: 'bg-fuchsia-500 text-white',    freq: 587.33 }
+    ];
+
+    let mjDanceState = {
+      running: false,
+      completed: false,
+      round: 1,
+      totalRounds: 6,
+      score: 0,
+      tokensEarned: 0,
+      phase: 'idle', // 'demo' | 'input' | 'success' | 'fail'
+      sequence: [],
+      inputIdx: 0,
+      activePose: 'idle',
+      muted: false,
+      bpm: 108,
+      grooveInterval: null,
+      grooveStep: 0,
+      timers: []
+    };
+
+    function stopMjDanceGame() {
+      mjDanceState.running = false;
+      if (mjDanceState.grooveInterval) {
+        clearInterval(mjDanceState.grooveInterval);
+        mjDanceState.grooveInterval = null;
+      }
+      if (mjDanceState.timers) mjDanceState.timers.forEach(t => clearTimeout(t));
+      mjDanceState.timers = [];
+    }
+
+    function startMjFunkyGroove() {
+      if (mjDanceState.grooveInterval) clearInterval(mjDanceState.grooveInterval);
+      const stepMs = Math.round(60000 / mjDanceState.bpm / 2); // 8th-note disco-funk groove
+      const bassLine = [110, 0, 110, 130.81, 146.83, 0, 164.81, 146.83];
+      mjDanceState.grooveStep = 0;
+
+      mjDanceState.grooveInterval = setInterval(() => {
+        if (!mjDanceState.running || mjDanceState.muted) return;
+        const s = mjDanceState.grooveStep % 8;
+        if (s === 0 || s === 4) playDrumSound('kick');
+        if (s === 2 || s === 6) playDrumSound('snare');
+        playDrumSound('hihat');
+        if (bassLine[s]) playTonePitch(bassLine[s], 0.14, 0.14, 'sawtooth');
+        mjDanceState.grooveStep++;
+      }, stepMs);
+    }
+
+    function startMjDanceGame() {
+      stopMjDanceGame();
+      mjDanceState = {
+        running: true, completed: false, round: 1, totalRounds: 6, score: 0, tokensEarned: 0,
+        phase: 'demo', sequence: [], inputIdx: 0, activePose: 'idle', muted: false,
+        bpm: 108, grooveInterval: null, grooveStep: 0, timers: []
+      };
+      startMjRound();
+    }
+
+    function startMjRound() {
+      const st = mjDanceState;
+      st.bpm = 108 + (st.round - 1) * 5;
+      startMjFunkyGroove();
+      const moveCount = Math.min(8, 2 + st.round); // 3 to 8 moves
+      st.sequence = Array.from({ length: moveCount }, () => mjMoves[Math.floor(Math.random() * mjMoves.length)].code);
+      st.inputIdx = 0;
+      st.phase = 'demo';
+      st.activePose = 'idle';
+      renderMjDanceGameView(document.getElementById('app-viewport'));
+
+      const beatMs = Math.round(60000 / st.bpm);
+      st.sequence.forEach((code, idx) => {
+        const mv = mjMoves.find(m => m.code === code);
+        st.timers.push(setTimeout(() => {
+          st.activePose = code;
+          if (!st.muted && mv) playTonePitch(mv.freq, 0.18, 0.25, 'triangle');
+          renderMjDanceGameView(document.getElementById('app-viewport'));
+        }, (idx + 1) * beatMs));
+      });
+
+      st.timers.push(setTimeout(() => {
+        st.activePose = 'idle';
+        st.phase = 'input';
+        renderMjDanceGameView(document.getElementById('app-viewport'));
+      }, (st.sequence.length + 1) * beatMs + 150));
+    }
+
+    function handleMjMoveInput(code) {
+      const st = mjDanceState;
+      if (!st.running || st.phase !== 'input') return;
+      const mv = mjMoves.find(m => m.code === code);
+      st.activePose = code;
+      if (!st.muted && mv) playTonePitch(mv.freq, 0.18, 0.28, 'triangle');
+
+      if (st.sequence[st.inputIdx] === code) {
+        st.inputIdx++;
+        if (st.inputIdx >= st.sequence.length) {
+          st.score++;
+          st.tokensEarned += 2;
+          addTokens(2);
+          st.phase = 'success';
+          renderMjDanceGameView(document.getElementById('app-viewport'));
+          st.timers.push(setTimeout(() => {
+            if (!st.running) return;
+            if (st.round < st.totalRounds) {
+              st.round++;
+              startMjRound();
+            } else {
+              st.tokensEarned += 5;
+              addTokens(5);
+              st.completed = true;
+              stopMjDanceGame();
+              renderMjDanceGameView(document.getElementById('app-viewport'));
+            }
+          }, 950));
+          return;
+        }
+      } else {
+        playTonePitch(145, 0.25, 0.3, 'sawtooth');
+        st.phase = 'fail';
+        renderMjDanceGameView(document.getElementById('app-viewport'));
+        st.timers.push(setTimeout(() => {
+          if (st.running) startMjRound();
+        }, 1050));
+        return;
+      }
+      renderMjDanceGameView(document.getElementById('app-viewport'));
+    }
+
+    function renderMjDancerSVG(pose) {
+      const tilt = pose === 'ArrowRight' ? 'rotate(16 100 180)' : pose === 'ArrowLeft' ? 'translate(-12, 0)' : pose === 'ArrowUp' ? 'translate(0, -14)' : '';
+      const hatY = pose === 'ArrowDown' ? 28 : 20;
+      const leftArm = pose === 'ArrowUp' ? 'M 80 78 L 54 42' : pose === 'ArrowDown' ? 'M 80 78 L 72 36' : 'M 80 78 L 58 106';
+      const rightArm = pose === 'ArrowLeft' ? 'M 120 78 L 152 68' : pose === 'ArrowRight' ? 'M 120 78 L 148 96' : 'M 120 78 L 144 52';
+      return `
+        <svg viewBox="0 0 200 200" class="w-44 h-44 mx-auto drop-shadow-[0_0_20px_rgba(244,63,94,0.45)]">
+          <ellipse cx="100" cy="186" rx="58" ry="10" fill="#fbbf24" opacity="0.28"/>
+          <g transform="${tilt}">
+            <!-- Black Pants & White Socks/Loafers -->
+            <line x1="88" y1="126" x2="${pose === 'ArrowLeft' ? 72 : 82}" y2="174" stroke="#0f172a" stroke-width="11" stroke-linecap="round"/>
+            <line x1="112" y1="126" x2="${pose === 'ArrowLeft' ? 128 : 118}" y2="174" stroke="#0f172a" stroke-width="11" stroke-linecap="round"/>
+            <line x1="${pose === 'ArrowLeft' ? 72 : 82}" y1="170" x2="${pose === 'ArrowLeft' ? 72 : 82}" y2="179" stroke="#ffffff" stroke-width="7"/>
+            <line x1="${pose === 'ArrowLeft' ? 128 : 118}" y1="170" x2="${pose === 'ArrowLeft' ? 128 : 118}" y2="179" stroke="#ffffff" stroke-width="7"/>
+            <ellipse cx="${pose === 'ArrowLeft' ? 68 : 78}" cy="182" rx="9" ry="4" fill="#0f172a"/>
+            <ellipse cx="${pose === 'ArrowLeft' ? 132 : 122}" cy="182" rx="9" ry="4" fill="#0f172a"/>
+            <!-- Iconic Red Thriller Jacket -->
+            <rect x="78" y="72" width="44" height="58" rx="10" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/>
+            <line x1="100" y1="74" x2="100" y2="128" stroke="#0f172a" stroke-width="3"/>
+            <path d="M 80 76 L 100 94 L 120 76" fill="none" stroke="#0f172a" stroke-width="3"/>
+            <!-- Arms + Sparkling White Sequined Glove -->
+            <path d="${leftArm}" stroke="#dc2626" stroke-width="10" stroke-linecap="round"/>
+            <path d="${rightArm}" stroke="#dc2626" stroke-width="10" stroke-linecap="round"/>
+            <circle cx="${pose === 'ArrowLeft' ? 152 : pose === 'ArrowRight' ? 148 : 144}" cy="${pose === 'ArrowLeft' ? 68 : pose === 'ArrowRight' ? 96 : 52}" r="7.5" fill="#ffffff" stroke="#fde047" stroke-width="2"/>
+            <!-- Head & Fedora -->
+            <circle cx="100" cy="52" r="18" fill="#d9a066"/>
+            <rect x="74" y="${hatY + 12}" width="52" height="6" rx="3" fill="#0f172a"/>
+            <path d="M 84 ${hatY + 12} L 88 ${hatY - 4} L 112 ${hatY - 4} L 116 ${hatY + 12} Z" fill="#0f172a"/>
+            <rect x="86" y="${hatY + 7}" width="28" height="3.5" fill="#ffffff"/>
+          </g>
+        </svg>
+      `;
+    }
+
+    function renderMjDanceGameView(container) {
+      if (!container) return;
+      const st = mjDanceState;
+
+      if (!st.running && !st.completed) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-rose-500 tracking-widest"><i class="fa-solid fa-microphone-lines mr-1"></i> Michael Jackson's Mic</span>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-rose-500/50 space-y-5">
+              ${renderMjDancerSVG('ArrowUp')}
+              <h2 class="text-3xl font-black text-rose-400">Let's Dance!</h2>
+              <p class="text-sm text-slate-300 max-w-md mx-auto">Watch the King of Pop's dance combo to the funky backing track, then copy the moves using <strong>▲ ▼ ◀ ▶ Arrow Keys</strong> (or the dance pad)! Earns <strong>+2 Tokens per round</strong> + <strong>+5 Encore Bonus</strong>!</p>
+              <button onclick="startMjDanceGame()" class="px-8 py-4 bg-gradient-to-r from-rose-600 to-fuchsia-600 hover:brightness-110 text-white font-black rounded-2xl text-base shadow-lg">
+                <i class="fa-solid fa-play mr-2"></i> Hit the Dancefloor!
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.completed) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-emerald-400 space-y-4">
+              ${renderMjDancerSVG('ArrowUp')}
+              <h2 class="text-3xl font-black text-amber-400">King of Pop Encore!</h2>
+              <p class="text-sm text-slate-300">You mastered all 6 dance routines up to <strong>${st.bpm} BPM</strong> and earned <strong class="text-emerald-400">+${st.tokensEarned} Tokens</strong>!</p>
+              <button onclick="startMjDanceGame()" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl text-sm shadow-lg">Dance Again</button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const activeMove = mjMoves.find(m => m.code === st.activePose);
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-4">
+          <div class="flex items-center justify-between">
+            <button onclick="stopMjDanceGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <button onclick="mjDanceState.muted=!mjDanceState.muted; renderMjDanceGameView(document.getElementById('app-viewport'))" class="px-3.5 py-1.5 rounded-xl bg-slate-800 text-white font-bold text-xs">
+              <i class="fa-solid ${st.muted ? 'fa-volume-xmark text-rose-400' : 'fa-volume-high text-emerald-400'} mr-1"></i> ${st.muted ? 'Unmute Groove' : 'Mute Groove'}
+            </button>
+          </div>
+          <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl border-2 border-rose-500/40 space-y-5 text-center">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 text-xs font-black">
+              <span class="px-3 py-1 rounded-xl bg-rose-600 text-white">Round ${st.round} / ${st.totalRounds} (${st.bpm} BPM)</span>
+              <span class="text-amber-300">${st.phase === 'demo' ? '👀 WATCH THE MOVES...' : st.phase === 'input' ? '🕺 YOUR TURN! COPY THE COMBO!' : st.phase === 'success' ? '✨ SMOOTH CRIMINAL! (+2 Tokens)' : '✗ OOPS! WATCH AGAIN...'}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 text-emerald-300">+${st.tokensEarned} Tokens</span>
+            </div>
+
+            ${renderMjDancerSVG(st.activePose)}
+
+            <div class="h-6 text-sm font-black text-amber-300">${activeMove ? activeMove.name : ''}</div>
+
+            <!-- Combo Progress Pills -->
+            <div class="flex flex-wrap justify-center gap-2">
+              ${st.sequence.map((code, idx) => {
+                const mv = mjMoves.find(m => m.code === code);
+                const done = idx < st.inputIdx;
+                return `<span class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm border-2 ${
+                  done ? 'bg-emerald-500 border-emerald-300 text-slate-950' : st.phase === 'demo' ? 'bg-slate-800 border-slate-600 text-slate-300' : 'bg-slate-800 border-slate-700 text-slate-500'
+                }">${done || st.phase === 'demo' ? mv.icon : '?'}</span>`;
+              }).join('')}
+            </div>
+
+            <!-- Touch / Click Dance Pad -->
+            <div class="grid grid-cols-4 gap-2 max-w-md mx-auto pt-1">
+              ${mjMoves.map(m => `
+                <button onclick="handleMjMoveInput('${m.code}')" ${st.phase !== 'input' ? 'disabled' : ''} class="py-3.5 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all ${m.color} ${st.phase !== 'input' ? 'opacity-50' : ''}">
+                  <div class="text-lg leading-none">${m.icon}</div>
+                  <div class="text-[9px] mt-1">${m.name.replace('!', '')}</div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     // ==========================================
     // MINIGAME ARCADE: EVH'S STRIPED GUITAR (FRETBOARD SHRED CHALLENGE)

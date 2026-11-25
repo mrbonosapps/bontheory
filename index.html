@@ -400,6 +400,7 @@
       try { if (typeof stopOrchestralBrassLab === 'function') stopOrchestralBrassLab(); } catch (e) {}
       try { if (typeof stopPercussionLab === 'function') stopPercussionLab(); } catch (e) {}
       try { if (typeof stopEltonPianoGame === 'function') stopEltonPianoGame(); } catch (e) {}
+      try { if (typeof stopCombophoneGame === 'function') stopCombophoneGame(); } catch (e) {}
     }
 
     window.app = {
@@ -477,6 +478,10 @@
           case 'eltonPianoGame':
             if (!this.currentUser) return renderLoginView(viewport);
             renderEltonPianoGameView(viewport);
+            break;
+          case 'combophoneGame':
+            if (!this.currentUser) return renderLoginView(viewport);
+            renderCombophoneGameView(viewport);
             break;
           default:
             renderHomeView(viewport);
@@ -10472,6 +10477,9 @@
     }
 
     function renderShopView(container) {
+      if (!window.state) {
+        window.state = { stats: { tokens: 0, testsTaken: 0 }, inventory: [], testHistory: [], completedLessons: [] };
+      }
       const toks = (window.state.stats && window.state.stats.tokens) || 0;
       const inv = window.state.inventory || [];
       
@@ -10557,6 +10565,10 @@
                         <button onclick="window.app.navigate('eltonPianoGame')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-play"></i> Play Minigame
                         </button>
+                      ` : item.id === 'item_comb' ? `
+                        <button onclick="window.app.navigate('combophoneGame')" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-play"></i> Play Comb-o-Phone
+                        </button>
                       ` : ''}
                       <button onclick="tradeShopItem('${item.id}')" class="w-full py-3 rounded-xl bg-emerald-100 hover:bg-rose-100 text-emerald-800 hover:text-rose-800 font-black text-xs transition-colors group border border-emerald-200 hover:border-rose-200">
                           <span class="group-hover:hidden"><i class="fa-solid fa-check mr-1"></i> Owned In Locker</span>
@@ -10603,6 +10615,9 @@
       } else if (item.id === 'item_eltonpiano') {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Playing the minigame...`, true);
         window.app.navigate('eltonPianoGame');
+      } else if (item.id === 'item_comb') {
+        showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Launching The Comb-o-Phone...`, true);
+        window.app.navigate('combophoneGame');
       } else {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
         renderShopView(document.getElementById('app-viewport'));
@@ -11070,6 +11085,10 @@
                         </button>
                       ` : it.id === 'item_eltonpiano' ? `
                         <button onclick="window.app.navigate('eltonPianoGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[10px] shadow-sm hover:bg-amber-400 transition-colors">
+                          Play
+                        </button>
+                      ` : it.id === 'item_comb' ? `
+                        <button onclick="window.app.navigate('combophoneGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-600 text-white font-black text-[10px] shadow-sm hover:bg-amber-500 transition-colors">
                           Play
                         </button>
                       ` : ''}
@@ -13401,6 +13420,503 @@
     });
 
     // ==========================================
+    // MINIGAME ARCADE: MR H'S VINTAGE COMB (THE COMB-O-PHONE)
+    // ==========================================
+    const combophoneTeeth = [
+      { id: 0, note: 'C', freq: 261.63, heightPct: 100, color: '#f59e0b' },
+      { id: 1, note: 'D', freq: 293.66, heightPct: 91,  color: '#f97316' },
+      { id: 2, note: 'E', freq: 329.63, heightPct: 82,  color: '#fbbf24' },
+      { id: 3, note: 'F', freq: 349.23, heightPct: 73,  color: '#eab308' },
+      { id: 4, note: 'G', freq: 392.00, heightPct: 64,  color: '#f59e0b' },
+      { id: 5, note: 'A', freq: 440.00, heightPct: 55,  color: '#d97706' },
+      { id: 6, note: 'B', freq: 493.88, heightPct: 46,  color: '#b45309' }
+    ];
+
+    const combHairStages = [
+      { stage: 0, name: 'Aerodynamic Shine', subtitle: '0/5 — Not a single strand yet!' },
+      { stage: 1, name: 'Peach Fuzz', subtitle: '1/5 — The first musical sprouts!' },
+      { stage: 2, name: 'Distinguished Sideburns', subtitle: '2/5 — Vintage barber vibes!' },
+      { stage: 3, name: 'Classic Side-Part', subtitle: '3/5 — Neat, crisp & concert-ready!' },
+      { stage: 4, name: '80s Rockstar Mullet', subtitle: '4/5 — Business up front, party in the back!' },
+      { stage: 5, name: 'Immaculate Maestro Pompadour', subtitle: '5/5 — Pure musical poise!' }
+    ];
+
+    let combophoneState = {
+      running: false,
+      completed: false,
+      round: 1,
+      totalRounds: 5,
+      hairStage: 0,
+      tokensEarned: 0,
+      mistakesThisRound: 0,
+      totalMistakes: 0,
+      sequence: [],
+      playerInput: [],
+      isPlayingSequence: false,
+      activeTooth: -1,
+      statusMsg: 'Click "Play Comb Melody" to listen!',
+      timers: []
+    };
+
+    function clearCombophoneTimers() {
+      if (combophoneState.timers && combophoneState.timers.length) {
+        combophoneState.timers.forEach(t => clearTimeout(t));
+      }
+      combophoneState.timers = [];
+    }
+
+    function stopCombophoneGame() {
+      clearCombophoneTimers();
+      combophoneState.running = false;
+      combophoneState.isPlayingSequence = false;
+      combophoneState.activeTooth = -1;
+    }
+
+    // Realistic plucked comb-tooth synthesizer (twangy pitched pluck + crisp fingernail transient)
+    function playCombTooth(freq) {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        const osc = ctx.createOscillator();
+        const overtone = ctx.createOscillator();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+        const overGain = ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq * 1.025, now);
+        osc.frequency.exponentialRampToValueAtTime(freq, now + 0.025);
+
+        overtone.type = 'triangle';
+        overtone.frequency.setValueAtTime(freq * 2.0, now);
+        overGain.gain.value = 0.28;
+
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(freq * 2.8, now);
+        filter.Q.setValueAtTime(2.2, now);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.38, now + 0.006);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+        osc.connect(filter);
+        overtone.connect(overGain);
+        overGain.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        overtone.start(now);
+        osc.stop(now + 0.45);
+        overtone.stop(now + 0.45);
+      } catch (e) {}
+    }
+
+    function generateCombophoneSequence(roundNum) {
+      const len = roundNum <= 2 ? 3 : (roundNum <= 4 ? 4 : 5);
+      const seq = [];
+      let prev = Math.floor(Math.random() * combophoneTeeth.length);
+      seq.push(prev);
+      for (let i = 1; i < len; i++) {
+        // Prefer musical stepwise or small leap motion
+        let next = Math.floor(Math.random() * combophoneTeeth.length);
+        if (next === prev) next = (next + 1 + Math.floor(Math.random() * 3)) % combophoneTeeth.length;
+        seq.push(next);
+        prev = next;
+      }
+      return seq;
+    }
+
+    function startCombophoneGame() {
+      stopCombophoneGame();
+      combophoneState = {
+        running: true,
+        completed: false,
+        round: 1,
+        totalRounds: 5,
+        hairStage: 0,
+        tokensEarned: 0,
+        mistakesThisRound: 0,
+        totalMistakes: 0,
+        sequence: generateCombophoneSequence(1),
+        playerInput: [],
+        isPlayingSequence: false,
+        activeTooth: -1,
+        statusMsg: 'Listen to the comb teeth, then pluck them back in order!',
+        timers: []
+      };
+      renderCombophoneGameView(document.getElementById('app-viewport'));
+      const t = setTimeout(() => playCombophoneSequence(), 450);
+      combophoneState.timers.push(t);
+    }
+
+    function playCombophoneSequence() {
+      const st = combophoneState;
+      if (!st.running || st.isPlayingSequence || st.completed) return;
+      clearCombophoneTimers();
+      st.isPlayingSequence = true;
+      st.playerInput = [];
+      st.statusMsg = 'Listen closely to the Vintage Comb...';
+      renderCombophoneGameView(document.getElementById('app-viewport'));
+
+      st.sequence.forEach((toothIdx, i) => {
+        const t1 = setTimeout(() => {
+          if (!st.running) return;
+          st.activeTooth = toothIdx;
+          playCombTooth(combophoneTeeth[toothIdx].freq);
+          highlightCombToothDOM(toothIdx, true);
+          const t2 = setTimeout(() => {
+            st.activeTooth = -1;
+            highlightCombToothDOM(toothIdx, false);
+          }, 340);
+          st.timers.push(t2);
+        }, i * 540);
+        st.timers.push(t1);
+      });
+
+      const endT = setTimeout(() => {
+        if (!st.running) return;
+        st.isPlayingSequence = false;
+        st.statusMsg = `Your turn! Pluck ${st.sequence.length} comb teeth to grow hair!`;
+        renderCombophoneGameView(document.getElementById('app-viewport'));
+      }, st.sequence.length * 540 + 180);
+      st.timers.push(endT);
+    }
+
+    function highlightCombToothDOM(toothIdx, isLit) {
+      const el = document.getElementById(`comb-tooth-${toothIdx}`);
+      if (!el) return;
+      if (isLit) {
+        el.classList.add('ring-4', 'ring-amber-300', 'scale-y-105', 'brightness-125');
+      } else {
+        el.classList.remove('ring-4', 'ring-amber-300', 'scale-y-105', 'brightness-125');
+      }
+    }
+
+    function handleCombToothPluck(toothIdx) {
+      const st = combophoneState;
+      if (!st.running || st.isPlayingSequence || st.completed) return;
+
+      playCombTooth(combophoneTeeth[toothIdx].freq);
+      highlightCombToothDOM(toothIdx, true);
+      setTimeout(() => highlightCombToothDOM(toothIdx, false), 220);
+
+      const expected = st.sequence[st.playerInput.length];
+      if (toothIdx !== expected) {
+        st.mistakesThisRound++;
+        st.totalMistakes++;
+        st.playerInput = [];
+        st.statusMsg = 'Oops! Wrong tooth — listen again and echo carefully!';
+        playTonePitch(155.56, 0.22, 0.28, 'sawtooth');
+        renderCombophoneGameView(document.getElementById('app-viewport'));
+        const retryT = setTimeout(() => playCombophoneSequence(), 950);
+        st.timers.push(retryT);
+        return;
+      }
+
+      st.playerInput.push(toothIdx);
+      if (st.playerInput.length < st.sequence.length) {
+        st.statusMsg = `Nice! ${st.playerInput.length} / ${st.sequence.length} notes matched...`;
+        renderCombophoneGameView(document.getElementById('app-viewport'));
+        return;
+      }
+
+      // Round completed! Grow hair + award tokens
+      st.hairStage = Math.min(5, st.hairStage + 1);
+      st.tokensEarned += 2;
+      addTokens(2);
+      st.isPlayingSequence = true;
+      const stageInfo = combHairStages[st.hairStage];
+      st.statusMsg = `✨ Hair Grew: ${stageInfo.name}! (+2 Tokens)`;
+      playTonePitch(587.33, 0.14, 0.3, 'triangle');
+      setTimeout(() => playTonePitch(880, 0.25, 0.3, 'triangle'), 140);
+      renderCombophoneGameView(document.getElementById('app-viewport'));
+
+      const nextT = setTimeout(() => {
+        if (!st.running) return;
+        if (st.round < st.totalRounds) {
+          st.round++;
+          st.mistakesThisRound = 0;
+          st.sequence = generateCombophoneSequence(st.round);
+          st.playerInput = [];
+          st.isPlayingSequence = false;
+          renderCombophoneGameView(document.getElementById('app-viewport'));
+          playCombophoneSequence();
+        } else {
+          // Final completion + Bonus Twist Hair Style Rating
+          st.running = false;
+          st.completed = true;
+          st.isPlayingSequence = false;
+          if (st.totalMistakes === 0) {
+            st.tokensEarned += 5;
+            addTokens(5);
+          }
+          renderCombophoneGameView(document.getElementById('app-viewport'));
+        }
+      }, 1250);
+      st.timers.push(nextT);
+    }
+
+    function getCombHairStyleRating(totalMistakes) {
+      if (totalMistakes === 0) {
+        return {
+          title: 'Immaculate Poise — 10/10 Maestro Pompadour!',
+          badge: 'FLAWLESS SALON MASTER (+5 Bonus Tokens!)',
+          desc: 'Not a single stray hair or wrong note! Mr H himself is applauding your golden ears.'
+        };
+      } else if (totalMistakes <= 2) {
+        return {
+          title: 'Mozart’s Concert Wig — 9/10!',
+          badge: 'CLASSICAL VIRTUOSO STYLE',
+          desc: 'Dignified, voluminous, and pitch-perfect! Ready for a standing ovation.'
+        };
+      } else if (totalMistakes <= 5) {
+        return {
+          title: '80s Glam Rock Legend — 8/10!',
+          badge: 'BIG VOLUME, BIG ATTITUDE',
+          desc: 'A couple of wild flicks of the comb gave this hairdo unstoppable stadium rock energy!'
+        };
+      }
+      return {
+        title: 'Avant-Garde Jazz Tousle — 7/10!',
+        badge: 'CREATIVE IMPROVISATION',
+        desc: 'A little chaotic, a lot of charm—and a full head of hair grown by sheer musical determination!'
+      };
+    }
+
+    function renderBaldHeadPortraitSVG(stage) {
+      let hairMarkup = '';
+      if (stage === 0) {
+        // Shiny bald scalp sparkles
+        hairMarkup = `
+          <path d="M 76 58 Q 88 48 102 52" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+          <circle cx="112" cy="55" r="3" fill="#ffffff" opacity="0.85"/>
+        `;
+      } else if (stage === 1) {
+        // Stage 1: Peach Fuzz sprouts
+        hairMarkup = `
+          <path d="M 85 42 Q 82 30 88 26 M 98 40 Q 100 26 105 24 M 112 42 Q 118 30 116 25" stroke="#78350f" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M 74 54 Q 84 48 94 50" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+        `;
+      } else if (stage === 2) {
+        // Stage 2: Peach fuzz + Distinguished Sideburns
+        hairMarkup = `
+          <path d="M 82 42 Q 80 30 87 26 M 98 40 Q 100 26 105 24 M 114 42 Q 120 30 118 25" stroke="#78350f" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M 52 80 Q 48 96 58 112 L 64 106 Q 60 94 60 80 Z" fill="#78350f"/>
+          <path d="M 148 80 Q 152 96 142 112 L 136 106 Q 140 94 140 80 Z" fill="#78350f"/>
+        `;
+      } else if (stage === 3) {
+        // Stage 3: Classic Slick Side-Part
+        hairMarkup = `
+          <path d="M 52 88 C 48 44, 72 28, 104 30 C 134 32, 152 50, 148 88 L 140 82 C 138 58, 122 48, 86 52 C 72 54, 62 64, 58 84 Z" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+          <path d="M 74 38 Q 102 36 126 48" stroke="#b45309" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M 52 82 Q 49 96 58 110 L 63 104 Q 60 94 60 82 Z" fill="#78350f"/>
+          <path d="M 148 82 Q 151 96 142 110 L 137 104 Q 140 94 140 82 Z" fill="#78350f"/>
+        `;
+      } else if (stage === 4) {
+        // Stage 4: 80s Rockstar Mullet
+        hairMarkup = `
+          <!-- Mullet back flow -->
+          <path d="M 46 84 C 34 114, 34 144, 48 164 L 66 154 L 62 112 Z" fill="#5c2808"/>
+          <path d="M 154 84 C 166 114, 166 144, 152 164 L 134 154 L 138 112 Z" fill="#5c2808"/>
+          <!-- Spiky top -->
+          <path d="M 48 88 C 44 40, 70 22, 100 24 C 130 22, 156 40, 152 88 L 142 82 C 138 56, 122 48, 100 48 C 78 48, 62 56, 58 82 Z" fill="#78350f" stroke="#451a03" stroke-width="2"/>
+          <path d="M 76 34 Q 100 28 124 38" stroke="#d97706" stroke-width="3" stroke-linecap="round" fill="none"/>
+        `;
+      } else {
+        // Stage 5: Immaculate Maestro Pompadour + Golden Sparkles
+        hairMarkup = `
+          <path d="M 48 92 C 42 54, 54 14, 106 10 C 146 7, 166 32, 152 88 L 142 84 C 140 58, 128 48, 98 48 C 74 48, 60 62, 58 88 Z" fill="#78350f" stroke="#451a03" stroke-width="2.2"/>
+          <path d="M 68 32 C 88 18, 126 18, 142 36" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M 76 42 C 94 32, 118 32, 134 44" stroke="#d97706" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+          <path d="M 50 84 Q 48 100 58 114 L 64 108 Q 60 96 60 84 Z" fill="#78350f"/>
+          <path d="M 150 84 Q 152 100 142 114 L 136 108 Q 140 96 140 84 Z" fill="#78350f"/>
+          <!-- Sparkles -->
+          <path d="M 38 28 L 41 35 L 48 38 L 41 41 L 38 48 L 35 41 L 28 38 L 35 35 Z" fill="#fde047"/>
+          <path d="M 164 18 L 166 23 L 171 25 L 166 27 L 164 32 L 162 27 L 157 25 L 162 23 Z" fill="#fde047"/>
+        `;
+      }
+
+      return `
+        <svg viewBox="0 0 200 185" class="w-44 h-40 mx-auto drop-shadow-lg" fill="none">
+          <!-- Barber Cape & Neck -->
+          <rect x="84" y="138" width="32" height="22" rx="8" fill="#f5c69c"/>
+          <path d="M 44 182 C 48 156, 74 150, 100 150 C 126 150, 152 156, 156 182 Z" fill="#4f46e5" stroke="#312e81" stroke-width="2"/>
+          <path d="M 80 151 Q 100 162 120 151" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+          <!-- Ears -->
+          <circle cx="52" cy="96" r="10" fill="#f5c69c" stroke="#d99b6c" stroke-width="1.5"/>
+          <circle cx="148" cy="96" r="10" fill="#f5c69c" stroke="#d99b6c" stroke-width="1.5"/>
+          <!-- Head -->
+          <ellipse cx="100" cy="94" rx="48" ry="54" fill="#fde0c3" stroke="#d99b6c" stroke-width="2"/>
+          <!-- Eyes & Eyebrows -->
+          <circle cx="82" cy="92" r="4.5" fill="#1e293b"/>
+          <circle cx="118" cy="92" r="4.5" fill="#1e293b"/>
+          <circle cx="83.5" cy="90.5" r="1.5" fill="#ffffff"/>
+          <circle cx="119.5" cy="90.5" r="1.5" fill="#ffffff"/>
+          <path d="M 74 82 Q 82 78 90 82" stroke="#78350f" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M 110 82 Q 118 78 126 82" stroke="#78350f" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Rosy Cheeks & Happy Smile -->
+          <ellipse cx="70" cy="105" rx="6" ry="3.5" fill="#fda4af" opacity="0.55"/>
+          <ellipse cx="130" cy="105" rx="6" ry="3.5" fill="#fda4af" opacity="0.55"/>
+          <path d="${stage >= 4 ? 'M 84 114 Q 100 130 116 114' : 'M 86 116 Q 100 126 114 116'}" stroke="#9a3412" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <!-- Hair Stage Overlay -->
+          ${hairMarkup}
+        </svg>
+      `;
+    }
+
+    function renderCombophoneGameView(container) {
+      if (!container) return;
+      const st = combophoneState;
+      const stageInfo = combHairStages[st.hairStage] || combHairStages[0];
+
+      if (!st.running && !st.completed) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-amber-600 tracking-widest">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Mr H's Vintage Comb
+              </span>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-amber-500/40 space-y-5">
+              ${renderBaldHeadPortraitSVG(0)}
+              <h2 class="text-3xl font-black text-amber-400">The Comb-o-Phone</h2>
+              <p class="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                Pluck the musical teeth on <strong>Mr H's Vintage Comb</strong> (long teeth = low pitch, short teeth = high pitch) to echo back each melody! Every correct round grows a brand-new stage of glorious hair onto the shiny bald head and awards <strong>+2 Tokens</strong> (+5 Bonus for a flawless run!).
+              </p>
+              <button onclick="startCombophoneGame()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-base shadow-lg transition-all">
+                <i class="fa-solid fa-play mr-2"></i> Start Growing Hair!
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (st.completed) {
+        const rating = getCombHairStyleRating(st.totalMistakes);
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-amber-400 space-y-4">
+              <span class="inline-block px-3.5 py-1 rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-300 text-[11px] font-black uppercase tracking-widest">
+                <i class="fa-solid fa-award mr-1"></i> ${rating.badge}
+              </span>
+              ${renderBaldHeadPortraitSVG(5)}
+              <h2 class="text-2xl sm:text-3xl font-black text-amber-300">${rating.title}</h2>
+              <p class="text-sm text-slate-300 max-w-md mx-auto">${rating.desc}</p>
+              <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-950 border border-emerald-500 text-emerald-300 font-black text-sm">
+                <i class="fa-solid fa-coins text-amber-400"></i> Total Earned: +${st.tokensEarned} Tokens
+              </div>
+              <div class="pt-3 flex flex-wrap justify-center gap-3">
+                <button onclick="startCombophoneGame()" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
+                  <i class="fa-solid fa-rotate-right mr-1.5"></i> Style Another Head
+                </button>
+                <button onclick="window.app.navigate('shop')" class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl text-sm border border-slate-700">
+                  Back to Shop
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-5">
+          <div class="flex items-center justify-between">
+            <button onclick="stopCombophoneGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-amber-600 tracking-widest">
+              <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Mr H's Vintage Comb
+            </span>
+          </div>
+
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border-2 border-amber-500/40 space-y-6">
+            <!-- Header & Progress -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h2 class="text-2xl font-black text-amber-400">The Comb-o-Phone</h2>
+                <p class="text-xs text-slate-300 mt-0.5">Long comb teeth play <strong>lower</strong> notes; short teeth play <strong>higher</strong> notes. Echo the melody to grow hair!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="px-3 py-1.5 rounded-xl bg-amber-950 border border-amber-700 text-xs font-black text-amber-300">
+                  Round ${st.round} / ${st.totalRounds}
+                </span>
+                <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">
+                  +${st.tokensEarned} Tokens
+                </span>
+              </div>
+            </div>
+
+            <!-- Barber Chair Portrait + Hair Stage -->
+            <div class="bg-slate-950/90 rounded-2xl p-5 border border-slate-800 flex flex-col sm:flex-row items-center justify-around gap-4">
+              <div class="text-center">
+                ${renderBaldHeadPortraitSVG(st.hairStage)}
+              </div>
+              <div class="text-center sm:text-left space-y-2 max-w-xs">
+                <span class="text-[10px] font-black uppercase tracking-widest text-amber-400">Current Hair Growth</span>
+                <div class="text-xl font-black text-white">${stageInfo.name}</div>
+                <div class="text-xs text-slate-400">${stageInfo.subtitle}</div>
+                <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mt-2">
+                  <div class="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-500" style="width: ${(st.hairStage / 5) * 100}%"></div>
+                </div>
+                <div class="pt-2">
+                  <button type="button" onclick="playCombophoneSequence()" ${st.isPlayingSequence ? 'disabled' : ''} class="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow ${st.isPlayingSequence ? 'opacity-50 cursor-not-allowed' : ''}">
+                    <i class="fa-solid fa-volume-high mr-1.5"></i> Replay Comb Melody
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Status -->
+            <div class="text-center text-xs sm:text-sm font-black text-amber-300 bg-amber-950/40 border border-amber-500/30 py-2.5 px-4 rounded-xl">
+              ${st.statusMsg}
+            </div>
+
+            <!-- Mr H's Vintage Tortoise-Shell Comb-o-Phone -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-amber-200/70 px-2">
+                <span>&larr; Longer Teeth (Lower Pitch)</span>
+                <span>Shorter Teeth (Higher Pitch) &rarr;</span>
+              </div>
+
+              <!-- Comb Spine -->
+              <div class="rounded-t-2xl bg-gradient-to-r from-amber-900 via-amber-700 to-amber-900 border-2 border-amber-500/60 px-4 py-3 text-center shadow-lg">
+                <span class="text-xs font-black tracking-widest uppercase text-amber-200 italic">★ Mr H's Vintage Tortoise-Shell Comb ★</span>
+              </div>
+
+              <!-- Graduated Musical Comb Teeth -->
+              <div class="grid grid-cols-7 gap-2 sm:gap-3 px-2 sm:px-4 items-start min-h-[190px]">
+                ${combophoneTeeth.map(t => `
+                  <button
+                    id="comb-tooth-${t.id}"
+                    type="button"
+                    onclick="handleCombToothPluck(${t.id})"
+                    ${st.isPlayingSequence ? 'disabled' : ''}
+                    style="height: ${Math.round(1.65 * t.heightPct)}px;"
+                    class="w-full rounded-b-2xl bg-gradient-to-b from-amber-600 via-amber-400 to-yellow-200 border-x-2 border-b-2 border-amber-700 text-amber-950 font-black text-sm sm:text-base flex flex-col items-center justify-end pb-3 shadow-md transition-all origin-top ${st.isPlayingSequence ? 'cursor-wait' : 'hover:brightness-110 active:scale-y-95 cursor-pointer'}">
+                    <span>${t.note}</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
     // APPLICATION BOOTSTRAP ON WINDOW LOAD
     // ==========================================
     
@@ -13522,6 +14038,15 @@
           }
         }
       } catch (e) {}
+
+      if (!window.state) {
+        window.state = {
+          stats: { tokens: 0, testsTaken: 0 },
+          inventory: [],
+          testHistory: [],
+          completedLessons: []
+        };
+      }
 
       updateNavBar();
       updateGlobalLeaderboard();

@@ -404,6 +404,7 @@
       try { if (typeof stopMjDanceGame === 'function') stopMjDanceGame(); } catch (e) {}
       try { if (typeof stopSimpleMeterPulse === 'function') stopSimpleMeterPulse(); } catch (e) {}
       try { if (typeof stopMonophonicCleanerGame === 'function') stopMonophonicCleanerGame(); } catch (e) {}
+      try { if (typeof stopHomophonicRoleGame === 'function') stopHomophonicRoleGame(); } catch (e) {}
     }
 
     window.app = {
@@ -6244,6 +6245,105 @@
                     </div>
                   </div>
                 `
+              },
+              {
+                lessonNum: 2,
+                title: 'Lesson 2: Homophonic Texture',
+                summary: 'Discover Homophonic texture (a main melody supported by harmony/accompaniment) with diagrams and audio, then identify Melody vs. Harmony/Accompaniment lines!',
+                toolType: 'homophonicRoleGame',
+                contentHtml: `
+                  <!-- Colourful Hero Banner -->
+                  <div class="rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-600 p-6 text-white shadow-md">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-widest text-amber-200 mb-2">Texture Type #2 • Homo = Same, Phonic = Sound</span>
+                        <h3 class="text-xl sm:text-2xl font-black">What is Homophonic Texture?</h3>
+                        <p class="text-xs sm:text-sm text-indigo-50 mt-1.5 leading-relaxed max-w-2xl">
+                          <strong>Homophonic texture</strong> is the most common texture in pop, rock, folk, and film music! It features <strong>one clear, main Melody</strong> standing out on top, supported underneath by <strong>Harmony / Accompaniment</strong> (such as piano chords, guitar strums, or a steady bassline).
+                        </p>
+                      </div>
+                      <div class="shrink-0 bg-white/15 backdrop-blur-sm rounded-2xl p-4 text-center border border-white/25">
+                        <div class="text-xl font-black text-amber-300">Melody + Chords</div>
+                        <div class="text-[11px] font-bold text-indigo-50 mt-0.5">1 Lead Tune Supported<br/>by Accompaniment</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Visual Diagrams: Melody + Accompaniment vs. Chordal Homophony -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <!-- Diagram 1: Melody & Accompaniment -->
+                    <div class="p-5 rounded-3xl bg-indigo-50 border-2 border-indigo-200 space-y-3 shadow-sm flex flex-col justify-between">
+                      <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                          <span class="px-2.5 py-1 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase">1. Melody + Accompaniment</span>
+                          <span class="text-[11px] font-bold text-indigo-700">Pop / Rock / Folk</span>
+                        </div>
+                        <h4 class="font-black text-base text-indigo-950">Star Melody Over Supporting Chords</h4>
+                        <svg viewBox="0 0 320 100" class="w-full h-24 bg-slate-950 rounded-2xl border border-slate-800 p-1">
+                          <!-- Supporting Accompaniment Chord Blocks Underneath -->
+                          <rect x="22" y="54" width="60" height="26" rx="6" fill="#6366f1" fill-opacity="0.45" stroke="#818cf8" stroke-width="1.5"/>
+                          <rect x="92" y="58" width="60" height="22" rx="6" fill="#6366f1" fill-opacity="0.45" stroke="#818cf8" stroke-width="1.5"/>
+                          <rect x="162" y="52" width="60" height="28" rx="6" fill="#6366f1" fill-opacity="0.45" stroke="#818cf8" stroke-width="1.5"/>
+                          <rect x="232" y="56" width="64" height="24" rx="6" fill="#6366f1" fill-opacity="0.45" stroke="#818cf8" stroke-width="1.5"/>
+                          <text x="160" y="71" fill="#c7d2fe" font-size="9" font-weight="900" text-anchor="middle">HARMONY / ACCOMPANIMENT CHORDS</text>
+                          <!-- Expressive Lead Melody Ribbon on Top -->
+                          <path d="M 24 34 C 60 12, 88 42, 128 24 C 166 8, 198 40, 238 20 C 266 10, 282 22, 296 18" fill="none" stroke="#fbbf24" stroke-width="5.5" stroke-linecap="round"/>
+                          <circle cx="24" cy="34" r="4.5" fill="#fef08a"/>
+                          <circle cx="128" cy="24" r="4.5" fill="#fef08a"/>
+                          <circle cx="238" cy="20" r="4.5" fill="#fef08a"/>
+                          <circle cx="296" cy="18" r="4.5" fill="#fef08a"/>
+                          <text x="160" y="93" fill="#fde047" font-size="9.5" font-weight="900" text-anchor="middle">MELODY ON TOP + ACCOMPANIMENT BELOW</text>
+                        </svg>
+                        <p class="text-xs text-slate-700 leading-relaxed">
+                          Example: A singer performing the main tune while a pianist plays chords or a guitarist strums underneath.
+                        </p>
+                      </div>
+                      <button type="button" onclick="playHomophonicDemoExample('melodyChords')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black text-xs shadow transition-all">
+                        <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Melody + Chords
+                      </button>
+                    </div>
+
+                    <!-- Diagram 2: Chordal Homophony (Hymn Style) -->
+                    <div class="p-5 rounded-3xl bg-fuchsia-50 border-2 border-fuchsia-200 space-y-3 shadow-sm flex flex-col justify-between">
+                      <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                          <span class="px-2.5 py-1 rounded-full bg-fuchsia-600 text-white text-[10px] font-black uppercase">2. Chordal Homophony</span>
+                          <span class="text-[11px] font-bold text-fuchsia-700">Choir / Brass Band</span>
+                        </div>
+                        <h4 class="font-black text-base text-fuchsia-950">All Parts Moving in the Same Rhythm</h4>
+                        <svg viewBox="0 0 320 100" class="w-full h-24 bg-slate-950 rounded-2xl border border-slate-800 p-1">
+                          <!-- Vertical Chord Slices Moving Together in Rhythm -->
+                          ${[42, 118, 194, 270].map((x, idx) => {
+                            const ys = [[22, 40, 58], [16, 36, 56], [26, 44, 62], [18, 38, 58]][idx];
+                            return `
+                              <rect x="${x - 24}" y="${ys[0] - 6}" width="48" height="${ys[2] - ys[0] + 12}" rx="8" fill="#d946ef" fill-opacity="0.22" stroke="#f0abfc" stroke-width="1.2"/>
+                              <circle cx="${x}" cy="${ys[0]}" r="5" fill="#fbbf24"/>
+                              <circle cx="${x}" cy="${ys[1]}" r="4.5" fill="#f472b6"/>
+                              <circle cx="${x}" cy="${ys[2]}" r="4.5" fill="#38bdf8"/>
+                            `;
+                          }).join('')}
+                          <text x="160" y="93" fill="#f5d0fe" font-size="9.5" font-weight="900" text-anchor="middle">DIFFERENT PITCHES • SAME RHYTHM (CHORDS)</text>
+                        </svg>
+                        <p class="text-xs text-slate-700 leading-relaxed">
+                          Example: A choir singing a hymn in 4-part harmony—every voice sings the same words at the exact same time, creating rich chords!
+                        </p>
+                      </div>
+                      <button type="button" onclick="playHomophonicDemoExample('chordal')" class="w-full py-2.5 rounded-xl bg-fuchsia-600 hover:bg-fuchsia-700 active:scale-95 text-white font-black text-xs shadow transition-all">
+                        <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Chordal Homophony
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Quick Rule Box -->
+                  <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center text-base shrink-0 mt-0.5 shadow-sm">
+                      <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div class="text-xs text-amber-950 leading-relaxed">
+                      <strong>How to Spot the Two Roles:</strong> The <strong>Melody</strong> is the catchy, singable tune that moves around in pitch. The <strong>Harmony / Accompaniment</strong> sits underneath—playing warm chords, steady rhythmic strums, or deep bass notes to support the melody!
+                    </div>
+                  </div>
+                `
               }
             ],
             testQuestions: [
@@ -6256,7 +6356,12 @@
               { q: 'Can a large group of instruments (like 10 violins) still create a Monophonic texture?', options: ['Yes, if all 10 violins play the exact same melody in unison or octaves with no accompaniment', 'No, monophonic only allows 1 single performer', 'No, violins can never play monophonically', 'Only if they play staccato'], correct: 0 },
               { q: 'Which musical element is ALWAYS absent in Monophonic texture?', options: ['Harmonic accompaniment or a second independent melody', 'A melody', 'Pitch', 'Rhythm'], correct: 0 },
               { q: 'Which visual diagram best represents Unison Monophonic texture?', options: ['Several identical parallel lines moving up and down in exact lockstep', 'Two completely different wiggly lines crossing over each other', 'One melody line sitting on top of chunky chord blocks', 'Empty blank space with no lines'], correct: 0 },
-              { q: 'In the Monophonic Mix Rescue game, how do you restore a mix to pure Monophonic texture?', options: ['Delete the one track playing a different melody so all remaining tracks play in unison', 'Turn up the volume of every instrument to fortissimo', 'Add a bass drone and chords underneath', 'Delete every single track until it is silent'], correct: 0 }
+              { q: 'In the Monophonic Mix Rescue game, how do you restore a mix to pure Monophonic texture?', options: ['Delete the one track playing a different melody so all remaining tracks play in unison', 'Turn up the volume of every instrument to fortissimo', 'Add a bass drone and chords underneath', 'Delete every single track until it is silent'], correct: 0 },
+              { q: 'Which description accurately defines Homophonic Texture?', options: ['One main melody supported underneath by harmony or chordal accompaniment', 'A single unaccompanied melodic line with no chords', 'Complete silence with no instruments playing', 'Only unpitched percussion instruments'], correct: 0 },
+              { q: 'Which everyday musical performance is the BEST example of Homophonic Texture?', options: ['A singer performing a pop song accompanied by guitar or piano chords', 'One person whistling a tune alone in an empty room', 'A crowd singing Happy Birthday in unison with no instruments', 'A snare drum playing a solo rhythm'], correct: 0 },
+              { q: 'In a Homophonic arrangement, what is the main job of the Harmony / Accompaniment?', options: ['To support the main melody with chords, bass notes, or rhythmic backing', 'To play completely silently for the whole song', 'To play the exact same melody in unison with no chords', 'To stop the steady beat'], correct: 0 },
+              { q: 'What is "Chordal Homophony" (such as a choir singing a hymn)?', options: ['Multiple voices singing different pitches in the exact same rhythm to form chords', 'One solo flute playing alone', 'Every singer singing the exact same pitch in unison', 'A drum solo with no pitch'], correct: 0 },
+              { q: 'What is the main difference between Monophonic and Homophonic texture?', options: ['Monophonic has only one melody line alone, while Homophonic adds supporting harmony/accompaniment', 'Monophonic is always loud, while Homophonic is always soft', 'Monophonic is fast, while Homophonic is slow', 'There is no difference between them'], correct: 0 }
             ]
           }
         ]
@@ -6812,6 +6917,7 @@
       else if (lesson.toolType === 'textureLabGame') mountEmbeddedTextureLabGame(toolBox);
       else if (lesson.toolType === 'staggeredTextureLab') mountEmbeddedStaggeredTextureLab(toolBox);
       else if (lesson.toolType === 'monophonicCleanerGame') mountEmbeddedMonophonicCleanerGame(toolBox);
+      else if (lesson.toolType === 'homophonicRoleGame') mountEmbeddedHomophonicRoleGame(toolBox);
       else if (lesson.toolType === 'repeatSignGame') mountEmbeddedRepeatSignGame(toolBox);
       else if (lesson.toolType === 'voltaBracketGame') mountEmbeddedVoltaBracketGame(toolBox);
       else if (lesson.toolType === 'structureFormGame') mountEmbeddedStructureFormGame(toolBox);
@@ -16102,6 +16208,429 @@
                     : `✗ Oops! That track was part of the unison melody. The different melody was actually the <strong>${imposterTrack ? imposterTrack.name : ''}</strong> (shown in red above)!`}
                 </div>
                 <button type="button" onclick="nextMonophonicCleanerRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0 shadow">
+                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+          `}
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // TEXTURE LEVEL 2: LESSON 2 — HOMOPHONIC TEXTURE ("MELODY OR HARMONY? STUDIO MIXER")
+    // ==========================================
+    const homophonicStudioSongs = [
+      {
+        title: 'Pop Ballad',
+        melodyName: 'Lead Vocal Synth',
+        melodyWave: 'triangle',
+        melodyNotes: [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 523.25],
+        chordName: 'Warm Piano Chords',
+        chords: [[261.63, 329.63, 392.00], [196.00, 246.94, 293.66], [220.00, 261.63, 329.63], [174.61, 220.00, 261.63]],
+        bassName: 'Soft Bassline',
+        bassNotes: [130.81, 130.81, 98.00, 98.00, 110.00, 110.00, 87.31, 87.31]
+      },
+      {
+        title: 'Sunny Folk Song',
+        melodyName: 'Bright Flute Lead',
+        melodyWave: 'sine',
+        melodyNotes: [659.25, 587.33, 523.25, 587.33, 659.25, 659.25, 783.99, 659.25],
+        chordName: 'Acoustic Strum Chords',
+        chords: [[261.63, 329.63, 392.00], [174.61, 220.00, 261.63], [261.63, 329.63, 392.00], [196.00, 246.94, 293.66]],
+        bassName: 'Plucked Acoustic Bass',
+        bassNotes: [130.81, 130.81, 87.31, 87.31, 130.81, 130.81, 98.00, 98.00]
+      },
+      {
+        title: '80s Synthwave',
+        melodyName: 'Neon Lead Synth',
+        melodyWave: 'sawtooth',
+        melodyNotes: [440.00, 523.25, 587.33, 659.25, 587.33, 523.25, 440.00, 392.00],
+        chordName: 'Retro Pad Chords',
+        chords: [[220.00, 261.63, 329.63], [174.61, 220.00, 261.63], [261.63, 329.63, 392.00], [196.00, 246.94, 293.66]],
+        bassName: 'Pulsing Synth Bass',
+        bassNotes: [110.00, 110.00, 87.31, 87.31, 130.81, 130.81, 98.00, 98.00]
+      },
+      {
+        title: 'Heroic Film Theme',
+        melodyName: 'Solo Trumpet Melody',
+        melodyWave: 'square',
+        melodyNotes: [392.00, 523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25],
+        chordName: 'Orchestral String Pad',
+        chords: [[261.63, 329.63, 392.00], [220.00, 261.63, 329.63], [174.61, 220.00, 261.63], [196.00, 246.94, 293.66]],
+        bassName: 'Deep Tuba Foundation',
+        bassNotes: [130.81, 130.81, 110.00, 110.00, 87.31, 87.31, 98.00, 98.00]
+      },
+      {
+        title: 'Gentle Lullaby',
+        melodyName: 'Music Box Tune',
+        melodyWave: 'sine',
+        melodyNotes: [783.99, 659.25, 587.33, 523.25, 587.33, 659.25, 523.25, 523.25],
+        chordName: 'Harp Harmony Chords',
+        chords: [[261.63, 329.63, 392.00], [174.61, 220.00, 261.63], [196.00, 246.94, 293.66], [261.63, 329.63, 392.00]],
+        bassName: 'Warm Cello Drone',
+        bassNotes: [130.81, 130.81, 87.31, 87.31, 98.00, 98.00, 130.81, 130.81]
+      },
+      {
+        title: 'Upbeat Indie Anthem',
+        melodyName: 'Guitar Hook Melody',
+        melodyWave: 'triangle',
+        melodyNotes: [523.25, 659.25, 783.99, 659.25, 880.00, 783.99, 659.25, 523.25],
+        chordName: 'Organ Harmony Chords',
+        chords: [[261.63, 329.63, 392.00], [196.00, 246.94, 293.66], [174.61, 220.00, 261.63], [261.63, 329.63, 392.00]],
+        bassName: 'Driving Bass Guitar',
+        bassNotes: [130.81, 130.81, 98.00, 98.00, 87.31, 87.31, 130.81, 130.81]
+      },
+      {
+        title: 'Royal Court Dance',
+        melodyName: 'Violin Solo Line',
+        melodyWave: 'sawtooth',
+        melodyNotes: [587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 587.33, 523.25],
+        chordName: 'Harpsichord Chords',
+        chords: [[293.66, 349.23, 440.00], [196.00, 246.94, 293.66], [261.63, 329.63, 392.00], [261.63, 329.63, 392.00]],
+        bassName: 'Double Bass Support',
+        bassNotes: [146.83, 146.83, 98.00, 98.00, 130.81, 130.81, 130.81, 130.81]
+      },
+      {
+        title: 'Smooth Jazz Lounge',
+        melodyName: 'Saxophone Melody',
+        melodyWave: 'sawtooth',
+        melodyNotes: [659.25, 783.99, 659.25, 587.33, 523.25, 440.00, 523.25, 587.33],
+        chordName: 'Electric Piano Chords',
+        chords: [[220.00, 261.63, 329.63], [293.66, 349.23, 440.00], [196.00, 246.94, 293.66], [261.63, 329.63, 392.00]],
+        bassName: 'Walking Upright Bass',
+        bassNotes: [110.00, 123.47, 146.83, 130.81, 98.00, 110.00, 130.81, 146.83]
+      }
+    ];
+
+    let homophonicRoleState = {
+      round: 1,
+      totalRounds: 8,
+      score: 0,
+      queue: [],
+      song: null,
+      tracks: [], // Shuffled tracks [{ id, label, role: 'melody'|'harmony', kind: 'melody'|'chords'|'bass', color, icon }]
+      spotlightIdx: 0,
+      playingMode: null, // null | 'mix' | trackIdx
+      answered: false,
+      selectedRole: null,
+      lastCorrect: false,
+      completed: false,
+      timers: []
+    };
+
+    function clearHomophonicTimers() {
+      if (homophonicRoleState.timers && homophonicRoleState.timers.length) {
+        homophonicRoleState.timers.forEach(t => clearTimeout(t));
+      }
+      homophonicRoleState.timers = [];
+    }
+
+    function stopHomophonicRoleGame() {
+      clearHomophonicTimers();
+      homophonicRoleState.playingMode = null;
+    }
+
+    function playHomophonicDemoExample(mode) {
+      stopHomophonicRoleGame();
+      if (mode === 'melodyChords') {
+        const mel = [523.25, 587.33, 659.25, 783.99, 659.25, 523.25];
+        const chords = [[261.63, 329.63, 392.00], [174.61, 220.00, 261.63], [196.00, 246.94, 293.66]];
+        mel.forEach((f, i) => {
+          const t = setTimeout(() => playTonePitch(f, 0.34, 0.26, 'triangle'), i * 360);
+          homophonicRoleState.timers.push(t);
+        });
+        chords.forEach((ch, i) => {
+          const t = setTimeout(() => {
+            ch.forEach(cf => playTonePitch(cf, 0.68, 0.09, 'sine'));
+          }, i * 720);
+          homophonicRoleState.timers.push(t);
+        });
+      } else {
+        // Chordal Homophony: all voices move in the exact same rhythm
+        const prog = [
+          [261.63, 329.63, 392.00, 523.25],
+          [220.00, 261.63, 329.63, 587.33],
+          [174.61, 220.00, 261.63, 659.25],
+          [196.00, 246.94, 293.66, 587.33],
+          [261.63, 329.63, 392.00, 523.25]
+        ];
+        prog.forEach((ch, idx) => {
+          const t = setTimeout(() => {
+            ch.forEach((f, vIdx) => playTonePitch(f, 0.55, vIdx === 3 ? 0.18 : 0.11, 'triangle'));
+          }, idx * 520);
+          homophonicRoleState.timers.push(t);
+        });
+      }
+    }
+
+    function setupHomophonicRound() {
+      stopHomophonicRoleGame();
+      const st = homophonicRoleState;
+      const song = st.queue[st.round - 1] || homophonicStudioSongs[0];
+      st.song = song;
+
+      // Shuffle the 3 tracks so students can't guess by position or colour!
+      const colors = [
+        { grad: 'from-amber-400 to-orange-500', border: 'border-amber-400', bar: 'bg-amber-400' },
+        { grad: 'from-indigo-400 to-violet-500', border: 'border-indigo-400', bar: 'bg-indigo-400' },
+        { grad: 'from-pink-400 to-fuchsia-500', border: 'border-pink-400', bar: 'bg-pink-400' }
+      ].sort(() => Math.random() - 0.5);
+
+      const rawTracks = [
+        { kind: 'melody', role: 'melody', realName: song.melodyName, icon: 'fa-music' },
+        { kind: 'chords', role: 'harmony', realName: song.chordName, icon: 'fa-layer-group' },
+        { kind: 'bass',   role: 'harmony', realName: song.bassName,  icon: 'fa-wave-square' }
+      ].sort(() => Math.random() - 0.5);
+
+      st.tracks = rawTracks.map((tr, i) => ({
+        ...tr,
+        trackLabel: `Track ${i + 1}`,
+        ...colors[i]
+      }));
+
+      // Alternate roughly 50/50 between spotlighting the Melody track vs. a Harmony/Accompaniment track
+      const wantMelody = (st.round % 2 === 1);
+      const matchingIndices = st.tracks
+        .map((t, idx) => (wantMelody ? t.role === 'melody' : t.role === 'harmony') ? idx : -1)
+        .filter(idx => idx >= 0);
+
+      st.spotlightIdx = matchingIndices[Math.floor(Math.random() * matchingIndices.length)] || 0;
+      st.answered = false;
+      st.selectedRole = null;
+      st.lastCorrect = false;
+    }
+
+    function mountEmbeddedHomophonicRoleGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      stopHomophonicRoleGame();
+      const shuffled = [...homophonicStudioSongs].sort(() => Math.random() - 0.5);
+      homophonicRoleState = {
+        round: 1,
+        totalRounds: 8,
+        score: 0,
+        queue: shuffled,
+        song: null,
+        tracks: [],
+        spotlightIdx: 0,
+        playingMode: null,
+        answered: false,
+        selectedRole: null,
+        lastCorrect: false,
+        completed: false,
+        timers: []
+      };
+      setupHomophonicRound();
+      renderHomophonicRoleGameUI(target);
+    }
+
+    function playHomophonicStudioTrack(mode) {
+      const st = homophonicRoleState;
+      const song = st.song;
+      if (!song) return;
+      stopHomophonicRoleGame();
+      st.playingMode = mode;
+      renderHomophonicRoleGameUI(document.getElementById('embedded-tool-container'));
+
+      const playMelody = (mode === 'mix') || (st.tracks[mode] && st.tracks[mode].kind === 'melody');
+      const playChords = (mode === 'mix') || (st.tracks[mode] && st.tracks[mode].kind === 'chords');
+      const playBass   = (mode === 'mix') || (st.tracks[mode] && st.tracks[mode].kind === 'bass');
+
+      const stepMs = 340;
+      for (let s = 0; s < 8; s++) {
+        const t = setTimeout(() => {
+          if (playMelody && song.melodyNotes[s]) {
+            const vol = song.melodyWave === 'sawtooth' || song.melodyWave === 'square' ? 0.14 : 0.25;
+            playTonePitch(song.melodyNotes[s], 0.30, vol, song.melodyWave);
+          }
+          if (playBass && song.bassNotes[s]) {
+            playTonePitch(song.bassNotes[s], 0.30, 0.24, 'triangle');
+          }
+          if (playChords && s % 2 === 0) {
+            const chord = song.chords[Math.floor(s / 2)];
+            if (chord) {
+              chord.forEach(cf => playTonePitch(cf, 0.62, 0.085, 'sine'));
+            }
+          }
+        }, s * stepMs);
+        st.timers.push(t);
+      }
+
+      const endT = setTimeout(() => {
+        st.playingMode = null;
+        renderHomophonicRoleGameUI(document.getElementById('embedded-tool-container'));
+      }, 8 * stepMs + 120);
+      st.timers.push(endT);
+    }
+
+    function guessHomophonicRole(roleChoice) {
+      const st = homophonicRoleState;
+      if (st.answered || st.completed) return;
+      stopHomophonicRoleGame();
+
+      const spotlightTrack = st.tracks[st.spotlightIdx];
+      if (!spotlightTrack) return;
+
+      st.answered = true;
+      st.selectedRole = roleChoice;
+      st.lastCorrect = (spotlightTrack.role === roleChoice);
+
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.16, 0.32, 'triangle');
+        setTimeout(() => playTonePitch(880, 0.24, 0.32, 'triangle'), 130);
+      } else {
+        playTonePitch(155.56, 0.28, 0.3, 'sawtooth');
+      }
+      renderHomophonicRoleGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextHomophonicRoleRound() {
+      const st = homophonicRoleState;
+      stopHomophonicRoleGame();
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupHomophonicRound();
+        renderHomophonicRoleGameUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderHomophonicRoleGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal(
+          'Homophonic Studio Detective Complete!',
+          `You identified ${st.score} / ${st.totalRounds} Melody and Harmony/Accompaniment lines correctly and earned +${st.score} Tokens!`,
+          st.score >= 4
+        );
+      }
+    }
+
+    function renderHomophonicRoleGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = homophonicRoleState;
+      const spotlightTrack = st.tracks[st.spotlightIdx];
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border-2 border-indigo-500/35 shadow-xl">
+          <!-- Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">8-Round Listening Challenge • 1 Token Per Correct Answer</span>
+              <h3 class="text-xl sm:text-2xl font-black mt-0.5 bg-gradient-to-r from-amber-300 via-pink-400 to-indigo-300 bg-clip-text text-transparent">Melody or Harmony / Accompaniment?</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the full Homophonic mix, then solo the <strong>Spotlight Track</strong> and select whether it is the <strong>Melody Line</strong> or a <strong>Harmony / Accompaniment Line</strong>!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1.5 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-3xl bg-gradient-to-br from-indigo-950/70 to-emerald-950/70 border-2 border-emerald-400 text-center space-y-3">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 to-pink-500 text-slate-950 flex items-center justify-center text-3xl mx-auto shadow-lg">
+                <i class="fa-solid fa-award"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">Homophonic Texture Mastered!</h4>
+              <p class="text-xs sm:text-sm text-slate-200">You scored <strong>${st.score} / ${st.totalRounds}</strong> and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedHomophonicRoleGame(document.getElementById('embedded-tool-container'))" class="px-6 py-3 bg-gradient-to-r from-amber-400 to-pink-500 hover:brightness-110 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                <i class="fa-solid fa-rotate-right mr-1.5"></i> Play Another 8 Rounds
+              </button>
+            </div>
+          ` : `
+            <!-- Studio Header Bar -->
+            <div class="p-4 rounded-2xl bg-gradient-to-r from-indigo-950 via-violet-950/80 to-slate-900 border border-indigo-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div>
+                <div class="text-[10px] font-black uppercase tracking-widest text-indigo-300">Now Mixing • ${st.song ? st.song.title : ''}</div>
+                <div class="text-sm font-black text-white mt-0.5">Identify <span class="text-amber-300">${spotlightTrack ? spotlightTrack.trackLabel : ''}</span>!</div>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <button type="button" onclick="playHomophonicStudioTrack('mix')" class="px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 active:scale-95 text-white font-black text-xs shadow">
+                  <i class="fa-solid fa-play mr-1.5"></i> ${st.playingMode === 'mix' ? 'Playing Full Mix...' : 'Hear Full Mix'}
+                </button>
+                <button type="button" onclick="playHomophonicStudioTrack(${st.spotlightIdx})" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-xs shadow-lg">
+                  <i class="fa-solid fa-headphones mr-1.5"></i> ${st.playingMode === st.spotlightIdx ? 'Playing Spotlight...' : 'Solo Spotlight Track'}
+                </button>
+              </div>
+            </div>
+
+            <!-- 3 Studio Track Lanes -->
+            <div class="space-y-3">
+              ${st.tracks.map((tr, idx) => {
+                const isSpotlight = idx === st.spotlightIdx;
+                const isPlaying = st.playingMode === 'mix' || st.playingMode === idx;
+                return `
+                  <div class="p-4 rounded-2xl border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    isSpotlight
+                      ? 'border-amber-400 bg-amber-500/10 ring-2 ring-amber-400/40 shadow-lg'
+                      : 'border-slate-700/80 bg-slate-800/60 opacity-85'
+                  }">
+                    <div class="flex items-center gap-3">
+                      <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr ${tr.grad} text-slate-950 flex items-center justify-center text-lg shadow shrink-0">
+                        <i class="fa-solid ${isSpotlight ? 'fa-star' : tr.icon}"></i>
+                      </div>
+                      <div>
+                        <div class="font-black text-sm text-white flex flex-wrap items-center gap-2">
+                          <span>${tr.trackLabel}</span>
+                          ${isSpotlight ? '<span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase">Identify This Track!</span>' : ''}
+                          ${st.answered ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${tr.role === 'melody' ? 'bg-amber-500/25 text-amber-300 border border-amber-400/40' : 'bg-indigo-500/25 text-indigo-200 border border-indigo-400/40'}">${tr.role === 'melody' ? 'Melody' : 'Harmony / Accomp.'} (${tr.realName})</span>` : ''}
+                        </div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">${isPlaying ? '🔊 Playing audio...' : 'Click Solo to hear this part by itself'}</div>
+                      </div>
+                    </div>
+
+                    <button type="button" onclick="playHomophonicStudioTrack(${idx})" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-600 text-white font-black text-xs shrink-0 transition-all">
+                      <i class="fa-solid fa-volume-high mr-1 text-amber-300"></i> Solo ${tr.trackLabel}
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- 2 Big Role Selection Buttons: MELODY LINE vs. HARMONY / ACCOMPANIMENT -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <button type="button" onclick="guessHomophonicRole('melody')" ${st.answered ? 'disabled' : ''} class="p-5 rounded-3xl border-2 text-center transition-all flex flex-col items-center justify-center gap-2 ${
+                st.answered && spotlightTrack.role === 'melody'
+                  ? 'border-emerald-400 bg-emerald-950/70 scale-[1.02] shadow-lg'
+                  : st.answered && st.selectedRole === 'melody'
+                  ? 'border-rose-500 bg-rose-950/70'
+                  : st.answered
+                  ? 'border-slate-800 bg-slate-800/40 opacity-40'
+                  : 'border-amber-400/70 bg-gradient-to-b from-amber-500/20 to-slate-800 hover:border-amber-300 hover:bg-amber-500/30 cursor-pointer active:scale-95'
+              }">
+                <div class="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center text-xl shadow">
+                  <i class="fa-solid fa-music"></i>
+                </div>
+                <div class="text-lg font-black text-white">Melody Line</div>
+                <div class="text-[11px] text-amber-200 font-semibold">The main, catchy tune on top</div>
+              </button>
+
+              <button type="button" onclick="guessHomophonicRole('harmony')" ${st.answered ? 'disabled' : ''} class="p-5 rounded-3xl border-2 text-center transition-all flex flex-col items-center justify-center gap-2 ${
+                st.answered && spotlightTrack.role === 'harmony'
+                  ? 'border-emerald-400 bg-emerald-950/70 scale-[1.02] shadow-lg'
+                  : st.answered && st.selectedRole === 'harmony'
+                  ? 'border-rose-500 bg-rose-950/70'
+                  : st.answered
+                  ? 'border-slate-800 bg-slate-800/40 opacity-40'
+                  : 'border-indigo-400/70 bg-gradient-to-b from-indigo-500/20 to-slate-800 hover:border-indigo-300 hover:bg-indigo-500/30 cursor-pointer active:scale-95'
+              }">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-500 text-white flex items-center justify-center text-xl shadow">
+                  <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div class="text-lg font-black text-white">Harmony / Accompaniment</div>
+                <div class="text-[11px] text-indigo-200 font-semibold">Supporting chords or bass backing</div>
+              </button>
+            </div>
+
+            <!-- Feedback Banner -->
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs leading-relaxed font-bold">
+                  ${st.lastCorrect
+                    ? `✓ Spot on (+1 Token)! ${spotlightTrack.trackLabel} (${spotlightTrack.realName}) is the <strong>${spotlightTrack.role === 'melody' ? 'Melody Line' : 'Harmony / Accompaniment'}</strong>.`
+                    : `✗ Not quite — ${spotlightTrack.trackLabel} (${spotlightTrack.realName}) is actually a <strong>${spotlightTrack.role === 'melody' ? 'Melody Line' : 'Harmony / Accompaniment Line'}</strong>!`}
+                </div>
+                <button type="button" onclick="nextHomophonicRoleRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0 shadow">
                   ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
                 </button>
               </div>

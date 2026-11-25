@@ -12084,71 +12084,232 @@
     // MINIGAME ARCADE: ANALOG POCKET SYNTHESIZER (WAVEFORM SCULPTOR)
     // ==========================================
     const waveformTypes = [
-      { id: 'sine',     name: 'Sine Wave',     desc: 'Pure, smooth & flute-like',      color: '#38bdf8' },
-      { id: 'triangle', name: 'Triangle Wave', desc: 'Soft, warm & mellow',            color: '#34d399' },
-      { id: 'square',   name: 'Square Wave',   desc: 'Hollow, retro 8-bit chiptune',   color: '#fbbf24' },
-      { id: 'sawtooth', name: 'Sawtooth Wave', desc: 'Bright, buzzy & brassy',         color: '#f472b6' }
+      { id: 'sine',     name: 'Sine',     desc: 'Smooth & pure',      color: '#38bdf8' },
+      { id: 'triangle', name: 'Triangle', desc: 'Soft & mellow',      color: '#34d399' },
+      { id: 'square',   name: 'Square',   desc: 'Retro 8-bit',        color: '#fbbf24' },
+      { id: 'sawtooth', name: 'Sawtooth', desc: 'Bright & buzzy',     color: '#f472b6' }
     ];
 
     let waveformGameState = {
       running: false,
       round: 1,
-      totalRounds: 8,
+      totalRounds: 6,
       score: 0,
       tokensEarned: 0,
       targetWave: 'sine',
       targetFreq: 330,
-      selectedWave: 'sine',
-      answered: false,
-      lastCorrect: false,
-      completed: false,
-      audioPlayed: false
+      targetAmp: 70,
+      playerWave: 'sine',
+      playerFreq: 220,
+      playerAmp: 40,
+      liveAudio: false,
+      osc: null,
+      gainNode: null,
+      roundCleared: false,
+      completed: false
     };
 
+    function stopWaveformLiveOsc() {
+      try {
+        if (waveformGameState.osc) {
+          waveformGameState.osc.stop();
+          waveformGameState.osc.disconnect();
+        }
+        if (waveformGameState.gainNode) {
+          waveformGameState.gainNode.disconnect();
+        }
+      } catch (e) {}
+      waveformGameState.osc = null;
+      waveformGameState.gainNode = null;
+      waveformGameState.liveAudio = false;
+    }
+
     function stopWaveformGame() {
+      stopWaveformLiveOsc();
       waveformGameState.running = false;
     }
 
-    function setupWaveformRound() {
-      const freqs = [261.63, 293.66, 329.63, 392.00, 440.00];
-      waveformGameState.targetWave = waveformTypes[Math.floor(Math.random() * waveformTypes.length)].id;
-      waveformGameState.targetFreq = freqs[Math.floor(Math.random() * freqs.length)];
-      waveformGameState.answered = false;
-      waveformGameState.lastCorrect = false;
-      waveformGameState.audioPlayed = false;
-    }
-
-    function playWaveformMystery() {
-      waveformGameState.audioPlayed = true;
-      playTonePitch(waveformGameState.targetFreq, 0.75, 0.25, waveformGameState.targetWave);
-      renderWaveformGameView(document.getElementById('app-viewport'));
-    }
-
-    function previewWaveformChoice(waveId) {
-      waveformGameState.selectedWave = waveId;
-      playTonePitch(waveformGameState.targetFreq, 0.45, 0.22, waveId);
-      renderWaveformGameView(document.getElementById('app-viewport'));
-    }
-
-    function submitWaveformGuess() {
-      const st = waveformGameState;
-      if (st.answered || st.completed) return;
-      if (!st.audioPlayed) {
-        showAppModal('Listen First', 'Click "Hear Mystery Synth Wave" before locking in your answer!', false);
-        return;
+    function buildSculptorWavePath(waveType, freq, amp) {
+      const width = 400;
+      const midY = 85;
+      const maxAmp = (amp / 100) * 64;
+      const cycles = freq / 110;
+      const steps = 220;
+      let d = '';
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = t * width;
+        const phase = (t * cycles) % 1;
+        let v = 0;
+        if (waveType === 'sine') {
+          v = Math.sin(phase * Math.PI * 2);
+        } else if (waveType === 'triangle') {
+          v = phase < 0.25 ? phase * 4 : phase < 0.75 ? 2 - phase * 4 : phase * 4 - 4;
+        } else if (waveType === 'square') {
+          v = phase < 0.5 ? 1 : -1;
+        } else {
+          v = 2 * phase - 1;
+        }
+        const y = midY - v * maxAmp;
+        d += (i === 0 ? 'M ' : 'L ') + x.toFixed(1) + ' ' + y.toFixed(1) + ' ';
       }
-      st.answered = true;
-      st.lastCorrect = (st.selectedWave === st.targetWave);
-      if (st.lastCorrect) {
+      return d;
+    }
+
+    function getWaveformMatchInfo() {
+      const st = waveformGameState;
+      const shapeOk = st.playerWave === st.targetWave;
+      const freqDiff = Math.abs(st.playerFreq - st.targetFreq);
+      const ampDiff = Math.abs(st.playerAmp - st.targetAmp);
+      const isMatched = shapeOk && freqDiff <= 20 && ampDiff <= 10;
+
+      const freqScore = Math.max(0, 1 - freqDiff / 350);
+      const ampScore = Math.max(0, 1 - ampDiff / 80);
+      let pct = Math.round(((shapeOk ? 0.35 : 0) + freqScore * 0.35 + ampScore * 0.30) * 100);
+      if (!shapeOk) pct = Math.min(pct, 55);
+      if (isMatched) pct = Math.max(pct, 96);
+      return { pct: Math.min(100, Math.max(0, pct)), isMatched, shapeOk, freqDiff, ampDiff };
+    }
+
+    function setupWaveformRound() {
+      stopWaveformLiveOsc();
+      const st = waveformGameState;
+      const wavePool = ['sine', 'triangle', 'square', 'sawtooth'];
+      const targetWave = wavePool[Math.floor(Math.random() * wavePool.length)];
+      const targetFreq = 180 + Math.floor(Math.random() * 21) * 20; // 180..580 Hz
+      const targetAmp = 35 + Math.floor(Math.random() * 12) * 5;    // 35..90%
+
+      // Start player sliders noticeably offset from the target
+      let startFreq = targetFreq > 380 ? 200 : 520;
+      let startAmp = targetAmp > 60 ? 30 : 85;
+      let startWave = targetWave === 'sine' ? 'triangle' : 'sine';
+
+      st.targetWave = targetWave;
+      st.targetFreq = targetFreq;
+      st.targetAmp = targetAmp;
+      st.playerWave = startWave;
+      st.playerFreq = startFreq;
+      st.playerAmp = startAmp;
+      st.roundCleared = false;
+    }
+
+    function toggleWaveformLiveAudio() {
+      const st = waveformGameState;
+      if (st.liveAudio) {
+        stopWaveformLiveOsc();
+      } else {
+        try {
+          const ctx = getAudioCtx();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = st.playerWave;
+          osc.frequency.setValueAtTime(st.playerFreq, ctx.currentTime);
+          gain.gain.setValueAtTime((st.playerAmp / 100) * 0.22, ctx.currentTime);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          st.osc = osc;
+          st.gainNode = gain;
+          st.liveAudio = true;
+        } catch (e) {}
+      }
+      const btn = document.getElementById('wf-audio-btn');
+      if (btn) {
+        btn.innerHTML = st.liveAudio
+          ? '<i class="fa-solid fa-stop mr-1.5"></i> Stop Live Synth'
+          : '<i class="fa-solid fa-volume-high mr-1.5"></i> Hear My Wave';
+        btn.className = st.liveAudio
+          ? 'px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow shrink-0'
+          : 'px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow shrink-0';
+      }
+    }
+
+    function playWaveformTargetTone() {
+      const st = waveformGameState;
+      playTonePitch(st.targetFreq, 0.6, (st.targetAmp / 100) * 0.26, st.targetWave);
+    }
+
+    function updateWaveformSlider(field, value) {
+      const st = waveformGameState;
+      if (st.roundCleared || st.completed) return;
+
+      if (field === 'wave') st.playerWave = value;
+      if (field === 'freq') st.playerFreq = Number(value);
+      if (field === 'amp')  st.playerAmp = Number(value);
+
+      if (st.liveAudio && st.osc && st.gainNode) {
+        const ctx = getAudioCtx();
+        if (ctx) {
+          st.osc.type = st.playerWave;
+          st.osc.frequency.setTargetAtTime(st.playerFreq, ctx.currentTime, 0.02);
+          st.gainNode.gain.setTargetAtTime((st.playerAmp / 100) * 0.22, ctx.currentTime, 0.02);
+        }
+      }
+
+      // Live DOM update for silky smooth slider dragging
+      const playerPath = document.getElementById('wf-player-path');
+      const freqReadout = document.getElementById('wf-freq-val');
+      const ampReadout = document.getElementById('wf-amp-val');
+      const matchBadge = document.getElementById('wf-match-badge');
+      const lockBtn = document.getElementById('wf-lock-btn');
+
+      if (playerPath) {
+        playerPath.setAttribute('d', buildSculptorWavePath(st.playerWave, st.playerFreq, st.playerAmp));
+      }
+      if (freqReadout) freqReadout.textContent = `${st.playerFreq} Hz`;
+      if (ampReadout) ampReadout.textContent = `${st.playerAmp}%`;
+
+      // Highlight active waveform button
+      waveformTypes.forEach(w => {
+        const b = document.getElementById(`wf-shape-btn-${w.id}`);
+        if (!b) return;
+        b.className = w.id === st.playerWave
+          ? 'py-2.5 px-3 rounded-xl border-2 border-amber-400 bg-indigo-900 text-white font-black text-xs shadow transition-all'
+          : 'py-2.5 px-3 rounded-xl border-2 border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500 font-bold text-xs transition-all';
+      });
+
+      const info = getWaveformMatchInfo();
+      if (matchBadge) {
+        matchBadge.textContent = `Match: ${info.pct}%`;
+        matchBadge.className = info.isMatched
+          ? 'px-3 py-1 rounded-full text-xs font-black bg-emerald-500 text-slate-950 animate-pulse'
+          : 'px-3 py-1 rounded-full text-xs font-black bg-slate-800 text-amber-300 border border-slate-700';
+      }
+      if (lockBtn) {
+        lockBtn.className = info.isMatched
+          ? 'w-full sm:w-auto px-8 py-3.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all scale-[1.02]'
+          : 'w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-sm shadow-lg transition-all';
+      }
+    }
+
+    function checkWaveformSculptMatch() {
+      const st = waveformGameState;
+      if (st.roundCleared || st.completed) return;
+      const info = getWaveformMatchInfo();
+
+      if (info.isMatched) {
+        stopWaveformLiveOsc();
+        st.roundCleared = true;
         st.score++;
         st.tokensEarned += 2;
         addTokens(2);
-        playTonePitch(659.25, 0.16, 0.3, 'triangle');
-        setTimeout(() => playTonePitch(880, 0.22, 0.3, 'triangle'), 120);
+        playTonePitch(523.25, 0.14, 0.3, 'triangle');
+        setTimeout(() => playTonePitch(659.25, 0.14, 0.3, 'triangle'), 110);
+        setTimeout(() => playTonePitch(783.99, 0.24, 0.32, 'triangle'), 220);
+        renderWaveformGameView(document.getElementById('app-viewport'));
       } else {
-        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+        playTonePitch(155.56, 0.22, 0.28, 'sawtooth');
+        const hintEl = document.getElementById('wf-hint-msg');
+        if (hintEl) {
+          let tip = '';
+          if (!info.shapeOk) tip = 'Check your Waveform Shape (Sine, Triangle, Square, or Sawtooth)!';
+          else if (info.freqDiff > 20) tip = st.playerFreq < st.targetFreq ? 'Frequency is too low — slide Frequency higher!' : 'Frequency is too high — slide Frequency lower!';
+          else tip = st.playerAmp < st.targetAmp ? 'Wave is too short — slide Amplitude higher!' : 'Wave is too tall — slide Amplitude lower!';
+          hintEl.textContent = `Almost there (${info.pct}%) — ${tip}`;
+          hintEl.className = 'text-center text-xs font-black text-rose-300 bg-rose-950/60 border border-rose-500/50 rounded-xl py-2 px-3';
+        }
       }
-      renderWaveformGameView(document.getElementById('app-viewport'));
     }
 
     function nextWaveformRound() {
@@ -12157,31 +12318,25 @@
         st.round++;
         setupWaveformRound();
       } else {
+        stopWaveformLiveOsc();
         st.completed = true;
       }
       renderWaveformGameView(document.getElementById('app-viewport'));
-    }
-
-    function buildWaveformSvgPath(waveId) {
-      if (waveId === 'sine')     return 'M 0 50 Q 25 10, 50 50 T 100 50 T 150 50 T 200 50';
-      if (waveId === 'triangle') return 'M 0 50 L 25 14 L 75 86 L 125 14 L 175 86 L 200 50';
-      if (waveId === 'square')   return 'M 0 50 L 0 18 L 50 18 L 50 82 L 100 82 L 100 18 L 150 18 L 150 82 L 200 82 L 200 50';
-      return 'M 0 82 L 50 18 L 50 82 L 100 18 L 100 82 L 150 18 L 150 82 L 200 18';
     }
 
     function renderWaveformGameView(container) {
       if (!container) return;
       if (!waveformGameState.running && !waveformGameState.completed) {
         waveformGameState = {
-          running: true, round: 1, totalRounds: 8, score: 0, tokensEarned: 0,
-          targetWave: 'sine', targetFreq: 330, selectedWave: 'sine',
-          answered: false, lastCorrect: false, completed: false, audioPlayed: false
+          running: true, round: 1, totalRounds: 6, score: 0, tokensEarned: 0,
+          targetWave: 'sine', targetFreq: 330, targetAmp: 70,
+          playerWave: 'triangle', playerFreq: 220, playerAmp: 40,
+          liveAudio: false, osc: null, gainNode: null, roundCleared: false, completed: false
         };
         setupWaveformRound();
       }
       const st = waveformGameState;
-      const activeObj = waveformTypes.find(w => w.id === st.selectedWave) || waveformTypes[0];
-      const targetObj = waveformTypes.find(w => w.id === st.targetWave) || waveformTypes[0];
+      const info = getWaveformMatchInfo();
 
       container.innerHTML = `
         <div class="max-w-3xl mx-auto space-y-6">
@@ -12194,12 +12349,12 @@
             </span>
           </div>
 
-          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border-2 border-indigo-500/40 space-y-6">
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border-2 border-indigo-500/40 space-y-5">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div>
-                <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">8-Round Synth Ear Lab • +2 Tokens Per Match</span>
+                <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">6-Round Oscilloscope Lab • +2 Tokens Per Match</span>
                 <h2 class="text-2xl font-black mt-0.5">Waveform Sculptor</h2>
-                <p class="text-xs text-slate-300 mt-1">Hear the mystery synthesizer oscillator, audition the 4 waveforms, and lock in the exact match!</p>
+                <p class="text-xs text-slate-300 mt-1">Move the <strong>Frequency</strong> and <strong>Amplitude</strong> sliders (and pick the Wave Shape) until your cyan wave aligns with the dashed target wave!</p>
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <span class="px-3 py-1.5 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
@@ -12210,63 +12365,95 @@
             ${st.completed ? `
               <div class="p-8 rounded-2xl bg-emerald-950/60 border-2 border-emerald-500 text-center space-y-4">
                 <div class="text-5xl text-emerald-400"><i class="fa-solid fa-sliders"></i></div>
-                <h3 class="text-2xl font-black text-emerald-300">Synth Patch Master!</h3>
-                <p class="text-sm text-slate-200">You sculpted <strong>${st.score} / ${st.totalRounds}</strong> waveforms accurately and earned <strong>+${st.tokensEarned} Tokens</strong>!</p>
+                <h3 class="text-2xl font-black text-emerald-300">Waveform Sculptor Mastered!</h3>
+                <p class="text-sm text-slate-200">You matched all <strong>${st.score} / ${st.totalRounds}</strong> synthesizer waves and earned <strong>+${st.tokensEarned} Tokens</strong>!</p>
                 <button onclick="waveformGameState.running=false; waveformGameState.completed=false; renderWaveformGameView(document.getElementById('app-viewport'))" class="px-7 py-3 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
-                  Play Another 8 Rounds
+                  Sculpt 6 New Waves
                 </button>
               </div>
             ` : `
-              <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
-                <div class="text-center sm:text-left">
-                  <div class="text-xs font-black text-amber-300">${st.audioPlayed ? 'Now select the matching waveform below!' : 'Step 1: Listen to the mystery oscillator!'}</div>
-                  <div class="text-[11px] text-slate-400 mt-0.5">Tip: Compare smooth Sine vs. hollow Square vs. buzzy Sawtooth.</div>
+              <!-- Dual-Trace Oscilloscope Screen -->
+              <div class="bg-slate-950 rounded-2xl p-4 border-2 border-sky-900/70 space-y-2 shadow-[0_0_20px_rgba(14,165,233,0.18)]">
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-black">
+                  <div class="flex items-center gap-3">
+                    <span class="text-emerald-400"><span class="inline-block w-3 h-0.5 bg-emerald-400 mr-1 align-middle"></span> Target Wave</span>
+                    <span class="text-sky-400"><span class="inline-block w-3 h-1 bg-sky-400 mr-1 align-middle rounded"></span> Your Wave</span>
+                  </div>
+                  <span id="wf-match-badge" class="${info.isMatched ? 'px-3 py-1 rounded-full text-xs font-black bg-emerald-500 text-slate-950 animate-pulse' : 'px-3 py-1 rounded-full text-xs font-black bg-slate-800 text-amber-300 border border-slate-700'}">
+                    Match: ${info.pct}%
+                  </span>
                 </div>
-                <button onclick="playWaveformMystery()" class="px-6 py-3 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow-lg shrink-0">
-                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Mystery Synth Wave
-                </button>
-              </div>
-
-              <!-- Live Oscilloscope Preview -->
-              <div class="bg-slate-950 rounded-2xl p-4 border-2 border-slate-800 space-y-2">
-                <div class="flex items-center justify-between text-[11px] font-black uppercase tracking-wider text-slate-400">
-                  <span>Your Selected Oscillator</span>
-                  <span style="color:${activeObj.color}">${activeObj.name}</span>
-                </div>
-                <svg viewBox="0 0 200 100" class="w-full h-24" preserveAspectRatio="none">
-                  <line x1="0" y1="50" x2="200" y2="50" stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>
-                  <path d="${buildWaveformSvgPath(st.selectedWave)}" fill="none" stroke="${activeObj.color}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+                <svg viewBox="0 0 400 170" class="w-full h-40 sm:h-48" preserveAspectRatio="none">
+                  <line x1="0" y1="85" x2="400" y2="85" stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>
+                  <line x1="0" y1="42" x2="400" y2="42" stroke="#1e293b" stroke-width="1"/>
+                  <line x1="0" y1="128" x2="400" y2="128" stroke="#1e293b" stroke-width="1"/>
+                  <!-- Target Reference Wave (Dashed Emerald) -->
+                  <path d="${buildSculptorWavePath(st.targetWave, st.targetFreq, st.targetAmp)}" fill="none" stroke="#34d399" stroke-width="3.5" stroke-dasharray="8 6" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+                  <!-- Player Live Wave (Glowing Sky Cyan) -->
+                  <path id="wf-player-path" d="${buildSculptorWavePath(st.playerWave, st.playerFreq, st.playerAmp)}" fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
 
-              <!-- 4 Oscillator Selector Pads -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                ${waveformTypes.map(w => `
-                  <button onclick="previewWaveformChoice('${w.id}')" ${st.answered ? 'disabled' : ''} class="p-4 rounded-2xl border-2 text-left transition-all ${
-                    st.answered && w.id === st.targetWave
-                      ? 'border-emerald-400 bg-emerald-950/70'
-                      : st.selectedWave === w.id
-                      ? 'border-amber-400 bg-indigo-900/80 scale-[1.02]'
-                      : 'border-slate-700 bg-slate-800 hover:border-slate-500'
-                  }">
-                    <svg viewBox="0 0 200 100" class="w-full h-10 mb-2"><path d="${buildWaveformSvgPath(w.id)}" fill="none" stroke="${w.color}" stroke-width="6" stroke-linejoin="round"/></svg>
-                    <div class="font-black text-xs text-white">${w.name}</div>
-                    <div class="text-[10px] text-slate-400 mt-0.5">${w.desc}</div>
-                  </button>
-                `).join('')}
+              <!-- Audio Preview Controls -->
+              <div class="flex flex-wrap items-center justify-center gap-3">
+                <button onclick="playWaveformTargetTone()" class="px-4 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-300 font-black text-xs">
+                  <i class="fa-solid fa-ear-listen mr-1.5"></i> Hear Target Wave
+                </button>
+                <button id="wf-audio-btn" onclick="toggleWaveformLiveAudio()" class="px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow">
+                  <i class="fa-solid fa-volume-high mr-1.5"></i> Hear My Wave
+                </button>
               </div>
 
-              ${!st.answered ? `
+              <!-- Waveform Shape Selector -->
+              <div class="space-y-2">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400">1. Wave Shape</div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  ${waveformTypes.map(w => `
+                    <button id="wf-shape-btn-${w.id}" onclick="updateWaveformSlider('wave', '${w.id}')" ${st.roundCleared ? 'disabled' : ''} class="${
+                      w.id === st.playerWave
+                        ? 'py-2.5 px-3 rounded-xl border-2 border-amber-400 bg-indigo-900 text-white font-black text-xs shadow transition-all'
+                        : 'py-2.5 px-3 rounded-xl border-2 border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500 font-bold text-xs transition-all'
+                    }">
+                      ${w.name}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- Frequency & Amplitude Sliders -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-800/70 p-4 rounded-2xl border border-slate-700">
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between text-xs font-black">
+                    <span class="text-sky-300 uppercase">2. Frequency (Pitch)</span>
+                    <span id="wf-freq-val" class="text-white">${st.playerFreq} Hz</span>
+                  </div>
+                  <input type="range" min="140" max="620" step="10" value="${st.playerFreq}" ${st.roundCleared ? 'disabled' : ''} oninput="updateWaveformSlider('freq', this.value)" class="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-sky-400">
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between text-xs font-black">
+                    <span class="text-amber-300 uppercase">3. Amplitude (Volume)</span>
+                    <span id="wf-amp-val" class="text-white">${st.playerAmp}%</span>
+                  </div>
+                  <input type="range" min="15" max="100" step="5" value="${st.playerAmp}" ${st.roundCleared ? 'disabled' : ''} oninput="updateWaveformSlider('amp', this.value)" class="w-full h-2.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400">
+                </div>
+              </div>
+
+              <div id="wf-hint-msg" class="text-center text-xs font-bold text-slate-400">
+                Line up the cyan wave right on top of the dashed green target wave, then click Lock In!
+              </div>
+
+              ${!st.roundCleared ? `
                 <div class="text-center">
-                  <button onclick="submitWaveformGuess()" class="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg">
-                    <i class="fa-solid fa-check mr-1.5"></i> Lock In ${activeObj.name}
+                  <button id="wf-lock-btn" onclick="checkWaveformSculptMatch()" class="${info.isMatched ? 'w-full sm:w-auto px-8 py-3.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all scale-[1.02]' : 'w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-sm shadow-lg transition-all'}">
+                    <i class="fa-solid fa-check mr-1.5"></i> Lock In Wave Match (+2 Tokens)
                   </button>
                 </div>
               ` : `
-                <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <span class="text-xs font-bold">${st.lastCorrect ? `✓ Exact match (+2 Tokens)! That was a ${targetObj.name}.` : `✗ Not quite — the mystery oscillator was a ${targetObj.name} (${targetObj.desc}).`}</span>
-                  <button onclick="nextWaveformRound()" class="px-5 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                    ${st.round < st.totalRounds ? 'Next Round →' : 'See Results'}
+                <div class="p-4 rounded-2xl bg-emerald-950/70 border border-emerald-500 text-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <span class="text-xs font-black">✓ Perfect Wave Match (+2 Tokens)! Target was ${st.targetWave.toUpperCase()} • ${st.targetFreq} Hz • ${st.targetAmp}%.</span>
+                  <button onclick="nextWaveformRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
+                    ${st.round < st.totalRounds ? 'Next Wave →' : 'See Results'}
                   </button>
                 </div>
               `}

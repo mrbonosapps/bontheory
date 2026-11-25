@@ -653,6 +653,44 @@
       ).join(' • ');
     }
 
+    const avatarUpgradeCosts = {
+      'avatar_bg_#a7f3d0': 10,
+      'avatar_bg_#bae6fd': 10,
+      'avatar_bg_rays': 30,
+      'avatar_bg_bubbles': 30,
+      'avatar_bg_zigzag': 40,
+      'avatar_bg_neon': 50,
+      'avatar_head_square': 20,
+      'avatar_head_tall': 20,
+      'avatar_eyes_wink': 15,
+      'avatar_eyes_circle_shades': 25,
+      'avatar_eyes_tri_shades': 25,
+      'avatar_eyes_red_shades': 30,
+      'avatar_mouth_none': 10,
+      'avatar_mouth_sad': 10,
+      'avatar_mouth_straight': 10,
+      'avatar_headwear_conductor': 25,
+      'avatar_headwear_rocker_wig': 35,
+      'avatar_headwear_mullet': 40,
+      'avatar_headwear_mohawk': 45,
+      'avatar_headwear_top_hat': 50
+    };
+
+    function getStudentOverallTokens(student) {
+      const tokensLeft = (student && student.stats && Number(student.stats.tokens)) || 0;
+      const inv = (student && Array.isArray(student.inventory)) ? student.inventory : [];
+      let spent = 0;
+      inv.forEach(itemId => {
+        const shopItem = shopCatalog.find(i => i.id === itemId);
+        if (shopItem) {
+          spent += Number(shopItem.cost) || 0;
+        } else if (avatarUpgradeCosts[itemId]) {
+          spent += avatarUpgradeCosts[itemId];
+        }
+      });
+      return tokensLeft + spent;
+    }
+
     function refreshLeaderboardTableInPlace() {
       const tbody = document.getElementById('overall-leaderboard-tbody');
       if (!tbody) return;
@@ -669,15 +707,19 @@
         students = students.filter(s => s.stats && s.stats.dailyTokens && s.stats.dailyTokens.date === todayStr && s.stats.dailyTokens.amount > 0);
         students.sort((a, b) => b.stats.dailyTokens.amount - a.stats.dailyTokens.amount);
       } else {
-        students.sort((a, b) => ((b.stats && b.stats.tokens) || 0) - ((a.stats && a.stats.tokens) || 0));
+        students.sort((a, b) => getStudentOverallTokens(b) - getStudentOverallTokens(a));
       }
 
       if (students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-slate-400 text-xs">No students found for this leaderboard filter. Log in and play to appear here!</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400 text-xs">No students found for this leaderboard filter. Log in and play to appear here!</td></tr>`;
         return;
       }
       tbody.innerHTML = students.map((s, idx) => {
-        const toks = timeframe === 'daily' ? s.stats.dailyTokens.amount : ((s.stats && s.stats.tokens) || 0);
+        const tokensLeft = (s.stats && s.stats.tokens) || 0;
+        const overallTokens = getStudentOverallTokens(s);
+        const dailyBadge = timeframe === 'daily'
+          ? `<span class="ml-1.5 px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-black">+${s.stats.dailyTokens.amount} today</span>`
+          : '';
         const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
         return `
           <tr class="hover:bg-slate-50 transition-colors">
@@ -689,7 +731,8 @@
               </div>
             </td>
             <td class="px-4 py-3"><span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">${s.class}</span></td>
-            <td class="px-4 py-3 text-right font-black text-amber-600"><i class="fa-solid fa-coins text-amber-400 mr-1"></i>${toks}</td>
+            <td class="px-4 py-3 text-right font-bold text-slate-600"><i class="fa-solid fa-coins text-amber-400 mr-1"></i>${tokensLeft}</td>
+            <td class="px-4 py-3 text-right font-black text-amber-600"><i class="fa-solid fa-trophy text-amber-500 mr-1"></i>${overallTokens}${dailyBadge}</td>
           </tr>
         `;
       }).join('');
@@ -11248,11 +11291,12 @@
                   <th class="px-4 py-3">Rank</th>
                   <th class="px-4 py-3">Student</th>
                   <th class="px-4 py-3">Class</th>
-                  <th class="px-4 py-3 text-right">Tokens</th>
+                  <th class="px-4 py-3 text-right">Tokens Left</th>
+                  <th class="px-4 py-3 text-right">Overall Tokens</th>
                 </tr>
               </thead>
               <tbody id="overall-leaderboard-tbody" class="divide-y divide-slate-100">
-                <tr><td colspan="4" class="px-4 py-6 text-center text-slate-400">Loading leaderboard...</td></tr>
+                <tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Loading leaderboard...</td></tr>
               </tbody>
             </table>
           </div>

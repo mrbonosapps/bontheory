@@ -9839,16 +9839,30 @@
     // MINIGAME 10: REPEAT SIGNS & ROADMAPS
     // ==========================================
     const repeatGameScenarios = [
-      { id: 'rs1', title: 'Bar 1, 2, repeat back to Bar 1', fwd: null, bwd: 2, correctPath: '1, 2, 1, 2', wrongPaths: ['1, 2, 3', '1, 2, 1', '1, 2, 2'] },
-      { id: 'rs2', title: 'Bar 1, repeat section ||: Bar 2, 3 :|| Bar 4', fwd: 2, bwd: 3, correctPath: '1, 2, 3, 2, 3, 4', wrongPaths: ['1, 2, 3, 1, 2, 3, 4', '1, 2, 3, 4', '1, 2, 3, 3, 4'] },
-      { id: 'rs3', title: 'Bar 1, 2, 3, repeat back to Bar 2 ||: 2, 3 :|| 4', fwd: 2, bwd: 3, correctPath: '1, 2, 3, 2, 3, 4', wrongPaths: ['1, 2, 3, 1, 2, 3, 4', '1, 2, 3, 4', '1, 2, 3, 2, 4'] }
+      { id: 'rs1',  title: 'Repeat Bar 1 back to the start',             fwd: null,   bwd: 1,      correctPath: '1, 1, 2, 3, 4',          wrongPaths: ['1, 2, 3, 4', '1, 2, 1, 2, 3, 4', '1, 1, 2, 2, 3, 4'] },
+      { id: 'rs2',  title: 'Repeat Bars 1 & 2 back to the start',        fwd: null,   bwd: 2,      correctPath: '1, 2, 1, 2, 3, 4',       wrongPaths: ['1, 2, 3, 4', '1, 2, 2, 3, 4', '1, 2, 3, 4, 1, 2'] },
+      { id: 'rs3',  title: 'Repeat Bars 1–3 back to the start',          fwd: null,   bwd: 3,      correctPath: '1, 2, 3, 1, 2, 3, 4',    wrongPaths: ['1, 2, 3, 2, 3, 4', '1, 2, 3, 4', '1, 2, 3, 3, 4'] },
+      { id: 'rs4',  title: 'Repeat the entire 4-bar piece',              fwd: null,   bwd: 4,      correctPath: '1, 2, 3, 4, 1, 2, 3, 4', wrongPaths: ['1, 2, 3, 4, 4', '1, 2, 3, 4, 3, 4', '1, 2, 3, 4'] },
+      { id: 'rs5',  title: 'Paired repeat around Bars 1 & 2',            fwd: 1,      bwd: 2,      correctPath: '1, 2, 1, 2, 3, 4',       wrongPaths: ['1, 2, 2, 3, 4', '1, 2, 3, 4, 1, 2', '1, 1, 2, 3, 4'] },
+      { id: 'rs6',  title: 'Paired repeat around Bars 2 & 3',            fwd: 2,      bwd: 3,      correctPath: '1, 2, 3, 2, 3, 4',       wrongPaths: ['1, 2, 3, 1, 2, 3, 4', '1, 2, 3, 4', '1, 2, 3, 3, 4'] },
+      { id: 'rs7',  title: 'Paired repeat around Bars 2, 3 & 4',         fwd: 2,      bwd: 4,      correctPath: '1, 2, 3, 4, 2, 3, 4',    wrongPaths: ['1, 2, 3, 4, 1, 2, 3, 4', '1, 2, 3, 4, 3, 4', '1, 2, 3, 2, 3, 4'] },
+      { id: 'rs8',  title: 'Paired repeat around Bars 3 & 4',            fwd: 3,      bwd: 4,      correctPath: '1, 2, 3, 4, 3, 4',       wrongPaths: ['1, 2, 3, 4, 1, 2, 3, 4', '1, 2, 3, 4, 4', '1, 2, 3, 3, 4'] },
+      { id: 'rs9',  title: 'Single-bar repeat on Bar 2 only',            fwd: 2,      bwd: 2,      correctPath: '1, 2, 2, 3, 4',          wrongPaths: ['1, 2, 1, 2, 3, 4', '1, 2, 3, 2, 3, 4', '1, 2, 3, 4'] },
+      { id: 'rs10', title: 'Single-bar repeat on Bar 3 only',            fwd: 3,      bwd: 3,      correctPath: '1, 2, 3, 3, 4',          wrongPaths: ['1, 2, 3, 2, 3, 4', '1, 2, 3, 1, 2, 3, 4', '1, 2, 3, 4, 3, 4'] },
+      { id: 'rs11', title: 'Single-bar repeat on the final bar (Bar 4)', fwd: 4,      bwd: 4,      correctPath: '1, 2, 3, 4, 4',          wrongPaths: ['1, 2, 3, 4, 3, 4', '1, 2, 3, 4, 1, 2, 3, 4', '1, 2, 3, 4'] },
+      { id: 'rs12', title: 'Double repeats: Bars 1–2 and Bars 3–4',      fwd: [1, 3], bwd: [2, 4], correctPath: '1, 2, 1, 2, 3, 4, 3, 4', wrongPaths: ['1, 2, 3, 4, 1, 2, 3, 4', '1, 2, 1, 2, 3, 4', '1, 2, 3, 4, 3, 4'] }
     ];
 
-    let repeatSignGameState = { round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
+    let repeatSignGameState = { round: 1, totalRounds: 10, score: 0, scenarioQueue: [], currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
 
     function createRepeatScoreSVG(fwd, bwd) {
+      const fwdList = Array.isArray(fwd) ? fwd : (fwd ? [fwd] : []);
+      const bwdList = Array.isArray(bwd) ? bwd : (bwd ? [bwd] : []);
+      const hasFwd = (barNum) => fwdList.includes(barNum);
+      const hasBwd = (barNum) => bwdList.includes(barNum);
+
       let svg = `<svg viewBox="0 0 400 80" class="w-full max-w-xl mx-auto h-auto bg-slate-950 rounded-xl mb-3 shadow-inner py-2">`;
-      // lines
+      // Staff lines
       for (let i = 0; i < 5; i++) {
         svg += `<line x1="20" y1="${35 + i*7.5}" x2="380" y2="${35 + i*7.5}" stroke="#475569" stroke-width="1.5"/>`;
       }
@@ -9856,28 +9870,28 @@
       for (let i = 0; i < 5; i++) {
         let x = bars[i];
         if (i === 0) {
-          if (fwd === 1) {
+          if (hasFwd(1)) {
             svg += `<line x1="${x}" y1="35" x2="${x}" y2="65" stroke="#fff" stroke-width="4"/><line x1="${x+6}" y1="35" x2="${x+6}" y2="65" stroke="#fff" stroke-width="1.5"/><circle cx="${x+14}" cy="46.25" r="2.5" fill="#38bdf8"/><circle cx="${x+14}" cy="53.75" r="2.5" fill="#38bdf8"/>`;
           } else {
             svg += `<line x1="${x}" y1="35" x2="${x}" y2="65" stroke="#fff" stroke-width="4"/><line x1="${x+6}" y1="35" x2="${x+6}" y2="65" stroke="#fff" stroke-width="1.5"/>`;
           }
         } else if (i === 4) {
-          if (bwd === 4) {
+          if (hasBwd(4)) {
             svg += `<circle cx="${x-14}" cy="46.25" r="2.5" fill="#38bdf8"/><circle cx="${x-14}" cy="53.75" r="2.5" fill="#38bdf8"/><line x1="${x-6}" y1="35" x2="${x-6}" y2="65" stroke="#fff" stroke-width="1.5"/><line x1="${x}" y1="35" x2="${x}" y2="65" stroke="#fff" stroke-width="4"/>`;
           } else {
             svg += `<line x1="${x-6}" y1="35" x2="${x-6}" y2="65" stroke="#fff" stroke-width="1.5"/><line x1="${x}" y1="35" x2="${x}" y2="65" stroke="#fff" stroke-width="4"/>`;
           }
         } else {
-          let hasRepeat = false;
-          if (fwd === i + 1) {
+          const isBwdHere = hasBwd(i);
+          const isFwdHere = hasFwd(i + 1);
+          if (isBwdHere && isFwdHere) {
+            // Back-to-back repeat sign (:||:)
+            svg += `<circle cx="${x-10}" cy="46.25" r="2.5" fill="#38bdf8"/><circle cx="${x-10}" cy="53.75" r="2.5" fill="#38bdf8"/><line x1="${x-4}" y1="35" x2="${x-4}" y2="65" stroke="#fff" stroke-width="1.5"/><line x1="${x}" y1="35" x2="${x}" y2="65" stroke="#fff" stroke-width="4"/><line x1="${x+4}" y1="35" x2="${x+4}" y2="65" stroke="#fff" stroke-width="1.5"/><circle cx="${x+10}" cy="46.25" r="2.5" fill="#38bdf8"/><circle cx="${x+10}" cy="53.75" r="2.5" fill="#38bdf8"/>`;
+          } else if (isFwdHere) {
             svg += `<line x1="${x-2}" y1="35" x2="${x-2}" y2="65" stroke="#fff" stroke-width="4"/><line x1="${x+2}" y1="35" x2="${x+2}" y2="65" stroke="#fff" stroke-width="1.5"/><circle cx="${x+10}" cy="46.25" r="2.5" fill="#38bdf8"/><circle cx="${x+10}" cy="53.75" r="2.5" fill="#38bdf8"/>`;
-            hasRepeat = true;
-          }
-          if (bwd === i) {
+          } else if (isBwdHere) {
             svg += `<circle cx="${x-8}" cy="46.25" r="2.5" fill="#38bdf8"/><circle cx="${x-8}" cy="53.75" r="2.5" fill="#38bdf8"/><line x1="${x-2}" y1="35" x2="${x-2}" y2="65" stroke="#fff" stroke-width="1.5"/><line x1="${x+2}" y1="35" x2="${x+2}" y2="65" stroke="#fff" stroke-width="4"/>`;
-            hasRepeat = true;
-          }
-          if (!hasRepeat) {
+          } else {
             svg += `<line x1="${x}" y1="35" x2="${x}" y2="65" stroke="#475569" stroke-width="1.5"/>`;
           }
         }
@@ -9892,17 +9906,19 @@
     }
 
     function setupRepeatSignRound() {
-      const scenario = repeatGameScenarios[Math.floor(Math.random() * repeatGameScenarios.length)];
-      repeatSignGameState.currentScenario = scenario;
-      repeatSignGameState.choices = [scenario.correctPath, ...scenario.wrongPaths].sort(() => Math.random() - 0.5);
-      repeatSignGameState.answered = false;
-      repeatSignGameState.roundStartTime = performance.now();
+      const st = repeatSignGameState;
+      const scenario = st.scenarioQueue[st.round - 1] || repeatGameScenarios[Math.floor(Math.random() * repeatGameScenarios.length)];
+      st.currentScenario = scenario;
+      st.choices = [scenario.correctPath, ...scenario.wrongPaths].sort(() => Math.random() - 0.5);
+      st.answered = false;
+      st.roundStartTime = performance.now();
     }
 
     function mountEmbeddedRepeatSignGame(target) {
       if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      repeatSignGameState = { round: 1, totalRounds: 10, score: 0, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
+      const shuffledDeck = [...repeatGameScenarios].sort(() => Math.random() - 0.5).slice(0, 10);
+      repeatSignGameState = { round: 1, totalRounds: 10, score: 0, scenarioQueue: shuffledDeck, currentScenario: null, choices: [], answered: false, lastCorrect: false, completed: false, roundStartTime: 0 };
       setupRepeatSignRound();
       renderRepeatSignGameUI(target);
     }

@@ -10547,8 +10547,8 @@
                           <i class="fa-solid fa-play"></i> Play Minigame
                         </button>
                       ` : item.id === 'item_baton' ? `
-                        <button onclick="window.app.navigate('dynamicsTracer')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
-                          <i class="fa-solid fa-play"></i> Play Minigame
+                        <button onclick="window.app.navigate('dynamicsTracer')" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-wand-sparkles"></i> Play Instrument Ninja
                         </button>
                       ` : item.id === 'item_drumkit30' ? `
                         <button onclick="window.app.navigate('drumHeroGame')" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
@@ -10906,7 +10906,6 @@
         if (idx > -1) {
           window.state.inventory.splice(idx, 1);
           window.state.stats.tokens += cost;
-          // Revert to default if the traded item is currently equipped
           if (window.tempAvatarState[cat] === val) {
             const defaults = { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' };
             window.tempAvatarState[cat] = defaults[cat] || 'none';
@@ -11002,7 +11001,7 @@
                 <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Student Portal • Class ${u.class} (${u.teacher})</span>
                 <h1 class="text-2xl sm:text-3xl font-black text-slate-800 mt-1">Welcome back, ${u.firstName}!</h1>
                 <div class="mt-2 flex gap-2">
-                  <button onclick="window.app.navigate('avatarMaker')" class="text-[11px] font-black bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-3.5 py-1.5 rounded-lg transition-all shadow-sm hover:shadow active:scale-95">
+                  <button onclick="window.app.navigate('avatarMaker')" class="text-[11px] font-black bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-3.5 py-1.5 rounded-lg transition-all shadow-sm">
                     <i class="fa-solid fa-user-astronaut mr-1"></i> Customize Avatar
                   </button>
                 </div>
@@ -11081,6 +11080,10 @@
                         </button>
                       ` : it.id === 'item_synth' ? `
                         <button onclick="window.app.navigate('waveformGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-black text-[10px] shadow-sm hover:bg-indigo-500 transition-colors">
+                          Play
+                        </button>
+                      ` : it.id === 'item_baton' ? `
+                        <button onclick="window.app.navigate('dynamicsTracer')" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-black text-[10px] shadow-sm hover:bg-amber-400 transition-colors">
                           Play
                         </button>
                       ` : it.id === 'item_drumkit30' ? `
@@ -11327,13 +11330,6 @@
       refreshLeaderboardTableInPlace();
     }
 
-    window.addEventListener('keyup', (e) => {
-      if (e.code === 'Space' && longNoteState.running) {
-        e.preventDefault();
-        endLongNoteHold();
-      }
-    });
-
     // ==========================================
     // MINIGAME ARCADE: ANALOG POCKET SYNTHESIZER (WAVEFORM SCULPTOR)
     // ==========================================
@@ -11363,7 +11359,7 @@
         vol: Math.floor(Math.random() * wfgVols.length)
       };
       if (st.current.wave === st.target.wave && st.current.freq === st.target.freq && st.current.vol === st.target.vol) {
-         st.current.wave = (st.current.wave + 1) % wfgWaves.length;
+        st.current.wave = (st.current.wave + 1) % wfgWaves.length;
       }
     }
 
@@ -11378,126 +11374,100 @@
       renderWaveformGameView(document.getElementById('app-viewport'));
     }
 
-    function playWaveformTone(isTarget, start) {
-       const st = waveformGameState;
-       stopWaveformGame(); // Prevent overlapping pulses
-       if (!start) return;
-
-       const cfg = isTarget ? st.target : st.current;
-       const ctx = getAudioCtx();
-       if (!ctx) return;
-
-       const osc = ctx.createOscillator();
-       const gain = ctx.createGain();
-       osc.type = wfgWaves[cfg.wave];
-       osc.frequency.value = wfgFreqs[cfg.freq];
-       gain.gain.value = wfgVols[cfg.vol];
-
-       osc.connect(gain);
-       gain.connect(ctx.destination);
-       osc.start();
-
-       if (isTarget) {
-          st.targetOsc = osc;
-       } else {
-          st.synthOsc = osc;
-       }
-    }
-
     function updateWaveform(param, val) {
-       const st = waveformGameState;
-       st.current[param] = Number(val);
-       const svgContainer = document.getElementById('wf-current-svg');
-       if (svgContainer) {
-         svgContainer.innerHTML = generateWaveformSVG(st.current.wave, st.current.freq, st.current.vol, '#38bdf8');
-       }
-       if (param === 'wave') document.getElementById('wf-wave-val').textContent = wfgWaves[st.current.wave].toUpperCase();
-       if (param === 'freq') document.getElementById('wf-freq-val').textContent = wfgFreqs[st.current.freq] + ' Hz';
-       if (param === 'vol') document.getElementById('wf-vol-val').textContent = Math.round(wfgVols[st.current.vol]*400) + '%';
+      const st = waveformGameState;
+      st.current[param] = Number(val);
+      const svgContainer = document.getElementById('wf-current-svg');
+      if (svgContainer) {
+        svgContainer.innerHTML = generateWaveformSVG(st.current.wave, st.current.freq, st.current.vol, '#38bdf8');
+      }
+      if (param === 'wave') document.getElementById('wf-wave-val').textContent = wfgWaves[st.current.wave].toUpperCase();
+      if (param === 'freq') document.getElementById('wf-freq-val').textContent = wfgFreqs[st.current.freq] + ' Hz';
+      if (param === 'vol') document.getElementById('wf-vol-val').textContent = Math.round(wfgVols[st.current.vol]*400) + '%';
     }
 
     function checkWaveformMatch() {
-       const st = waveformGameState;
-       const isMatch = st.current.wave == st.target.wave && st.current.freq == st.target.freq && st.current.vol == st.target.vol;
+      const st = waveformGameState;
+      const isMatch = st.current.wave == st.target.wave && st.current.freq == st.target.freq && st.current.vol == st.target.vol;
 
-       if (isMatch) {
-         st.score++;
-         playTonePitch(659.25, 0.2, 0.35, 'triangle');
-         if (st.round < st.totalRounds) {
-           st.round++;
-           setupWaveformRound();
-         } else {
-           st.completed = true;
-           addTokens(st.score * 2);
-           showAppModal('Synth Master!', `You successfully sculpted ${st.score} waveforms and earned +${st.score*2} Tokens!`, true);
-         }
-       } else {
-         playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
-         showAppModal('Not Quite a Match', 'Keep adjusting the sliders! The wave shape, pitch, and volume must exactly match the target.', false);
-       }
-       renderWaveformGameView(document.getElementById('app-viewport'));
+      if (isMatch) {
+        st.score++;
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+        if (st.round < st.totalRounds) {
+          st.round++;
+          setupWaveformRound();
+        } else {
+          st.completed = true;
+          addTokens(st.score * 2);
+          showAppModal('Synth Master!', `You successfully sculpted ${st.score} waveforms and earned +${st.score*2} Tokens!`, true);
+        }
+      } else {
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+        showAppModal('Not Quite a Match', 'Keep adjusting the sliders! The wave shape, pitch, and volume must exactly match the target.', false);
+      }
+      renderWaveformGameView(document.getElementById('app-viewport'));
     }
 
     function playWaveformTone(isTarget) {
-       const st = waveformGameState;
-       stopWaveformGame(); // Prevent overlapping pulses
+      const st = waveformGameState;
+      stopWaveformGame();
 
-       const cfg = isTarget ? st.target : st.current;
-       const ctx = getAudioCtx();
-       if (!ctx) return;
-       const now = ctx.currentTime;
+      const cfg = isTarget ? st.target : st.current;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
 
-       const osc = ctx.createOscillator();
-       const gain = ctx.createGain();
-       osc.type = wfgWaves[cfg.wave];
-       osc.frequency.setValueAtTime(wfgFreqs[cfg.freq], now);
-       
-       gain.gain.setValueAtTime(0.001, now);
-       gain.gain.linearRampToValueAtTime(wfgVols[cfg.vol], now + 0.05);
-       gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = wfgWaves[cfg.wave];
+      osc.frequency.setValueAtTime(wfgFreqs[cfg.freq], now);
+      
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(wfgVols[cfg.vol], now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
 
-       osc.connect(gain);
-       gain.connect(ctx.destination);
-       osc.start(now);
-       osc.stop(now + 1.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.6);
 
-       if (isTarget) {
-          st.targetOsc = osc;
-       } else {
-          st.synthOsc = osc;
-       }
+      if (isTarget) {
+        st.targetOsc = osc;
+      } else {
+        st.synthOsc = osc;
+      }
     }
 
     function generateWaveformSVG(waveIdx, freqIdx, volIdx, color) {
-       const reps = freqIdx + 2; 
-       const amp = 0.2 + (volIdx * 0.2); 
-       const mid = 50;
-       const h = 40 * amp;
+      const reps = freqIdx + 2; 
+      const amp = 0.2 + (volIdx * 0.2); 
+      const mid = 50;
+      const h = 40 * amp;
 
-       let d = `M 0 ${mid}`;
-       const stepX = 100 / reps;
+      let d = `M 0 ${mid}`;
+      const stepX = 100 / reps;
 
-       for(let i=0; i<reps; i++) {
-         const startX = i * stepX;
-         const endX = (i+1) * stepX;
-         const qX = startX + (stepX/2);
+      for(let i=0; i<reps; i++) {
+        const startX = i * stepX;
+        const endX = (i+1) * stepX;
+        const qX = startX + (stepX/2);
 
-         if (waveIdx === 0) {
-           d += ` Q ${startX + stepX*0.25} ${mid - h}, ${qX} ${mid} T ${endX} ${mid}`;
-         } else if (waveIdx === 1) {
-           d += ` L ${startX + stepX*0.25} ${mid - h} L ${startX + stepX*0.75} ${mid + h} L ${endX} ${mid}`;
-         } else if (waveIdx === 2) {
-           d += ` L ${startX} ${mid - h} L ${qX} ${mid - h} L ${qX} ${mid + h} L ${endX} ${mid + h} L ${endX} ${mid}`;
-         } else if (waveIdx === 3) {
-           d += ` L ${endX} ${mid - h} L ${endX} ${mid + h}`;
-         }
-       }
-       if (waveIdx === 3) d += ` L 100 ${mid}`;
+        if (waveIdx === 0) {
+          d += ` Q ${startX + stepX*0.25} ${mid - h}, ${qX} ${mid} T ${endX} ${mid}`;
+        } else if (waveIdx === 1) {
+          d += ` L ${startX + stepX*0.25} ${mid - h} L ${startX + stepX*0.75} ${mid + h} L ${endX} ${mid}`;
+        } else if (waveIdx === 2) {
+          d += ` L ${startX} ${mid - h} L ${qX} ${mid - h} L ${qX} ${mid + h} L ${endX} ${mid + h} L ${endX} ${mid}`;
+        } else if (waveIdx === 3) {
+          d += ` L ${endX} ${mid - h} L ${endX} ${mid + h}`;
+        }
+      }
+      if (waveIdx === 3) d += ` L 100 ${mid}`;
 
-       return `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md" preserveAspectRatio="none">
-         <line x1="0" y1="50" x2="100" y2="50" stroke="${color}" stroke-opacity="0.2" stroke-width="1" />
-         <path d="${d}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" />
-       </svg>`;
+      return `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md" preserveAspectRatio="none">
+        <line x1="0" y1="50" x2="100" y2="50" stroke="${color}" stroke-opacity="0.2" stroke-width="1" />
+        <path d="${d}" fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" />
+      </svg>`;
     }
 
     function renderWaveformGameView(container) {
@@ -11620,274 +11590,976 @@
     }
 
     // ==========================================
-    // MINIGAME ARCADE: DYNAMICS TRACER (MAESTRO BATON)
+    // MINIGAME ARCADE: INSTRUMENT NINJA (MAESTRO CONDUCTOR BATON)
     // ==========================================
+    const batonSliceInstruments = [
+      // Strings
+      { id: 'violin',   name: 'Violin',      family: 'Strings',    color: '#f43f5e', accent: '#fecdd3', freq: 659.25, wave: 'sawtooth', radius: 34 },
+      { id: 'cello',    name: 'Cello',       family: 'Strings',    color: '#fb7185', accent: '#ffe4e6', freq: 196.00, wave: 'sawtooth', radius: 36 },
+      { id: 'harp',     name: 'Harp',        family: 'Strings',    color: '#f59e0b', accent: '#fef3c7', freq: 523.25, wave: 'sine',     radius: 34 },
+      // Woodwinds
+      { id: 'flute',    name: 'Flute',       family: 'Woodwinds',  color: '#38bdf8', accent: '#e0f2fe', freq: 783.99, wave: 'sine',     radius: 34 },
+      { id: 'clarinet', name: 'Clarinet',    family: 'Woodwinds',  color: '#818cf8', accent: '#e0e7ff', freq: 329.63, wave: 'square',   radius: 34 },
+      { id: 'sax',      name: 'Saxophone',   family: 'Woodwinds',  color: '#06b6d4', accent: '#cffafe', freq: 440.00, wave: 'sawtooth', radius: 35 },
+      // Brass
+      { id: 'trumpet',  name: 'Trumpet',     family: 'Brass',      color: '#eab308', accent: '#fef08a', freq: 523.25, wave: 'square',   radius: 34 },
+      { id: 'tuba',     name: 'Tuba',        family: 'Brass',      color: '#d97706', accent: '#fde68a', freq: 110.00, wave: 'sawtooth', radius: 36 },
+      // Percussion
+      { id: 'drum',     name: 'Snare Drum',  family: 'Percussion', color: '#ef4444', accent: '#fecaca', freq: 220.00, wave: 'triangle', radius: 34 },
+      { id: 'cymbal',   name: 'Cymbal',      family: 'Percussion', color: '#facc15', accent: '#fef9c3', freq: 880.00, wave: 'square',   radius: 34 }
+    ];
+
+    const instrumentNinjaRounds = [
+      { round: 1, prompt: 'Slice ONLY STRINGS!',              badge: 'STRINGS',               families: ['Strings'],               ids: null,                      goal: 5 },
+      { round: 2, prompt: 'Slice ONLY BRASS!',                badge: 'BRASS',                 families: ['Brass'],                 ids: null,                      goal: 5 },
+      { round: 3, prompt: 'Slice ONLY WOODWINDS!',            badge: 'WOODWINDS',             families: ['Woodwinds'],             ids: null,                      goal: 6 },
+      { round: 4, prompt: 'Slice ONLY PERCUSSION!',           badge: 'PERCUSSION',            families: ['Percussion'],            ids: null,                      goal: 6 },
+      { round: 5, prompt: 'Slice ONLY VIOLINS & TRUMPETS!',   badge: 'VIOLIN & TRUMPET',      families: null,                      ids: ['violin', 'trumpet'],     goal: 6 },
+      { round: 6, prompt: 'Slice ONLY FLUTES & SNARE DRUMS!', badge: 'FLUTE & SNARE DRUM',    families: null,                      ids: ['flute', 'drum'],         goal: 6 },
+      { round: 7, prompt: 'Slice ONLY STRINGS & WOODWINDS!',  badge: 'STRINGS + WOODWINDS',   families: ['Strings', 'Woodwinds'],  ids: null,                      goal: 8 },
+      { round: 8, prompt: 'Slice ONLY BRASS & PERCUSSION!',   badge: 'BRASS + PERCUSSION',    families: ['Brass', 'Percussion'],   ids: null,                      goal: 8 }
+    ];
+
     let dynamicsTracerState = {
-        running: false,
-        streak: 0,
-        completed: false,
-        animFrame: null,
-        canvas: null,
-        ctx: null,
-        path: [],
-        playerY: 150,
-        isTracing: false,
-        framePhase: 0,
-        lastToneTime: 0
+      running: false,
+      gameOver: false,
+      score: 0,
+      best: 0,
+      lives: 3,
+      tokensEarned: 0,
+      slicedCount: 0,
+      round: 1,
+      roundProgress: 0,
+      currentMission: instrumentNinjaRounds[0],
+      bannerText: '',
+      bannerTimer: 0,
+      animFrame: null,
+      canvas: null,
+      ctx: null,
+      items: [],      // Active whole flying instruments & bombs
+      halves: [],     // Sliced instrument halves flying apart
+      particles: [],  // Sparkles & musical note particles
+      popups: [],     // Floating combo/score text
+      trail: [],      // Baton slash trail points { x, y, life }
+      isSlicing: false,
+      pointerActive: false,
+      pointerX: 0,
+      pointerY: 0,
+      prevPointerX: 0,
+      prevPointerY: 0,
+      batonAngle: -0.6,
+      swipeCombo: 0,
+      swipeComboTimer: 0,
+      spawnTimer: 500,
+      screenFlash: 0,
+      lastTime: 0
     };
 
+    function getNinjaMissionForRound(roundNum) {
+      const idx = (roundNum - 1) % instrumentNinjaRounds.length;
+      const base = instrumentNinjaRounds[idx];
+      const loopBonus = Math.floor((roundNum - 1) / instrumentNinjaRounds.length) * 2;
+      return { ...base, round: roundNum, goal: base.goal + loopBonus };
+    }
+
+    function isInstrumentNinjaTarget(item, mission) {
+      if (!item || item.isBomb || !mission) return false;
+      if (mission.ids && mission.ids.includes(item.id)) return true;
+      if (mission.families && mission.families.includes(item.family)) return true;
+      return false;
+    }
+
     function stopDynamicsTracer() {
-        dynamicsTracerState.running = false;
-        if (dynamicsTracerState.animFrame) cancelAnimationFrame(dynamicsTracerState.animFrame);
+      dynamicsTracerState.running = false;
+      dynamicsTracerState.isSlicing = false;
+      dynamicsTracerState.pointerActive = false;
+      if (dynamicsTracerState.animFrame) {
+        cancelAnimationFrame(dynamicsTracerState.animFrame);
+        dynamicsTracerState.animFrame = null;
+      }
+    }
+
+    function playBatonWhoosh() {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const bufSize = Math.floor(ctx.sampleRate * 0.08);
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const flt = ctx.createBiquadFilter();
+        flt.type = 'bandpass';
+        flt.frequency.setValueAtTime(1600, now);
+        flt.frequency.exponentialRampToValueAtTime(520, now + 0.08);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.001, now);
+        g.gain.linearRampToValueAtTime(0.14, now + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        src.connect(flt);
+        flt.connect(g);
+        g.connect(ctx.destination);
+        src.start(now);
+        src.stop(now + 0.09);
+      } catch (e) {}
+    }
+
+    function playBatonSliceHit(inst) {
+      try {
+        if (inst.id === 'drum') {
+          playDrumSound('snare');
+        } else if (inst.id === 'cymbal') {
+          playDrumSound('hihat');
+          playTonePitch(1046.5, 0.16, 0.2, 'triangle');
+        } else {
+          playTonePitch(inst.freq, 0.25, 0.26, inst.wave || 'triangle');
+        }
+      } catch (e) {}
+    }
+
+    function updateBatonSliceHud() {
+      const st = dynamicsTracerState;
+      const scoreEl = document.getElementById('baton-score');
+      const roundEl = document.getElementById('baton-round');
+      const tokEl = document.getElementById('baton-tokens');
+      const livesEl = document.getElementById('baton-lives');
+      const missionEl = document.getElementById('baton-mission-text');
+      const progEl = document.getElementById('baton-mission-progress');
+
+      if (scoreEl) scoreEl.textContent = st.score;
+      if (roundEl) roundEl.textContent = `R${st.round}`;
+      if (tokEl) tokEl.textContent = `+${st.tokensEarned}`;
+      if (missionEl && st.currentMission) missionEl.textContent = st.currentMission.prompt;
+      if (progEl && st.currentMission) progEl.textContent = `${st.roundProgress} / ${st.currentMission.goal}`;
+      if (livesEl) {
+        livesEl.innerHTML = Array.from({ length: 3 }, (_, i) =>
+          `<i class="fa-solid fa-heart ${i < st.lives ? 'text-rose-500' : 'text-slate-700'}"></i>`
+        ).join(' ');
+      }
     }
 
     function renderDynamicsTracerView(container) {
-        if (!container) return;
-        
-        if (dynamicsTracerState.completed) {
-            container.innerHTML = `
-              <div class="max-w-2xl mx-auto space-y-6">
-                <div class="flex items-center justify-between">
-                  <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
-                    <i class="fa-solid fa-arrow-left"></i> Rewards Shop
-                  </button>
-                </div>
-                <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border border-slate-800">
-                  <div class="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-slate-900 text-4xl mx-auto mb-6 shadow-[0_0_20px_#10b981]">
-                    <i class="fa-solid fa-wand-sparkles"></i>
-                  </div>
-                  <h2 class="text-3xl font-black text-emerald-400 mb-2">Maestro Mastered!</h2>
-                  <p class="text-slate-300 mb-6">Incredible conducting! You maintained a perfect 200 streak through wild, escalating dynamics and earned +15 Tokens!</p>
-                  <button onclick="startDynamicsTracer()" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-sm transition-all shadow-md">
-                    Play Again
-                  </button>
-                </div>
-              </div>
-            `;
-            return;
-        }
+      if (!container) return;
+      const st = dynamicsTracerState;
 
+      if (st.gameOver) {
         container.innerHTML = `
-          <div class="max-w-3xl mx-auto space-y-6">
+          <div class="max-w-2xl mx-auto space-y-6">
             <div class="flex items-center justify-between">
               <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
                 <i class="fa-solid fa-arrow-left"></i> Rewards Shop
               </button>
-              <span class="text-xs font-black uppercase text-amber-500 tracking-widest"><i class="fa-solid fa-wand-sparkles"></i> Dynamics Tracer</span>
             </div>
-            
-            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
-              <div class="flex items-center justify-between mb-4">
-                 <h2 class="text-2xl font-black text-amber-400">Dynamics Tracer</h2>
-                 <div class="text-right">
-                   <div class="text-[10px] font-black uppercase text-slate-500">Streak</div>
-                   <div id="tracer-streak" class="text-2xl font-black text-emerald-400">${dynamicsTracerState.streak} / 200</div>
-                 </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-amber-500/40 space-y-4">
+              <div class="w-20 h-20 bg-gradient-to-tr from-amber-500 to-yellow-300 rounded-full flex items-center justify-center text-slate-950 text-4xl mx-auto shadow-[0_0_24px_rgba(251,191,36,0.5)]">
+                <i class="fa-solid fa-wand-sparkles"></i>
               </div>
-              <p class="text-sm text-slate-400 mb-6">Click and hold the glowing baton (or drag with your finger) to stay inside the moving dynamic path. As your streak grows, the music gets wilder! Maintain a streak of 200 to win +15 Tokens.</p>
-              
-              <div id="tracer-game-area" class="relative w-full h-[320px] bg-slate-950 rounded-2xl border-2 border-slate-700 overflow-hidden cursor-crosshair touch-none select-none">
-                 <canvas id="tracer-canvas" class="absolute inset-0 w-full h-full"></canvas>
-                 <div id="tracer-start-overlay" class="absolute inset-0 bg-slate-900/80 flex items-center justify-center flex-col">
-                    <button onclick="startDynamicsTracer()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-lg shadow-[0_0_20px_rgba(251,191,36,0.5)] transition-all">
-                      Start Conducting <i class="fa-solid fa-play ml-2"></i>
-                    </button>
-                 </div>
+              <h2 class="text-3xl font-black text-amber-400">Instrument Ninja — Curtain Call!</h2>
+              <p class="text-sm text-slate-300">
+                You reached <strong class="text-sky-400">Round ${st.round}</strong>, sliced <strong class="text-white">${st.slicedCount}</strong> target instruments for a score of <strong class="text-amber-300">${st.score}</strong> (Best: <strong>${st.best}</strong>), and earned <strong class="text-emerald-400">+${st.tokensEarned} Tokens</strong>!
+              </p>
+              <div class="pt-2 flex flex-wrap justify-center gap-3">
+                <button onclick="dynamicsTracerState.gameOver = false; renderDynamicsTracerView(document.getElementById('app-viewport')); startDynamicsTracer();" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all">
+                  <i class="fa-solid fa-rotate-right mr-1.5"></i> Play Again
+                </button>
+                <button onclick="window.app.navigate('shop')" class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl text-sm border border-slate-700">
+                  Back to Shop
+                </button>
               </div>
             </div>
           </div>
         `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="max-w-4xl mx-auto space-y-5">
+          <div class="flex items-center justify-between">
+            <button onclick="stopDynamicsTracer(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-amber-500 tracking-widest">
+              <i class="fa-solid fa-wand-sparkles mr-1"></i> Maestro Conductor Baton
+            </span>
+          </div>
+
+          <div class="bg-slate-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl border-2 border-amber-500/40 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h2 class="text-2xl font-black text-amber-400">Instrument Ninja</h2>
+                <p class="text-xs text-slate-300 mt-0.5">Swipe across the stage with your mouse or finger to swing the <strong>Giant Conductor's Baton</strong> and slice <strong>ONLY the target instruments</strong> for each round!</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <div class="text-center px-3 py-1.5 rounded-xl bg-indigo-950 border border-indigo-700">
+                  <div class="text-[9px] font-black uppercase text-indigo-300">Round</div>
+                  <div id="baton-round" class="text-lg font-black text-white">R${st.round}</div>
+                </div>
+                <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
+                  <div class="text-[9px] font-black uppercase text-slate-400">Score</div>
+                  <div id="baton-score" class="text-lg font-black text-amber-400">${st.score}</div>
+                </div>
+                <div class="text-center px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700">
+                  <div class="text-[9px] font-black uppercase text-emerald-300">Tokens</div>
+                  <div id="baton-tokens" class="text-lg font-black text-emerald-400">+${st.tokensEarned}</div>
+                </div>
+                <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700">
+                  <div class="text-[9px] font-black uppercase text-slate-400">Lives</div>
+                  <div id="baton-lives" class="text-sm font-black pt-0.5">
+                    <i class="fa-solid fa-heart text-rose-500"></i>
+                    <i class="fa-solid fa-heart text-rose-500"></i>
+                    <i class="fa-solid fa-heart text-rose-500"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Round Mission Bar -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-500/20 via-indigo-900/60 to-amber-500/20 border border-amber-400/50">
+              <div class="flex items-center gap-2.5">
+                <span class="px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 font-black text-[10px] uppercase tracking-wider">Mission</span>
+                <span id="baton-mission-text" class="text-sm sm:text-base font-black text-amber-300">${st.currentMission ? st.currentMission.prompt : 'Slice ONLY STRINGS!'}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs font-black">
+                <span class="text-slate-300">Progress:</span>
+                <span id="baton-mission-progress" class="px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-300">0 / 5</span>
+              </div>
+            </div>
+
+            <!-- Concert Stage Canvas -->
+            <div id="tracer-game-area" class="relative w-full h-[410px] sm:h-[450px] bg-slate-950 rounded-2xl border-2 border-amber-500/40 overflow-hidden cursor-none touch-none select-none shadow-inner">
+              <canvas id="tracer-canvas" class="w-full h-full block"></canvas>
+              <div id="tracer-start-overlay" class="absolute inset-0 bg-slate-950/85 flex flex-col items-center justify-center p-6 text-center space-y-4 cursor-default">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 flex items-center justify-center text-3xl shadow-lg">
+                  <i class="fa-solid fa-wand-sparkles"></i>
+                </div>
+                <h3 class="text-2xl font-black text-amber-300">Welcome to Instrument Ninja!</h3>
+                <p class="text-xs text-slate-300 max-w-md leading-relaxed">
+                  Each round gives you a musical target (like <strong>Slice ONLY STRINGS!</strong> or <strong>Slice ONLY BRASS!</strong>). Simply swipe your mouse or finger across the flying target instruments to slice them in half—and let the wrong families fall safely! Earn <strong>+1 Token</strong> every 2 targets sliced plus <strong>+2 Bonus Tokens</strong> per round cleared!
+                </p>
+                <button onclick="startDynamicsTracer()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-base shadow-[0_0_20px_rgba(251,191,36,0.5)] transition-all">
+                  <i class="fa-solid fa-play mr-2"></i> Start Instrument Ninja!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function spawnBatonSliceWave() {
+      const st = dynamicsTracerState;
+      const w = st.canvas.width;
+      const h = st.canvas.height;
+      const mission = st.currentMission;
+
+      const targetPool = batonSliceInstruments.filter(inst => isInstrumentNinjaTarget(inst, mission));
+      const decoyPool = batonSliceInstruments.filter(inst => !isInstrumentNinjaTarget(inst, mission));
+
+      const count = Math.min(4, 2 + Math.floor((st.round - 1) / 3) + (Math.random() < 0.4 ? 1 : 0));
+
+      for (let i = 0; i < count; i++) {
+        let template;
+        // Guarantee at least 1 target instrument per wave, and mix decoys + occasional bombs
+        if (i === 0 || Math.random() < 0.52) {
+          template = targetPool[Math.floor(Math.random() * targetPool.length)];
+        } else if (st.round >= 2 && Math.random() < 0.16) {
+          template = { id: 'bomb', name: 'Bomb', family: 'Bomb', color: '#e11d48', accent: '#fecdd3', radius: 30, isBomb: true };
+        } else {
+          template = decoyPool[Math.floor(Math.random() * decoyPool.length)];
+        }
+
+        const margin = 70;
+        const startX = margin + Math.random() * Math.max(40, w - margin * 2);
+        const centerPull = (w / 2 - startX) * (0.32 + Math.random() * 0.42);
+        const launchVy = -(Math.sqrt(2 * 600 * (h * (0.68 + Math.random() * 0.22))));
+
+        st.items.push({
+          ...template,
+          x: startX,
+          y: h + 38 + i * 24,
+          vx: centerPull + (Math.random() - 0.5) * 85,
+          vy: launchVy,
+          angle: (Math.random() - 0.5) * 0.6,
+          vAngle: (Math.random() - 0.5) * 2.2,
+          sliced: false
+        });
+      }
+    }
+
+    // Distance from circle center (cx, cy) to line segment (x1, y1)-(x2, y2)
+    function segmentIntersectsCircle(x1, y1, x2, y2, cx, cy, r) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const lenSq = dx * dx + dy * dy;
+      if (lenSq < 0.5) {
+        const distSq = (cx - x1) * (cx - x1) + (cy - y1) * (cy - y1);
+        return distSq <= r * r;
+      }
+      let t = ((cx - x1) * dx + (cy - y1) * dy) / lenSq;
+      t = Math.max(0, Math.min(1, t));
+      const nearX = x1 + t * dx;
+      const nearY = y1 + t * dy;
+      const distSq = (cx - nearX) * (cx - nearX) + (cy - nearY) * (cy - nearY);
+      return distSq <= r * r;
+    }
+
+    function drawBatonSliceObject(ctx, item, showLabel = true) {
+      ctx.save();
+      const r = item.radius;
+
+      // Soft outer badge
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.fillStyle = item.isBomb ? 'rgba(159, 18, 57, 0.92)' : 'rgba(15, 23, 42, 0.86)';
+      ctx.fill();
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = item.isBomb ? '#fb7185' : item.color;
+      ctx.stroke();
+
+      if (item.isBomb) {
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath(); ctx.arc(0, 2, 16, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, -14); ctx.quadraticCurveTo(6, -24, 13, -22);
+        ctx.strokeStyle = '#fde047'; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.fillStyle = '#fef08a'; ctx.beginPath(); ctx.arc(14, -22, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#fb7185'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(-6, -4); ctx.lineTo(6, 8); ctx.moveTo(6, -4); ctx.lineTo(-6, 8); ctx.stroke();
+      } else if (item.id === 'violin' || item.id === 'cello') {
+        const s = item.id === 'cello' ? 1.15 : 0.95;
+        ctx.save();
+        ctx.scale(s, s);
+        ctx.fillStyle = item.id === 'cello' ? '#9a3412' : '#d97706';
+        ctx.strokeStyle = '#fde68a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.ellipse(0, 7, 11, 13, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(0, -6, 8.5, 8.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(-2.2, -23, 4.4, 24);
+        if (item.id === 'cello') {
+          ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(0, 20); ctx.lineTo(0, 27); ctx.stroke();
+        }
+        ctx.strokeStyle = '#fef3c7'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-1, -21); ctx.lineTo(-1, 15); ctx.moveTo(1, -21); ctx.lineTo(1, 15); ctx.stroke();
+        ctx.restore();
+      } else if (item.id === 'harp') {
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-13, 18); ctx.lineTo(-8, -18);
+        ctx.quadraticCurveTo(4, -20, 14, -8);
+        ctx.lineTo(14, 18); ctx.closePath();
+        ctx.stroke();
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 1.2;
+        [-4, 1, 6, 10].forEach(sx => {
+          ctx.beginPath(); ctx.moveTo(sx, -12); ctx.lineTo(sx, 17); ctx.stroke();
+        });
+      } else if (item.id === 'trumpet') {
+        ctx.fillStyle = '#facc15'; ctx.strokeStyle = '#92400e'; ctx.lineWidth = 1.5;
+        ctx.fillRect(-20, -3, 26, 6);
+        ctx.beginPath(); ctx.moveTo(4, -3); ctx.lineTo(20, -13); ctx.lineTo(20, 13); ctx.lineTo(4, 3); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(-10, -10, 3, 12); ctx.fillRect(-5, -10, 3, 12); ctx.fillRect(0, -10, 3, 12);
+      } else if (item.id === 'tuba') {
+        ctx.strokeStyle = '#eab308'; ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.ellipse(0, 4, 13, 15, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#facc15'; ctx.strokeStyle = '#92400e'; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(-10, -8); ctx.lineTo(-18, -22); ctx.lineTo(10, -22); ctx.lineTo(4, -8); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+      } else if (item.id === 'drum') {
+        ctx.fillStyle = '#dc2626'; ctx.fillRect(-17, -6, 34, 17);
+        ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.strokeRect(-17, -6, 34, 17);
+        ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.ellipse(0, -6, 17, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = '#fcd34d'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(-18, -19); ctx.lineTo(4, -6); ctx.moveTo(18, -19); ctx.lineTo(-4, -6); ctx.stroke();
+      } else if (item.id === 'cymbal') {
+        ctx.fillStyle = '#facc15'; ctx.strokeStyle = '#a16207'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(0, 2, 22, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, 7, Math.PI, 0); ctx.fillStyle = '#fef08a'; ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(0, 11); ctx.lineTo(0, 23); ctx.stroke();
+      } else if (item.id === 'sax') {
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 6.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-8, -18); ctx.lineTo(-2, 12); ctx.quadraticCurveTo(6, 22, 14, 10); ctx.lineTo(16, -2); ctx.stroke();
+        ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.ellipse(16, -3, 7, 4, 0.2, 0, Math.PI * 2); ctx.fill();
+      } else if (item.id === 'clarinet') {
+        ctx.save();
+        ctx.rotate(-0.45);
+        ctx.fillStyle = '#0f172a'; ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+        ctx.fillRect(-23, -3.5, 42, 7); ctx.strokeRect(-23, -3.5, 42, 7);
+        ctx.beginPath(); ctx.moveTo(18, -4); ctx.lineTo(26, -8); ctx.lineTo(26, 8); ctx.lineTo(18, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#e2e8f0';
+        [-12, -4, 4, 12].forEach(kx => { ctx.beginPath(); ctx.arc(kx, 0, 1.8, 0, Math.PI * 2); ctx.fill(); });
+        ctx.restore();
+      } else if (item.id === 'flute') {
+        ctx.save();
+        ctx.rotate(-0.55);
+        ctx.fillStyle = '#e2e8f0'; ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1.5;
+        ctx.fillRect(-24, -3.5, 48, 7); ctx.strokeRect(-24, -3.5, 48, 7);
+        ctx.fillStyle = '#0f172a';
+        [-14, -5, 3, 11, 18].forEach(kx => { ctx.beginPath(); ctx.arc(kx, 0, 1.8, 0, Math.PI * 2); ctx.fill(); });
+        ctx.restore();
+      }
+
+      ctx.restore();
+
+      // Upright readable instrument name pill beneath the badge
+      if (showLabel && !item.isBomb) {
+        ctx.save();
+        ctx.font = '800 11px sans-serif';
+        const tw = ctx.measureText(item.name).width + 12;
+        ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(-tw / 2, r + 4, tw, 17, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#f8fafc';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(item.name, 0, r + 12.5);
+        ctx.restore();
+      }
+    }
+
+    function drawGiantConductorBaton(ctx, x, y, angle, isSlicing) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+
+      if (isSlicing) {
+        ctx.shadowColor = '#fde047';
+        ctx.shadowBlur = 18;
+      }
+
+      // Cork / Mahogany Conductor Handle
+      const handleGrad = ctx.createLinearGradient(-34, 0, 4, 0);
+      handleGrad.addColorStop(0, '#78350f');
+      handleGrad.addColorStop(0.5, '#d97706');
+      handleGrad.addColorStop(1, '#451a03');
+      ctx.fillStyle = handleGrad;
+      ctx.beginPath();
+      ctx.ellipse(-18, 0, 16, 6.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fde68a';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Huge Tapering Glowing White-Gold Baton Shaft (90px long)
+      ctx.fillStyle = isSlicing ? '#ffffff' : '#fef3c7';
+      ctx.beginPath();
+      ctx.moveTo(-4, -3.5);
+      ctx.lineTo(88, -1.2);
+      ctx.lineTo(88, 1.2);
+      ctx.lineTo(-4, 3.5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Sparkling Baton Tip
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.arc(88, 0, isSlicing ? 4.5 : 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function handleBatonSliceSegment(x1, y1, x2, y2) {
+      const st = dynamicsTracerState;
+      const moveDist = Math.hypot(x2 - x1, y2 - y1);
+      if (moveDist < 1.5) return;
+
+      const sliceAngle = Math.atan2(y2 - y1, x2 - x1);
+      st.batonAngle = sliceAngle;
+
+      if (moveDist > 26 && Math.random() < 0.3) {
+        playBatonWhoosh();
+      }
+
+      // Also check the giant baton blade tip so swinging the baton slices cleanly!
+      const tipX = x2 + Math.cos(sliceAngle) * 84;
+      const tipY = y2 + Math.sin(sliceAngle) * 84;
+
+      let slicedTargetInThisMove = 0;
+
+      for (let i = st.items.length - 1; i >= 0; i--) {
+        const item = st.items[i];
+        if (item.sliced) continue;
+
+        const hitRadius = item.radius + 10;
+        const hitBySwipe = segmentIntersectsCircle(x1, y1, x2, y2, item.x, item.y, hitRadius);
+        const hitByBlade = segmentIntersectsCircle(x2, y2, tipX, tipY, item.x, item.y, hitRadius);
+
+        if (hitBySwipe || hitByBlade) {
+          item.sliced = true;
+          st.items.splice(i, 1);
+
+          // Split into TWO spinning halves visually regardless of right/wrong!
+          const perpAngle = sliceAngle + Math.PI / 2;
+          [-1, 1].forEach(side => {
+            st.halves.push({
+              ...item,
+              side,
+              sliceAngle,
+              x: item.x + Math.cos(perpAngle) * side * 7,
+              y: item.y + Math.sin(perpAngle) * side * 7,
+              vx: item.vx + Math.cos(perpAngle) * side * 130,
+              vy: Math.min(item.vy, -75) - 35,
+              vAngle: item.vAngle + side * 4.5,
+              life: 1050
+            });
+          });
+
+          if (item.isBomb) {
+            st.lives--;
+            st.swipeCombo = 0;
+            st.screenFlash = 380;
+            playTonePitch(130, 0.32, 0.35, 'sawtooth');
+            st.popups.push({ x: item.x, y: item.y, text: 'STATIC BOMB! -1 ♥', color: '#fb7185', life: 950 });
+            updateBatonSliceHud();
+            if (st.lives <= 0) {
+              st.running = false;
+              st.gameOver = true;
+              renderDynamicsTracerView(document.getElementById('app-viewport'));
+              return;
+            }
+            continue;
+          }
+
+          const isTarget = isInstrumentNinjaTarget(item, st.currentMission);
+
+          if (!isTarget) {
+            // Wrong instrument/family sliced!
+            st.lives--;
+            st.swipeCombo = 0;
+            st.screenFlash = 340;
+            playTonePitch(145, 0.28, 0.32, 'sawtooth');
+            st.popups.push({
+              x: item.x,
+              y: item.y,
+              text: `WRONG! ${item.name} = ${item.family} (-1 ♥)`,
+              color: '#fb7185',
+              life: 1150
+            });
+            updateBatonSliceHud();
+            if (st.lives <= 0) {
+              st.running = false;
+              st.gameOver = true;
+              renderDynamicsTracerView(document.getElementById('app-viewport'));
+              return;
+            }
+            continue;
+          }
+
+          // Correct target sliced!
+          slicedTargetInThisMove++;
+          st.slicedCount++;
+          st.roundProgress++;
+          st.score += 1;
+          if (st.score > st.best) st.best = st.score;
+          playBatonSliceHit(item);
+
+          // +1 Token every 2 targets sliced
+          if (st.slicedCount % 2 === 0) {
+            st.tokensEarned += 1;
+            addTokens(1);
+            st.popups.push({ x: item.x, y: item.y - 26, text: '+1 TOKEN!', color: '#34d399', life: 900 });
+          }
+
+          // Musical sparkle particles
+          const noteChars = ['♪', '♫', '★', '♩'];
+          for (let p = 0; p < 10; p++) {
+            const a = Math.random() * Math.PI * 2;
+            const spd = 55 + Math.random() * 155;
+            st.particles.push({
+              x: item.x,
+              y: item.y,
+              vx: Math.cos(a) * spd,
+              vy: Math.sin(a) * spd - 45,
+              color: p % 2 === 0 ? item.accent : '#fde047',
+              char: noteChars[p % noteChars.length],
+              life: 520 + Math.random() * 240
+            });
+          }
+
+          st.popups.push({
+            x: item.x,
+            y: item.y,
+            text: `✓ ${item.name}!`,
+            color: '#34d399',
+            life: 750
+          });
+
+          // Check Round Completion!
+          if (st.roundProgress >= st.currentMission.goal) {
+            st.round++;
+            st.roundProgress = 0;
+            st.tokensEarned += 2;
+            addTokens(2);
+            st.currentMission = getNinjaMissionForRound(st.round);
+            st.bannerText = `ROUND ${st.round}: ${st.currentMission.prompt} (+2 Bonus Tokens!)`;
+            st.bannerTimer = 2600;
+            st.items = []; // Clear stage for fresh round
+            playTonePitch(523.25, 0.14, 0.3, 'triangle');
+            setTimeout(() => playTonePitch(659.25, 0.14, 0.3, 'triangle'), 120);
+            setTimeout(() => playTonePitch(783.99, 0.25, 0.32, 'triangle'), 240);
+            updateBatonSliceHud();
+            break;
+          }
+        }
+      }
+
+      if (slicedTargetInThisMove > 0) {
+        st.swipeCombo += slicedTargetInThisMove;
+        st.swipeComboTimer = 280;
+        if (st.swipeCombo >= 2) {
+          st.score += 1;
+          if (st.score > st.best) st.best = st.score;
+          st.popups.push({
+            x: x2,
+            y: Math.max(45, y2 - 24),
+            text: `${st.swipeCombo}x NINJA COMBO! +1`,
+            color: '#38bdf8',
+            life: 900
+          });
+        }
+        updateBatonSliceHud();
+      }
     }
 
     function startDynamicsTracer() {
-        stopDynamicsTracer();
-        const canvas = document.getElementById('tracer-canvas');
-        if (!canvas) return;
-        document.getElementById('tracer-start-overlay').classList.add('hidden');
-        
+      stopDynamicsTracer();
+      const canvas = document.getElementById('tracer-canvas');
+      if (!canvas) return;
+      const overlay = document.getElementById('tracer-start-overlay');
+      if (overlay) overlay.classList.add('hidden');
+
+      canvas.width = canvas.clientWidth || 720;
+      canvas.height = canvas.clientHeight || 430;
+
+      const mission1 = getNinjaMissionForRound(1);
+
+      dynamicsTracerState = {
+        running: true,
+        gameOver: false,
+        score: 0,
+        best: dynamicsTracerState.best || 0,
+        lives: 3,
+        tokensEarned: 0,
+        slicedCount: 0,
+        round: 1,
+        roundProgress: 0,
+        currentMission: mission1,
+        bannerText: `ROUND 1: ${mission1.prompt}`,
+        bannerTimer: 2200,
+        animFrame: null,
+        canvas,
+        ctx: canvas.getContext('2d'),
+        items: [],
+        halves: [],
+        particles: [],
+        popups: [],
+        trail: [],
+        isSlicing: false,
+        pointerActive: false,
+        pointerX: canvas.width / 2,
+        pointerY: canvas.height / 2,
+        prevPointerX: canvas.width / 2,
+        prevPointerY: canvas.height / 2,
+        batonAngle: -0.6,
+        swipeCombo: 0,
+        swipeComboTimer: 0,
+        spawnTimer: 450,
+        screenFlash: 0,
+        lastTime: performance.now()
+      };
+
+      updateBatonSliceHud();
+
+      const getCoords = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const cx = (e.touches && e.touches.length > 0) ? e.touches[0].clientX : e.clientX;
+        const cy = (e.touches && e.touches.length > 0) ? e.touches[0].clientY : e.clientY;
+        return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
+      };
+
+      const onDown = (e) => {
+        if (!dynamicsTracerState.running) return;
+        const pt = getCoords(e);
+        dynamicsTracerState.isSlicing = true;
+        dynamicsTracerState.pointerActive = true;
+        dynamicsTracerState.pointerX = pt.x;
+        dynamicsTracerState.pointerY = pt.y;
+        dynamicsTracerState.prevPointerX = pt.x;
+        dynamicsTracerState.prevPointerY = pt.y;
+        dynamicsTracerState.trail.push({ x: pt.x, y: pt.y, life: 190 });
+      };
+
+      const onMove = (e) => {
+        if (!dynamicsTracerState.running) return;
+        const pt = getCoords(e);
+        const st = dynamicsTracerState;
+        if (!st.pointerActive) {
+          st.prevPointerX = pt.x;
+          st.prevPointerY = pt.y;
+          st.pointerActive = true;
+        } else {
+          st.prevPointerX = st.pointerX;
+          st.prevPointerY = st.pointerY;
+        }
+        st.pointerX = pt.x;
+        st.pointerY = pt.y;
+        // Slice smoothly on ANY swipe across the stage (hover-swipe OR click-drag OR touch-drag)
+        st.isSlicing = true;
+        st.trail.push({ x: pt.x, y: pt.y, life: 190 });
+        if (st.trail.length > 26) st.trail.shift();
+        handleBatonSliceSegment(st.prevPointerX, st.prevPointerY, pt.x, pt.y);
+      };
+
+      const onLeave = () => {
+        dynamicsTracerState.isSlicing = false;
+        dynamicsTracerState.pointerActive = false;
+        dynamicsTracerState.swipeCombo = 0;
+      };
+
+      canvas.onmousedown = onDown;
+      canvas.onmousemove = onMove;
+      canvas.onmouseleave = onLeave;
+      canvas.ontouchstart = (e) => { e.preventDefault(); onDown(e); };
+      canvas.ontouchmove = (e) => { e.preventDefault(); onMove(e); };
+      canvas.ontouchend = (e) => { e.preventDefault(); onLeave(); };
+
+      dynamicsTracerState.animFrame = requestAnimationFrame(tracerLoop);
+    }
+
+    function tracerLoop(now) {
+      const st = dynamicsTracerState;
+      if (!st.running) return;
+
+      const dtMs = Math.min(50, now - st.lastTime);
+      const dtSec = dtMs / 1000;
+      st.lastTime = now;
+
+      const canvas = st.canvas;
+      const ctx = st.ctx;
+      const w = canvas.width;
+      const h = canvas.height;
+      const gravity = 600;
+
+      if (canvas.clientWidth > 0 && Math.abs(canvas.width - canvas.clientWidth) > 8) {
         canvas.width = canvas.clientWidth;
         canvas.height = canvas.clientHeight;
-        
-        dynamicsTracerState = {
-            running: true,
-            streak: 0,
-            completed: false,
-            canvas: canvas,
-            ctx: canvas.getContext('2d'),
-            path: [],
-            playerY: canvas.height / 2,
-            isTracing: false,
-            framePhase: 0,
-            lastToneTime: 0
-        };
+      }
 
-        // Fill initial quiet path
-        for (let x = 0; x <= canvas.width + 20; x += 5) {
-            dynamicsTracerState.path.push({x: x, y: canvas.height / 2, halfW: 60});
-        }
+      if (st.swipeComboTimer > 0) {
+        st.swipeComboTimer -= dtMs;
+        if (st.swipeComboTimer <= 0) st.swipeCombo = 0;
+      }
+      if (st.screenFlash > 0) st.screenFlash -= dtMs;
+      if (st.bannerTimer > 0) st.bannerTimer -= dtMs;
 
-        // Input binding (Mouse + Touch)
-        const updatePlayerY = (e) => {
-            if (!dynamicsTracerState.running) return;
-            dynamicsTracerState.isTracing = true;
-            const rect = canvas.getBoundingClientRect();
-            let clientY = e.clientY;
-            if (e.touches && e.touches.length > 0) clientY = e.touches[0].clientY;
-            dynamicsTracerState.playerY = clientY - rect.top;
-        };
-        
-        canvas.onmousedown = (e) => { updatePlayerY(e); };
-        canvas.onmousemove = (e) => { if(dynamicsTracerState.isTracing || e.buttons === 1) updatePlayerY(e); };
-        canvas.onmouseup = () => dynamicsTracerState.isTracing = false;
-        canvas.onmouseleave = () => dynamicsTracerState.isTracing = false;
-        
-        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); updatePlayerY(e); }, {passive: false});
-        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); updatePlayerY(e); }, {passive: false});
-        canvas.addEventListener('touchend', () => dynamicsTracerState.isTracing = false);
+      // Spawn waves of instruments (gets slightly faster each round)
+      st.spawnTimer -= dtMs;
+      if (st.spawnTimer <= 0) {
+        spawnBatonSliceWave();
+        const baseDelay = Math.max(1050, 1950 - (st.round - 1) * 110);
+        st.spawnTimer = baseDelay + Math.random() * 400;
+      }
 
-        dynamicsTracerState.animFrame = requestAnimationFrame(tracerLoop);
-    }
-    
-    function playTracerChord(isGood) {
-        try {
-            const ctx = getAudioCtx();
-            if (!ctx) return;
-            if (isGood) {
-               [261.63, 329.63, 392.00].forEach(f => playTonePitch(f, 0.2, 0.1, 'sine'));
-            } else {
-               [180, 205, 230].forEach(f => playTonePitch(f, 0.35, 0.2, 'sawtooth'));
-            }
-        } catch(e){}
-    }
+      // Update whole flying instruments & bombs
+      for (let i = st.items.length - 1; i >= 0; i--) {
+        const it = st.items[i];
+        it.x += it.vx * dtSec;
+        it.y += it.vy * dtSec;
+        it.vy += gravity * dtSec;
+        it.angle += it.vAngle * dtSec;
 
-    function tracerLoop() {
-        const st = dynamicsTracerState;
-        if (!st.running) return;
-        
-        const w = st.canvas.width;
-        const h = st.canvas.height;
-        const ctx = st.ctx;
-        
-        // Difficulty strictly based on streak progress out of 200
-        const diff = Math.min(1, st.streak / 200); 
-        
-        // As it scales, speed dramatically increases and waveforms become erratic!
-        const speed = 4 + (diff * 8); 
-        st.framePhase += 0.02 + (diff * 0.08);
-        
-        // Move path left
-        for (let i = 0; i < st.path.length; i++) st.path[i].x -= speed;
-        
-        // Cleanup invisible segments
-        while(st.path.length > 0 && st.path[0].x < -20) st.path.shift();
-        
-        // Add new extreme segments to right edge
-        let lastX = st.path.length > 0 ? st.path[st.path.length-1].x : 0;
-        while(lastX < w + 20) {
-            lastX += 5;
-            
-            // Dramatic Rises & Drops based on scale
-            const yAmplitude = 30 + (diff * 85); 
-            const yWave = Math.sin(st.framePhase * 0.5) * yAmplitude + Math.sin(st.framePhase * 1.5) * (diff * 40);
-            const targetY = (h / 2) + yWave;
-            
-            // Width modulates rapidly, shrinking to make it harder
-            const wWave = Math.sin(st.framePhase * 0.8);
-            const targetHalfW = 75 - (diff * 45) + (wWave * 15); 
-            
-            st.path.push({x: lastX, y: targetY, halfW: Math.max(12, targetHalfW)});
+        if (it.y > h + 85 && it.vy > 0) {
+          st.items.splice(i, 1);
         }
-        
-        // Collision Detection at fixed Player X
-        const playerX = 120;
-        let currentSeg = st.path.find(p => p.x >= playerX) || st.path[0];
-        
-        let isInside = false;
-        if (st.isTracing) {
-            const upperY = currentSeg.y - currentSeg.halfW;
-            const lowerY = currentSeg.y + currentSeg.halfW;
-            if (st.playerY >= upperY && st.playerY <= lowerY) {
-                isInside = true;
-            }
-        }
-        
-        const now = performance.now();
-        if (isInside) {
-            if (now - st.lastToneTime > 120) { 
-                st.streak++;
-                st.lastToneTime = now;
-                const streakEl = document.getElementById('tracer-streak');
-                if (streakEl) streakEl.textContent = st.streak + ' / 200';
-                
-                if (st.streak % 10 === 0) playTracerChord(true); 
-                
-                if (st.streak >= 200) {
-                    st.running = false;
-                    st.completed = true;
-                    addTokens(15);
-                    renderDynamicsTracerView(document.getElementById('app-viewport'));
-                    return; 
-                }
-            }
-        } else if (st.isTracing) {
-            st.streak = 0;
-            const streakEl = document.getElementById('tracer-streak');
-            if (streakEl) streakEl.textContent = '0 / 200';
-            
-            if (now - st.lastToneTime > 300) {
-                playTracerChord(false);
-                st.lastToneTime = now;
-                
-                // Flash Red Error screen overlay
-                st.ctx.fillStyle = 'rgba(225, 29, 72, 0.35)';
-                st.ctx.fillRect(0,0,w,h);
-            }
-        }
-        
-        // Master Canvas Render
-        ctx.fillStyle = '#020617';
-        ctx.fillRect(0, 0, w, h);
-        
-        // Paint Path Boundaries
+      }
+
+      // Update sliced halves
+      for (let i = st.halves.length - 1; i >= 0; i--) {
+        const hf = st.halves[i];
+        hf.x += hf.vx * dtSec;
+        hf.y += hf.vy * dtSec;
+        hf.vy += gravity * 1.15 * dtSec;
+        hf.angle += hf.vAngle * dtSec;
+        hf.life -= dtMs;
+        if (hf.life <= 0 || hf.y > h + 95) st.halves.splice(i, 1);
+      }
+
+      // Update particles
+      for (let i = st.particles.length - 1; i >= 0; i--) {
+        const p = st.particles[i];
+        p.x += p.vx * dtSec;
+        p.y += p.vy * dtSec;
+        p.vy += 260 * dtSec;
+        p.life -= dtMs;
+        if (p.life <= 0) st.particles.splice(i, 1);
+      }
+
+      // Update floating popups
+      for (let i = st.popups.length - 1; i >= 0; i--) {
+        const pop = st.popups[i];
+        pop.y -= 42 * dtSec;
+        pop.life -= dtMs;
+        if (pop.life <= 0) st.popups.splice(i, 1);
+      }
+
+      // Fade baton slash trail
+      for (let i = st.trail.length - 1; i >= 0; i--) {
+        st.trail[i].life -= dtMs;
+        if (st.trail[i].life <= 0) st.trail.splice(i, 1);
+      }
+
+      // === RENDER CONCERT HALL STAGE ===
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+      bgGrad.addColorStop(0, '#0f172a');
+      bgGrad.addColorStop(0.65, '#1e1b4b');
+      bgGrad.addColorStop(1, '#31102a');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Subtle Stage Spotlights & Staff Lines
+      ctx.save();
+      ctx.fillStyle = 'rgba(253, 224, 71, 0.05)';
+      ctx.beginPath(); ctx.moveTo(w * 0.25, 0); ctx.lineTo(w * 0.05, h); ctx.lineTo(w * 0.45, h); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(w * 0.75, 0); ctx.lineTo(w * 0.55, h); ctx.lineTo(w * 0.95, h); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1.5;
+      for (let s = 0; s < 5; s++) {
+        const sy = h * 0.34 + s * 16;
+        ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(w, sy); ctx.stroke();
+      }
+      ctx.restore();
+
+      // Draw Sliced Instrument Halves (clipped along the split!)
+      st.halves.forEach(hf => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(1, hf.life / 550));
+        ctx.translate(hf.x, hf.y);
+        ctx.rotate(hf.angle);
         ctx.beginPath();
-        ctx.moveTo(st.path[0].x, st.path[0].y - st.path[0].halfW);
-        for(let i=1; i<st.path.length; i++) ctx.lineTo(st.path[i].x, st.path[i].y - st.path[i].halfW);
-        for(let i=st.path.length-1; i>=0; i--) ctx.lineTo(st.path[i].x, st.path[i].y + st.path[i].halfW);
-        ctx.closePath();
-        
-        ctx.fillStyle = 'rgba(251, 191, 36, 0.15)'; 
-        ctx.fill();
+        if (hf.side < 0) {
+          ctx.rect(-hf.radius - 12, -hf.radius - 12, hf.radius + 12, (hf.radius + 12) * 2);
+        } else {
+          ctx.rect(0, -hf.radius - 12, hf.radius + 12, (hf.radius + 12) * 2);
+        }
+        ctx.clip();
+        drawBatonSliceObject(ctx, hf, false);
+        ctx.restore();
+      });
+
+      // Draw Whole Oncoming Instruments & Bombs
+      st.items.forEach(it => {
+        ctx.save();
+        ctx.translate(it.x, it.y);
+        ctx.save();
+        ctx.rotate(it.angle);
+        drawBatonSliceObject(ctx, it, false);
+        ctx.restore();
+        // Draw upright label cleanly under the badge
+        if (!it.isBomb) {
+          ctx.font = '800 11px sans-serif';
+          const tw = ctx.measureText(it.name).width + 12;
+          ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
+          ctx.strokeStyle = it.color;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.roundRect(-tw / 2, it.radius + 4, tw, 17, 6);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#f8fafc';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(it.name, 0, it.radius + 12.5);
+        }
+        ctx.restore();
+      });
+
+      // Draw Glowing Baton Slash Trail
+      if (st.trail.length > 1) {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (let i = 1; i < st.trail.length; i++) {
+          const p0 = st.trail[i - 1];
+          const p1 = st.trail[i];
+          const ratio = Math.max(0, p1.life / 190);
+          ctx.strokeStyle = `rgba(253, 224, 71, ${ratio * 0.9})`;
+          ctx.lineWidth = 2 + ratio * 12;
+          ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+          ctx.strokeStyle = `rgba(255, 255, 255, ${ratio})`;
+          ctx.lineWidth = 1 + ratio * 4;
+          ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // Draw Sparkles & Musical Note Particles
+      st.particles.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life / 750);
+        ctx.fillStyle = p.color;
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.char, p.x, p.y);
+        ctx.restore();
+      });
+
+      // Draw Floating Score / Combo Popups
+      st.popups.forEach(pop => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, pop.life / 950);
+        ctx.fillStyle = pop.color;
+        ctx.font = '900 17px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#020617';
+        ctx.shadowBlur = 6;
+        ctx.fillText(pop.text, pop.x, pop.y);
+        ctx.restore();
+      });
+
+      // Draw Round Announcement Banner
+      if (st.bannerTimer > 0 && st.bannerText) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
         ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Draw Center Target Line (faint)
+        const bw = Math.min(w - 30, 460);
         ctx.beginPath();
-        ctx.moveTo(st.path[0].x, st.path[0].y);
-        for(let i=1; i<st.path.length; i++) ctx.lineTo(st.path[i].x, st.path[i].y);
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.25)';
-        ctx.setLineDash([5, 5]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // Draw Vertical Guide line
-        ctx.beginPath();
-        ctx.moveTo(playerX, 0);
-        ctx.lineTo(playerX, h);
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
-        // Render Player Baton
-        ctx.beginPath();
-        ctx.arc(playerX, st.playerY, 8, 0, Math.PI*2);
-        ctx.fillStyle = isInside ? '#10b981' : (st.isTracing ? '#e11d48' : '#94a3b8');
+        ctx.roundRect(w / 2 - bw / 2, 16, bw, 40, 14);
         ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
         ctx.stroke();
+        ctx.fillStyle = '#fde047';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(st.bannerText, w / 2, 36);
+        ctx.restore();
+      }
 
-        st.animFrame = requestAnimationFrame(tracerLoop);
+      // Draw the Giant Conductor's Baton at the pointer
+      drawGiantConductorBaton(ctx, st.pointerX, st.pointerY, st.batonAngle, st.isSlicing);
+
+      // Red screen flash on wrong family or bomb hit
+      if (st.screenFlash > 0) {
+        ctx.fillStyle = `rgba(225, 29, 72, ${(st.screenFlash / 380) * 0.35})`;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      st.animFrame = requestAnimationFrame(tracerLoop);
     }
 
     // ==========================================

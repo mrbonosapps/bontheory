@@ -14463,6 +14463,15 @@
           { label: 'B', freq: 493.88, str: 1 }, { label: 'C', freq: 523.25, str: 1 },
           { label: 'D', freq: 587.33, str: 0 }, { label: 'E5', freq: 659.25, str: 0 }
         ]
+      },
+      {
+        name: 'BONUS ROUND: 500 BPM Hyper-Shred!', bpm: 500, bonusTokens: 2,
+        notes: [
+          { label: 'E', freq: 329.63, str: 3 }, { label: 'F#', freq: 369.99, str: 2 },
+          { label: 'G#', freq: 415.30, str: 2 }, { label: 'A', freq: 440.00, str: 2 },
+          { label: 'B', freq: 493.88, str: 1 }, { label: 'C#', freq: 554.37, str: 1 },
+          { label: 'D#', freq: 622.25, str: 0 }, { label: 'E5', freq: 659.25, str: 0 }
+        ]
       }
     ];
 
@@ -14690,11 +14699,12 @@
         st.score++;
         st.streak++;
         if (st.streak > st.best) st.best = st.streak;
-        st.tokensEarned += 1;
-        addTokens(1);
+        const reward = st.scaleObj.bonusTokens || 1;
+        st.tokensEarned += reward;
+        addTokens(reward);
         const targetNote = st.scaleObj.notes[st.targetIdx];
         playEvhRockTone(targetNote.freq * 2, 0.38, true); // Screaming rock harmonic!
-        st.statusMsg = `⚡ NAILED IT! Hit ${targetNote.label} right on time! (+1 Token)`;
+        st.statusMsg = `⚡ NAILED IT! Hit ${targetNote.label} right on time! (+${reward} Token${reward > 1 ? 's' : ''})`;
       } else {
         st.roundOutcome = 'miss';
         st.streak = 0;
@@ -14957,7 +14967,7 @@
             <!-- Header & HUD -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div>
-                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Round ${st.round} / ${st.totalRounds} • ${st.scaleObj.bpm} BPM</span>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Round ${st.round} / ${st.totalRounds} • ${st.scaleObj.bpm} BPM${st.scaleObj.bonusTokens ? ` • BONUS (+${st.scaleObj.bonusTokens} TOKENS!)` : ''}</span>
                 <h2 class="text-2xl font-black text-white mt-0.5">${st.scaleObj.name}</h2>
               </div>
               <div class="flex flex-wrap items-center gap-2 shrink-0">

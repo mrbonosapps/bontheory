@@ -4260,7 +4260,16 @@
 
     // --- STAFF NOTATION GAME ---
     const staffNoteY = { 'E4': 80, 'F4': 72.5, 'G4': 65, 'A4': 57.5, 'B4': 50, 'C5': 42.5, 'D5': 35, 'E5': 27.5, 'F5': 20 };
-    let staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, isPlaying: false, answered: false, guessedY: null, lastCorrect: false, completed: false, audioPlayed: false, roundStartTime: 0 };
+    const staffNoteHints = {
+      'E': 'Line 1 (bottom line — Every) or Space 4 (top space — facE)',
+      'F': 'Space 1 (bottom space — Face) or Line 5 (top line — Fruit)',
+      'G': 'Line 2 (2nd line from bottom — Good)',
+      'A': 'Space 2 (2nd space from bottom — fAce)',
+      'B': 'Line 3 (middle line — Boy)',
+      'C': 'Space 3 (3rd space from bottom — faCe)',
+      'D': 'Line 4 (4th line from bottom — Deserves)'
+    };
+    let staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, targetLetter: null, answered: false, guessedNote: null, guessedY: null, lastCorrect: false, completed: false, roundStartTime: 0 };
 
     function getFreqForNote(note) {
       const p = pitchKeyboardKeys.find(k => k.note === note);
@@ -4273,46 +4282,37 @@
 
     function setupStaffNotationRound() {
       const pool = Object.keys(staffNoteY);
-      staffNotationState.targetNote = pool[Math.floor(Math.random() * pool.length)];
+      const picked = pool[Math.floor(Math.random() * pool.length)];
+      staffNotationState.targetNote = picked;
+      staffNotationState.targetLetter = picked.charAt(0);
       staffNotationState.answered = false;
+      staffNotationState.guessedNote = null;
       staffNotationState.guessedY = null;
-      staffNotationState.isPlaying = false;
-      staffNotationState.audioPlayed = false;
+      staffNotationState.lastCorrect = false;
       staffNotationState.roundStartTime = performance.now();
     }
 
     function mountEmbeddedStaffNotationGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
-      staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, isPlaying: false, answered: false, guessedY: null, lastCorrect: false, completed: false, audioPlayed: false, roundStartTime: 0 };
+      staffNotationState = { round: 1, totalRounds: 10, score: 0, targetNote: null, targetLetter: null, answered: false, guessedNote: null, guessedY: null, lastCorrect: false, completed: false, roundStartTime: 0 };
       setupStaffNotationRound();
       renderStaffNotationGameUI(target);
     }
-    
+
     function playStaffNotationTarget() {
       const st = staffNotationState;
-      if (st.isPlaying || !st.targetNote) return;
-      st.isPlaying = true;
-      st.audioPlayed = true;
-      renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
-      playTonePitch(getFreqForNote(st.targetNote), 0.6, 0.35, 'triangle');
-      setTimeout(() => {
-        st.isPlaying = false;
-        renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
-      }, 800);
+      if (!st.targetNote) return;
+      playTonePitch(getFreqForNote(st.targetNote), 0.55, 0.35, 'triangle');
     }
 
-    function handleStaffClick(event) {
-      const st = staffNotationState;
-      if (st.answered || st.completed || !st.targetNote) return;
-      if (performance.now() - st.roundStartTime < 800) return;
-      if (!st.audioPlayed) { showAppModal('Listen First', 'Please play the target pitch before guessing!', false); return; }
-      
+    function getClosestStaffNoteFromEvent(event) {
       const svg = event.currentTarget;
       const pt = svg.createSVGPoint();
       pt.x = event.clientX;
       pt.y = event.clientY;
       const svgP = pt.matrixTransform(svg.getScreenCTM().inverse());
-      
+
       let closestNote = null;
       let minDiff = Infinity;
       for (const [note, y] of Object.entries(staffNoteY)) {
@@ -4322,20 +4322,51 @@
           closestNote = note;
         }
       }
-      
-      if (minDiff > 12) return; 
-      
+      if (minDiff > 12) return null;
+      return closestNote;
+    }
+
+    function handleStaffHover(event) {
+      const st = staffNotationState;
+      const ghost = document.getElementById('staff-ghost-note');
+      if (!ghost || st.answered || st.completed) return;
+      const closestNote = getClosestStaffNoteFromEvent(event);
+      if (!closestNote) {
+        ghost.setAttribute('opacity', '0');
+        return;
+      }
+      const y = staffNoteY[closestNote];
+      ghost.setAttribute('cy', y);
+      ghost.setAttribute('transform', `rotate(-15 170 ${y})`);
+      ghost.setAttribute('opacity', '0.55');
+    }
+
+    function clearStaffHover() {
+      const ghost = document.getElementById('staff-ghost-note');
+      if (ghost) ghost.setAttribute('opacity', '0');
+    }
+
+    function handleStaffClick(event) {
+      const st = staffNotationState;
+      if (st.answered || st.completed || !st.targetNote) return;
+      if (performance.now() - st.roundStartTime < 350) return;
+
+      const closestNote = getClosestStaffNoteFromEvent(event);
+      if (!closestNote) return;
+
+      st.guessedNote = closestNote;
       st.guessedY = staffNoteY[closestNote];
       st.answered = true;
-      st.lastCorrect = (closestNote === st.targetNote);
-      
+      // Accept any valid treble staff line/space matching the target letter (e.g., E4 or E5 for E, F4 or F5 for F)
+      st.lastCorrect = (closestNote.charAt(0) === st.targetLetter);
+
       playTonePitch(getFreqForNote(closestNote), 0.4, 0.35, 'triangle');
       if (st.lastCorrect) {
         st.score++;
         addTokens(1);
-        setTimeout(() => playTonePitch(659.25, 0.2, 0.35, 'triangle'), 500);
+        setTimeout(() => playTonePitch(659.25, 0.18, 0.32, 'triangle'), 280);
       } else {
-        setTimeout(() => playTonePitch(155.56, 0.25, 0.3, 'sawtooth'), 500);
+        setTimeout(() => playTonePitch(155.56, 0.25, 0.3, 'sawtooth'), 280);
       }
       renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
     }
@@ -4349,78 +4380,109 @@
       } else {
         st.completed = true;
         renderStaffNotationGameUI(document.getElementById('embedded-tool-container'));
-        showAppModal('Staff Notation Game Complete!', `You scored ${st.score}/${st.totalRounds} and earned +${st.score} Tokens!`, st.score >= 5);
+        showAppModal('Treble Staff Game Complete!', `You placed ${st.score}/${st.totalRounds} notes accurately and earned +${st.score} Tokens!`, st.score >= 5);
       }
     }
 
     function renderStaffNotationGameUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
       if (!target) return;
       const st = staffNotationState;
+
       let staffLines = '';
       for (let i = 0; i < 5; i++) {
-        staffLines += `<line x1="20" y1="${20 + i*15}" x2="280" y2="${20 + i*15}" stroke="#475569" stroke-width="2"/>`;
+        staffLines += `<line x1="20" y1="${20 + i*15}" x2="280" y2="${20 + i*15}" stroke="#64748b" stroke-width="1.8"/>`;
       }
-      staffLines += `<text x="35" y="88" font-size="85" font-family="serif" fill="#94a3b8" font-weight="bold">&#119070;</text>`;
+      staffLines += `<text x="32" y="88" font-size="85" font-family="serif" fill="#cbd5e1" font-weight="bold">&#119070;</text>`;
 
       let answerDots = '';
       if (st.answered) {
         const targetY = staffNoteY[st.targetNote];
         if (st.lastCorrect) {
-          answerDots = `<ellipse cx="150" cy="${st.guessedY}" rx="9" ry="6" fill="#34d399" transform="rotate(-15 150 ${st.guessedY})"/>`;
+          answerDots = `
+            <ellipse cx="170" cy="${st.guessedY}" rx="10" ry="6.5" fill="#34d399" stroke="#ffffff" stroke-width="1.5" transform="rotate(-15 170 ${st.guessedY})"/>
+            <text x="192" y="${st.guessedY + 4}" fill="#34d399" font-size="11" font-weight="900">${st.guessedNote.charAt(0)} ✓</text>
+          `;
         } else {
           answerDots = `
-            <ellipse cx="150" cy="${st.guessedY}" rx="9" ry="6" fill="#ef4444" transform="rotate(-15 150 ${st.guessedY})"/>
-            <ellipse cx="150" cy="${targetY}" rx="9" ry="6" fill="#34d399" opacity="0.6" transform="rotate(-15 150 ${targetY})"/>
+            <ellipse cx="170" cy="${st.guessedY}" rx="10" ry="6.5" fill="#f43f5e" stroke="#ffffff" stroke-width="1.5" transform="rotate(-15 170 ${st.guessedY})"/>
+            <text x="192" y="${st.guessedY + 4}" fill="#fb7185" font-size="11" font-weight="900">${st.guessedNote.charAt(0)} ✗</text>
+            <ellipse cx="170" cy="${targetY}" rx="10" ry="6.5" fill="#34d399" opacity="0.85" transform="rotate(-15 170 ${targetY})"/>
+            <text x="142" y="${targetY + 4}" fill="#34d399" font-size="11" font-weight="900" text-anchor="end">${st.targetLetter}</text>
           `;
         }
       }
 
       target.innerHTML = `
-        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800 shadow-lg">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • 1 Token Per Correct Answer</span>
-              <h3 class="text-xl font-black">Treble Staff Notation Game</h3>
-              <p class="text-xs text-slate-300 mt-1">Listen to the target note, then click the correct line or space on the staff to place the note!</p>
+              <span class="text-[11px] font-black uppercase tracking-widest text-sky-400">10-Round Challenge • +1 Token Per Correct Answer</span>
+              <h3 class="text-xl font-black mt-0.5">Place the Note on the Treble Staff</h3>
+              <p class="text-xs text-slate-300 mt-1">Click directly on the correct <strong>line</strong> or <strong>space</strong> on the treble staff to place each target note!</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
-              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+              <span class="px-3 py-1.5 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
             </div>
           </div>
 
           ${st.completed ? `
-            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
-              <h4 class="text-xl font-black text-emerald-300">Staff Notation Game Complete!</h4>
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border-2 border-emerald-500 text-center space-y-3">
+              <div class="w-14 h-14 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-2xl mx-auto shadow-lg">
+                <i class="fa-solid fa-music"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">Treble Staff Mastered!</h4>
               <p class="text-xs text-slate-200">You placed <strong>${st.score} / ${st.totalRounds}</strong> notes correctly and earned <strong>+${st.score} Tokens</strong>!</p>
-              <button type="button" onclick="mountEmbeddedStaffNotationGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Another 10 Rounds</button>
+              <button type="button" onclick="mountEmbeddedStaffNotationGame(document.getElementById('embedded-tool-container'))" class="px-6 py-2.5 bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-black rounded-xl text-xs shadow">
+                Play Another 10 Rounds
+              </button>
             </div>
           ` : `
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-indigo-950/80 border border-indigo-700/70">
-              <div class="text-center sm:text-left">
-                <span class="text-xs sm:text-sm font-black text-sky-300">Target Note: ${st.targetNote}</span>
-                <div class="text-[10px] text-sky-200 opacity-80 mt-0.5">${st.isPlaying ? 'Listening...' : 'Click "Hear Target Pitch" then click the staff.'}</div>
+              <div class="flex items-center gap-3">
+                <div class="w-14 h-14 rounded-2xl bg-sky-500 text-slate-950 flex items-center justify-center font-black text-3xl shadow-md">
+                  ${st.targetLetter}
+                </div>
+                <div>
+                  <div class="text-[10px] font-black uppercase tracking-widest text-sky-300">Place This Note on the Staff</div>
+                  <div class="text-base sm:text-lg font-black text-white">Click the line or space for <span class="text-amber-300">${st.targetLetter}</span></div>
+                </div>
               </div>
-              <button type="button" onclick="playStaffNotationTarget()" ${st.isPlaying ? 'disabled' : ''} class="px-6 py-3 bg-sky-500 hover:bg-sky-400 active:scale-95 text-slate-950 font-black rounded-2xl text-xs shadow-lg shrink-0 ${st.isPlaying ? 'opacity-50 cursor-not-allowed' : ''}">
-                <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Target Pitch
+              <button type="button" onclick="playStaffNotationTarget()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sky-300 font-black rounded-xl text-xs shrink-0 transition-all">
+                <i class="fa-solid fa-volume-high mr-1.5"></i> Hear Pitch
               </button>
             </div>
 
-            <div class="flex justify-center mt-4">
-              <svg viewBox="0 0 300 100" class="w-full max-w-md h-auto bg-slate-950 rounded-xl shadow-inner cursor-crosshair border border-slate-800" onclick="handleStaffClick(event)">
+            <div class="flex justify-center">
+              <svg viewBox="0 0 300 100"
+                   class="w-full max-w-lg h-auto bg-slate-950 rounded-2xl shadow-inner cursor-crosshair border-2 border-slate-800 hover:border-sky-500/50 transition-colors"
+                   onmousemove="handleStaffHover(event)"
+                   onmouseleave="clearStaffHover()"
+                   onclick="handleStaffClick(event)">
                 ${staffLines}
+                <!-- Live Hover Ghost Note -->
+                <ellipse id="staff-ghost-note" cx="170" cy="50" rx="10" ry="6.5" fill="#38bdf8" opacity="0" pointer-events="none"/>
                 ${answerDots}
               </svg>
             </div>
 
             ${st.answered ? `
-              <div class="mt-4 p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex items-center justify-between gap-3">
-                <span class="text-xs font-bold">${st.lastCorrect ? '✓ Spot on (+1 Token)!' : `✗ Not quite. You clicked near ${Object.keys(staffNoteY).find(key => staffNoteY[key] === st.guessedY)}.`}</span>
-                <button type="button" onclick="nextStaffNotationRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0">
-                  ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs font-bold leading-relaxed">
+                  ${st.lastCorrect
+                    ? `✓ Spot on (+1 Token)! You placed <strong>${st.targetLetter}</strong> right on the staff.`
+                    : `✗ Not quite — you placed <strong>${st.guessedNote.charAt(0)}</strong>. Remember: <strong>${st.targetLetter}</strong> is on ${staffNoteHints[st.targetLetter]}.`}
+                </div>
+                <button type="button" onclick="nextStaffNotationRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0 shadow">
+                  ${st.round < st.totalRounds ? 'Next Note →' : 'Finish'}
                 </button>
               </div>
-            ` : ''}
+            ` : `
+              <div class="text-center text-[11px] font-bold text-slate-400">
+                Tip: Lines from bottom to top = <span class="text-sky-300">E-G-B-D-F</span> • Spaces from bottom to top = <span class="text-rose-300">F-A-C-E</span>
+              </div>
+            `}
           `}
         </div>
       `;
@@ -7039,6 +7101,7 @@
       else if (lesson.toolType === 'pitchWaveGame') mountEmbeddedPitchWaveGame(toolBox);
       else if (lesson.toolType === 'melodicContourGame') mountEmbeddedMelodicContourGame(toolBox);
       else if (lesson.toolType === 'pitchKeyboard') mountEmbeddedPitchKeyboard(toolBox);
+      else if (lesson.toolType === 'staffNotationGame') mountEmbeddedStaffNotationGame(toolBox);
       else if (lesson.toolType === 'trebleClefGame') mountEmbeddedTrebleClefGame(toolBox);
       else if (lesson.toolType === 'toneSemitoneGame') mountEmbeddedToneSemitoneGame(toolBox);
       else if (lesson.toolType === 'ledgerLineGame') mountEmbeddedLedgerLineGame(toolBox);

@@ -8334,15 +8334,244 @@
     ];
 
     // 1. Long Note Game (Hold Spacebar)
-    let longNoteState = { running: false, round: 1, totalRounds: 5, score: 0, targetNote: null, targetBeats: 2, holdStartTime: 0, isHolding: false, answered: false, lastCorrect: false, completed: false, bpm: 90 };
+    let longNoteState = { running: false, phase: 'ready', round: 1, totalRounds: 5, score: 0, targetNote: null, targetBeats: 2, holdStartTime: 0, isHolding: false, answered: false, lastCorrect: false, completed: false, bpm: 90, countInBeat: 0, bgBeat: 0, beatIntervalId: null };
     const longNotes = [{ id: 'minim', beats: 2, name: 'Minim (2 Beats)' }, { id: 'dottedMinim', beats: 3, name: 'Dotted Minim (3 Beats)' }, { id: 'semibreve', beats: 4, name: 'Semibreve (4 Beats)' }];
     let lnOsc = null, lnGain = null;
 
+    function clearLongNoteBeatTimer() {
+      if (longNoteState.beatIntervalId) {
+        clearInterval(longNoteState.beatIntervalId);
+        longNoteState.beatIntervalId = null;
+      }
+    }
+
     function setupLongNoteRound() {
+      clearLongNoteBeatTimer();
       const note = longNotes[Math.floor(Math.random() * longNotes.length)];
       longNoteState.targetNote = note;
       longNoteState.answered = false;
       longNoteState.isHolding = false;
+      longNoteState.phase = 'ready';
+      longNoteState.countInBeat = 0;
+      longNoteState.bgBeat = 0;
+    }
+
+    function mountEmbeddedLongNoteGame(target) {
+      if (!target) return;
+      stopLongNoteGameLoop();
+      longNoteState = { running: true, phase: 'ready', round: 1, totalRounds: 5, score: 0, targetNote: null, targetBeats: 2, holdStartTime: 0, isHolding: false, answered: false, lastCorrect: false, completed: false, bpm: 90, countInBeat: 0, bgBeat: 0, beatIntervalId: null };
+      setupLongNoteRound();
+      renderLongNoteGameUI(target);
+    }
+
+    function updateLongNoteBeatVisuals() {
+      const st = longNoteState;
+      const statusEl = document.getElementById('ln-beat-status');
+      if (statusEl) {
+        if (st.phase === 'countIn') {
+          statusEl.textContent = `Count-In: ${st.countInBeat} / 4`;
+          statusEl.className = 'text-lg sm:text-xl font-black text-amber-400 animate-pulse';
+        } else if (st.phase === 'active') {
+          statusEl.textContent = st.isHolding ? `Holding... (Beat ${st.bgBeat})` : `GO! Hold for ${st.targetNote.beats} beats (Beat ${st.bgBeat})`;
+          statusEl.className = st.isHolding ? 'text-lg sm:text-xl font-black text-emerald-400' : 'text-lg sm:text-xl font-black text-sky-300';
+        } else {
+          statusEl.textContent = 'Click Start to hear the 4-beat count-in!';
+          statusEl.className = 'text-sm font-bold text-slate-400';
+        }
+      }
+
+      const activeNum = st.phase === 'countIn' ? st.countInBeat : (st.phase === 'active' ? st.bgBeat : 0);
+      for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById(`ln-beat-dot-${i}`);
+        if (!dot) continue;
+        if (i === activeNum) {
+          dot.className = st.phase === 'countIn'
+            ? 'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm bg-amber-400 text-slate-950 scale-110 shadow-lg transition-all'
+            : 'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm bg-emerald-400 text-slate-950 scale-110 shadow-lg transition-all';
+        } else {
+          dot.className = 'w-10 h-10 rounded-full flex items-center justify-center font-black text-sm bg-slate-800 border border-slate-700 text-slate-400 transition-all';
+        }
+      }
+    }
+
+    function startLongNoteRoundBeat() {
+      const st = longNoteState;
+      if (!st.running || st.answered || st.completed || st.phase !== 'ready') return;
+      clearLongNoteBeatTimer();
+      st.phase = 'countIn';
+      st.countInBeat = 0;
+      st.bgBeat = 0;
+      renderLongNoteGameUI(document.getElementById('embedded-tool-container'));
+
+      const beatMs = Math.round(60000 / st.bpm);
+      const tick = () => {
+        if (!st.running || st.answered || st.completed) {
+          clearLongNoteBeatTimer();
+          return;
+        }
+        if (st.phase === 'countIn') {
+          st.countInBeat++;
+          if (st.countInBeat <= 4) {
+            playTonePitch(st.countInBeat === 1 ? 987.77 : 783.99, 0.06, 0.28, 'sine');
+            updateLongNoteBeatVisuals();
+          } else {
+            st.phase = 'active';
+            st.bgBeat = 1;
+            playTonePitch(660, 0.055, 0.18, 'sine');
+            renderLongNoteGameUI(document.getElementById('embedded-tool-container'));
+            updateLongNoteBeatVisuals();
+          }
+        } else if (st.phase === 'active') {
+          st.bgBeat = (st.bgBeat % 4) + 1;
+          playTonePitch(st.bgBeat === 1 ? 660 : 523.25, 0.055, 0.16, 'sine');
+          updateLongNoteBeatVisuals();
+        }
+      };
+
+      tick();
+      st.beatIntervalId = setInterval(tick, beatMs);
+    }
+
+    function beginLongNoteHold() {
+      const st = longNoteState;
+      if (!st.running || st.phase !== 'active' || st.answered || st.completed || st.isHolding) return;
+      st.isHolding = true;
+      st.holdStartTime = performance.now();
+      const ctx = getAudioCtx();
+      if(ctx) {
+        lnOsc = ctx.createOscillator();
+        lnGain = ctx.createGain();
+        lnOsc.type = 'triangle';
+        lnOsc.frequency.value = 330;
+        lnGain.gain.setValueAtTime(0.001, ctx.currentTime);
+        lnGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+        lnOsc.connect(lnGain);
+        lnGain.connect(ctx.destination);
+        lnOsc.start();
+      }
+      const noteEl = document.getElementById('ln-note-icon');
+      if (noteEl) noteEl.classList.add('scale-110', 'text-emerald-400');
+      const holdBtn = document.getElementById('ln-hold-btn');
+      if (holdBtn) {
+        holdBtn.textContent = 'HOLDING NOTE... RELEASE ON TIME!';
+        holdBtn.className = 'px-8 py-4 bg-emerald-500 text-slate-950 font-black rounded-2xl text-sm shadow-lg w-full max-w-sm scale-95 transition-all';
+      }
+      updateLongNoteBeatVisuals();
+    }
+
+    function endLongNoteHold() {
+      const st = longNoteState;
+      if (!st.running || st.answered || st.completed || !st.isHolding) return;
+      st.isHolding = false;
+      clearLongNoteBeatTimer();
+      if (lnOsc && lnGain) {
+         const ctx = getAudioCtx();
+         lnGain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+         lnOsc.stop(ctx.currentTime + 0.06);
+         lnOsc = null; lnGain = null;
+      }
+
+      const holdDuration = performance.now() - st.holdStartTime;
+      const beatMs = 60000 / st.bpm;
+      const targetDuration = st.targetNote.beats * beatMs;
+      const tolerance = beatMs * 0.45; // 45% tolerance
+
+      st.answered = true;
+      if (Math.abs(holdDuration - targetDuration) < tolerance) {
+        st.lastCorrect = true;
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.2, 0.35, 'triangle');
+      } else {
+        st.lastCorrect = false;
+        playTonePitch(155.56, 0.25, 0.3, 'sawtooth');
+      }
+      renderLongNoteGameUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function stopLongNoteGameLoop() {
+      clearLongNoteBeatTimer();
+      if(lnOsc) { try { lnOsc.stop(); } catch(e){} lnOsc = null; }
+      longNoteState.running = false;
+    }
+
+    function nextLongNoteRound() {
+      const st = longNoteState;
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupLongNoteRound();
+        startLongNoteRoundBeat();
+      } else {
+        st.completed = true;
+        clearLongNoteBeatTimer();
+        renderLongNoteGameUI(document.getElementById('embedded-tool-container'));
+        showAppModal('Duration Master!', `You held notes accurately ${st.score}/${st.totalRounds} times and earned +${st.score} Tokens!`, st.score >= 3);
+      }
+    }
+
+    function renderLongNoteGameUI(target) {
+      if (!target) return;
+      const st = longNoteState;
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-5 border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-indigo-400">5-Round Challenge • 4-Beat Count-In &amp; Steady Pulse (${st.bpm} BPM)</span>
+              <h3 class="text-xl font-black">Long Note Duration Challenge</h3>
+              <p class="text-xs text-slate-300 mt-1">Listen to the <strong>4-beat count-in</strong>, follow the steady background beat, and press &amp; hold <strong>Spacebar</strong> (or the button) for the exact number of beats shown!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score}</span>
+            </div>
+          </div>
+          ${st.completed ? `
+            <div class="p-6 rounded-2xl bg-emerald-950/60 border border-emerald-500 text-center space-y-3">
+              <h4 class="text-xl font-black text-emerald-300">Challenge Complete!</h4>
+              <button type="button" onclick="mountEmbeddedLongNoteGame(document.getElementById('embedded-tool-container'))" class="px-5 py-2.5 bg-emerald-400 text-slate-950 font-black rounded-xl text-xs">Play Again</button>
+            </div>
+          ` : `
+            <div class="flex flex-col items-center justify-center space-y-4">
+               <div id="ln-note-icon" class="text-slate-300 ${st.isHolding ? 'scale-110 text-emerald-400' : ''} transition-transform">
+                 ${st.targetNote ? renderEngravedNoteDarkSVG(st.targetNote.id, 'w-16 h-24') : ''}
+               </div>
+               <div class="text-lg font-black text-amber-400">${st.targetNote ? st.targetNote.name : ''}</div>
+
+               <!-- 4-Beat Count-In & Background Pulse Indicators -->
+               <div class="flex items-center justify-center gap-3">
+                 ${[1, 2, 3, 4].map(n => `
+                   <div id="ln-beat-dot-${n}" class="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm bg-slate-800 border border-slate-700 text-slate-400 transition-all">${n}</div>
+                 `).join('')}
+               </div>
+               <div id="ln-beat-status" class="text-sm font-bold text-slate-400">
+                 ${st.phase === 'ready' ? 'Click Start to hear the 4-beat count-in!' : st.phase === 'countIn' ? `Count-In: ${st.countInBeat} / 4` : `GO! Hold for ${st.targetNote.beats} beats`}
+               </div>
+               
+               ${st.answered ? `
+                  <div class="p-4 rounded-2xl border w-full max-w-sm ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col items-center gap-2">
+                    <span class="text-sm font-bold">${st.lastCorrect ? '✓ Perfect Timing! (+1 Token)' : '✗ Too early or too late.'}</span>
+                    <button type="button" onclick="nextLongNoteRound()" class="px-4 py-2 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs">
+                      ${st.round < st.totalRounds ? 'Next Round →' : 'Finish'}
+                    </button>
+                  </div>
+               ` : st.phase === 'ready' ? `
+                  <button type="button" onclick="startLongNoteRoundBeat()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg w-full max-w-sm">
+                    <i class="fa-solid fa-play mr-1.5"></i> Start Round ${st.round} (4-Beat Count-In)
+                  </button>
+               ` : st.phase === 'countIn' ? `
+                  <button type="button" disabled class="px-8 py-4 bg-slate-800 border border-slate-700 text-amber-300 font-black rounded-2xl text-sm w-full max-w-sm cursor-not-allowed">
+                    WAIT FOR COUNT-IN (1, 2, 3, 4)...
+                  </button>
+               ` : `
+                  <button id="ln-hold-btn" type="button" onmousedown="beginLongNoteHold()" onmouseup="endLongNoteHold()" onmouseleave="endLongNoteHold()" ontouchstart="event.preventDefault(); beginLongNoteHold();" ontouchend="endLongNoteHold()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-black rounded-2xl text-sm shadow-lg w-full max-w-sm">
+                    HOLD TO PLAY (SPACEBAR)
+                  </button>
+               `}
+            </div>
+          `}
+        </div>
+      `;
+      updateLongNoteBeatVisuals();
     }
 
     function mountEmbeddedLongNoteGame(target) {

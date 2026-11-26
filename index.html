@@ -13864,13 +13864,23 @@
       phase: 'idle', // 'demo' | 'input' | 'success' | 'fail'
       sequence: [],
       inputIdx: 0,
+      demoIdx: -1,
       activePose: 'idle',
       muted: false,
-      bpm: 108,
+      bpm: 88,
       grooveInterval: null,
       grooveStep: 0,
       timers: []
     };
+
+    const mjRoundConfigs = [
+      { label: 'Warm-Up',         bpm: 88,  moveCount: 2, allowedCodes: ['ArrowLeft', 'ArrowRight'],                       demoMult: 1.2  },
+      { label: 'Getting Groovy',  bpm: 96,  moveCount: 3, allowedCodes: ['ArrowLeft', 'ArrowRight', 'ArrowUp'],            demoMult: 1.12 },
+      { label: 'In the Pocket',   bpm: 105, moveCount: 4, allowedCodes: ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], demoMult: 1.05 },
+      { label: 'Thriller Tempo',  bpm: 115, moveCount: 5, allowedCodes: ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], demoMult: 1.0  },
+      { label: 'Smooth Criminal', bpm: 126, moveCount: 6, allowedCodes: ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], demoMult: 0.95 },
+      { label: 'King of Pop!',    bpm: 138, moveCount: 8, allowedCodes: ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], demoMult: 0.9  }
+    ];
 
     function stopMjDanceGame() {
       mjDanceState.running = false;
@@ -13884,57 +13894,59 @@
 
     function startMjFunkyGroove() {
       if (mjDanceState.grooveInterval) clearInterval(mjDanceState.grooveInterval);
-      const stepMs = Math.round(60000 / mjDanceState.bpm / 2); // 8th-note disco-funk groove
-      const bassLine = [110, 0, 110, 130.81, 146.83, 0, 164.81, 146.83];
-      mjDanceState.grooveStep = 0;
-
+      const stepMs = Math.round(60000 / mjDanceState.bpm / 2);
+      const bassLine = [110, 0, 110, 130.81, 146.83, 0, 130.81, 98];
       mjDanceState.grooveInterval = setInterval(() => {
         if (!mjDanceState.running || mjDanceState.muted) return;
         const s = mjDanceState.grooveStep % 8;
+        mjDanceState.grooveStep++;
         if (s === 0 || s === 4) playDrumSound('kick');
         if (s === 2 || s === 6) playDrumSound('snare');
         playDrumSound('hihat');
-        if (bassLine[s]) playTonePitch(bassLine[s], 0.14, 0.14, 'sawtooth');
-        mjDanceState.grooveStep++;
+        if (bassLine[s]) playTonePitch(bassLine[s], 0.14, 0.22, 'sawtooth');
       }, stepMs);
     }
 
     function startMjDanceGame() {
       stopMjDanceGame();
       mjDanceState = {
-        running: true, completed: false, round: 1, totalRounds: 6, score: 0, tokensEarned: 0,
-        phase: 'demo', sequence: [], inputIdx: 0, activePose: 'idle', muted: false,
-        bpm: 108, grooveInterval: null, grooveStep: 0, timers: []
+        running: true, completed: false, round: 1, totalRounds: mjRoundConfigs.length, score: 0, tokensEarned: 0,
+        phase: 'demo', sequence: [], inputIdx: 0, demoIdx: -1, activePose: 'idle', muted: false,
+        bpm: mjRoundConfigs[0].bpm, grooveInterval: null, grooveStep: 0, timers: []
       };
       startMjRound();
     }
 
     function startMjRound() {
       const st = mjDanceState;
-      st.bpm = 108 + (st.round - 1) * 5;
+      const cfg = mjRoundConfigs[st.round - 1] || mjRoundConfigs[mjRoundConfigs.length - 1];
+      st.bpm = cfg.bpm;
       startMjFunkyGroove();
-      const moveCount = Math.min(8, 2 + st.round); // 3 to 8 moves
-      st.sequence = Array.from({ length: moveCount }, () => mjMoves[Math.floor(Math.random() * mjMoves.length)].code);
+      const pool = mjMoves.filter(m => cfg.allowedCodes.includes(m.code));
+      st.sequence = Array.from({ length: cfg.moveCount }, () => pool[Math.floor(Math.random() * pool.length)].code);
       st.inputIdx = 0;
+      st.demoIdx = -1;
       st.phase = 'demo';
       st.activePose = 'idle';
       renderMjDanceGameView(document.getElementById('app-viewport'));
 
-      const beatMs = Math.round(60000 / st.bpm);
+      const demoStepMs = Math.round((60000 / st.bpm) * cfg.demoMult);
       st.sequence.forEach((code, idx) => {
         const mv = mjMoves.find(m => m.code === code);
         st.timers.push(setTimeout(() => {
+          st.demoIdx = idx;
           st.activePose = code;
           if (!st.muted && mv) playTonePitch(mv.freq, 0.18, 0.25, 'triangle');
           renderMjDanceGameView(document.getElementById('app-viewport'));
-        }, (idx + 1) * beatMs));
+        }, (idx + 1) * demoStepMs));
       });
 
       st.timers.push(setTimeout(() => {
+        st.demoIdx = -1;
         st.activePose = 'idle';
         st.phase = 'input';
         renderMjDanceGameView(document.getElementById('app-viewport'));
-      }, (st.sequence.length + 1) * beatMs + 150));
+      }, (st.sequence.length + 1) * demoStepMs + 180));
     }
 
     function handleMjMoveInput(code) {
@@ -13958,56 +13970,50 @@
               st.round++;
               startMjRound();
             } else {
-              st.tokensEarned += 5;
-              addTokens(5);
-              st.completed = true;
               stopMjDanceGame();
+              st.completed = true;
               renderMjDanceGameView(document.getElementById('app-viewport'));
             }
           }, 950));
           return;
         }
       } else {
-        playTonePitch(145, 0.25, 0.3, 'sawtooth');
         st.phase = 'fail';
+        if (!st.muted) playTonePitch(140, 0.28, 0.3, 'sawtooth');
         renderMjDanceGameView(document.getElementById('app-viewport'));
         st.timers.push(setTimeout(() => {
           if (st.running) startMjRound();
-        }, 1050));
+        }, 900));
         return;
       }
       renderMjDanceGameView(document.getElementById('app-viewport'));
     }
 
     function renderMjDancerSVG(pose) {
-      const tilt = pose === 'ArrowRight' ? 'rotate(16 100 180)' : pose === 'ArrowLeft' ? 'translate(-12, 0)' : pose === 'ArrowUp' ? 'translate(0, -14)' : '';
-      const hatY = pose === 'ArrowDown' ? 28 : 20;
-      const leftArm = pose === 'ArrowUp' ? 'M 80 78 L 54 42' : pose === 'ArrowDown' ? 'M 80 78 L 72 36' : 'M 80 78 L 58 106';
-      const rightArm = pose === 'ArrowLeft' ? 'M 120 78 L 152 68' : pose === 'ArrowRight' ? 'M 120 78 L 148 96' : 'M 120 78 L 144 52';
+      const tilt = pose === 'ArrowRight' ? 'rotate(18 90 150)' : pose === 'ArrowLeft' ? 'translate(-12,0) rotate(-10 90 150)' : pose === 'ArrowUp' ? 'translate(0,-10)' : pose === 'ArrowDown' ? 'translate(0,6)' : '';
       return `
-        <svg viewBox="0 0 200 200" class="w-44 h-44 mx-auto drop-shadow-[0_0_20px_rgba(244,63,94,0.45)]">
-          <ellipse cx="100" cy="186" rx="58" ry="10" fill="#fbbf24" opacity="0.28"/>
+        <svg viewBox="0 0 180 180" class="w-44 h-44 mx-auto drop-shadow-[0_0_20px_rgba(244,63,94,0.45)]">
+          <!-- Stage Spotlight -->
+          <ellipse cx="90" cy="162" rx="58" ry="12" fill="#f43f5e" opacity="0.28"/>
           <g transform="${tilt}">
-            <!-- Black Pants & White Socks/Loafers -->
-            <line x1="88" y1="126" x2="${pose === 'ArrowLeft' ? 72 : 82}" y2="174" stroke="#0f172a" stroke-width="11" stroke-linecap="round"/>
-            <line x1="112" y1="126" x2="${pose === 'ArrowLeft' ? 128 : 118}" y2="174" stroke="#0f172a" stroke-width="11" stroke-linecap="round"/>
-            <line x1="${pose === 'ArrowLeft' ? 72 : 82}" y1="170" x2="${pose === 'ArrowLeft' ? 72 : 82}" y2="179" stroke="#ffffff" stroke-width="7"/>
-            <line x1="${pose === 'ArrowLeft' ? 128 : 118}" y1="170" x2="${pose === 'ArrowLeft' ? 128 : 118}" y2="179" stroke="#ffffff" stroke-width="7"/>
-            <ellipse cx="${pose === 'ArrowLeft' ? 68 : 78}" cy="182" rx="9" ry="4" fill="#0f172a"/>
-            <ellipse cx="${pose === 'ArrowLeft' ? 132 : 122}" cy="182" rx="9" ry="4" fill="#0f172a"/>
-            <!-- Iconic Red Thriller Jacket -->
-            <rect x="78" y="72" width="44" height="58" rx="10" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/>
-            <line x1="100" y1="74" x2="100" y2="128" stroke="#0f172a" stroke-width="3"/>
-            <path d="M 80 76 L 100 94 L 120 76" fill="none" stroke="#0f172a" stroke-width="3"/>
-            <!-- Arms + Sparkling White Sequined Glove -->
-            <path d="${leftArm}" stroke="#dc2626" stroke-width="10" stroke-linecap="round"/>
-            <path d="${rightArm}" stroke="#dc2626" stroke-width="10" stroke-linecap="round"/>
-            <circle cx="${pose === 'ArrowLeft' ? 152 : pose === 'ArrowRight' ? 148 : 144}" cy="${pose === 'ArrowLeft' ? 68 : pose === 'ArrowRight' ? 96 : 52}" r="7.5" fill="#ffffff" stroke="#fde047" stroke-width="2"/>
-            <!-- Head & Fedora -->
-            <circle cx="100" cy="52" r="18" fill="#d9a066"/>
-            <rect x="74" y="${hatY + 12}" width="52" height="6" rx="3" fill="#0f172a"/>
-            <path d="M 84 ${hatY + 12} L 88 ${hatY - 4} L 112 ${hatY - 4} L 116 ${hatY + 12} Z" fill="#0f172a"/>
-            <rect x="86" y="${hatY + 7}" width="28" height="3.5" fill="#ffffff"/>
+            <!-- Fedora Hat -->
+            <ellipse cx="90" cy="40" rx="26" ry="5.5" fill="#0f172a" stroke="#f8fafc" stroke-width="1.5"/>
+            <path d="M 73 40 L 78 22 L 102 22 L 107 40 Z" fill="#0f172a"/>
+            <rect x="75" y="34" width="30" height="3.5" fill="#f8fafc"/>
+            <!-- Head -->
+            <circle cx="90" cy="52" r="12" fill="#fde68a"/>
+            <!-- Red Thriller Jacket -->
+            <path d="M 72 66 L 108 66 L 104 114 L 76 114 Z" fill="#e11d48" stroke="#0f172a" stroke-width="2"/>
+            <path d="M 80 66 L 90 114 L 100 66" fill="none" stroke="#0f172a" stroke-width="3"/>
+            <!-- Arms + Sparkling White Glove -->
+            <line x1="72" y1="72" x2="${pose === 'ArrowUp' ? 50 : 54}" y2="${pose === 'ArrowUp' ? 40 : 96}" stroke="#e11d48" stroke-width="8" stroke-linecap="round"/>
+            <line x1="108" y1="72" x2="${pose === 'ArrowDown' ? 98 : 132}" y2="${pose === 'ArrowDown' ? 44 : 88}" stroke="#e11d48" stroke-width="8" stroke-linecap="round"/>
+            <circle cx="${pose === 'ArrowDown' ? 98 : 132}" cy="${pose === 'ArrowDown' ? 44 : 88}" r="6" fill="#ffffff" stroke="#fbbf24" stroke-width="2"/>
+            <!-- Legs + White Socks -->
+            <line x1="82" y1="114" x2="${pose === 'ArrowLeft' ? 66 : 76}" y2="154" stroke="#0f172a" stroke-width="9" stroke-linecap="round"/>
+            <line x1="98" y1="114" x2="${pose === 'ArrowLeft' ? 112 : 104}" y2="154" stroke="#0f172a" stroke-width="9" stroke-linecap="round"/>
+            <rect x="${pose === 'ArrowLeft' ? 61 : 71}" y="148" width="10" height="6" fill="#ffffff"/>
+            <rect x="${pose === 'ArrowLeft' ? 107 : 99}" y="148" width="10" height="6" fill="#ffffff"/>
           </g>
         </svg>
       `;
@@ -14019,17 +14025,17 @@
 
       if (!st.running && !st.completed) {
         container.innerHTML = `
-          <div class="max-w-2xl mx-auto space-y-6">
+          <div class="max-w-3xl mx-auto space-y-6">
             <div class="flex items-center justify-between">
               <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
                 <i class="fa-solid fa-arrow-left"></i> Rewards Shop
               </button>
               <span class="text-xs font-black uppercase text-rose-500 tracking-widest"><i class="fa-solid fa-microphone-lines mr-1"></i> Michael Jackson's Mic</span>
             </div>
-            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-rose-500/50 space-y-5">
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-rose-500/40 space-y-5">
               ${renderMjDancerSVG('ArrowUp')}
-              <h2 class="text-3xl font-black text-rose-400">Let's Dance!</h2>
-              <p class="text-sm text-slate-300 max-w-md mx-auto">Watch the King of Pop's dance combo to the funky backing track, then copy the moves using <strong>▲ ▼ ◀ ▶ Arrow Keys</strong> (or the dance pad)! Earns <strong>+2 Tokens per round</strong> + <strong>+5 Encore Bonus</strong>!</p>
+              <h2 class="text-3xl font-black text-amber-400">Let's Dance!</h2>
+              <p class="text-sm text-slate-300 max-w-md mx-auto">Watch the King of Pop perform a dance combo to the funky groove, then repeat the exact moves using your <strong>Arrow Keys</strong> (or the dance pads below)! Starts easy and speeds up each round. <strong>+2 Tokens per combo!</strong></p>
               <button onclick="startMjDanceGame()" class="px-8 py-4 bg-gradient-to-r from-rose-600 to-fuchsia-600 hover:brightness-110 text-white font-black rounded-2xl text-base shadow-lg">
                 <i class="fa-solid fa-play mr-2"></i> Hit the Dancefloor!
               </button>
@@ -14047,11 +14053,11 @@
                 <i class="fa-solid fa-arrow-left"></i> Rewards Shop
               </button>
             </div>
-            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-emerald-400 space-y-4">
-              ${renderMjDancerSVG('ArrowUp')}
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-amber-400 space-y-4">
+              ${renderMjDancerSVG('ArrowRight')}
               <h2 class="text-3xl font-black text-amber-400">King of Pop Encore!</h2>
-              <p class="text-sm text-slate-300">You mastered all 6 dance routines up to <strong>${st.bpm} BPM</strong> and earned <strong class="text-emerald-400">+${st.tokensEarned} Tokens</strong>!</p>
-              <button onclick="startMjDanceGame()" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl text-sm shadow-lg">Dance Again</button>
+              <p class="text-sm text-slate-300">You nailed all <strong>${st.score}</strong> dance routines and earned <strong class="text-emerald-400">+${st.tokensEarned} Tokens</strong>!</p>
+              <button onclick="startMjDanceGame()" class="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-black rounded-2xl text-sm shadow-lg">Dance Again!</button>
             </div>
           </div>
         `;
@@ -14059,6 +14065,7 @@
       }
 
       const activeMove = mjMoves.find(m => m.code === st.activePose);
+      const roundCfg = mjRoundConfigs[st.round - 1] || mjRoundConfigs[0];
       container.innerHTML = `
         <div class="max-w-3xl mx-auto space-y-4">
           <div class="flex items-center justify-between">
@@ -14071,7 +14078,7 @@
           </div>
           <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl border-2 border-rose-500/40 space-y-5 text-center">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 text-xs font-black">
-              <span class="px-3 py-1 rounded-xl bg-rose-600 text-white">Round ${st.round} / ${st.totalRounds} (${st.bpm} BPM)</span>
+              <span class="px-3 py-1 rounded-xl bg-rose-600 text-white">Round ${st.round} / ${st.totalRounds} • ${roundCfg.label} (${st.bpm} BPM)</span>
               <span class="text-amber-300">${st.phase === 'demo' ? '👀 WATCH THE MOVES...' : st.phase === 'input' ? '🕺 YOUR TURN! COPY THE COMBO!' : st.phase === 'success' ? '✨ SMOOTH CRIMINAL! (+2 Tokens)' : '✗ OOPS! WATCH AGAIN...'}</span>
               <span class="px-3 py-1 rounded-xl bg-emerald-950 text-emerald-300">+${st.tokensEarned} Tokens</span>
             </div>
@@ -14085,8 +14092,9 @@
               ${st.sequence.map((code, idx) => {
                 const mv = mjMoves.find(m => m.code === code);
                 const done = idx < st.inputIdx;
-                return `<span class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm border-2 ${
-                  done ? 'bg-emerald-500 border-emerald-300 text-slate-950' : st.phase === 'demo' ? 'bg-slate-800 border-slate-600 text-slate-300' : 'bg-slate-800 border-slate-700 text-slate-500'
+                const isDemoActive = st.phase === 'demo' && st.demoIdx === idx;
+                return `<span class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm border-2 transition-transform ${
+                  done ? 'bg-emerald-500 border-emerald-300 text-slate-950' : isDemoActive ? 'bg-amber-400 border-white text-slate-950 scale-110 shadow-lg' : st.phase === 'demo' ? 'bg-slate-800 border-slate-600 text-slate-300' : 'bg-slate-800 border-slate-700 text-slate-500'
                 }">${done || st.phase === 'demo' ? mv.icon : '?'}</span>`;
               }).join('')}
             </div>
@@ -14110,171 +14118,111 @@
     // ==========================================
     const evhScaleCatalog = [
       {
-        name: 'C Major Scale',
-        bpm: 200,
+        name: 'C Major Scale', bpm: 200,
         notes: [
-          { label: 'C',  freq: 261.63, fret: 3,  str: 4 },
-          { label: 'D',  freq: 293.66, fret: 5,  str: 4 },
-          { label: 'E',  freq: 329.63, fret: 7,  str: 4 },
-          { label: 'F',  freq: 349.23, fret: 8,  str: 4 },
-          { label: 'G',  freq: 392.00, fret: 10, str: 3 },
-          { label: 'A',  freq: 440.00, fret: 12, str: 3 },
-          { label: 'B',  freq: 493.88, fret: 14, str: 2 },
-          { label: 'C5', freq: 523.25, fret: 15, str: 2 }
+          { label: 'C', freq: 261.63, str: 4 }, { label: 'D', freq: 293.66, str: 4 },
+          { label: 'E', freq: 329.63, str: 3 }, { label: 'F', freq: 349.23, str: 3 },
+          { label: 'G', freq: 392.00, str: 2 }, { label: 'A', freq: 440.00, str: 2 },
+          { label: 'B', freq: 493.88, str: 1 }, { label: 'C5', freq: 523.25, str: 1 }
         ]
       },
       {
-        name: 'G Major Scale',
-        bpm: 212,
+        name: 'G Major Scale', bpm: 212,
         notes: [
-          { label: 'G',  freq: 196.00, fret: 3,  str: 5 },
-          { label: 'A',  freq: 220.00, fret: 5,  str: 5 },
-          { label: 'B',  freq: 246.94, fret: 7,  str: 4 },
-          { label: 'C',  freq: 261.63, fret: 8,  str: 4 },
-          { label: 'D',  freq: 293.66, fret: 10, str: 3 },
-          { label: 'E',  freq: 329.63, fret: 12, str: 3 },
-          { label: 'F#', freq: 369.99, fret: 14, str: 2 },
-          { label: 'G4', freq: 392.00, fret: 15, str: 2 }
+          { label: 'G', freq: 196.00, str: 5 }, { label: 'A', freq: 220.00, str: 5 },
+          { label: 'B', freq: 246.94, str: 4 }, { label: 'C', freq: 261.63, str: 4 },
+          { label: 'D', freq: 293.66, str: 3 }, { label: 'E', freq: 329.63, str: 3 },
+          { label: 'F#', freq: 369.99, str: 2 }, { label: 'G4', freq: 392.00, str: 2 }
         ]
       },
       {
-        name: 'A Minor Scale',
-        bpm: 224,
+        name: 'D Major Scale', bpm: 224,
         notes: [
-          { label: 'A',  freq: 220.00, fret: 5,  str: 5 },
-          { label: 'B',  freq: 246.94, fret: 7,  str: 5 },
-          { label: 'C',  freq: 261.63, fret: 8,  str: 4 },
-          { label: 'D',  freq: 293.66, fret: 10, str: 4 },
-          { label: 'E',  freq: 329.63, fret: 12, str: 3 },
-          { label: 'F',  freq: 349.23, fret: 13, str: 3 },
-          { label: 'G',  freq: 392.00, fret: 15, str: 2 },
-          { label: 'A4', freq: 440.00, fret: 17, str: 1 }
+          { label: 'D', freq: 293.66, str: 3 }, { label: 'E', freq: 329.63, str: 3 },
+          { label: 'F#', freq: 369.99, str: 2 }, { label: 'G', freq: 392.00, str: 2 },
+          { label: 'A', freq: 440.00, str: 2 }, { label: 'B', freq: 493.88, str: 1 },
+          { label: 'C#', freq: 554.37, str: 1 }, { label: 'D5', freq: 587.33, str: 0 }
         ]
       },
       {
-        name: 'D Major Scale',
-        bpm: 236,
+        name: 'A Minor Rock Scale', bpm: 236,
         notes: [
-          { label: 'D',  freq: 293.66, fret: 5,  str: 4 },
-          { label: 'E',  freq: 329.63, fret: 7,  str: 4 },
-          { label: 'F#', freq: 369.99, fret: 9,  str: 3 },
-          { label: 'G',  freq: 392.00, fret: 10, str: 3 },
-          { label: 'A',  freq: 440.00, fret: 12, str: 2 },
-          { label: 'B',  freq: 493.88, fret: 14, str: 2 },
-          { label: 'C#', freq: 554.37, fret: 16, str: 1 },
-          { label: 'D5', freq: 587.33, fret: 17, str: 1 }
+          { label: 'A', freq: 220.00, str: 4 }, { label: 'B', freq: 246.94, str: 4 },
+          { label: 'C', freq: 261.63, str: 4 }, { label: 'D', freq: 293.66, str: 3 },
+          { label: 'E', freq: 329.63, str: 3 }, { label: 'F', freq: 349.23, str: 2 },
+          { label: 'G', freq: 392.00, str: 2 }, { label: 'A4', freq: 440.00, str: 1 }
         ]
       },
       {
-        name: 'E Minor Rock Scale',
-        bpm: 248,
+        name: 'E Minor Shred Scale', bpm: 248,
         notes: [
-          { label: 'E',  freq: 329.63, fret: 2,  str: 3 },
-          { label: 'F#', freq: 369.99, fret: 4,  str: 3 },
-          { label: 'G',  freq: 392.00, fret: 5,  str: 3 },
-          { label: 'A',  freq: 440.00, fret: 7,  str: 2 },
-          { label: 'B',  freq: 493.88, fret: 9,  str: 2 },
-          { label: 'C',  freq: 523.25, fret: 10, str: 1 },
-          { label: 'D',  freq: 587.33, fret: 12, str: 1 },
-          { label: 'E5', freq: 659.25, fret: 14, str: 0 }
+          { label: 'E', freq: 329.63, str: 3 }, { label: 'F#', freq: 369.99, str: 2 },
+          { label: 'G', freq: 392.00, str: 2 }, { label: 'A', freq: 440.00, str: 2 },
+          { label: 'B', freq: 493.88, str: 1 }, { label: 'C', freq: 523.25, str: 1 },
+          { label: 'D', freq: 587.33, str: 0 }, { label: 'E5', freq: 659.25, str: 0 }
         ]
       },
       {
-        name: 'F Major Scale',
-        bpm: 260,
+        name: 'F Major Scale', bpm: 260,
         notes: [
-          { label: 'F',  freq: 349.23, fret: 3,  str: 3 },
-          { label: 'G',  freq: 392.00, fret: 5,  str: 3 },
-          { label: 'A',  freq: 440.00, fret: 7,  str: 2 },
-          { label: 'Bb', freq: 466.16, fret: 8,  str: 2 },
-          { label: 'C',  freq: 523.25, fret: 10, str: 1 },
-          { label: 'D',  freq: 587.33, fret: 12, str: 1 },
-          { label: 'E',  freq: 659.25, fret: 14, str: 0 },
-          { label: 'F5', freq: 698.46, fret: 15, str: 0 }
+          { label: 'F', freq: 349.23, str: 3 }, { label: 'G', freq: 392.00, str: 2 },
+          { label: 'A', freq: 440.00, str: 2 }, { label: 'Bb', freq: 466.16, str: 1 },
+          { label: 'C', freq: 523.25, str: 1 }, { label: 'D', freq: 587.33, str: 0 },
+          { label: 'E', freq: 659.25, str: 0 }, { label: 'F5', freq: 698.46, str: 0 }
         ]
       },
       {
-        name: 'A Major Shred Scale',
-        bpm: 272,
+        name: 'A Major Arena Scale', bpm: 272,
         notes: [
-          { label: 'A',  freq: 220.00, fret: 5,  str: 5 },
-          { label: 'B',  freq: 246.94, fret: 7,  str: 4 },
-          { label: 'C#', freq: 277.18, fret: 9,  str: 4 },
-          { label: 'D',  freq: 293.66, fret: 10, str: 3 },
-          { label: 'E',  freq: 329.63, fret: 12, str: 3 },
-          { label: 'F#', freq: 369.99, fret: 14, str: 2 },
-          { label: 'G#', freq: 415.30, fret: 16, str: 1 },
-          { label: 'A4', freq: 440.00, fret: 17, str: 0 }
+          { label: 'A', freq: 220.00, str: 4 }, { label: 'B', freq: 246.94, str: 4 },
+          { label: 'C#', freq: 277.18, str: 3 }, { label: 'D', freq: 293.66, str: 3 },
+          { label: 'E', freq: 329.63, str: 3 }, { label: 'F#', freq: 369.99, str: 2 },
+          { label: 'G#', freq: 415.30, str: 2 }, { label: 'A4', freq: 440.00, str: 1 }
         ]
       },
       {
-        name: 'E Major Eruption Finale',
-        bpm: 284,
+        name: 'E Major Eruption', bpm: 284,
         notes: [
-          { label: 'E',  freq: 329.63, fret: 2,  str: 3 },
-          { label: 'F#', freq: 369.99, fret: 4,  str: 3 },
-          { label: 'G#', freq: 415.30, fret: 6,  str: 2 },
-          { label: 'A',  freq: 440.00, fret: 7,  str: 2 },
-          { label: 'B',  freq: 493.88, fret: 9,  str: 1 },
-          { label: 'C#', freq: 554.37, fret: 11, str: 1 },
-          { label: 'D#', freq: 622.25, fret: 13, str: 0 },
-          { label: 'E5', freq: 659.25, fret: 14, str: 0 }
+          { label: 'E', freq: 329.63, str: 3 }, { label: 'F#', freq: 369.99, str: 2 },
+          { label: 'G#', freq: 415.30, str: 2 }, { label: 'A', freq: 440.00, str: 2 },
+          { label: 'B', freq: 493.88, str: 1 }, { label: 'C#', freq: 554.37, str: 1 },
+          { label: 'D#', freq: 622.25, str: 0 }, { label: 'E5', freq: 659.25, str: 0 }
         ]
       },
       {
-        name: 'B Minor Shred Scale',
-        bpm: 296,
+        name: 'B Minor Shred Scale', bpm: 296,
         notes: [
-          { label: 'B',  freq: 246.94, fret: 2,  str: 4 },
-          { label: 'C#', freq: 277.18, fret: 4,  str: 4 },
-          { label: 'D',  freq: 293.66, fret: 5,  str: 4 },
-          { label: 'E',  freq: 329.63, fret: 7,  str: 3 },
-          { label: 'F#', freq: 369.99, fret: 9,  str: 3 },
-          { label: 'G',  freq: 392.00, fret: 10, str: 2 },
-          { label: 'A',  freq: 440.00, fret: 12, str: 2 },
-          { label: 'B4', freq: 493.88, fret: 14, str: 1 }
+          { label: 'B', freq: 246.94, str: 4 }, { label: 'C#', freq: 277.18, str: 4 },
+          { label: 'D', freq: 293.66, str: 3 }, { label: 'E', freq: 329.63, str: 3 },
+          { label: 'F#', freq: 369.99, str: 2 }, { label: 'G', freq: 392.00, str: 2 },
+          { label: 'A', freq: 440.00, str: 1 }, { label: 'B4', freq: 493.88, str: 1 }
         ]
       },
       {
-        name: 'Bb Major Lightning Scale',
-        bpm: 308,
+        name: 'Bb Major Lightning Scale', bpm: 308,
         notes: [
-          { label: 'Bb',  freq: 233.08, fret: 1,  str: 4 },
-          { label: 'C',   freq: 261.63, fret: 3,  str: 4 },
-          { label: 'D',   freq: 293.66, fret: 5,  str: 4 },
-          { label: 'Eb',  freq: 311.13, fret: 6,  str: 3 },
-          { label: 'F',   freq: 349.23, fret: 8,  str: 3 },
-          { label: 'G',   freq: 392.00, fret: 10, str: 2 },
-          { label: 'A',   freq: 440.00, fret: 12, str: 2 },
-          { label: 'Bb4', freq: 466.16, fret: 13, str: 1 }
+          { label: 'Bb', freq: 233.08, str: 4 }, { label: 'C', freq: 261.63, str: 4 },
+          { label: 'D', freq: 293.66, str: 3 }, { label: 'Eb', freq: 311.13, str: 3 },
+          { label: 'F', freq: 349.23, str: 2 }, { label: 'G', freq: 392.00, str: 2 },
+          { label: 'A', freq: 440.00, str: 1 }, { label: 'Bb4', freq: 466.16, str: 1 }
         ]
       },
       {
-        name: 'D Harmonic Minor',
-        bpm: 320,
+        name: 'D Harmonic Minor', bpm: 320,
         notes: [
-          { label: 'D',  freq: 293.66, fret: 5,  str: 4 },
-          { label: 'E',  freq: 329.63, fret: 7,  str: 4 },
-          { label: 'F',  freq: 349.23, fret: 8,  str: 3 },
-          { label: 'G',  freq: 392.00, fret: 10, str: 3 },
-          { label: 'A',  freq: 440.00, fret: 12, str: 2 },
-          { label: 'Bb', freq: 466.16, fret: 13, str: 2 },
-          { label: 'C#', freq: 554.37, fret: 16, str: 1 },
-          { label: 'D5', freq: 587.33, fret: 17, str: 1 }
+          { label: 'D', freq: 293.66, str: 3 }, { label: 'E', freq: 329.63, str: 3 },
+          { label: 'F', freq: 349.23, str: 2 }, { label: 'G', freq: 392.00, str: 2 },
+          { label: 'A', freq: 440.00, str: 2 }, { label: 'Bb', freq: 466.16, str: 1 },
+          { label: 'C#', freq: 554.37, str: 1 }, { label: 'D5', freq: 587.33, str: 0 }
         ]
       },
       {
-        name: 'E Phrygian Overdrive Finale',
-        bpm: 332,
+        name: 'E Phrygian Overdrive Finale', bpm: 332,
         notes: [
-          { label: 'E',  freq: 329.63, fret: 2,  str: 3 },
-          { label: 'F',  freq: 349.23, fret: 3,  str: 3 },
-          { label: 'G#', freq: 415.30, fret: 6,  str: 2 },
-          { label: 'A',  freq: 440.00, fret: 7,  str: 2 },
-          { label: 'B',  freq: 493.88, fret: 9,  str: 1 },
-          { label: 'C',  freq: 523.25, fret: 10, str: 1 },
-          { label: 'D',  freq: 587.33, fret: 12, str: 0 },
-          { label: 'E5', freq: 659.25, fret: 14, str: 0 }
+          { label: 'E', freq: 329.63, str: 3 }, { label: 'F', freq: 349.23, str: 3 },
+          { label: 'G', freq: 392.00, str: 2 }, { label: 'A', freq: 440.00, str: 2 },
+          { label: 'B', freq: 493.88, str: 1 }, { label: 'C', freq: 523.25, str: 1 },
+          { label: 'D', freq: 587.33, str: 0 }, { label: 'E5', freq: 659.25, str: 0 }
         ]
       }
     ];
@@ -14290,23 +14238,27 @@
       best: 0,
       scaleObj: evhScaleCatalog[0],
       targetIdx: 4,
-      tickIdx: -5,          // -4..-1 = count-in, 0..7 = scale notes
+      tickIdx: -5,
       roundStartTime: 0,
       targetTimestamp: 0,
-      msPerBeat: 300,
+      msPerBeat: Math.round(60000 / evhScaleCatalog[0].bpm),
       attemptedThisRound: false,
-      roundOutcome: null,   // null | 'hit' | 'miss' | 'spam'
-      statusMsg: 'Press Start to plug in EVH’s Striped Guitar!',
+      roundOutcome: null,
+      statusMsg: 'Get ready for the 4-beat count-in!',
       intervalId: null,
       nextRoundTimer: null
     };
 
     function stopEvhGuitarGame() {
-      if (evhGuitarState.intervalId) clearInterval(evhGuitarState.intervalId);
-      if (evhGuitarState.nextRoundTimer) clearTimeout(evhGuitarState.nextRoundTimer);
-      evhGuitarState.intervalId = null;
-      evhGuitarState.nextRoundTimer = null;
       evhGuitarState.running = false;
+      if (evhGuitarState.intervalId) {
+        clearInterval(evhGuitarState.intervalId);
+        evhGuitarState.intervalId = null;
+      }
+      if (evhGuitarState.nextRoundTimer) {
+        clearTimeout(evhGuitarState.nextRoundTimer);
+        evhGuitarState.nextRoundTimer = null;
+      }
     }
 
     // Overdriven rock electric guitar tone for EVH scales
@@ -14766,47 +14718,34 @@
             <!-- Header & HUD -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div>
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-lg bg-red-600 text-white text-[10px] font-black uppercase">Round ${st.round} / ${st.totalRounds}</span>
-                  <span class="px-2.5 py-0.5 rounded-lg bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-black uppercase">${st.scaleObj.bpm} BPM</span>
-                </div>
-                <h2 class="text-2xl font-black text-white mt-1">${st.scaleObj.name}</h2>
+                <span class="text-[11px] font-black uppercase tracking-widest text-amber-400">Round ${st.round} / ${st.totalRounds} • ${st.scaleObj.bpm} BPM</span>
+                <h2 class="text-2xl font-black text-white mt-0.5">${st.scaleObj.name}</h2>
               </div>
-              <div class="flex items-center gap-2.5 shrink-0">
-                <div id="evh-countin-badge" class="px-4 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-black text-sm shadow">
-                  COUNT-IN
-                </div>
-                <div class="text-center px-3 py-1 rounded-xl bg-slate-800 border border-slate-700">
-                  <div class="text-[9px] font-black uppercase text-slate-400">Hits</div>
-                  <div id="evh-score-val" class="text-sm font-black text-amber-400">${st.score} / ${st.totalRounds}</div>
-                </div>
-                <div class="text-center px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700">
-                  <div class="text-[9px] font-black uppercase text-emerald-300">Tokens</div>
-                  <div id="evh-token-val" class="text-sm font-black text-emerald-400">+${st.tokensEarned}</div>
-                </div>
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <span id="evh-countin-badge" class="px-4 py-1.5 rounded-xl bg-amber-400 text-slate-950 font-black text-sm shadow">COUNT-IN</span>
+                <span class="px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-black text-slate-200">Hits: <span id="evh-score-val">${st.score} / ${st.totalRounds}</span></span>
+                <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Tokens: <span id="evh-token-val">+${st.tokensEarned}</span></span>
               </div>
             </div>
 
-            <!-- EVH Red, Black & White Striped Guitar Fretboard -->
-            <div class="bg-slate-950 rounded-2xl p-3 sm:p-5 border border-slate-800 shadow-inner overflow-x-auto">
+            <!-- EVH Frankenstrat SVG Fretboard -->
+            <div class="bg-slate-950 rounded-2xl p-3 sm:p-5 border border-slate-800 overflow-x-auto">
               ${renderEvhFrankenstratSVG(st.scaleObj, st.targetIdx, st.tickIdx)}
             </div>
 
-            <!-- Live Feedback Status -->
+            <!-- Status Bar -->
             <div id="evh-status-bar" class="text-center text-xs sm:text-sm font-black py-2.5 px-4 rounded-xl border bg-slate-950/80 border-red-500/40 text-amber-300">
               ${st.statusMsg}
             </div>
 
             <!-- Spacebar / Touch Hit Button -->
-            <div class="flex flex-col items-center gap-2">
-              <button
-                type="button"
-                onmousedown="handleEvhGuitarHit()"
-                ontouchstart="event.preventDefault(); handleEvhGuitarHit();"
-                class="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 hover:brightness-110 active:scale-95 text-white font-black rounded-2xl text-sm sm:text-base shadow-lg transition-all">
-                <i class="fa-solid fa-bolt mr-2"></i> HIT TARGET NOTE (PRESS SPACEBAR)
+            <div class="text-center pt-1">
+              <button type="button" onmousedown="handleEvhGuitarHit()" ontouchstart="event.preventDefault(); handleEvhGuitarHit();" class="w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-red-600 to-amber-500 hover:from-red-500 hover:to-amber-400 active:scale-95 text-white font-black rounded-2xl text-sm sm:text-base shadow-lg transition-all">
+                <i class="fa-solid fa-bolt mr-2"></i> HIT TARGET NOTE (SPACEBAR)
               </button>
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">1 press per scale • No auto-clicking or spamming!</span>
+              <div class="text-[11px] font-bold text-slate-400 mt-2">
+                Single press only — auto-clicking or pressing during the 4-beat count-in cancels the round!
+              </div>
             </div>
           </div>
         </div>

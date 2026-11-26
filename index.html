@@ -10783,6 +10783,10 @@
                         <button onclick="window.app.navigate('evhGuitarGame')" class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs transition-colors shadow flex items-center justify-center gap-2">
                           <i class="fa-solid fa-bolt"></i> Play Fretboard Shred!
                         </button>
+                      ` : item.id === 'item_crown' ? `
+                        <a href="https://sites.google.com/erc.nsw.edu.au/maestrosechotower/full-page-embed" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-slate-950 font-black text-xs transition-all shadow flex items-center justify-center gap-2">
+                          <i class="fa-solid fa-trophy"></i> Play Maestro's Echo Tower <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                        </a>
                       ` : ''}
                       ${isTeacher ? `
                         <div class="w-full py-2.5 rounded-xl bg-emerald-100 text-emerald-800 font-black text-xs text-center border border-emerald-200">
@@ -10844,6 +10848,9 @@
       } else if (item.id === 'item_evhguitar') {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})! Plug in and shred the fretboard!`, true);
         window.app.navigate('evhGuitarGame');
+      } else if (item.id === 'item_crown') {
+        showAppModal('Prestige Trophy Unlocked!', `You redeemed ${item.name}! Your bonus game "Maestro's Echo Tower" is now unlocked in the Shop and your Student Locker!`, true);
+        renderShopView(document.getElementById('app-viewport'));
       } else {
         showAppModal('Item Unlocked!', `You redeemed ${item.name} (${item.category})!`, true);
         renderShopView(document.getElementById('app-viewport'));
@@ -11463,6 +11470,10 @@
                         <button onclick="window.app.navigate('evhGuitarGame')" class="shrink-0 px-3 py-1.5 rounded-lg bg-red-600 text-white font-black text-[10px] shadow-sm hover:bg-red-500 transition-colors">
                           Play
                         </button>
+                      ` : it.id === 'item_crown' ? `
+                        <a href="https://sites.google.com/erc.nsw.edu.au/maestrosechotower/full-page-embed" target="_blank" rel="noopener noreferrer" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-black text-[10px] shadow-sm hover:bg-amber-300 transition-colors" title="Play Maestro's Echo Tower">
+                          Play
+                        </a>
                       ` : ''}
                     </div>
                   `).join('')}
@@ -11553,7 +11564,8 @@
         { route: 'mjDanceGame',    name: "MJ Let's Dance!",    icon: 'fa-microphone-lines',    cls: 'bg-rose-600 hover:bg-rose-500 text-white' },
         { route: 'drumHeroGame',   name: 'Drum Hero',          icon: 'fa-drum',                cls: 'bg-pink-600 hover:bg-pink-500 text-white' },
         { route: 'eltonPianoGame', name: 'Golden Key Drop',    icon: 'fa-keyboard',            cls: 'bg-yellow-400 hover:bg-yellow-300 text-slate-950' },
-        { route: 'evhGuitarGame',  name: 'EVH Fretboard Shred',icon: 'fa-bolt',                cls: 'bg-red-600 hover:bg-red-500 text-white' }
+        { route: 'evhGuitarGame',  name: 'EVH Fretboard Shred',icon: 'fa-bolt',                cls: 'bg-red-600 hover:bg-red-500 text-white' },
+        { url: 'https://sites.google.com/erc.nsw.edu.au/maestrosechotower/full-page-embed', name: "Maestro's Echo Tower", icon: 'fa-trophy', cls: 'bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-slate-950' }
       ];
       container.innerHTML = `
         <div class="space-y-6">
@@ -11590,11 +11602,16 @@
                 <p class="text-xs text-slate-500 mt-0.5">Launch any rewards-shop minigame instantly for classroom demos—no tokens required.</p>
               </div>
               <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase">
-                <i class="fa-solid fa-unlock mr-1"></i> All 10 Unlocked
+                <i class="fa-solid fa-unlock mr-1"></i> All 11 Unlocked
               </span>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-              ${teacherMinigames.map(g => `
+              ${teacherMinigames.map(g => g.url ? `
+                <a href="${g.url}" target="_blank" rel="noopener noreferrer" class="px-3 py-3 rounded-2xl font-black text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${g.cls}">
+                  <i class="fa-solid ${g.icon}"></i>
+                  <span class="truncate">${g.name}</span>
+                </a>
+              ` : `
                 <button onclick="window.app.navigate('${g.route}')" class="px-3 py-3 rounded-2xl font-black text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 ${g.cls}">
                   <i class="fa-solid ${g.icon}"></i>
                   <span class="truncate">${g.name}</span>

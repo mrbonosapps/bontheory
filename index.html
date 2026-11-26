@@ -15784,6 +15784,386 @@
       `;
     }
 
+    // ==========================================
+    // TEXTURE LEVEL 2, LESSON 1: MONOPHONIC TEXTURE (AUDIO DEMOS & MONOPHONIC MIX RESCUE GAME)
+    // ==========================================
+    const monophonicMixPuzzles = [
+      {
+        title: 'Sunrise Fanfare',
+        unisonNotes:   [523.25, 587.33, 659.25, 783.99, 659.25, 523.25],
+        imposterNotes: [523.25, 440.00, 392.00, 440.00, 329.63, 392.00],
+        partCount: 3
+      },
+      {
+        title: 'Starlight Melody',
+        unisonNotes:   [440.00, 440.00, 523.25, 587.33, 523.25, 440.00],
+        imposterNotes: [659.25, 587.33, 523.25, 493.88, 523.25, 659.25],
+        partCount: 3
+      },
+      {
+        title: 'Bouncing March',
+        unisonNotes:   [392.00, 493.88, 587.33, 587.33, 493.88, 392.00],
+        imposterNotes: [392.00, 349.23, 329.63, 293.66, 329.63, 392.00],
+        partCount: 3
+      },
+      {
+        title: 'Forest Echo',
+        unisonNotes:   [587.33, 659.25, 783.99, 659.25, 587.33, 493.88],
+        imposterNotes: [293.66, 392.00, 329.63, 440.00, 392.00, 523.25],
+        partCount: 4
+      },
+      {
+        title: 'Ocean Breeze',
+        unisonNotes:   [523.25, 659.25, 783.99, 880.00, 783.99, 659.25],
+        imposterNotes: [523.25, 493.88, 440.00, 392.00, 440.00, 493.88],
+        partCount: 4
+      },
+      {
+        title: 'Midnight Mystery',
+        unisonNotes:   [329.63, 392.00, 440.00, 493.88, 440.00, 329.63],
+        imposterNotes: [659.25, 587.33, 523.25, 440.00, 523.25, 587.33],
+        partCount: 4
+      },
+      {
+        title: 'Festival Dance',
+        unisonNotes:   [659.25, 587.33, 523.25, 587.33, 659.25, 783.99],
+        imposterNotes: [329.63, 440.00, 392.00, 493.88, 440.00, 329.63],
+        partCount: 4
+      },
+      {
+        title: 'Grand Finale Unison',
+        unisonNotes:   [523.25, 523.25, 659.25, 783.99, 880.00, 783.99],
+        imposterNotes: [523.25, 440.00, 349.23, 392.00, 329.63, 293.66],
+        partCount: 4
+      }
+    ];
+
+    const monophonicInstrumentSkins = [
+      { name: 'Bright Flute',   wave: 'sine',     vol: 0.28, icon: 'fa-wind',          grad: 'from-cyan-400 to-sky-500',       stroke: '#38bdf8' },
+      { name: 'Warm Violin',    wave: 'triangle', vol: 0.28, icon: 'fa-music',         grad: 'from-pink-400 to-rose-500',      stroke: '#f472b6' },
+      { name: 'Golden Trumpet', wave: 'square',   vol: 0.13, icon: 'fa-bullhorn',      grad: 'from-amber-400 to-orange-500',   stroke: '#fbbf24' },
+      { name: 'Neon Synth',     wave: 'sawtooth', vol: 0.13, icon: 'fa-sliders',       grad: 'from-violet-400 to-fuchsia-500', stroke: '#c084fc' }
+    ];
+
+    let monophonicDemoTimers = [];
+    let monophonicCleanerState = {
+      round: 1,
+      totalRounds: 8,
+      score: 0,
+      queue: [],
+      puzzle: null,
+      tracks: [],
+      imposterIdx: 0,
+      playingMode: null, // null | 'mix' | 'pure' | trackIdx
+      answered: false,
+      deletedIdx: null,
+      lastCorrect: false,
+      completed: false,
+      timers: []
+    };
+
+    function clearMonophonicTimers() {
+      if (monophonicDemoTimers.length) {
+        monophonicDemoTimers.forEach(t => clearTimeout(t));
+        monophonicDemoTimers = [];
+      }
+      if (monophonicCleanerState.timers && monophonicCleanerState.timers.length) {
+        monophonicCleanerState.timers.forEach(t => clearTimeout(t));
+        monophonicCleanerState.timers = [];
+      }
+    }
+
+    function stopMonophonicCleanerGame() {
+      clearMonophonicTimers();
+      monophonicCleanerState.playingMode = null;
+    }
+
+    function playMonophonicDemoExample(mode) {
+      clearMonophonicTimers();
+      const melody = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25];
+      melody.forEach((freq, idx) => {
+        const t = setTimeout(() => {
+          if (mode === 'solo') {
+            // Single clear flute-like melodic line alone
+            playTonePitch(freq, 0.30, 0.30, 'sine');
+          } else {
+            // 3 instruments locked in exact unison = still Monophonic!
+            playTonePitch(freq, 0.30, 0.22, 'sine');
+            playTonePitch(freq, 0.30, 0.18, 'triangle');
+            playTonePitch(freq, 0.30, 0.08, 'sawtooth');
+          }
+        }, idx * 320);
+        monophonicDemoTimers.push(t);
+      });
+    }
+
+    function buildMonophonicContourSVG(notes, strokeColor) {
+      if (!notes || !notes.length) return '';
+      const minF = 280;
+      const maxF = 900;
+      const pts = notes.map((f, i) => {
+        const x = 14 + (i / Math.max(1, notes.length - 1)) * 172;
+        const norm = Math.max(0, Math.min(1, (f - minF) / (maxF - minF)));
+        const y = 38 - norm * 30;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      return `
+        <svg viewBox="0 0 200 46" class="w-full h-11 bg-slate-950/90 rounded-xl border border-slate-800">
+          <polyline points="${pts}" fill="none" stroke="${strokeColor}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          ${notes.map((f, i) => {
+            const x = 14 + (i / Math.max(1, notes.length - 1)) * 172;
+            const norm = Math.max(0, Math.min(1, (f - minF) / (maxF - minF)));
+            const y = 38 - norm * 30;
+            return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="#ffffff"/>`;
+          }).join('')}
+        </svg>
+      `;
+    }
+
+    function setupMonophonicRound() {
+      stopMonophonicCleanerGame();
+      const st = monophonicCleanerState;
+      const puzzle = st.queue[st.round - 1] || monophonicMixPuzzles[0];
+      st.puzzle = puzzle;
+
+      const skins = [...monophonicInstrumentSkins].sort(() => Math.random() - 0.5).slice(0, puzzle.partCount);
+      st.imposterIdx = Math.floor(Math.random() * skins.length);
+
+      st.tracks = skins.map((skin, idx) => ({
+        ...skin,
+        isImposter: idx === st.imposterIdx,
+        notes: idx === st.imposterIdx ? puzzle.imposterNotes : puzzle.unisonNotes
+      }));
+
+      st.answered = false;
+      st.deletedIdx = null;
+      st.lastCorrect = false;
+      st.playingMode = null;
+    }
+
+    function mountEmbeddedMonophonicCleanerGame(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      stopMonophonicCleanerGame();
+      const shuffled = [...monophonicMixPuzzles].sort(() => Math.random() - 0.5);
+      monophonicCleanerState = {
+        round: 1,
+        totalRounds: 8,
+        score: 0,
+        queue: shuffled,
+        puzzle: null,
+        tracks: [],
+        imposterIdx: 0,
+        playingMode: null,
+        answered: false,
+        deletedIdx: null,
+        lastCorrect: false,
+        completed: false,
+        timers: []
+      };
+      setupMonophonicRound();
+      renderMonophonicCleanerUI(target);
+    }
+
+    function playMonophonicTrackOrMix(mode) {
+      const st = monophonicCleanerState;
+      if (!st.tracks.length) return;
+      stopMonophonicCleanerGame();
+      st.playingMode = mode;
+      renderMonophonicCleanerUI(document.getElementById('embedded-tool-container'));
+
+      let activeTracks = [];
+      if (mode === 'mix') {
+        activeTracks = st.tracks;
+      } else if (mode === 'pure') {
+        activeTracks = st.tracks.filter(t => !t.isImposter);
+      } else if (typeof mode === 'number' && st.tracks[mode]) {
+        activeTracks = [st.tracks[mode]];
+      }
+
+      const stepMs = 340;
+      const noteCount = st.puzzle ? st.puzzle.unisonNotes.length : 6;
+      const volScale = activeTracks.length > 1 ? 0.65 : 1.0;
+
+      for (let i = 0; i < noteCount; i++) {
+        const t = setTimeout(() => {
+          activeTracks.forEach(tr => {
+            const freq = tr.notes[i];
+            if (freq) playTonePitch(freq, 0.29, tr.vol * volScale, tr.wave);
+          });
+        }, i * stepMs);
+        st.timers.push(t);
+      }
+
+      const endT = setTimeout(() => {
+        st.playingMode = null;
+        renderMonophonicCleanerUI(document.getElementById('embedded-tool-container'));
+      }, noteCount * stepMs + 120);
+      st.timers.push(endT);
+    }
+
+    function deleteMonophonicPart(trackIdx) {
+      const st = monophonicCleanerState;
+      if (st.answered || st.completed || !st.tracks[trackIdx]) return;
+      stopMonophonicCleanerGame();
+
+      st.answered = true;
+      st.deletedIdx = trackIdx;
+      st.lastCorrect = Boolean(st.tracks[trackIdx].isImposter);
+
+      if (st.lastCorrect) {
+        st.score++;
+        addTokens(1);
+        playTonePitch(659.25, 0.16, 0.34, 'triangle');
+        setTimeout(() => playTonePitch(880, 0.24, 0.34, 'triangle'), 130);
+      } else {
+        playTonePitch(155.56, 0.28, 0.32, 'sawtooth');
+      }
+      renderMonophonicCleanerUI(document.getElementById('embedded-tool-container'));
+    }
+
+    function nextMonophonicRound() {
+      const st = monophonicCleanerState;
+      stopMonophonicCleanerGame();
+      if (st.round < st.totalRounds) {
+        st.round++;
+        setupMonophonicRound();
+        renderMonophonicCleanerUI(document.getElementById('embedded-tool-container'));
+      } else {
+        st.completed = true;
+        renderMonophonicCleanerUI(document.getElementById('embedded-tool-container'));
+        showAppModal(
+          'Monophonic Mix Rescue Complete!',
+          `You rescued ${st.score} / ${st.totalRounds} unison mixes and earned +${st.score} Tokens!`,
+          st.score >= 4
+        );
+      }
+    }
+
+    function renderMonophonicCleanerUI(target) {
+      if (!target) target = document.getElementById('embedded-tool-container');
+      if (!target) return;
+      const st = monophonicCleanerState;
+
+      target.innerHTML = `
+        <div class="bg-slate-900 p-6 sm:p-8 rounded-3xl text-white space-y-6 border-2 border-pink-500/35 shadow-xl">
+          <!-- Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[11px] font-black uppercase tracking-widest text-pink-400">8-Round Studio Rescue • 1 Token Per Mix Rescued</span>
+              <h3 class="text-xl sm:text-2xl font-black mt-0.5 bg-gradient-to-r from-pink-300 via-amber-300 to-cyan-300 bg-clip-text text-transparent">Monophonic Mix Rescue!</h3>
+              <p class="text-xs text-slate-300 mt-1">All parts except <strong>ONE</strong> are playing the exact same melody in unison. Solo each track to find the imposter melody, then click <strong>Delete</strong> to leave pure <strong>Monophonic Texture</strong>!</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1.5 rounded-xl bg-pink-950 border border-pink-700 text-xs font-black text-pink-200">Round ${st.round} / ${st.totalRounds}</span>
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">Score: ${st.score} (+${st.score} Tokens)</span>
+            </div>
+          </div>
+
+          ${st.completed ? `
+            <div class="p-6 rounded-3xl bg-gradient-to-br from-pink-950/70 to-emerald-950/70 border-2 border-emerald-400 text-center space-y-3">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-400 to-amber-300 text-slate-950 flex items-center justify-center text-3xl mx-auto shadow-lg">
+                <i class="fa-solid fa-trophy"></i>
+              </div>
+              <h4 class="text-2xl font-black text-emerald-300">Monophonic Texture Mastered!</h4>
+              <p class="text-xs sm:text-sm text-slate-200">You rescued <strong>${st.score} / ${st.totalRounds}</strong> unison mixes and earned <strong>+${st.score} Tokens</strong>!</p>
+              <button type="button" onclick="mountEmbeddedMonophonicCleanerGame(document.getElementById('embedded-tool-container'))" class="px-6 py-3 bg-gradient-to-r from-pink-400 to-amber-400 hover:brightness-110 text-slate-950 font-black rounded-2xl text-xs shadow-lg">
+                <i class="fa-solid fa-rotate-right mr-1.5"></i> Rescue Another 8 Mixes
+              </button>
+            </div>
+          ` : `
+            <!-- Top Mixer Controls -->
+            <div class="p-4 rounded-2xl bg-gradient-to-r from-pink-950/90 via-violet-950/80 to-slate-900 border border-pink-500/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div>
+                <div class="text-[10px] font-black uppercase tracking-widest text-pink-300">Studio Session • ${st.puzzle ? st.puzzle.title : ''}</div>
+                <div class="text-sm font-black text-white mt-0.5">${st.tracks.length} Instruments Playing — Delete the 1 Different Melody!</div>
+              </div>
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <button type="button" onclick="playMonophonicTrackOrMix('mix')" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-black text-xs shadow-lg">
+                  <i class="fa-solid fa-play mr-1.5"></i> ${st.playingMode === 'mix' ? 'Playing Full Mix...' : 'Play Full Mix'}
+                </button>
+                ${st.answered ? `
+                  <button type="button" onclick="playMonophonicTrackOrMix('pure')" class="px-4 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 active:scale-95 text-slate-950 font-black text-xs shadow-lg">
+                    <i class="fa-solid fa-sparkles mr-1.5"></i> ${st.playingMode === 'pure' ? 'Playing Pure Unison...' : 'Hear Pure Unison'}
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Colourful Track Lanes -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              ${st.tracks.map((tr, idx) => {
+                const isPlaying = st.playingMode === 'mix' || st.playingMode === idx || (st.playingMode === 'pure' && !tr.isImposter);
+                const wasDeleted = st.answered && st.deletedIdx === idx;
+                let cardCls = 'border-slate-700 bg-slate-800/80 hover:border-pink-400/70';
+                if (st.answered) {
+                  if (tr.isImposter) cardCls = 'border-emerald-400 bg-emerald-950/40 ring-2 ring-emerald-400/40';
+                  else if (wasDeleted) cardCls = 'border-rose-500 bg-rose-950/50 opacity-85';
+                  else cardCls = 'border-slate-700/70 bg-slate-800/50';
+                }
+                return `
+                  <div class="p-4 rounded-2xl border-2 transition-all space-y-3 ${cardCls}">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr ${tr.grad} text-slate-950 flex items-center justify-center text-base shadow shrink-0">
+                          <i class="fa-solid ${tr.icon}"></i>
+                        </div>
+                        <div>
+                          <div class="font-black text-sm text-white flex items-center gap-1.5">
+                            <span>${tr.name}</span>
+                            ${isPlaying ? '<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>' : ''}
+                          </div>
+                          <div class="text-[10px] font-bold ${st.answered ? (tr.isImposter ? 'text-amber-300' : 'text-emerald-300') : 'text-slate-400'}">
+                            ${st.answered ? (tr.isImposter ? '🚨 IMPOSTER MELODY!' : '✓ Matches Unison Melody') : 'Track ' + (idx + 1)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Melodic Contour (Hidden until answered so students use their ears!) -->
+                    ${st.answered ? buildMonophonicContourSVG(tr.notes, tr.isImposter ? '#fbbf24' : tr.stroke) : `
+                      <div class="h-11 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-center gap-1.5 px-3">
+                        ${Array.from({ length: 14 }, (_, b) => `<span class="w-1.5 rounded-full bg-gradient-to-t ${tr.grad} ${isPlaying ? 'animate-pulse' : 'opacity-45'}" style="height:${10 + ((b * 7 + idx * 5) % 22)}px"></span>`).join('')}
+                      </div>
+                    `}
+
+                    <!-- Solo & Delete Controls -->
+                    <div class="flex items-center gap-2">
+                      <button type="button" onclick="playMonophonicTrackOrMix(${idx})" class="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-600 text-white font-black text-xs transition-all">
+                        <i class="fa-solid fa-headphones mr-1 text-cyan-300"></i> ${st.playingMode === idx ? 'Playing...' : 'Solo'}
+                      </button>
+                      <button type="button" onclick="deleteMonophonicPart(${idx})" ${st.answered ? 'disabled' : ''} class="flex-1 py-2 rounded-xl font-black text-xs transition-all ${
+                        st.answered
+                          ? (tr.isImposter ? 'bg-emerald-500 text-slate-950' : wasDeleted ? 'bg-rose-600 text-white' : 'bg-slate-800 text-slate-500')
+                          : 'bg-rose-600 hover:bg-rose-500 active:scale-95 text-white shadow'
+                      }">
+                        <i class="fa-solid ${st.answered && tr.isImposter ? 'fa-check' : 'fa-trash'} mr-1"></i>
+                        ${st.answered ? (tr.isImposter ? 'Imposter!' : wasDeleted ? 'Wrong Track' : 'Unison') : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Feedback Banner -->
+            ${st.answered ? `
+              <div class="p-4 rounded-2xl border ${st.lastCorrect ? 'bg-emerald-950/70 border-emerald-500 text-emerald-200' : 'bg-rose-950/70 border-rose-500 text-rose-200'} flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-xs font-bold leading-relaxed">
+                  ${st.lastCorrect
+                    ? `✓ Pure Monophony Restored (+1 Token)! You deleted the imposter (${st.tracks[st.imposterIdx].name}) so all remaining instruments play in unison.`
+                    : `✗ Not quite — the <strong>${st.tracks[st.imposterIdx].name}</strong> was playing the different melody! Compare the melodic contours above.`}
+                </div>
+                <button type="button" onclick="nextMonophonicRound()" class="px-5 py-2.5 bg-white text-slate-950 hover:bg-slate-100 font-black rounded-xl text-xs shrink-0 shadow">
+                  ${st.round < st.totalRounds ? 'Next Mix →' : 'Finish'}
+                </button>
+              </div>
+            ` : ''}
+          `}
+        </div>
+      `;
+    }
+
     window.onload = function() {
       try {
         const savedSession = localStorage.getItem('boncepts_active_session');

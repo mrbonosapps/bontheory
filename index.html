@@ -629,6 +629,21 @@
         if (window.saveUserRecordToCloud) {
           window.saveUserRecordToCloud(u.key, record);
         }
+      } else if (u.role === 'teacher') {
+        const teacherRecord = {
+          key: u.key,
+          firstName: u.firstName,
+          surname: u.surname,
+          class: 'Staff',
+          teacher: `${u.firstName} ${u.surname}`,
+          role: 'teacher',
+          avatar: (window.state && window.state.avatar) || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'conductor' }
+        };
+        try {
+          const db = getAllUserRecords();
+          db[u.key] = teacherRecord;
+          localStorage.setItem('boncepts_users_db', JSON.stringify(db));
+        } catch (e) {}
       }
       updateNavBar();
       updateGlobalLeaderboard();
@@ -669,20 +684,40 @@
       'avatar_bg_bubbles': 30,
       'avatar_bg_zigzag': 40,
       'avatar_bg_neon': 50,
+      'avatar_bg_retro_grid': 45,
+      'avatar_bg_galaxy': 55,
+      'avatar_bg_stage': 45,
+      'avatar_bg_vinyl': 40,
       'avatar_head_square': 20,
       'avatar_head_tall': 20,
+      'avatar_head_robot': 35,
       'avatar_eyes_wink': 15,
       'avatar_eyes_circle_shades': 25,
       'avatar_eyes_tri_shades': 25,
       'avatar_eyes_red_shades': 30,
+      'avatar_eyes_pixel_shades': 35,
+      'avatar_eyes_cyber_visor': 40,
+      'avatar_eyes_gold_rims': 25,
+      'avatar_eyes_heart_shades': 30,
       'avatar_mouth_none': 10,
       'avatar_mouth_sad': 10,
       'avatar_mouth_straight': 10,
+      'avatar_mouth_grin': 15,
+      'avatar_mouth_whistle': 15,
       'avatar_headwear_conductor': 25,
       'avatar_headwear_rocker_wig': 35,
       'avatar_headwear_mullet': 40,
       'avatar_headwear_mohawk': 45,
-      'avatar_headwear_top_hat': 50
+      'avatar_headwear_top_hat': 50,
+      'avatar_headwear_afro': 30,
+      'avatar_headwear_curly_bob': 25,
+      'avatar_headwear_spiky_anime': 35,
+      'avatar_headwear_beethoven': 40,
+      'avatar_headwear_beanie': 25,
+      'avatar_headwear_fedora': 35,
+      'avatar_headwear_cowboy': 35,
+      'avatar_headwear_astro_helmet': 50,
+      'avatar_headwear_crown': 60
     };
 
     function getStudentSpentTokens(student) {
@@ -775,6 +810,18 @@
       } else if (a.bg === 'neon') {
         bgStyle = `background-color: #0f172a;`;
         bgSVG = `<circle cx="50" cy="50" r="45" fill="none" stroke="#22d3ee" stroke-width="2" filter="drop-shadow(0 0 4px #22d3ee)"/><circle cx="50" cy="50" r="35" fill="none" stroke="#f472b6" stroke-width="2" filter="drop-shadow(0 0 4px #f472b6)"/>`;
+      } else if (a.bg === 'retro_grid') {
+        bgStyle = `background-color: #1e1b4b;`;
+        bgSVG = `<rect x="0" y="0" width="100" height="58" fill="#312e81"/><circle cx="50" cy="40" r="22" fill="#f59e0b" opacity="0.85"/><line x1="0" y1="58" x2="100" y2="58" stroke="#f472b6" stroke-width="2"/><line x1="0" y1="70" x2="100" y2="70" stroke="#e879f9" stroke-width="1.2" opacity="0.7"/><line x1="0" y1="84" x2="100" y2="84" stroke="#e879f9" stroke-width="1.2" opacity="0.7"/><line x1="50" y1="58" x2="50" y2="100" stroke="#e879f9" stroke-width="1.2" opacity="0.7"/><line x1="35" y1="58" x2="10" y2="100" stroke="#e879f9" stroke-width="1.2" opacity="0.7"/><line x1="65" y1="58" x2="90" y2="100" stroke="#e879f9" stroke-width="1.2" opacity="0.7"/>`;
+      } else if (a.bg === 'galaxy') {
+        bgStyle = `background-color: #090d1f;`;
+        bgSVG = `<circle cx="25" cy="25" r="20" fill="#6366f1" opacity="0.28"/><circle cx="78" cy="70" r="24" fill="#ec4899" opacity="0.22"/><circle cx="18" cy="22" r="1.6" fill="#fff"/><circle cx="82" cy="18" r="2" fill="#fde047"/><circle cx="14" cy="72" r="1.8" fill="#38bdf8"/><circle cx="88" cy="52" r="1.5" fill="#fff"/><circle cx="34" cy="14" r="1.2" fill="#c4b5fd"/><circle cx="70" cy="88" r="1.6" fill="#fff"/><path d="M10 86 Q 50 70 92 20" fill="none" stroke="#38bdf8" stroke-width="1" stroke-dasharray="3 4" opacity="0.5"/>`;
+      } else if (a.bg === 'stage') {
+        bgStyle = `background-color: #18181b;`;
+        bgSVG = `<polygon points="10,0 45,100 0,100" fill="#fbbf24" opacity="0.22"/><polygon points="90,0 100,100 55,100" fill="#f43f5e" opacity="0.24"/><polygon points="50,0 75,100 25,100" fill="#38bdf8" opacity="0.18"/>`;
+      } else if (a.bg === 'vinyl') {
+        bgStyle = `background-color: #18181b;`;
+        bgSVG = `<circle cx="50" cy="50" r="46" fill="#09090b" stroke="#3f3f46" stroke-width="1.5"/><circle cx="50" cy="50" r="39" fill="none" stroke="#27272a" stroke-width="1.2"/><circle cx="50" cy="50" r="32" fill="none" stroke="#3f3f46" stroke-width="1"/><circle cx="50" cy="50" r="24" fill="#f59e0b" opacity="0.22"/>`;
       } else if (!a.bg || !a.bg.startsWith('#')) {
          bgStyle = `background-color: #c7d2fe;`;
       }
@@ -782,6 +829,7 @@
       let headSVG = `<circle cx="50" cy="55" r="30" fill="${skin}" />`;
       if (a.head === 'square') headSVG = `<rect x="20" y="25" width="60" height="60" rx="12" fill="${skin}" />`;
       if (a.head === 'tall') headSVG = `<ellipse cx="50" cy="55" rx="24" ry="36" fill="${skin}" />`;
+      if (a.head === 'robot') headSVG = `<rect x="20" y="26" width="60" height="58" rx="10" fill="#cbd5e1" stroke="#475569" stroke-width="2.5" /><rect x="13" y="46" width="7" height="16" rx="2" fill="#64748b" /><rect x="80" y="46" width="7" height="16" rx="2" fill="#64748b" /><line x1="50" y1="26" x2="50" y2="15" stroke="#64748b" stroke-width="3" /><circle cx="50" cy="13" r="4" fill="#22d3ee" />`;
 
       let eyesSVG = `<circle cx="38" cy="48" r="4" fill="#0f172a" /><circle cx="62" cy="48" r="4" fill="#0f172a" />`;
       if (a.eyes === 'sunglasses') {
@@ -796,6 +844,14 @@
         eyesSVG = `<polygon points="25,40 45,40 35,55" fill="#0f172a" /><polygon points="55,40 75,40 65,55" fill="#0f172a" /><line x1="45" y1="42" x2="55" y2="42" stroke="#0f172a" stroke-width="2" />`;
       } else if (a.eyes === 'red_shades') {
         eyesSVG = `<rect x="25" y="42" width="22" height="12" rx="2" fill="#ef4444" /><rect x="53" y="42" width="22" height="12" rx="2" fill="#ef4444" /><line x1="47" y1="46" x2="53" y2="46" stroke="#ef4444" stroke-width="2" />`;
+      } else if (a.eyes === 'pixel_shades') {
+        eyesSVG = `<rect x="22" y="42" width="56" height="5" fill="#0f172a" /><rect x="26" y="47" width="20" height="7" fill="#0f172a" /><rect x="54" y="47" width="20" height="7" fill="#0f172a" /><rect x="30" y="45" width="4" height="3" fill="#ffffff" /><rect x="58" y="45" width="4" height="3" fill="#ffffff" />`;
+      } else if (a.eyes === 'cyber_visor') {
+        eyesSVG = `<rect x="23" y="41" width="54" height="14" rx="7" fill="#0f172a" stroke="#22d3ee" stroke-width="2.5" /><line x1="30" y1="48" x2="70" y2="48" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" />`;
+      } else if (a.eyes === 'gold_rims') {
+        eyesSVG = `<circle cx="37" cy="48" r="9" fill="#ffffff" fill-opacity="0.25" stroke="#d97706" stroke-width="2.5" /><circle cx="63" cy="48" r="9" fill="#ffffff" fill-opacity="0.25" stroke="#d97706" stroke-width="2.5" /><line x1="46" y1="48" x2="54" y2="48" stroke="#d97706" stroke-width="2.2" /><circle cx="37" cy="48" r="3" fill="#0f172a" /><circle cx="63" cy="48" r="3" fill="#0f172a" />`;
+      } else if (a.eyes === 'heart_shades') {
+        eyesSVG = `<path d="M36 55 C26 48 26 39 32 39 C35 39 36 42 36 42 C36 42 37 39 40 39 C46 39 46 48 36 55 Z" fill="#ec4899" stroke="#ffffff" stroke-width="1.5" /><path d="M64 55 C54 48 54 39 60 39 C63 39 64 42 64 42 C64 42 65 39 68 39 C74 39 74 48 64 55 Z" fill="#ec4899" stroke="#ffffff" stroke-width="1.5" /><line x1="45" y1="45" x2="55" y2="45" stroke="#ffffff" stroke-width="2" />`;
       }
 
       let mouthSVG = `<path d="M38 65 Q 50 75 62 65" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
@@ -804,6 +860,8 @@
       else if (a.mouth === 'none') mouthSVG = '';
       else if (a.mouth === 'sad') mouthSVG = `<path d="M38 72 Q 50 62 62 72" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
       else if (a.mouth === 'straight') mouthSVG = `<line x1="40" y1="68" x2="60" y2="68" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />`;
+      else if (a.mouth === 'grin') mouthSVG = `<path d="M36 64 Q 50 79 64 64 Z" fill="#ffffff" stroke="#0f172a" stroke-width="2.5" stroke-linejoin="round" />`;
+      else if (a.mouth === 'whistle') mouthSVG = `<circle cx="50" cy="68" r="4.5" fill="#0f172a" /><text x="61" y="65" font-size="11" fill="#0f172a" font-weight="bold">&#9834;</text>`;
 
       let headwearSVG = ``;
       if (a.headwear === 'headphones') {
@@ -820,6 +878,24 @@
         headwearSVG = `<path d="M40 25 Q 50 -10 60 25 Z M45 25 Q 50 0 55 25 Z" fill="#ef4444" />`;
       } else if (a.headwear === 'top_hat') {
         headwearSVG = `<rect x="30" y="5" width="40" height="30" fill="#0f172a" /><rect x="20" y="32" width="60" height="5" rx="2" fill="#0f172a" /><rect x="30" y="27" width="40" height="5" fill="#ef4444" />`;
+      } else if (a.headwear === 'afro') {
+        headwearSVG = `<circle cx="30" cy="28" r="16" fill="#292524" /><circle cx="50" cy="20" r="18" fill="#292524" /><circle cx="70" cy="28" r="16" fill="#292524" /><circle cx="22" cy="40" r="12" fill="#292524" /><circle cx="78" cy="40" r="12" fill="#292524" />`;
+      } else if (a.headwear === 'curly_bob') {
+        headwearSVG = `<path d="M18 52 C 14 20, 86 20, 82 52 C 84 68, 76 74, 72 68 C 76 52, 74 34, 50 32 C 26 34, 24 52, 28 68 C 24 74, 16 68, 18 52 Z" fill="#92400e" />`;
+      } else if (a.headwear === 'spiky_anime') {
+        headwearSVG = `<polygon points="18,40 24,14 38,28 50,6 62,28 76,14 82,40 66,32 50,36 34,32" fill="#4f46e5" stroke="#1e1b4b" stroke-width="1.5" stroke-linejoin="round" />`;
+      } else if (a.headwear === 'beethoven') {
+        headwearSVG = `<path d="M16 54 C 10 22, 34 8, 50 14 C 66 8, 90 22, 84 54 C 92 66, 84 78, 76 74 C 78 56, 74 34, 50 30 C 26 34, 22 56, 24 74 C 16 78, 8 66, 16 54 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" />`;
+      } else if (a.headwear === 'beanie') {
+        headwearSVG = `<path d="M22 34 C 22 10, 78 10, 78 34 Z" fill="#10b981" /><rect x="19" y="29" width="62" height="8" rx="4" fill="#059669" /><circle cx="50" cy="11" r="5" fill="#fbbf24" />`;
+      } else if (a.headwear === 'fedora') {
+        headwearSVG = `<ellipse cx="50" cy="31" rx="34" ry="5.5" fill="#1e293b" /><path d="M28 31 L34 12 Q 50 17 66 12 L72 31 Z" fill="#1e293b" /><rect x="30" y="25" width="40" height="4" fill="#f8fafc" />`;
+      } else if (a.headwear === 'cowboy') {
+        headwearSVG = `<path d="M12 30 Q 50 40 88 30 Q 75 24 68 26 L62 10 Q 50 16 38 10 L32 26 Q 25 24 12 30 Z" fill="#b45309" stroke="#78350f" stroke-width="1.5" /><rect x="33" y="23" width="34" height="4" fill="#fbbf24" />`;
+      } else if (a.headwear === 'astro_helmet') {
+        headwearSVG = `<circle cx="50" cy="54" r="40" fill="none" stroke="#e2e8f0" stroke-width="6" /><path d="M26 24 Q 50 10 74 24" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" /><circle cx="24" cy="36" r="3" fill="#ffffff" opacity="0.7" />`;
+      } else if (a.headwear === 'crown') {
+        headwearSVG = `<polygon points="24,32 28,10 40,22 50,6 60,22 72,10 76,32" fill="#fbbf24" stroke="#b45309" stroke-width="2" stroke-linejoin="round" /><circle cx="50" cy="24" r="3" fill="#ef4444" /><circle cx="36" cy="26" r="2.2" fill="#38bdf8" /><circle cx="64" cy="26" r="2.2" fill="#38bdf8" />`;
       }
 
       return `<svg viewBox="0 0 100 100" class="${sizeClass} rounded-full flex-shrink-0" style="${bgStyle} border: 2px solid rgba(0,0,0,0.1); overflow: hidden;">
@@ -10891,6 +10967,15 @@
         }
         const key = `teacher_${firstName.toLowerCase()}_${surname.toLowerCase()}`.replace(/\s+/g, '_');
         window.app.currentUser = { key, firstName, surname, role: 'teacher', class: 'Staff', teacher: `${firstName} ${surname}` };
+        const existingUsers = getAllUserRecords();
+        const existingTeacher = existingUsers[key];
+        window.state = {
+          stats: { tokens: 0, testsTaken: 0 },
+          inventory: [],
+          testHistory: [],
+          completedLessons: [],
+          avatar: (existingTeacher && existingTeacher.avatar) || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'conductor' }
+        };
         saveUserState();
         window.app.navigate('teacherDash');
         return;
@@ -10936,8 +11021,9 @@
 
     window.tempAvatarState = null;
     function renderAvatarMakerView(container) {
+      const isTeacher = Boolean(window.app.currentUser && window.app.currentUser.role === 'teacher');
       if (!window.tempAvatarState) {
-        window.tempAvatarState = { ...((window.state && window.state.avatar) || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' }) };
+        window.tempAvatarState = { ...((window.state && window.state.avatar) || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: isTeacher ? 'conductor' : 'headphones' }) };
       }
       const a = window.tempAvatarState;
 
@@ -10951,12 +11037,17 @@
           {id: 'rays', name: 'Light Rays', cost: 30},
           {id: 'bubbles', name: 'Bubbles', cost: 30},
           {id: 'zigzag', name: 'Zig Zag', cost: 40},
-          {id: 'neon', name: 'Neon Glow', cost: 50}
+          {id: 'vinyl', name: 'Vinyl Disc', cost: 40},
+          {id: 'retro_grid', name: 'Retro Grid', cost: 45},
+          {id: 'stage', name: 'Stage Lights', cost: 45},
+          {id: 'neon', name: 'Neon Glow', cost: 50},
+          {id: 'galaxy', name: 'Sci-Fi Galaxy', cost: 55}
         ],
         head: [
           {id: 'round', name: 'Round', cost: 0},
           {id: 'square', name: 'Square', cost: 20},
-          {id: 'tall', name: 'Tall', cost: 20}
+          {id: 'tall', name: 'Tall', cost: 20},
+          {id: 'robot', name: 'Sci-Fi Bot', cost: 35}
         ],
         eyes: [
           {id: 'normal', name: 'Normal', cost: 0},
@@ -10965,7 +11056,11 @@
           {id: 'wink', name: 'Wink', cost: 15},
           {id: 'circle_shades', name: 'Circle Shades', cost: 25},
           {id: 'tri_shades', name: 'Tri Shades', cost: 25},
-          {id: 'red_shades', name: 'Red Shades', cost: 30}
+          {id: 'gold_rims', name: 'Gold Glasses', cost: 25},
+          {id: 'red_shades', name: 'Red Shades', cost: 30},
+          {id: 'heart_shades', name: 'Heart Shades', cost: 30},
+          {id: 'pixel_shades', name: '8-Bit Shades', cost: 35},
+          {id: 'cyber_visor', name: 'Cyber Visor', cost: 40}
         ],
         mouth: [
           {id: 'smile', name: 'Smile', cost: 0},
@@ -10973,24 +11068,54 @@
           {id: 'smirk', name: 'Smirk', cost: 0},
           {id: 'none', name: 'None', cost: 10},
           {id: 'sad', name: 'Sad', cost: 10},
-          {id: 'straight', name: 'Straight', cost: 10}
+          {id: 'straight', name: 'Straight', cost: 10},
+          {id: 'grin', name: 'Big Grin', cost: 15},
+          {id: 'whistle', name: 'Whistle ♪', cost: 15}
         ],
-        headwear: [
+        hair: [
           {id: 'none', name: 'None', cost: 0},
+          {id: 'curly_bob', name: 'Curly Waves', cost: 25},
+          {id: 'afro', name: 'Funky Afro', cost: 30},
+          {id: 'rocker_wig', name: 'Rocker Wig', cost: 35},
+          {id: 'spiky_anime', name: 'Spiky Hair', cost: 35},
+          {id: 'mullet', name: 'Mullet', cost: 40},
+          {id: 'beethoven', name: 'Maestro Curls', cost: 40},
+          {id: 'mohawk', name: 'Mohawk', cost: 45}
+        ],
+        hats: [
           {id: 'headphones', name: 'DJ Phones', cost: 0},
           {id: 'bandana', name: 'Rock Bandana', cost: 0},
           {id: 'conductor', name: 'Maestro Hat', cost: 25},
-          {id: 'rocker_wig', name: 'Rocker Wig', cost: 35},
-          {id: 'mullet', name: 'Mullet', cost: 40},
-          {id: 'mohawk', name: 'Mohawk', cost: 45},
-          {id: 'top_hat', name: 'Top Hat', cost: 50}
+          {id: 'beanie', name: 'Indie Beanie', cost: 25},
+          {id: 'fedora', name: 'Jazz Fedora', cost: 35},
+          {id: 'cowboy', name: 'Country Hat', cost: 35},
+          {id: 'top_hat', name: 'Top Hat', cost: 50},
+          {id: 'astro_helmet', name: 'Sci-Fi Helmet', cost: 50},
+          {id: 'crown', name: 'Royal Crown', cost: 60}
         ]
+      };
+
+      const avatarThemes = [
+        { id: 'classic', name: 'Studio Classic', icon: 'fa-headphones', badge: 'from-indigo-500 to-violet-500', preset: { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'headphones' } },
+        { id: 'retro', name: 'Retro Game', icon: 'fa-gamepad', badge: 'from-fuchsia-600 to-amber-500', preset: { bg: 'retro_grid', head: 'square', eyes: 'pixel_shades', mouth: 'grin', headwear: 'beanie' } },
+        { id: 'neon', name: 'Neon Synth', icon: 'fa-bolt', badge: 'from-cyan-500 to-pink-500', preset: { bg: 'neon', head: 'round', eyes: 'red_shades', mouth: 'smirk', headwear: 'mohawk' } },
+        { id: 'scifi', name: 'Sci-Fi Bot', icon: 'fa-user-astronaut', badge: 'from-sky-500 to-indigo-700', preset: { bg: 'galaxy', head: 'robot', eyes: 'cyber_visor', mouth: 'straight', headwear: 'astro_helmet' } },
+        { id: 'disco', name: 'Disco Funk', icon: 'fa-compact-disc', badge: 'from-amber-400 to-orange-500', preset: { bg: 'rays', head: 'round', eyes: 'gold_rims', mouth: 'singing', headwear: 'afro' } },
+        { id: 'popstar', name: 'Pop Royalty', icon: 'fa-crown', badge: 'from-rose-500 to-amber-400', preset: { bg: 'stage', head: 'round', eyes: 'heart_shades', mouth: 'smile', headwear: 'crown' } },
+        { id: 'jazz', name: 'Jazz Lounge', icon: 'fa-music', badge: 'from-slate-700 to-amber-600', preset: { bg: 'vinyl', head: 'tall', eyes: 'sunglasses', mouth: 'whistle', headwear: 'fedora' } }
+      ];
+
+      const getOptionCost = (cat, val) => {
+        if (isTeacher) return 0;
+        const unlockKey = `avatar_${cat}_${val}`;
+        if (window.state && window.state.inventory && window.state.inventory.includes(unlockKey)) return 0;
+        return avatarUpgradeCosts[unlockKey] || 0;
       };
 
       const btnHTML = (cat, o) => {
         const isSelected = a[cat] === o.id;
         const unlockKey = `avatar_${cat}_${o.id}`;
-        const isUnlocked = o.cost === 0 || (window.state.inventory && window.state.inventory.includes(unlockKey));
+        const isUnlocked = isTeacher || o.cost === 0 || (window.state.inventory && window.state.inventory.includes(unlockKey));
         
         let mainBtn = '';
         if (isSelected) {
@@ -11001,7 +11126,7 @@
           return `<button onclick="attemptAvatarUnlock('${cat}', '${o.id}', ${o.cost})" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 font-semibold text-xs border-2 border-dashed border-slate-300 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-lock text-[10px]"></i> ${o.name} <span class="text-amber-500 font-bold">(${o.cost})</span></button>`;
         }
 
-        if (isUnlocked && o.cost > 0) {
+        if (!isTeacher && isUnlocked && o.cost > 0) {
           return `<div class="flex items-center gap-1">
             ${mainBtn}
             <button onclick="tradeAvatarItem('${cat}', '${o.id}', ${o.cost}, '${o.name}')" class="px-2 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-500 transition-colors" title="Trade back for ${o.cost} Tokens"><i class="fa-solid fa-rotate-left"></i></button>
@@ -11015,7 +11140,55 @@
         renderAvatarMakerView(document.getElementById('app-viewport'));
       };
 
+      window.applyAvatarThemePreset = function(themeId) {
+        const theme = avatarThemes.find(t => t.id === themeId);
+        if (!theme) return;
+        const p = theme.preset;
+
+        if (isTeacher) {
+          window.tempAvatarState = { ...p };
+          renderAvatarMakerView(document.getElementById('app-viewport'));
+          return;
+        }
+
+        if (!window.state) window.state = {};
+        if (!window.state.inventory) window.state.inventory = [];
+
+        const cats = ['bg', 'head', 'eyes', 'mouth', 'headwear'];
+        let totalNeeded = 0;
+        const toUnlock = [];
+        cats.forEach(c => {
+          const cost = getOptionCost(c, p[c]);
+          if (cost > 0) {
+            totalNeeded += cost;
+            toUnlock.push(`avatar_${c}_${p[c]}`);
+          }
+        });
+
+        const bal = (window.state.stats && window.state.stats.tokens) || 0;
+        if (totalNeeded > bal) {
+          showAppModal('Not Enough Tokens for Full Theme', `The ${theme.name} theme requires ${totalNeeded} more tokens to unlock its remaining items (you have ${bal}). Unlock individual items or earn more tokens!`, false);
+          return;
+        }
+
+        if (totalNeeded > 0) {
+          window.state.stats.tokens -= totalNeeded;
+          toUnlock.forEach(k => {
+            if (!window.state.inventory.includes(k)) window.state.inventory.push(k);
+          });
+          saveUserState();
+          showAppModal('Theme Unlocked!', `You unlocked and equipped the ${theme.name} avatar theme for ${totalNeeded} Tokens!`, true);
+        }
+
+        window.tempAvatarState = { ...p };
+        renderAvatarMakerView(document.getElementById('app-viewport'));
+      };
+
       window.attemptAvatarUnlock = function(cat, val, cost) {
+        if (isTeacher) {
+          updateTempAvatar(cat, val);
+          return;
+        }
         if (!window.state) window.state = {};
         if (!window.state.inventory) window.state.inventory = [];
         const unlockKey = `avatar_${cat}_${val}`;
@@ -11038,7 +11211,7 @@
       };
 
       window.tradeAvatarItem = function(cat, val, cost, name) {
-        if (!window.state || !window.state.inventory) return;
+        if (isTeacher || !window.state || !window.state.inventory) return;
         const unlockKey = `avatar_${cat}_${val}`;
         const idx = window.state.inventory.indexOf(unlockKey);
         if (idx > -1) {
@@ -11059,25 +11232,57 @@
         window.state.avatar = { ...window.tempAvatarState };
         saveUserState();
         window.tempAvatarState = null;
-        window.app.navigate('studentDash');
+        openCurrentPortal();
       };
 
       container.innerHTML = `
-        <div class="max-w-2xl mx-auto space-y-6">
-          <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-black text-slate-800">Customize Your Musical Avatar</h1>
-            <button onclick="window.tempAvatarState = null; window.app.navigate('studentDash')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Cancel</button>
+        <div class="max-w-4xl mx-auto space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 class="text-2xl font-black text-slate-800">Customize Your Musical Avatar</h1>
+              ${isTeacher ? '<p class="text-xs font-bold text-emerald-600 mt-0.5"><i class="fa-solid fa-unlock-keyhole mr-1"></i> Teacher Mode: All themes, hair, glasses, hats &amp; backgrounds are 100% FREE!</p>' : ''}
+            </div>
+            <button onclick="window.tempAvatarState = null; openCurrentPortal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Cancel</button>
           </div>
 
-          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-8">
+          <!-- QUICK AVATAR THEME PRESETS MENU -->
+          <div class="bg-slate-900 rounded-3xl p-5 border border-slate-800 shadow-lg space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black uppercase tracking-widest text-amber-400"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Avatar Theme Menu</span>
+              <span class="text-[11px] font-bold text-slate-400">One-click style presets</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+              ${avatarThemes.map(t => {
+                const cats = ['bg', 'head', 'eyes', 'mouth', 'headwear'];
+                const remainingCost = isTeacher ? 0 : cats.reduce((sum, c) => sum + getOptionCost(c, t.preset[c]), 0);
+                return `
+                  <button onclick="applyAvatarThemePreset('${t.id}')" class="p-3 rounded-2xl bg-gradient-to-br ${t.badge} text-white text-center shadow hover:brightness-110 active:scale-95 transition-all flex flex-col items-center justify-center gap-1">
+                    <i class="fa-solid ${t.icon} text-base"></i>
+                    <span class="font-black text-[11px] leading-tight">${t.name}</span>
+                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-black/25">
+                      ${isTeacher ? 'Teacher Free' : remainingCost === 0 ? 'Unlocked' : `${remainingCost} Tokens`}
+                    </span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-8">
             <!-- Preview -->
             <div class="flex flex-col items-center justify-start shrink-0 space-y-4">
               <div class="p-2 border-4 border-indigo-100 rounded-full shadow-lg bg-white">
-                ${renderAvatarSVG(a, 'w-32 h-32 sm:w-40 sm:h-40')}
+                ${renderAvatarSVG(a, 'w-32 h-32 sm:w-44 sm:h-44')}
               </div>
               <div class="text-center w-full">
-                <div class="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">Tokens Available</div>
-                <div class="font-black text-amber-500 text-lg"><i class="fa-solid fa-coins mr-1"></i> ${(window.state.stats && window.state.stats.tokens) || 0}</div>
+                ${isTeacher ? `
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs">
+                    <i class="fa-solid fa-crown"></i> Teacher Free Mode
+                  </span>
+                ` : `
+                  <div class="text-xs font-black uppercase tracking-wider text-slate-400 mb-1">Tokens Available</div>
+                  <div class="font-black text-amber-500 text-lg"><i class="fa-solid fa-coins mr-1"></i> ${(window.state.stats && window.state.stats.tokens) || 0}</div>
+                `}
               </div>
               <button onclick="saveTempAvatar()" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-sm shadow-md transition-transform active:scale-95 mt-2">
                 <i class="fa-solid fa-floppy-disk mr-1"></i> Save Avatar
@@ -11087,7 +11292,7 @@
             <!-- Controls -->
             <div class="flex-1 space-y-5">
               <div>
-                <div class="text-xs font-black uppercase text-slate-400 mb-2">Backdrop &amp; Effects</div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Background Style &amp; Effects</div>
                 <div class="flex flex-wrap gap-2">
                   ${opts.bg.map(o => btnHTML('bg', o)).join('')}
                 </div>
@@ -11111,9 +11316,15 @@
                 </div>
               </div>
               <div>
-                <div class="text-xs font-black uppercase text-slate-400 mb-2">Musical Headwear</div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Hairstyles</div>
                 <div class="flex flex-wrap gap-2">
-                  ${opts.headwear.map(o => btnHTML('headwear', o)).join('')}
+                  ${opts.hair.map(o => btnHTML('headwear', o)).join('')}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs font-black uppercase text-slate-400 mb-2">Hats &amp; Headgear</div>
+                <div class="flex flex-wrap gap-2">
+                  ${opts.hats.map(o => btnHTML('headwear', o)).join('')}
                 </div>
               </div>
             </div>
@@ -11331,6 +11542,7 @@
 
     function renderTeacherDash(container) {
       const students = getDeduplicatedStudents().sort((a, b) => (a.surname || '').localeCompare(b.surname || ''));
+      const teacherAvatar = (window.state && window.state.avatar) || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: 'conductor' };
       const teacherMinigames = [
         { route: 'metronomeGame',  name: 'Brass Metronome',    icon: 'fa-stopwatch',           cls: 'bg-indigo-600 hover:bg-indigo-500 text-white' },
         { route: 'dynamicsTracer', name: 'Instrument Ninja',   icon: 'fa-wand-sparkles',       cls: 'bg-amber-400 hover:bg-amber-300 text-slate-950' },
@@ -11346,10 +11558,18 @@
       container.innerHTML = `
         <div class="space-y-6">
           <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-black uppercase tracking-widest text-amber-400">Music Staff Portal</span>
-              <h1 class="text-2xl sm:text-3xl font-black mt-1">Teacher Markbook &amp; Student Manager</h1>
-              <p class="text-xs text-slate-300 mt-1">Review student tokens, confidential assessment scores, and class rosters.</p>
+            <div class="flex items-center gap-4">
+              ${renderAvatarSVG(teacherAvatar, 'w-16 h-16 sm:w-20 sm:h-20')}
+              <div>
+                <span class="text-xs font-black uppercase tracking-widest text-amber-400">Music Staff Portal</span>
+                <h1 class="text-2xl sm:text-3xl font-black mt-1">Teacher Markbook &amp; Student Manager</h1>
+                <p class="text-xs text-slate-300 mt-1">Review student tokens, confidential assessment scores, and class rosters.</p>
+                <div class="mt-2">
+                  <button onclick="window.app.navigate('avatarMaker')" class="text-[11px] font-black bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 px-3.5 py-1.5 rounded-lg transition-all shadow-sm">
+                    <i class="fa-solid fa-user-astronaut mr-1"></i> Customize Teacher Avatar (All Free!)
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="flex flex-wrap gap-2">
               <button onclick="window.app.navigate('conceptsHub')" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-xs">
@@ -16135,7 +16355,8 @@
                 stats: db[parsed.key].stats || { tokens: 10, testsTaken: 0 },
                 inventory: db[parsed.key].inventory || [],
                 testHistory: db[parsed.key].testHistory || [],
-                completedLessons: db[parsed.key].completedLessons || []
+                completedLessons: db[parsed.key].completedLessons || [],
+                avatar: db[parsed.key].avatar || { bg: '#c7d2fe', head: 'round', eyes: 'normal', mouth: 'smile', headwear: parsed.role === 'teacher' ? 'conductor' : 'headphones' }
               };
             }
           }

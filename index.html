@@ -12215,11 +12215,28 @@
       liveAudio: false,
       osc: null,
       gainNode: null,
+      audioTimeout: null,
       roundCleared: false,
       completed: false
     };
 
+    function updateWaveformAudioButtonUI() {
+      const btn = document.getElementById('wf-audio-btn');
+      if (!btn) return;
+      if (waveformGameState.liveAudio) {
+        btn.innerHTML = '<i class="fa-solid fa-stop mr-1.5"></i> Playing (2s)...';
+        btn.className = 'px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow shrink-0';
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-volume-high mr-1.5"></i> Hear My Wave';
+        btn.className = 'px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow shrink-0';
+      }
+    }
+
     function stopWaveformLiveOsc() {
+      if (waveformGameState.audioTimeout) {
+        clearTimeout(waveformGameState.audioTimeout);
+        waveformGameState.audioTimeout = null;
+      }
       try {
         if (waveformGameState.osc) {
           waveformGameState.osc.stop();
@@ -12232,6 +12249,7 @@
       waveformGameState.osc = null;
       waveformGameState.gainNode = null;
       waveformGameState.liveAudio = false;
+      updateWaveformAudioButtonUI();
     }
 
     function stopWaveformGame() {
@@ -12311,28 +12329,29 @@
         try {
           const ctx = getAudioCtx();
           if (!ctx) return;
+          const now = ctx.currentTime;
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = st.playerWave;
-          osc.frequency.setValueAtTime(st.playerFreq, ctx.currentTime);
-          gain.gain.setValueAtTime((st.playerAmp / 100) * 0.22, ctx.currentTime);
+          osc.frequency.setValueAtTime(st.playerFreq, now);
+          const targetVol = (st.playerAmp / 100) * 0.22;
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(targetVol, now + 0.02);
+          gain.gain.setValueAtTime(targetVol, now + 1.9);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
           osc.connect(gain);
           gain.connect(ctx.destination);
-          osc.start();
+          osc.start(now);
+          osc.stop(now + 2.02);
           st.osc = osc;
           st.gainNode = gain;
           st.liveAudio = true;
+          st.audioTimeout = setTimeout(() => {
+            stopWaveformLiveOsc();
+          }, 2000);
         } catch (e) {}
       }
-      const btn = document.getElementById('wf-audio-btn');
-      if (btn) {
-        btn.innerHTML = st.liveAudio
-          ? '<i class="fa-solid fa-stop mr-1.5"></i> Stop Live Synth'
-          : '<i class="fa-solid fa-volume-high mr-1.5"></i> Hear My Wave';
-        btn.className = st.liveAudio
-          ? 'px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs shadow shrink-0'
-          : 'px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-xs shadow shrink-0';
-      }
+      updateWaveformAudioButtonUI();
     }
 
     function playWaveformTargetTone() {

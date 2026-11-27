@@ -2121,64 +2121,506 @@
     }
 
     // Shop Minigame: Brass Pyramid Metronome (Internal Pulse Challenge)
-    let metronomeGameState = { running: false, intervalId: null, beatCount: 0, bpm: 96, lastBeat: 0, score: 0, tokensEarned: 0, msg: 'Click Start, listen to 4 clicks, then keep tapping Spacebar when the clicks go silent!' };
-    function stopMetronomeGame() { metronomeGameState.running = false; if (metronomeGameState.intervalId) { clearInterval(metronomeGameState.intervalId); metronomeGameState.intervalId = null; } }
-    function startMetronomeGame() {
-      stopMetronomeGame();
-      const beatMs = Math.round(60000 / metronomeGameState.bpm);
-      metronomeGameState = { running: true, intervalId: null, beatCount: 0, bpm: 96, lastBeat: performance.now(), score: 0, tokensEarned: 0, msg: 'Listen to the 4 metronome clicks...' };
-      const tick = () => {
-        if (!metronomeGameState.running) return;
-        metronomeGameState.beatCount++;
-        metronomeGameState.lastBeat = performance.now();
-        if (metronomeGameState.beatCount <= 4) {
-          playTonePitch(metronomeGameState.beatCount === 1 ? 880 : 660, 0.06, 0.3, 'triangle');
-          metronomeGameState.msg = `Metronome Click ${metronomeGameState.beatCount} / 4`;
-        } else {
-          metronomeGameState.msg = 'SILENT PULSE! Tap SPACEBAR on the hidden beat!';
-        }
-        renderMetronomeGameView(document.getElementById('app-viewport'));
-      };
-      tick();
-      metronomeGameState.intervalId = setInterval(tick, beatMs);
-    }
-    function handleMetronomeHit() {
-      const st = metronomeGameState;
-      if (!st.running || st.beatCount <= 4) return;
-      const beatMs = Math.round(60000 / st.bpm);
-      const diff = Math.abs(performance.now() - st.lastBeat);
-      const ok = diff < 190 || Math.abs(diff - beatMs) < 190;
-      if (ok) {
-        st.score++;
-        if (st.score % 3 === 0) { st.tokensEarned++; addTokens(1); }
-        playTonePitch(659.25, 0.1, 0.3, 'triangle');
-        st.msg = `✓ Locked in! Streak: ${st.score} (+${st.tokensEarned} Tokens)`;
-      } else {
-        playTonePitch(155, 0.2, 0.3, 'sawtooth');
-        st.msg = `✗ Off the internal pulse! Final streak: ${st.score}`;
-        stopMetronomeGame();
+    let metronomeGameState = {
+      running: false,
+      completed: false,
+      bpm: 92,
+      round: 1,
+      totalRounds: 5,
+      beatIndex: 0,           // 1..4 audible count-in, 5..8 silent pulse
+      beatTimes: [],          // scheduled performance.now() timestamps for beats 1..8
+      tappedBeats: {},        // tracks which silent beat index (5..8) was already tapped
+      roundHits: 0,
+      totalHits: 0,
+      streak: 0,
+      best: 0,
+      tokensEarned: 0,
+      pendulumSide: -1,
+      lastClickTime: 0,
+      phase: 'idle',          // 'idle' | 'listen' | 'silent' | 'roundEnd' | 'done'
+      feedback: 'Pick a tempo or press Start! Listen to 4 clicks, then tap SPACEBAR on the 4 silent beats.',
+      feedbackTone: 'amber',
+      timers: [],
+      rafId: null
+    };
+
+    const metronomeTempoLevels = [
+      { round: 1, bpm: 84,  label: 'Andante (84 BPM)' },
+      { round: 2, bpm: 96,  label: 'Moderato (96 BPM)' },
+      { round: 3, bpm: 108, label: 'Allegretto (108 BPM)' },
+      { round: 4, bpm: 120, label: 'Allegro (120 BPM)' },
+      { round: 5, bpm: 132, label: 'Vivace (132 BPM)' }
+    ];
+
+    function stopMetronomeGame() {
+      metronomeGameState.running = false;
+      if (metronomeGameState.timers && metronomeGameState.timers.length) {
+        metronomeGameState.timers.forEach(t => clearTimeout(t));
       }
+      metronomeGameState.timers = [];
+      if (metronomeGameState.rafId) {
+        cancelAnimationFrame(metronomeGameState.rafId);
+        metronomeGameState.rafId = null;
+      }
+    }
+
+    function playMetronomeWoodClick(isAccent = false) {
+      try {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(isAccent ? 1280 : 880, now);
+        osc.frequency.exponentialRampToValueAtTime(isAccent ? 640 : 420, now + 0.045);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(isAccent ? 0.42 : 0.28, now + 0.004);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.065);
+      } catch (e) {}
+    }
+
+    function setMetronomeCustomBpm(bpmVal) {
+      if (metronomeGameState.running) return;
+      metronomeGameState.bpm = Number(bpmVal) || 96;
       renderMetronomeGameView(document.getElementById('app-viewport'));
     }
+
+    function startMetronomeGame(useCurrentBpm = false) {
+      stopMetronomeGame();
+      const startBpm = useCurrentBpm ? (metronomeGameState.bpm || 96) : metronomeTempoLevels[0].bpm;
+      metronomeGameState = {
+        running: true,
+        completed: false,
+        bpm: startBpm,
+        round: 1,
+        totalRounds: metronomeTempoLevels.length,
+        beatIndex: 0,
+        beatTimes: [],
+        tappedBeats: {},
+        roundHits: 0,
+        totalHits: 0,
+        streak: 0,
+        best: metronomeGameState.best || 0,
+        tokensEarned: 0,
+        pendulumSide: -1,
+        lastClickTime: performance.now(),
+        phase: 'listen',
+        feedback: 'Listen closely to the 4 brass metronome clicks...',
+        feedbackTone: 'amber',
+        timers: [],
+        rafId: null,
+        customMode: useCurrentBpm
+      };
+      renderMetronomeGameView(document.getElementById('app-viewport'));
+      launchMetronomeRound();
+    }
+
+    function launchMetronomeRound() {
+      const st = metronomeGameState;
+      if (!st.running) return;
+      if (st.timers && st.timers.length) st.timers.forEach(t => clearTimeout(t));
+      st.timers = [];
+
+      if (!st.customMode) {
+        const cfg = metronomeTempoLevels[st.round - 1] || metronomeTempoLevels[0];
+        st.bpm = cfg.bpm;
+      }
+
+      const beatMs = Math.round(60000 / st.bpm);
+      const startTime = performance.now() + 260;
+      st.beatIndex = 0;
+      st.tappedBeats = {};
+      st.roundHits = 0;
+      st.phase = 'listen';
+      st.beatTimes = [];
+      for (let i = 0; i < 8; i++) {
+        st.beatTimes.push(startTime + i * beatMs);
+      }
+      st.feedback = `Round ${st.round}: Feel the pulse at ${st.bpm} BPM (4 audible clicks)...`;
+      st.feedbackTone = 'amber';
+      updateMetronomeLiveDOM();
+
+      // Schedule Beats 1..4 (Audible + Pendulum Visible)
+      for (let b = 1; b <= 4; b++) {
+        const delay = Math.max(0, st.beatTimes[b - 1] - performance.now());
+        st.timers.push(setTimeout(() => {
+          if (!st.running) return;
+          st.beatIndex = b;
+          st.phase = 'listen';
+          st.pendulumSide = b % 2 === 1 ? -1 : 1;
+          st.lastClickTime = performance.now();
+          playMetronomeWoodClick(b === 1);
+          st.feedback = `Listen & Lock In: Click ${b} of 4`;
+          st.feedbackTone = 'amber';
+          updateMetronomeLiveDOM();
+        }, delay));
+      }
+
+      // Transition right before Beat 5 into Silent Pulse Phase
+      const silentStartDelay = Math.max(0, st.beatTimes[4] - performance.now() - Math.round(beatMs * 0.45));
+      st.timers.push(setTimeout(() => {
+        if (!st.running) return;
+        st.phase = 'silent';
+        st.feedback = '🔇 SILENT PULSE! Tap SPACEBAR on Beats 5, 6, 7 & 8!';
+        st.feedbackTone = 'sky';
+        updateMetronomeLiveDOM();
+      }, silentStartDelay));
+
+      // Track Beat 5..8 silent ticks (no audio!)
+      for (let b = 5; b <= 8; b++) {
+        const delay = Math.max(0, st.beatTimes[b - 1] - performance.now());
+        st.timers.push(setTimeout(() => {
+          if (!st.running) return;
+          st.beatIndex = b;
+          updateMetronomeLiveDOM();
+        }, delay));
+      }
+
+      // End of 8-beat round evaluation
+      const endDelay = Math.max(0, st.beatTimes[7] - performance.now() + Math.round(beatMs * 0.6));
+      st.timers.push(setTimeout(() => {
+        if (!st.running) return;
+        st.phase = 'roundEnd';
+        const reward = st.roundHits === 4 ? 2 : st.roundHits >= 3 ? 1 : 0;
+        if (reward > 0) {
+          st.tokensEarned += reward;
+          addTokens(reward);
+          playTonePitch(659.25, 0.16, 0.3, 'triangle');
+          setTimeout(() => playTonePitch(880, 0.24, 0.3, 'triangle'), 130);
+          st.feedback = `✓ Round ${st.round} Complete! ${st.roundHits}/4 Silent Beats Locked In (+${reward} Token${reward > 1 ? 's' : ''})!`;
+          st.feedbackTone = 'emerald';
+        } else {
+          playTonePitch(155.56, 0.25, 0.28, 'sawtooth');
+          st.feedback = `Round ${st.round}: ${st.roundHits}/4 Silent Beats hit — keep feeling that steady pulse!`;
+          st.feedbackTone = 'rose';
+        }
+        updateMetronomeLiveDOM();
+
+        st.timers.push(setTimeout(() => {
+          if (!st.running) return;
+          if (st.round < st.totalRounds) {
+            st.round++;
+            launchMetronomeRound();
+          } else {
+            stopMetronomeGame();
+            st.completed = true;
+            st.phase = 'done';
+            renderMetronomeGameView(document.getElementById('app-viewport'));
+          }
+        }, 1600));
+      }, endDelay));
+
+      startMetronomePendulumLoop();
+    }
+
+    function startMetronomePendulumLoop() {
+      const st = metronomeGameState;
+      if (st.rafId) cancelAnimationFrame(st.rafId);
+
+      const animate = (now) => {
+        if (!st.running) return;
+        const arm = document.getElementById('metro-pendulum-arm');
+        if (arm && st.beatTimes.length >= 8) {
+          const beatMs = 60000 / st.bpm;
+          const elapsedBeats = (now - st.beatTimes[0]) / beatMs;
+          // Smooth sinusoidal pendulum swing synced to BPM
+          const angle = Math.sin(elapsedBeats * Math.PI) * 28;
+          arm.setAttribute('transform', `rotate(${angle.toFixed(1)} 100 165)`);
+          arm.setAttribute('opacity', st.phase === 'silent' ? '0.12' : '1');
+        }
+        st.rafId = requestAnimationFrame(animate);
+      };
+      st.rafId = requestAnimationFrame(animate);
+    }
+
+    function handleMetronomeHit() {
+      const st = metronomeGameState;
+      if (!st.running || st.phase !== 'silent') return;
+
+      const now = performance.now();
+      const beatMs = 60000 / st.bpm;
+      const toleranceMs = Math.min(220, Math.max(135, beatMs * 0.34));
+
+      // Find closest silent beat (indices 4..7 -> Beats 5..8)
+      let closestIdx = -1;
+      let closestSigned = 9999;
+      for (let i = 4; i < 8; i++) {
+        const diff = now - st.beatTimes[i];
+        if (Math.abs(diff) < Math.abs(closestSigned)) {
+          closestSigned = diff;
+          closestIdx = i;
+        }
+      }
+
+      if (closestIdx < 4) return;
+      const beatNum = closestIdx + 1;
+
+      // Prevent multi-tapping the same silent beat
+      if (st.tappedBeats[beatNum]) return;
+
+      const absDiff = Math.abs(closestSigned);
+      if (absDiff <= toleranceMs) {
+        st.tappedBeats[beatNum] = 'hit';
+        st.roundHits++;
+        st.totalHits++;
+        st.streak++;
+        if (st.streak > st.best) st.best = st.streak;
+        playTonePitch(absDiff <= 75 ? 783.99 : 659.25, 0.11, 0.3, 'triangle');
+        const tag = absDiff <= 75 ? '⚡ PERFECT!' : '✓ ON BEAT!';
+        st.feedback = `${tag} Beat ${beatNum} (${Math.round(absDiff)}ms ${closestSigned < 0 ? 'early' : 'late'})`;
+        st.feedbackTone = 'emerald';
+      } else {
+        st.tappedBeats[beatNum] = 'miss';
+        st.streak = 0;
+        playTonePitch(165, 0.16, 0.26, 'sawtooth');
+        st.feedback = `✗ Off Beat (${Math.round(absDiff)}ms ${closestSigned < 0 ? 'too early' : 'too late'})`;
+        st.feedbackTone = 'rose';
+      }
+      updateMetronomeLiveDOM();
+    }
+
+    function updateMetronomeLiveDOM() {
+      const st = metronomeGameState;
+      const roundBadge = document.getElementById('metro-round-badge');
+      const bpmBadge = document.getElementById('metro-bpm-badge');
+      const tokenBadge = document.getElementById('metro-token-badge');
+      const streakEl = document.getElementById('metro-streak-val');
+      const fbEl = document.getElementById('metro-feedback-bar');
+      const tapBtn = document.getElementById('metro-tap-btn');
+      const veilEl = document.getElementById('metro-silent-veil');
+
+      if (roundBadge) roundBadge.textContent = `Round ${st.round} / ${st.totalRounds}`;
+      if (bpmBadge) bpmBadge.textContent = `${st.bpm} BPM`;
+      if (tokenBadge) tokenBadge.textContent = `+${st.tokensEarned} Tokens`;
+      if (streakEl) streakEl.textContent = `Streak: ${st.streak} • Best: ${st.best}`;
+      if (veilEl) veilEl.style.opacity = st.phase === 'silent' ? '1' : '0';
+
+      if (fbEl) {
+        fbEl.textContent = st.feedback;
+        const toneMap = {
+          amber:   'bg-amber-500/15 border-amber-400/50 text-amber-300',
+          sky:     'bg-sky-500/20 border-sky-400/60 text-sky-200',
+          emerald: 'bg-emerald-500/20 border-emerald-400/60 text-emerald-300',
+          rose:    'bg-rose-500/20 border-rose-500/60 text-rose-300'
+        };
+        fbEl.className = `text-xs sm:text-sm font-black py-2.5 px-4 rounded-xl border transition-colors ${toneMap[st.feedbackTone] || toneMap.amber}`;
+      }
+
+      if (tapBtn) {
+        if (st.phase === 'silent') {
+          tapBtn.disabled = false;
+          tapBtn.className = 'w-full sm:w-auto px-10 py-4 bg-gradient-to-r from-amber-400 to-yellow-300 hover:brightness-110 active:scale-95 text-slate-950 font-black rounded-2xl text-sm sm:text-base shadow-lg transition-all';
+          tapBtn.innerHTML = '<i class="fa-solid fa-hand-pointer mr-2"></i> TAP SILENT BEAT (SPACEBAR)';
+        } else {
+          tapBtn.disabled = true;
+          tapBtn.className = 'w-full sm:w-auto px-10 py-4 bg-slate-800 text-slate-400 font-black rounded-2xl text-sm sm:text-base border border-slate-700 cursor-not-allowed';
+          tapBtn.innerHTML = '<i class="fa-solid fa-ear-listen mr-2"></i> LISTEN TO THE 4 CLICKS...';
+        }
+      }
+
+      // Update the 8 beat indicator bulbs (1..4 Audible, 5..8 Silent)
+      for (let b = 1; b <= 8; b++) {
+        const bulb = document.getElementById(`metro-bulb-${b}`);
+        if (!bulb) continue;
+        if (b <= 4) {
+          const active = st.beatIndex === b && st.phase === 'listen';
+          const passed = st.beatIndex > b;
+          bulb.className = active
+            ? 'w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-amber-400 text-slate-950 scale-110 shadow-[0_0_14px_rgba(251,191,36,0.85)] transition-all'
+            : passed
+            ? 'w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-amber-500/30 border border-amber-400/50 text-amber-200 transition-all'
+            : 'w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-slate-800 border border-slate-700 text-slate-500 transition-all';
+        } else {
+          const res = st.tappedBeats[b];
+          bulb.className = res === 'hit'
+            ? 'w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-emerald-400 text-slate-950 scale-105 shadow-md transition-all'
+            : res === 'miss'
+            ? 'w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-rose-500 text-white transition-all'
+            : st.phase === 'silent'
+            ? 'w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-sky-950 border-2 border-dashed border-sky-400 text-sky-300 transition-all'
+            : 'w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-slate-800 border border-slate-700 text-slate-500 transition-all';
+        }
+      }
+    }
+
+    function renderBrassMetronomeSVG(bpm) {
+      // Weight sits lower on the arm for faster BPM, higher for slower BPM
+      const weightY = Math.round(52 + ((Math.max(60, Math.min(150, bpm)) - 60) / 90) * 62);
+      return `
+        <svg viewBox="0 0 200 210" class="w-44 h-44 mx-auto drop-shadow-[0_10px_24px_rgba(245,158,11,0.28)] select-none" fill="none">
+          <defs>
+            <linearGradient id="metroWood" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#78350f"/>
+              <stop offset="50%" stop-color="#b45309"/>
+              <stop offset="100%" stop-color="#451a03"/>
+            </linearGradient>
+            <linearGradient id="metroBrass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#fef08a"/>
+              <stop offset="50%" stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#b45309"/>
+            </linearGradient>
+          </defs>
+          <!-- Pyramid Body -->
+          <polygon points="100,14 166,186 34,186" fill="url(#metroWood)" stroke="#fbbf24" stroke-width="3" stroke-linejoin="round"/>
+          <!-- Base Pedestal -->
+          <rect x="26" y="184" width="148" height="16" rx="5" fill="#451a03" stroke="#f59e0b" stroke-width="2.5"/>
+          <!-- Brass Tempo Faceplate -->
+          <polygon points="100,32 132,166 68,166" fill="#1e293b" stroke="url(#metroBrass)" stroke-width="2.5"/>
+          <!-- Tempo Tick Markings -->
+          <line x1="88" y1="60"  x2="112" y2="60"  stroke="#fde047" stroke-width="1.5" opacity="0.65"/>
+          <line x1="84" y1="84"  x2="116" y2="84"  stroke="#fde047" stroke-width="1.5" opacity="0.65"/>
+          <line x1="80" y1="108" x2="120" y2="108" stroke="#fde047" stroke-width="1.5" opacity="0.65"/>
+          <line x1="76" y1="132" x2="124" y2="132" stroke="#fde047" stroke-width="1.5" opacity="0.65"/>
+          <!-- Swinging Brass Pendulum Arm -->
+          <g id="metro-pendulum-arm" transform="rotate(0 100 165)">
+            <line x1="100" y1="165" x2="100" y2="34" stroke="#e2e8f0" stroke-width="4" stroke-linecap="round"/>
+            <polygon points="90,${weightY - 10} 110,${weightY - 10} 106,${weightY + 10} 94,${weightY + 10}" fill="url(#metroBrass)" stroke="#78350f" stroke-width="2"/>
+          </g>
+          <!-- Pivot Knob -->
+          <circle cx="100" cy="165" r="9" fill="url(#metroBrass)" stroke="#451a03" stroke-width="2"/>
+          <!-- Silent Mode Frosted Overlay -->
+          <g id="metro-silent-veil" style="opacity:0; transition: opacity 0.25s ease;">
+            <rect x="52" y="88" width="96" height="30" rx="10" fill="#0f172a" fill-opacity="0.92" stroke="#38bdf8" stroke-width="2"/>
+            <text x="100" y="107" fill="#38bdf8" font-size="11" font-weight="900" text-anchor="middle">SILENT PULSE</text>
+          </g>
+        </svg>
+      `;
+    }
+
     function renderMetronomeGameView(container) {
       if (!container) return;
       const st = metronomeGameState;
-      container.innerHTML = `
-        <div class="max-w-2xl mx-auto space-y-6">
-          <div class="flex items-center justify-between">
-            <button onclick="stopMetronomeGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs"><i class="fa-solid fa-arrow-left mr-1"></i> Rewards Shop</button>
-            <span class="text-xs font-black uppercase text-amber-600"><i class="fa-solid fa-stopwatch mr-1"></i> Brass Pyramid Metronome</span>
-          </div>
-          <div class="bg-slate-900 rounded-3xl p-8 text-center text-white border-2 border-amber-500/40 space-y-5">
-            <h2 class="text-2xl font-black text-amber-400">Silent Metronome Pulse</h2>
-            <p class="text-xs text-slate-300">${st.msg}</p>
-            <div class="text-3xl font-black text-emerald-400">Hits: ${st.score} <span class="text-sm text-amber-300">(+${st.tokensEarned} Tokens)</span></div>
-            <div class="flex justify-center gap-3">
-              ${!st.running ? `<button onclick="startMetronomeGame()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg">Start Metronome (96 BPM)</button>` :
-              `<button onmousedown="handleMetronomeHit()" class="px-10 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-2xl text-sm shadow-lg active:scale-95">TAP BEAT (SPACEBAR)</button>`}
+
+      if (!st.running && !st.completed) {
+        container.innerHTML = `
+          <div class="max-w-3xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="stopMetronomeGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+              <span class="text-xs font-black uppercase text-amber-600 tracking-widest">
+                <i class="fa-solid fa-stopwatch mr-1"></i> Brass Pyramid Metronome
+              </span>
+            </div>
+
+            <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-center text-white shadow-xl border-2 border-amber-500/50 space-y-5">
+              ${renderBrassMetronomeSVG(st.bpm)}
+              <h2 class="text-3xl font-black text-amber-400">Silent Metronome Pulse</h2>
+              <p class="text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
+                Test your internal musical clock! Listen to <strong>4 audible clicks</strong> from the Brass Pyramid Metronome—then the sound mutes and the pendulum hides. Tap <strong>SPACEBAR</strong> (or the beat pad) right on <strong>Beats 5, 6, 7, and 8</strong> to earn up to <strong>+2 Tokens per round</strong>!
+              </p>
+
+              <!-- Mode & Tempo Controls -->
+              <div class="flex flex-wrap items-center justify-center gap-3 pt-1">
+                <button onclick="startMetronomeGame(false)" class="px-7 py-3.5 bg-gradient-to-r from-amber-400 to-yellow-300 hover:brightness-110 active:scale-95 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all">
+                  <i class="fa-solid fa-play mr-2"></i> Start 5-Round Challenge (84 &rarr; 132 BPM)
+                </button>
+              </div>
+
+              <div class="pt-3 border-t border-slate-800 space-y-2.5">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400">Or Practice at a Fixed Tempo:</div>
+                <div class="flex flex-wrap items-center justify-center gap-2">
+                  ${[80, 96, 112, 128].map(b => `
+                    <button onclick="setMetronomeCustomBpm(${b}); startMetronomeGame(true)" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-amber-400 text-xs font-black text-amber-200 transition-all">
+                      ${b} BPM
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
             </div>
           </div>
-        </div>`;
+        `;
+        return;
+      }
+
+      if (st.completed) {
+        container.innerHTML = `
+          <div class="max-w-2xl mx-auto space-y-6">
+            <div class="flex items-center justify-between">
+              <button onclick="window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+              </button>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-8 text-center text-white shadow-xl border-2 border-emerald-400/70 space-y-4">
+              <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 text-slate-950 flex items-center justify-center text-4xl mx-auto shadow-lg">
+                <i class="fa-solid fa-stopwatch"></i>
+              </div>
+              <h2 class="text-3xl font-black text-amber-400">Human Metronome!</h2>
+              <p class="text-sm text-slate-300">
+                You locked in <strong class="text-white">${st.totalHits} / ${st.totalRounds * 4}</strong> silent beats (Best Streak: <strong class="text-amber-300">${st.best}</strong>) and earned <strong class="text-emerald-400">+${st.tokensEarned} Tokens</strong>!
+              </p>
+              <div class="pt-2 flex flex-wrap justify-center gap-3">
+                <button onclick="startMetronomeGame(false)" class="px-8 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg transition-all">
+                  <i class="fa-solid fa-rotate-right mr-1.5"></i> Play Again
+                </button>
+                <button onclick="window.app.navigate('shop')" class="px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl text-sm border border-slate-700">
+                  Back to Shop
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto space-y-5">
+          <div class="flex items-center justify-between">
+            <button onclick="stopMetronomeGame(); window.app.navigate('shop')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-left"></i> Rewards Shop
+            </button>
+            <span class="text-xs font-black uppercase text-amber-600 tracking-widest">
+              <i class="fa-solid fa-stopwatch mr-1"></i> Brass Pyramid Metronome
+            </span>
+          </div>
+
+          <div class="bg-slate-900 rounded-3xl p-6 sm:p-8 text-center text-white border-2 border-amber-500/40 shadow-xl space-y-5">
+            <!-- Header & HUD -->
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4">
+              <div class="text-left">
+                <div class="text-[11px] font-black uppercase tracking-widest text-amber-400">Silent Pulse Challenge</div>
+                <div id="metro-streak-val" class="text-xs font-bold text-slate-300 mt-0.5">Streak: ${st.streak} • Best: ${st.best}</div>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span id="metro-round-badge" class="px-3 py-1 rounded-xl bg-indigo-950 border border-indigo-700 text-xs font-black text-indigo-200">Round ${st.round} / ${st.totalRounds}</span>
+                <span id="metro-bpm-badge" class="px-3 py-1 rounded-xl bg-amber-500/20 border border-amber-400/50 text-xs font-black text-amber-300">${st.bpm} BPM</span>
+                <span id="metro-token-badge" class="px-3 py-1 rounded-xl bg-emerald-950 border border-emerald-700 text-xs font-black text-emerald-300">+${st.tokensEarned} Tokens</span>
+              </div>
+            </div>
+
+            <!-- Animated Brass Pyramid Metronome -->
+            ${renderBrassMetronomeSVG(st.bpm)}
+
+            <!-- 8 Beat Indicator Bulbs (1-4 Audible | 5-8 Silent) -->
+            <div class="space-y-2">
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <span class="text-[10px] font-black uppercase text-amber-400 mr-1">Listen:</span>
+                ${[1, 2, 3, 4].map(b => `<span id="metro-bulb-${b}" class="w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-slate-800 border border-slate-700 text-slate-500">${b}</span>`).join('')}
+                <span class="text-slate-600 font-black mx-1">|</span>
+                <span class="text-[10px] font-black uppercase text-sky-400 mr-1">Tap:</span>
+                ${[5, 6, 7, 8].map(b => `<span id="metro-bulb-${b}" class="w-9 h-9 rounded-full flex items-center justify-center font-black text-xs bg-slate-800 border border-slate-700 text-slate-500">${b}</span>`).join('')}
+              </div>
+            </div>
+
+            <!-- Live Feedback Bar -->
+            <div id="metro-feedback-bar" class="text-xs sm:text-sm font-black py-2.5 px-4 rounded-xl border bg-amber-500/15 border-amber-400/50 text-amber-300">
+              ${st.feedback}
+            </div>
+
+            <!-- Tap Button -->
+            <div class="pt-1">
+              <button id="metro-tap-btn" type="button" onmousedown="handleMetronomeHit()" ontouchstart="event.preventDefault(); handleMetronomeHit()" disabled class="w-full sm:w-auto px-10 py-4 bg-slate-800 text-slate-400 font-black rounded-2xl text-sm sm:text-base border border-slate-700 cursor-not-allowed">
+                <i class="fa-solid fa-ear-listen mr-2"></i> LISTEN TO THE 4 CLICKS...
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     // ==========================================

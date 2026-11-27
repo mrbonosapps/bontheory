@@ -1668,29 +1668,49 @@
     }
 
     // --- RESTORED STATE OBJECTS & EMBEDDED MINIGAMES ---
-    let beatTapState = { running: false, intervalId: null, hits: 0, targetHits: 8, lastBeatTime: 0, beatMs: 600, score: 0, msg: 'Click Start, then tap Spacebar on every beat!' };
+    let beatTapState = { running: false, intervalId: null, hits: 0, targetHits: 8, lastBeatTime: 0, beatMs: 600, beatCount: 0, lastTappedBeat: -1, lastTapTimestamp: 0, score: 0, msg: 'Click Start, then tap Spacebar on every beat!' };
     function stopBeatTapLoop() { beatTapState.running = false; if (beatTapState.intervalId) { clearInterval(beatTapState.intervalId); beatTapState.intervalId = null; } }
     function handleBeatTapHit() {
       if (!beatTapState.running) return;
-      const diff = Math.abs(performance.now() - beatTapState.lastBeatTime);
-      const ok = diff < 210 || Math.abs(diff - beatTapState.beatMs) < 210;
+      if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+      const now = performance.now();
+      if (now - beatTapState.lastTapTimestamp < 320) {
+        beatTapState.msg = '🚫 Slow down! Only one tap per beat is allowed.';
+        renderBeatTapUI();
+        return;
+      }
+      const elapsed = Math.max(0, now - beatTapState.lastBeatTime);
+      const nearestBeat = elapsed > beatTapState.beatMs / 2 ? beatTapState.beatCount + 1 : beatTapState.beatCount;
+      if (nearestBeat === beatTapState.lastTappedBeat) {
+        beatTapState.msg = '🚫 Already tapped this beat — wait for the next beat!';
+        renderBeatTapUI();
+        return;
+      }
+      beatTapState.lastTapTimestamp = now;
+      beatTapState.lastTappedBeat = nearestBeat;
+      const diff = Math.min(elapsed, Math.abs(beatTapState.beatMs - elapsed));
+      const ok = diff <= 190;
       beatTapState.hits++;
       if (ok) { beatTapState.score++; playTonePitch(659.25, 0.12, 0.3, 'triangle'); beatTapState.msg = `✓ On the Beat! (${beatTapState.score}/${beatTapState.targetHits})`; }
       else { playTonePitch(180, 0.14, 0.25, 'sawtooth'); beatTapState.msg = '✗ Slightly off the beat — keep listening!'; }
       if (beatTapState.hits >= beatTapState.targetHits) {
         stopBeatTapLoop();
-        const reward = Math.max(1, Math.round(beatTapState.score / 2));
-        addTokens(reward);
-        beatTapState.msg = `Finished! ${beatTapState.score}/${beatTapState.targetHits} on beat (+${reward} Tokens)!`;
+        const reward = Math.floor(beatTapState.score / 2);
+        if (reward > 0) addTokens(reward);
+        beatTapState.msg = reward > 0
+          ? `Finished! ${beatTapState.score}/${beatTapState.targetHits} on beat (+${reward} Token${reward > 1 ? 's' : ''})!`
+          : `Finished! ${beatTapState.score}/${beatTapState.targetHits} on beat — land at least 2 on-beat hits to earn Tokens!`;
       }
       renderBeatTapUI();
     }
     function startBeatTapGame() {
       stopBeatTapLoop();
-      beatTapState = { running: true, intervalId: null, hits: 0, targetHits: 8, lastBeatTime: performance.now(), beatMs: 600, score: 0, msg: 'Tap SPACEBAR or the button in time with the beat!' };
+      if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+      beatTapState = { running: true, intervalId: null, hits: 0, targetHits: 8, lastBeatTime: performance.now(), beatMs: 600, beatCount: 0, lastTappedBeat: -1, lastTapTimestamp: 0, score: 0, msg: 'Tap SPACEBAR or the button in time with the beat!' };
       playDrumSound('kick');
       beatTapState.intervalId = setInterval(() => {
         if (!beatTapState.running) return;
+        beatTapState.beatCount++;
         beatTapState.lastBeatTime = performance.now();
         playDrumSound('kick');
       }, beatTapState.beatMs);
@@ -1706,8 +1726,8 @@
           <h3 class="text-xl font-black">Keep the Steady Beat!</h3>
           <p class="text-xs text-amber-300 font-bold">${st.msg}</p>
           <div class="flex justify-center gap-3">
-            ${!st.running ? `<button type="button" onclick="startBeatTapGame()" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow">Start Beat (100 BPM)</button>` :
-            `<button type="button" onmousedown="handleBeatTapHit()" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg active:scale-95">TAP ON BEAT (SPACEBAR)</button>`}
+            ${!st.running ? `<button type="button" onclick="this.blur(); startBeatTapGame()" onkeydown="if(event.key==='Enter'){event.preventDefault();}" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-2xl text-xs shadow">Start Beat (100 BPM)</button>` :
+            `<button type="button" onmousedown="event.preventDefault(); handleBeatTapHit()" onkeydown="if(event.key==='Enter'){event.preventDefault();}" class="px-8 py-4 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-sm shadow-lg active:scale-95">TAP ON BEAT (SPACEBAR)</button>`}
           </div>
         </div>`;
     }
